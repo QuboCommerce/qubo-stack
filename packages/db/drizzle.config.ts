@@ -1,4 +1,9 @@
+import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+import { resolve } from "node:path";
+
+// drizzle-kit runs from packages/db, so point it at the monorepo root .env.
+config({ path: resolve(process.cwd(), "../../.env") });
 
 export default defineConfig({
   schema: "./schema",

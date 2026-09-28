@@ -41,6 +41,9 @@ export * from "./discounts";
 // Content
 export * from "./content";
 
+// Pages (Puck block JSON, revisions, navigation, redirects)
+export * from "./pages";
+
 // Reviews & Wishlist
 export * from "./reviews";
 
