@@ -8,7 +8,7 @@ import {
   product,
   productImage,
   productVariant,
-} from "@hmf/db";
+} from "@peltier/db";
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { sendOrderConfirmation } from "@/lib/order-email";

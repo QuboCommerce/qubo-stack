@@ -1,7 +1,15 @@
-hmfroid.be {
-    reverse_proxy hmf-marketing:3000
+# Peltier edge proxy
+# One control plane (peltier-admin) fronting many storefronts.
+
+admin.peltier.be {
+	reverse_proxy peltier-admin:4000
 }
 
-panel.hmfroid.be {
-    reverse_proxy hmf-panel:4000
+hmfroid.be, www.hmfroid.be {
+	reverse_proxy hm-froid:3000
 }
+
+# Second storefront — enable when tailg-belgium lands in apps/.
+# tailg.be, www.tailg.be {
+# 	reverse_proxy tailg-belgium:3001
+# }

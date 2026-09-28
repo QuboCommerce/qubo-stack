@@ -14,7 +14,7 @@
     "outDir": "./dist",
     "rootDir": ".",
     "paths": {
-      "@hmf/db/*": ["./*"]
+      "@peltier/db/*": ["./*"]
     }
   },
   "include": ["schema/**/*.ts", "src/**/*.ts", "drizzle.config.ts"],

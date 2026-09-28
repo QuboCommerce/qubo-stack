@@ -4,7 +4,7 @@ import {
   product,
   productVariant,
   store,
-} from "@hmf/db";
+} from "@peltier/db";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import { storefrontOrigin, stripeRequest } from "@/lib/stripe";

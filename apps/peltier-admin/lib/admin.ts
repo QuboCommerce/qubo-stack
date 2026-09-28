@@ -1,11 +1,11 @@
 import "server-only";
 
-import { db } from "@hmf/db/client";
+import { db } from "@peltier/db/client";
 import {
   organizationMember,
   store,
   user,
-} from "@hmf/db/schema";
+} from "@peltier/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

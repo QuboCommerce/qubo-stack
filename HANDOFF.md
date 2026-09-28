@@ -18,8 +18,8 @@
 ```
 hm-froid/                          (Turborepo + pnpm monorepo)
 ├── apps/
-│   ├── hmf-marketing/             Next.js 16 storefront (:3000)
-│   └── hmf-panel/                 Next.js 16 admin dashboard (:4000)
+│   ├── hm-froid/             Next.js 16 storefront (:3000)
+│   └── peltier-admin/                 Next.js 16 admin dashboard (:4000)
 ├── packages/
 │   ├── db/                        Drizzle ORM schema + client (PostgreSQL)
 │   └── shared/                    Zod validators, utilities, constants
@@ -29,7 +29,7 @@ hm-froid/                          (Turborepo + pnpm monorepo)
 └── hm-froid.code-workspace        Cursor multi-root workspace
 ```
 
-Both apps share the same PostgreSQL database through `@hmf/db`. There is no dedicated API server -- each app uses Next.js API routes and Server Actions for mutations, plus direct DB reads through the shared package.
+Both apps share the same PostgreSQL database through `@peltier/db`. There is no dedicated API server -- each app uses Next.js API routes and Server Actions for mutations, plus direct DB reads through the shared package.
 
 ---
 
@@ -67,8 +67,8 @@ pnpm install
 pnpm dev
 
 # Or individually
-pnpm --filter hmf-panel dev      # localhost:4000
-pnpm --filter hmf-marketing dev  # localhost:3000
+pnpm --filter peltier-admin dev      # localhost:4000
+pnpm --filter hm-froid dev  # localhost:3000
 
 # Database
 pnpm db:push                     # Push schema to DB (no migration files)
@@ -138,7 +138,7 @@ The panel controls the marketing site's maintenance state via the `store_setting
 ## Conventions
 
 - **Import aliases:** `@/*` maps to the app root in both apps
-- **Shared packages:** Import as `@hmf/db`, `@hmf/db/schema`, `@hmf/db/client`, `@hmf/shared`, `@hmf/shared/utils`, `@hmf/shared/validators`, `@hmf/shared/constants`
+- **Shared packages:** Import as `@peltier/db`, `@peltier/db/schema`, `@peltier/db/client`, `@peltier/shared`, `@peltier/shared/utils`, `@peltier/shared/validators`, `@peltier/shared/constants`
 - **Component library:** shadcn/ui installed per-app (not shared). Use `npx shadcn@latest add <component>` inside each app
 - **CSS:** Tailwind v4 CSS-first config (no tailwind.config.js). Design tokens in `app/globals.css`
 - **Forms:** TanStack Form + Zod. Pass schema directly to `validators: { onChange: schema }`. No adapter needed.
@@ -163,7 +163,7 @@ The panel controls the marketing site's maintenance state via the `store_setting
 - [x] Zod 4 validators (Standard Schema, works natively with TanStack Form)
 - [x] `pnpm install` (lockfile generated, both apps start cleanly)
 
-- [x] Marketing landing page (hero with R3F 3D ice cube, dark/light themes, Anton display font, parallax sections — see `apps/hmf-marketing/components/landing/`)
+- [x] Marketing landing page (hero with R3F 3D ice cube, dark/light themes, Anton display font, parallax sections — see `apps/hm-froid/components/landing/`)
 
 ### TODO (future sessions)
 - [ ] shadcn/ui components (run `npx shadcn@latest add button card input` etc. in each app)
@@ -194,4 +194,4 @@ The panel controls the marketing site's maintenance state via the `store_setting
 4. **No dedicated API server** -- Next.js API routes + Server Actions. Both apps access DB directly.
 5. **Caddy over Traefik** -- Simpler config, automatic HTTPS, fewer moving parts.
 6. **pnpm over bun** -- Proven workspace support, matches existing kyf-moves patterns, better ecosystem compatibility.
-7. **Shared packages over code duplication** -- Unlike kyf-moves which duplicates lib/ across apps, HMF uses `@hmf/db` and `@hmf/shared` as shared workspace packages.
+7. **Shared packages over code duplication** -- Unlike kyf-moves which duplicates lib/ across apps, HMF uses `@peltier/db` and `@peltier/shared` as shared workspace packages.

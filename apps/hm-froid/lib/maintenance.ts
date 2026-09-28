@@ -1,5 +1,5 @@
-import { db } from "@hmf/db/client";
-import { storeSettings } from "@hmf/db/schema";
+import { db } from "@peltier/db/client";
+import { storeSettings } from "@peltier/db/schema";
 import { eq } from "drizzle-orm";
 
 let cachedMaintenance: { value: boolean; timestamp: number } | null = null;

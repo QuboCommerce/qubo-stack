@@ -9,7 +9,7 @@ import {
   productImage,
   productVariant,
   store,
-} from "@hmf/db";
+} from "@peltier/db";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
 export type StorefrontProduct = {

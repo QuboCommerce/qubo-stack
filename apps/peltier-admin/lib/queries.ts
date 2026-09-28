@@ -1,13 +1,13 @@
 import "server-only";
 
-import { db } from "@hmf/db/client";
+import { db } from "@peltier/db/client";
 import {
   order,
   product,
   productVariant,
   storeCustomer,
   user,
-} from "@hmf/db/schema";
+} from "@peltier/db/schema";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import { requireAdminContext } from "@/lib/admin";
 

@@ -2,34 +2,30 @@
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 services:
-  postgres:
-    ports:
-      - "127.0.0.1:55433:5432"
-
-  hmf-panel:
+  peltier-admin:
     build:
       target: deps
-    command: ["pnpm", "--filter", "hmf-panel", "dev"]
+    command: ["pnpm", "--filter", "peltier-admin", "dev"]
     volumes:
-      - ./apps/hmf-panel:/app/apps/hmf-panel
+      - ./apps/peltier-admin:/app/apps/peltier-admin
       - ./packages:/app/packages
-      - /app/apps/hmf-panel/node_modules
-      - /app/apps/hmf-panel/.next
+      - /app/apps/peltier-admin/node_modules
+      - /app/apps/peltier-admin/.next
     ports:
       - "4000:4000"
 
-  hmf-marketing:
+  hm-froid:
     build:
       target: deps
-    command: ["pnpm", "--filter", "hmf-marketing", "dev"]
+    command: ["pnpm", "--filter", "hm-froid", "dev"]
     volumes:
-      - ./apps/hmf-marketing:/app/apps/hmf-marketing
+      - ./apps/hm-froid:/app/apps/hm-froid
       - ./packages:/app/packages
-      - /app/apps/hmf-marketing/node_modules
-      - /app/apps/hmf-marketing/.next
+      - /app/apps/hm-froid/node_modules
+      - /app/apps/hm-froid/.next
     ports:
       - "3000:3000"
 
-  caddy:
+  caddy-edge:
     profiles:
       - production

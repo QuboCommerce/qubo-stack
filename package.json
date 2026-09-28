@@ -1,5 +1,5 @@
 {
-  "name": "hm-froid",
+  "name": "peltier-stack",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -9,13 +9,16 @@
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "db:push": "turbo run db:push",
-    "db:studio": "pnpm --filter @hmf/db studio",
+    "db:studio": "pnpm --filter @peltier/db studio",
     "legacy:archive": "node scripts/archive-legacy.mjs",
     "legacy:import": "node scripts/import-shopapplication.mjs",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "postinstall": "node scripts/link-env.mjs",
+    "setup:env": "node scripts/link-env.mjs"
   },
   "devDependencies": {
+    "dotenv": "^18.0.4",
     "turbo": "^2"
   },
-  "packageManager": "pnpm@9.15.4"
+  "packageManager": "pnpm@10.24.0"
 }

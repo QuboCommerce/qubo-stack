@@ -1,53 +1,62 @@
+name: peltier
+
 services:
-  postgres:
+  peltier-postgres:
     image: postgres:17-alpine
+    container_name: peltier-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: hmf
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hmf_secret}
-      POSTGRES_DB: hmfroid
+      POSTGRES_USER: ${POSTGRES_USER:-peltier}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-peltier_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-peltier}
     ports:
       - "127.0.0.1:55433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      - peltier-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hmf -d hmfroid"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-peltier} -d ${POSTGRES_DB:-peltier}",
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  hmf-panel:
+  peltier-admin:
     build:
       context: .
-      dockerfile: apps/hmf-panel/Dockerfile
+      dockerfile: apps/peltier-admin/Dockerfile
+    container_name: peltier-admin
     restart: unless-stopped
     expose:
       - "4000"
     environment:
-      - DATABASE_URL=postgresql://hmf:${POSTGRES_PASSWORD:-hmf_secret}@postgres:5432/hmfroid
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-peltier}:${POSTGRES_PASSWORD:-peltier_secret}@peltier-postgres:5432/${POSTGRES_DB:-peltier}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=https://panel.hmfroid.be
-      - NEXT_PUBLIC_PANEL_URL=https://panel.hmfroid.be
-      - NEXT_PUBLIC_MARKETING_URL=https://hmfroid.be
+      - BETTER_AUTH_URL=https://admin.peltier.be
+      - NEXT_PUBLIC_PANEL_URL=https://admin.peltier.be
     depends_on:
-      postgres:
+      peltier-postgres:
         condition: service_healthy
-    labels:
-      caddy: panel.hmfroid.be
-      caddy.reverse_proxy: "{{upstreams 4000}}"
+    networks:
+      - peltier-network
 
-  hmf-marketing:
+  hm-froid:
     build:
       context: .
-      dockerfile: apps/hmf-marketing/Dockerfile
+      dockerfile: apps/hm-froid/Dockerfile
+    container_name: hm-froid
     restart: unless-stopped
     expose:
       - "3000"
     environment:
-      - DATABASE_URL=postgresql://hmf:${POSTGRES_PASSWORD:-hmf_secret}@postgres:5432/hmfroid
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-peltier}:${POSTGRES_PASSWORD:-peltier_secret}@peltier-postgres:5432/${POSTGRES_DB:-peltier}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=https://hmfroid.be
-      - NEXT_PUBLIC_PANEL_URL=https://panel.hmfroid.be
+      - NEXT_PUBLIC_PANEL_URL=https://admin.peltier.be
       - NEXT_PUBLIC_MARKETING_URL=https://hmfroid.be
       - STOREFRONT_URL=https://hmfroid.be
       - STOREFRONT_STORE_SLUG=hm-froid
@@ -61,14 +70,14 @@ services:
     volumes:
       - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro
     depends_on:
-      postgres:
+      peltier-postgres:
         condition: service_healthy
-    labels:
-      caddy: hmfroid.be
-      caddy.reverse_proxy: "{{upstreams 3000}}"
+    networks:
+      - peltier-network
 
-  caddy:
+  caddy-edge:
     image: caddy:2-alpine
+    container_name: caddy-edge
     restart: unless-stopped
     ports:
       - "80:80"
@@ -78,9 +87,15 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - peltier-network
     depends_on:
-      - hmf-panel
-      - hmf-marketing
+      - peltier-admin
+      - hm-froid
+
+networks:
+  peltier-network:
+    name: peltier-network
 
 volumes:
   pgdata:

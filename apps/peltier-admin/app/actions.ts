@@ -1,7 +1,7 @@
 "use server";
 
-import { db } from "@hmf/db/client";
-import { order, orderStatusHistory, product } from "@hmf/db/schema";
+import { db } from "@peltier/db/client";
+import { order, orderStatusHistory, product } from "@peltier/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
