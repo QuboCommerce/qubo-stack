@@ -25,8 +25,16 @@ if (!existsSync(rootEnv)) {
 const appsDir = join(repoRoot, "apps");
 if (!existsSync(appsDir)) process.exit(0);
 
+const targets = [];
 for (const app of readdirSync(appsDir)) {
-  const appPath = join(appsDir, app);
+  targets.push(join(appsDir, app));
+}
+// The Elysia API runs under Bun, which also only reads .env from its own cwd.
+const apiDir = join(repoRoot, "packages", "api");
+if (existsSync(apiDir)) targets.push(apiDir);
+
+for (const appPath of targets) {
+  const app = appPath.slice(repoRoot.length + 1);
   if (!existsSync(join(appPath, "package.json"))) continue;
 
   const target = join(appPath, ".env");

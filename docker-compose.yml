@@ -25,6 +25,25 @@ services:
       timeout: 5s
       retries: 5
 
+  peltier-elysia:
+    build:
+      context: .
+      dockerfile: packages/api/Dockerfile
+    container_name: peltier-elysia
+    restart: unless-stopped
+    expose:
+      - "3333"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-peltier}:${POSTGRES_PASSWORD:-peltier_secret}@peltier-postgres:5432/${POSTGRES_DB:-peltier}
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - PELTIER_TRUSTED_ORIGINS=${PELTIER_TRUSTED_ORIGINS:-https://admin.peltier.be,https://hmfroid.be}
+      - PORT=3333
+    depends_on:
+      peltier-postgres:
+        condition: service_healthy
+    networks:
+      - peltier-network
+
   peltier-admin:
     build:
       context: .
@@ -38,9 +57,12 @@ services:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=https://admin.peltier.be
       - NEXT_PUBLIC_PANEL_URL=https://admin.peltier.be
+      - PELTIER_API_URL=http://peltier-elysia:3333
     depends_on:
       peltier-postgres:
         condition: service_healthy
+      peltier-elysia:
+        condition: service_started
     networks:
       - peltier-network
 
@@ -66,6 +88,7 @@ services:
       - HMF_SHIPPING_LABEL=${HMF_SHIPPING_LABEL:-Livraison professionnelle}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - ORDER_EMAIL_FROM=${ORDER_EMAIL_FROM:-HM Froid <commandes@hmfroid.be>}
+      - PELTIER_API_URL=http://peltier-elysia:3333
       - LEGACY_ASSET_ROOT=/data/legacy-products
     volumes:
       - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro

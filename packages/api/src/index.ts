@@ -1,0 +1,36 @@
+import { Elysia } from "elysia";
+import { cors } from "@elysiajs/cors";
+import { sql } from "drizzle-orm";
+import { db } from "@peltier/db/client";
+import { auth } from "./lib/auth";
+import { catalog } from "./routes/catalog";
+import { stores } from "./routes/stores";
+
+const allowedOrigins = (process.env.PELTIER_TRUSTED_ORIGINS ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+export const app = new Elysia()
+  .use(
+    cors({
+      origin: allowedOrigins.length ? allowedOrigins : true,
+      credentials: true,
+    }),
+  )
+  .onError(({ code, error, status }) => {
+    if (code === "NOT_FOUND") return status(404, { error: "not_found" });
+    console.error("[peltier-api]", error);
+    return status(500, { error: "internal_error" });
+  })
+  .get("/health", async () => {
+    const started = Date.now();
+    await db.execute(sql`select 1`);
+    return { ok: true, database: "up", latencyMs: Date.now() - started };
+  })
+  // Better Auth owns every /api/auth/* route across the platform.
+  .mount("/api/auth", auth.handler)
+  .use(stores)
+  .use(catalog);
+
+export type App = typeof app;
