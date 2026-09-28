@@ -1,197 +1,175 @@
-# HM Froid - Handoff Document
+# Peltier Stack — Handoff
 
-> This document is the entry point for any new chat session working on this project.
-> Read this first before making any changes.
+> Entry point for any new chat session. Read this before making changes.
+> Last verified: 2026-09-28.
 
-## Project Identity
+## What this is
 
-**HM Froid** (abbreviated **HMF**) is an e-commerce platform for HM Refrigeration, a Belgian professional refrigeration business. The project consists of a customer-facing storefront and an admin panel for managing products, orders, inventory, and content.
+**Peltier Stack** is a self-hosted, multi-store commerce platform built for
+Mostapha Hilal (aka Wooster), who runs two businesses:
 
-- **Domain:** hmfroid.be
-- **Panel:** panel.hmfroid.be
-- **Repository:** https://github.com/aliaddas/hm-froid
+| Business | What it sells | Status |
+| --- | --- | --- |
+| **HM Froid** | Industrial/commercial refrigeration (since 2008) | Migrating off ShopApplication — **urgent** |
+| **TailG Belgium** | Electric scooters | Still on Odoo, **not yet migrated** |
 
----
+One control plane (`peltier-admin`) manages many storefronts, Shopify-style
+store switching, but fully owned. A fridge and an e-scooter are ~98% the same
+product shape, so a single catalog/variant/pricing model serves both.
+
+- **Repository:** https://github.com/aliaddas/peltier-stack (push via SSH)
+- **Live legacy site being replaced:** hmfroid.be
 
 ## Architecture
 
 ```
-hm-froid/                          (Turborepo + pnpm monorepo)
+peltier-stack/                     Turborepo + pnpm workspace
 ├── apps/
-│   ├── hm-froid/             Next.js 16 storefront (:3000)
-│   └── peltier-admin/                 Next.js 16 admin dashboard (:4000)
+│   ├── peltier-admin/             Next.js 16 control plane (:4000)
+│   ├── hm-froid/                  Next.js 16 storefront (:3000)
+│   └── (tailg-belgium/)           future second storefront
 ├── packages/
-│   ├── db/                        Drizzle ORM schema + client (PostgreSQL)
-│   └── shared/                    Zod validators, utilities, constants
-├── caddy/                         Reverse proxy (Caddyfile)
-├── docker-compose.yml             Production stack
-├── docker-compose.dev.yml         Development override
-└── hm-froid.code-workspace        Cursor multi-root workspace
+│   ├── db/         @peltier/db    Drizzle schema + client (PostgreSQL)
+│   └── shared/     @peltier/shared Zod validators, utils, constants
+├── caddy/Caddyfile
+├── scripts/                       legacy archive + importer + link-env
+├── .zed/                          settings.json + tasks.json
+└── docker-compose.yml
 ```
 
-Both apps share the same PostgreSQL database through `@peltier/db`. There is no dedicated API server -- each app uses Next.js API routes and Server Actions for mutations, plus direct DB reads through the shared package.
+### Docker topology
 
----
+| Service | Container | Port |
+| --- | --- | --- |
+| Database | `peltier-postgres` | 127.0.0.1:55433 → 5432 |
+| Control plane | `peltier-admin` | 4000 |
+| Storefront | `hm-froid` | 3000 |
+| Edge proxy | `caddy-edge` | 80/443 |
 
-## Tech Stack
+Network: `peltier-network`. Compose project name: `peltier`.
+A `peltier-elysia` API service is planned but **does not exist yet**.
 
-| Layer | Technology |
-|-------|-----------|
+## Running locally
+
+```bash
+cp .env.example .env          # then fill values
+pnpm install                  # postinstall links root .env into each app
+docker compose up -d peltier-postgres
+pnpm dev                      # admin :4000, storefront :3000
+```
+
+In Zed, use the command palette → `task: spawn` for dev/build/db/docker tasks.
+
+### Env loading — important
+
+Next only reads `.env` from its own app directory, and `@next/env` resets
+`process.env` to a cached `initialEnv`, which silently wipes anything loaded
+from `next.config.ts`. So `scripts/link-env.mjs` symlinks the root `.env` into
+each app on `postinstall`. If env vars go missing, run `pnpm setup:env`.
+
+`@peltier/db` throws on a missing `DATABASE_URL` rather than silently
+connecting as the OS user.
+
+## Tech stack
+
+| Layer | Choice |
+| --- | --- |
 | Framework | Next.js 16 (App Router, RSC, Server Actions) |
-| Package Manager | pnpm 9.15.4 (workspace protocol) |
+| Package manager | pnpm 10 (workspace protocol) |
 | Monorepo | Turborepo |
-| ORM | Drizzle ORM + postgres-js driver |
+| ORM | Drizzle + postgres-js |
 | Database | PostgreSQL 17 |
-| Auth | Better Auth (self-hosted, email/password + OAuth) |
-| Data Fetching | TanStack Query v5 |
-| Client Sync | TanStack DB v0.6 (panel only, client-side live queries) |
-| Forms | TanStack Form v1 + Zod (Standard Schema, no adapter) |
-| Validation | Zod 4 |
-| UI | Tailwind CSS v4 + shadcn/ui (new-york style) |
-| Animations | Motion (framer-motion) + animate-ui registry |
-| State | Zustand v5 (cart, UI state) |
-| Toasts | Sonner |
-| Icons | Lucide React |
-| Reverse Proxy | Caddy 2 (automatic HTTPS) |
-| Containerization | Docker (node:22-alpine, standalone output) |
+| Auth | Better Auth (self-hosted) |
+| Server state | TanStack Query v5 |
+| Forms | TanStack Form + Zod 4 (Standard Schema, no adapter) |
+| UI | Tailwind v4 + shadcn/ui (new-york) |
+| Payments | Stripe (cards, Bancontact, Apple Pay) |
+| Proxy | Caddy 2 |
 
----
+## Database
 
-## Running Locally
+~48 tables in `packages/db/schema/`, including `organization`,
+`organizationMember`, `store`, `storeDomain` (multi-tenancy), `customerGroup`
+and `priceList` (B2B reseller pricing), and `legacySystem`/`legacyId`
+provenance columns so imports stay idempotent.
 
-```bash
-# Install dependencies
-pnpm install
+**Variant model:** `ProductOption` (dimension, e.g. "Capacity") →
+`ProductOptionValue` ("400L") → `ProductVariant` (the sellable SKU, with its
+own price/stock/barcode). `product.basePrice` is the default; a variant
+`price` is a nullable override.
 
-# Start both apps in dev mode
-pnpm dev
+### Current data (restored and verified)
 
-# Or individually
-pnpm --filter peltier-admin dev      # localhost:4000
-pnpm --filter hm-froid dev  # localhost:3000
+| Table | Rows |
+| --- | --- |
+| product | 3949 |
+| product_variant | 3949 |
+| product_image | 3946 |
+| store_customer | 2263 |
+| price_list / customer_group | 2 / 2 |
+| **category / product_category** | **0 — see gaps** |
+| order | 0 (history intentionally not migrated) |
 
-# Database
-pnpm db:push                     # Push schema to DB (no migration files)
-pnpm db:generate                 # Generate migration files
-pnpm db:migrate                  # Run migrations
-pnpm db:studio                   # Open Drizzle Studio
-```
+## Known gaps — read before planning work
 
-Requires a running PostgreSQL instance. Use docker-compose for convenience:
-```bash
-docker compose up postgres -d
-```
+1. **No category tree.** `category` and `product_category` are empty. This is
+   *not* an importer bug: the ShopApplication export
+   (`docs/reference-material/hmfroid-full-productlist.txt`) has no category
+   column at all — only reference, name, VAT, two prices, image, stock, colour.
+   The tree **is recoverable**: `.private/legacy-archive/2026-09-18/admin/
+   admin_articles_rubriques.php.html` holds 648 hierarchical entries
+   (`FROID COMMERCIAL` → `Armoires réfrigérées négatives`, `CHAMBRES FROIDES` →
+   `Monobloc positif`, …). Mostapha's whole business is fine-grained
+   subcategories, so this is high priority.
+2. **216 products missing.** 3949 of 4165 imported; 1172 duplicates collapsed,
+   30 invalid. Admin reported 3174 active + 991 inactive.
+3. **No product descriptions or brands** in the source export.
+4. **`peltier-admin` is thin.** Read-only lists for products/orders/customers.
+   No product CRUD, no variant builder, no media manager. This is the real gap
+   between "skeleton" and "product".
+5. **Legacy admin password was shared in chat** — rotate it.
 
----
+## Key decisions
 
-## Database Schema (~35 tables)
+1. **Next.js over TanStack Start** — TanStack Router/Start is incompatible with
+   the App Router. Query + Form are used as add-ons.
+2. **Drizzle over Prisma** — lighter, no generate step, better Docker cold
+   starts. (Prisma was briefly considered and rejected.)
+3. **Better Auth over Clerk** — self-hosted, no per-user cost, owns the data.
+4. **Stripe, not a payment CMS** — Stripe holds card data; we own catalogue,
+   customers, orders, content.
+5. **No Shopify** — ShopApplication's repricing is exactly the dependency risk
+   being escaped. Same argument applies to any hosted CMS.
+6. **Odoo is being dropped entirely** for TailG — too complex for the need.
+7. **Puck (MIT) for page building** — store versioned block JSON, never
+   generated React source. AI should emit validated block trees from approved
+   component schemas; executing merchant-authored React in the panel is a
+   security and deployment hazard.
+8. **`peltier-elysia` planned** — justified once three consumers (admin + two
+   storefronts) share tenancy and pricing rules. If storefronts keep direct DB
+   access "just for reads", the API becomes decorative and you get two sources
+   of truth.
 
-The schema is organized into domain files at `packages/db/schema/`:
+## Roadmap
 
-| Domain | Tables | File |
-|--------|--------|------|
-| Auth | user, session, account, verification | auth.ts |
-| Store | store, storeSettings | store.ts |
-| Catalog | category, product, productImage, productCategory, tag, productTag | catalog.ts |
-| Variants | productOption, productOptionValue, productVariant, variantOptionValue | variants.ts |
-| Inventory | inventoryItem, inventoryHistory | inventory.ts |
-| Cart | cart, cartItem | cart.ts |
-| Orders | order, orderItem, orderStatusHistory | orders.ts |
-| Payments | payment, refund | payments.ts |
-| Addresses | address | addresses.ts |
-| Shipping | shippingZone, shippingRate, shipment | shipping.ts |
-| Tax | taxZone, taxRate | tax.ts |
-| Discounts | discount, discountCondition, discountUsage | discounts.ts |
-| Content | post, blogCategory, postCategory | content.ts |
-| Reviews | review, wishlistItem | reviews.ts |
-| Support | discussion, message | support.ts |
-| Notifications | notification | notifications.ts |
-
-### Variant Model (important)
-
-The variant system uses industry-standard naming:
-- **ProductOption** = a dimension (e.g., "Capacity", "Color")
-- **ProductOptionValue** = a specific value (e.g., "400L", "Stainless Steel")
-- **ProductVariant** = the actual sellable SKU (combination of option values with its own price, stock, weight, barcode)
-
-A product's `basePrice` is the default. Each variant can have a `price` override (nullable -- falls back to basePrice if null).
-
----
-
-## Auth Strategy
-
-Better Auth is mounted in both apps at `/api/auth/[...all]`. They share the same DB tables. Users have a `role` field: `ADMIN`, `STAFF`, or `CUSTOMER`.
-
-- **Panel:** Requires authenticated user with ADMIN or STAFF role
-- **Marketing:** Public by default, auth required for /account/* routes
-
-Auth client utilities are at `lib/auth-client.ts` in each app.
-
----
-
-## Maintenance Mode
-
-The panel controls the marketing site's maintenance state via the `store_settings` table. The marketing middleware checks this on each request (with a 30-second cache). This replaces the old ENV-variable approach.
-
----
+- [x] Rename/restructure to `peltier-stack`, push to GitHub
+- [x] Zed workspace (`.zed/settings.json`, `.zed/tasks.json`)
+- [ ] `packages/api` — Elysia on Bun, auth + tenancy middleware
+- [ ] Multi-storefront seams so `tailg-belgium` drops in frictionlessly
+- [ ] Puck install + `page`/`pageRevision` schema in `peltier-admin`
+- [ ] Rebuild category tree, recover missing products
+- [ ] Panel CRUD: products, variants, media, orders
+- [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)
+- [ ] Domain/DNS cutover from ShopApplication
 
 ## Conventions
 
-- **Import aliases:** `@/*` maps to the app root in both apps
-- **Shared packages:** Import as `@peltier/db`, `@peltier/db/schema`, `@peltier/db/client`, `@peltier/shared`, `@peltier/shared/utils`, `@peltier/shared/validators`, `@peltier/shared/constants`
-- **Component library:** shadcn/ui installed per-app (not shared). Use `npx shadcn@latest add <component>` inside each app
-- **CSS:** Tailwind v4 CSS-first config (no tailwind.config.js). Design tokens in `app/globals.css`
-- **Forms:** TanStack Form + Zod. Pass schema directly to `validators: { onChange: schema }`. No adapter needed.
-- **Data fetching (panel):** TanStack Query for server state. TanStack DB for live dashboard widgets (client-only, use 'use client').
-- **Data fetching (marketing):** TanStack Query + RSC for SEO pages. Zustand for cart state.
-- **Route protection:** Uses `proxy.ts` (Next.js 16 convention, replaces middleware.ts). Export a named `proxy` function.
-
----
-
-## What Is Built vs What Remains
-
-### Done (scaffolded)
-- [x] Monorepo structure (Turborepo + pnpm)
-- [x] Full Drizzle schema (35 tables, enterprise-grade e-commerce)
-- [x] Better Auth setup (both apps)
-- [x] TanStack Query + Form provider setup
-- [x] TanStack DB + query-db-collection (panel)
-- [x] Tailwind v4 + shadcn/ui config (both apps)
-- [x] Proxy (auth protection + maintenance mode, Next.js 16 proxy.ts convention)
-- [x] Docker + Caddy setup (production + dev overrides)
-- [x] Workspace file for Cursor
-- [x] Zod 4 validators (Standard Schema, works natively with TanStack Form)
-- [x] `pnpm install` (lockfile generated, both apps start cleanly)
-
-- [x] Marketing landing page (hero with R3F 3D ice cube, dark/light themes, Anton display font, parallax sections — see `apps/hm-froid/components/landing/`)
-
-### TODO (future sessions)
-- [ ] shadcn/ui components (run `npx shadcn@latest add button card input` etc. in each app)
-- [ ] Product CRUD UI (panel)
-- [ ] Variant builder UI (panel)
-- [ ] Order management UI (panel)
-- [ ] Blog editor (panel)
-- [ ] Store settings page (panel, maintenance toggle)
-- [ ] Product catalog pages (marketing)
-- [ ] Product detail pages (marketing)
-- [ ] Shopping cart + checkout flow (marketing)
-- [ ] Stripe payment integration
-- [ ] Customer account pages (marketing: order history, addresses)
-- [ ] Blog pages (marketing)
-- [ ] Image upload (Supabase Storage or S3)
-- [ ] Email notifications (Resend)
-- [ ] Search (product search, possibly Meilisearch later)
-- [ ] SEO (meta tags, structured data, sitemap)
-- [ ] i18n (if needed -- currently fr-BE only)
-
----
-
-## Key Decisions Log
-
-1. **Next.js over TanStack Start** -- TanStack Router/Start is incompatible with Next.js App Router. We use TanStack Query + Form + DB as add-ons instead.
-2. **Drizzle over Prisma** -- Lighter (~12KB vs 1.6MB), no generate step, better cold starts for Docker.
-3. **Better Auth over Clerk** -- Self-hosted, no per-user cost, TypeScript-first, owns the data.
-4. **No dedicated API server** -- Next.js API routes + Server Actions. Both apps access DB directly.
-5. **Caddy over Traefik** -- Simpler config, automatic HTTPS, fewer moving parts.
-6. **pnpm over bun** -- Proven workspace support, matches existing kyf-moves patterns, better ecosystem compatibility.
-7. **Shared packages over code duplication** -- Unlike kyf-moves which duplicates lib/ across apps, HMF uses `@peltier/db` and `@peltier/shared` as shared workspace packages.
+- Imports: `@/*` is the app root; shared code via `@peltier/db`,
+  `@peltier/db/schema`, `@peltier/db/client`, `@peltier/shared`.
+- shadcn/ui is installed **per app**, not shared.
+- Tailwind v4 CSS-first config (no `tailwind.config.js`); tokens in
+  `app/globals.css`.
+- Route protection uses `proxy.ts` (Next.js 16 convention, replaces
+  `middleware.ts`) — export a named `proxy` function.
+- `.private/` holds the legacy archive, customer data and DB backups. It is
+  gitignored and must never be committed.

@@ -1,0 +1,69 @@
+{
+  "format_on_save": "on",
+  "formatter": "prettier",
+  "tab_size": 2,
+  "soft_wrap": "editor_width",
+  "ensure_final_newline_on_save": true,
+  "remove_trailing_whitespace_on_save": true,
+
+  "file_scan_exclusions": [
+    "**/.git",
+    "**/node_modules",
+    "**/.next",
+    "**/.turbo",
+    "**/dist",
+    "**/out",
+    "**/.private",
+    "**/pgdata",
+    "**/*.tsbuildinfo",
+    "**/pnpm-lock.yaml"
+  ],
+
+  "search": {
+    "exclude": ["**/node_modules", "**/.next", "**/.turbo", "**/.private"]
+  },
+
+  "languages": {
+    "TypeScript": { "formatter": "prettier", "tab_size": 2 },
+    "TSX": { "formatter": "prettier", "tab_size": 2 },
+    "JavaScript": { "formatter": "prettier", "tab_size": 2 },
+    "JSON": { "formatter": "prettier", "tab_size": 2 },
+    "JSONC": { "formatter": "prettier", "tab_size": 2 },
+    "CSS": { "formatter": "prettier", "tab_size": 2 },
+    "Markdown": { "format_on_save": "off" }
+  },
+
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "typescript": {
+          "tsserver": { "maxTsServerMemory": 8192 },
+          "preferences": { "importModuleSpecifier": "non-relative" },
+          "updateImportsOnFileMove": { "enabled": "always" },
+          "inlayHints": {
+            "parameterNames": { "enabled": "literals" },
+            "variableTypes": { "enabled": false }
+          }
+        }
+      }
+    },
+    "tailwindcss-language-server": {
+      "settings": {
+        "includeLanguages": {
+          "typescript": "javascript",
+          "typescriptreact": "javascript"
+        },
+        "experimental": {
+          "classRegex": [
+            ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+            ["cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)"]
+          ]
+        }
+      }
+    }
+  },
+
+  "terminal": {
+    "working_directory": "current_project_directory"
+  }
+}
