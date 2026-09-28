@@ -1,0 +1,152 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* Arctic light — cold-tinted whites, deep marine ink, icy cyan accents */
+  --background: oklch(0.985 0.006 220);
+  --foreground: oklch(0.21 0.045 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.045 255);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.045 255);
+  --primary: oklch(0.4 0.145 255);
+  --primary-foreground: oklch(0.985 0.006 220);
+  --secondary: oklch(0.955 0.012 220);
+  --secondary-foreground: oklch(0.28 0.05 255);
+  --muted: oklch(0.955 0.012 220);
+  --muted-foreground: oklch(0.5 0.03 250);
+  --accent: oklch(0.86 0.075 210);
+  --accent-foreground: oklch(0.24 0.06 250);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.9 0.015 225);
+  --input: oklch(0.9 0.015 225);
+  --ring: oklch(0.55 0.12 235);
+  --radius: 1rem;
+  /* Frost highlights used by decorative gradients */
+  --frost-1: oklch(0.82 0.09 215);
+  --frost-2: oklch(0.62 0.13 240);
+  --glow: oklch(0.75 0.11 220 / 35%);
+}
+
+.dark {
+  /* Deep inky marine / black with white arctic-blue frosty highlights */
+  --background: oklch(0.145 0.028 258);
+  --foreground: oklch(0.96 0.012 215);
+  --card: oklch(0.185 0.032 256);
+  --card-foreground: oklch(0.96 0.012 215);
+  --popover: oklch(0.185 0.032 256);
+  --popover-foreground: oklch(0.96 0.012 215);
+  --primary: oklch(0.85 0.085 212);
+  --primary-foreground: oklch(0.16 0.035 256);
+  --secondary: oklch(0.225 0.035 255);
+  --secondary-foreground: oklch(0.93 0.015 215);
+  --muted: oklch(0.225 0.035 255);
+  --muted-foreground: oklch(0.68 0.03 235);
+  --accent: oklch(0.32 0.06 245);
+  --accent-foreground: oklch(0.95 0.015 212);
+  --destructive: oklch(0.66 0.21 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.27 0.04 253);
+  --input: oklch(0.27 0.04 253);
+  --ring: oklch(0.75 0.09 215);
+  --frost-1: oklch(0.88 0.07 210);
+  --frost-2: oklch(0.72 0.11 230);
+  --glow: oklch(0.72 0.12 225 / 25%);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-frost-1: var(--frost-1);
+  --color-frost-2: var(--frost-2);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-anton), "Impact", ui-sans-serif, sans-serif;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+  }
+  ::selection {
+    background: var(--frost-1);
+    color: oklch(0.2 0.05 255);
+  }
+}
+
+@layer utilities {
+  /* Icy gradient text for accent words */
+  .text-frost {
+    background: linear-gradient(
+      100deg,
+      var(--frost-1) 0%,
+      var(--frost-2) 55%,
+      var(--frost-1) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Frosted glass panel */
+  .glass {
+    background: color-mix(in oklab, var(--card) 65%, transparent);
+    backdrop-filter: blur(18px) saturate(1.4);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  }
+
+  /* Soft radial glow used behind the hero cube */
+  .frost-glow {
+    background: radial-gradient(
+      closest-side,
+      var(--glow),
+      transparent 70%
+    );
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  .marquee-mask {
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 12%,
+      black 88%,
+      transparent
+    );
+  }
+}

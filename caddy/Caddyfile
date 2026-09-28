@@ -1,0 +1,7 @@
+hmfroid.be {
+    reverse_proxy hmf-marketing:3000
+}
+
+panel.hmfroid.be {
+    reverse_proxy hmf-panel:4000
+}

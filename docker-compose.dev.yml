@@ -1,0 +1,35 @@
+# Local development override
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:55433:5432"
+
+  hmf-panel:
+    build:
+      target: deps
+    command: ["pnpm", "--filter", "hmf-panel", "dev"]
+    volumes:
+      - ./apps/hmf-panel:/app/apps/hmf-panel
+      - ./packages:/app/packages
+      - /app/apps/hmf-panel/node_modules
+      - /app/apps/hmf-panel/.next
+    ports:
+      - "4000:4000"
+
+  hmf-marketing:
+    build:
+      target: deps
+    command: ["pnpm", "--filter", "hmf-marketing", "dev"]
+    volumes:
+      - ./apps/hmf-marketing:/app/apps/hmf-marketing
+      - ./packages:/app/packages
+      - /app/apps/hmf-marketing/node_modules
+      - /app/apps/hmf-marketing/.next
+    ports:
+      - "3000:3000"
+
+  caddy:
+    profiles:
+      - production

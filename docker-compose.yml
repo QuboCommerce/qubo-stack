@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hmf
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hmf_secret}
+      POSTGRES_DB: hmfroid
+    ports:
+      - "127.0.0.1:55433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hmf -d hmfroid"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  hmf-panel:
+    build:
+      context: .
+      dockerfile: apps/hmf-panel/Dockerfile
+    restart: unless-stopped
+    expose:
+      - "4000"
+    environment:
+      - DATABASE_URL=postgresql://hmf:${POSTGRES_PASSWORD:-hmf_secret}@postgres:5432/hmfroid
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=https://panel.hmfroid.be
+      - NEXT_PUBLIC_PANEL_URL=https://panel.hmfroid.be
+      - NEXT_PUBLIC_MARKETING_URL=https://hmfroid.be
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      caddy: panel.hmfroid.be
+      caddy.reverse_proxy: "{{upstreams 4000}}"
+
+  hmf-marketing:
+    build:
+      context: .
+      dockerfile: apps/hmf-marketing/Dockerfile
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      - DATABASE_URL=postgresql://hmf:${POSTGRES_PASSWORD:-hmf_secret}@postgres:5432/hmfroid
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - BETTER_AUTH_URL=https://hmfroid.be
+      - NEXT_PUBLIC_PANEL_URL=https://panel.hmfroid.be
+      - NEXT_PUBLIC_MARKETING_URL=https://hmfroid.be
+      - STOREFRONT_URL=https://hmfroid.be
+      - STOREFRONT_STORE_SLUG=hm-froid
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - HMF_SHIPPING_RATE_CENTS=${HMF_SHIPPING_RATE_CENTS:-0}
+      - HMF_SHIPPING_LABEL=${HMF_SHIPPING_LABEL:-Livraison professionnelle}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - ORDER_EMAIL_FROM=${ORDER_EMAIL_FROM:-HM Froid <commandes@hmfroid.be>}
+      - LEGACY_ASSET_ROOT=/data/legacy-products
+    volumes:
+      - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      caddy: hmfroid.be
+      caddy.reverse_proxy: "{{upstreams 3000}}"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - hmf-panel
+      - hmf-marketing
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
