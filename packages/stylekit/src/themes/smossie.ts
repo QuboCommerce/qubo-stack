@@ -1,0 +1,148 @@
+import { defineTheme, type RoleMap, type SchemeInput } from "../schema";
+
+/**
+ * Smossie Puddles — the 12 Shopify schemes, rebuilt on a de-duplicated
+ * palette. In Shopify, "#FDFBF7" was typed into 20+ fields; here it's one
+ * token ("paper") that every scheme references.
+ */
+
+const pastel = (id: string, name: string, bg: string, muted = "slate"): SchemeInput => ({
+  id,
+  name,
+  description: "Pastel band for playful product and flavour sections.",
+  light: {
+    background: bg,
+    backgroundAlt: `${bg}-light`,
+    text: "ink",
+    textMuted: muted,
+    accent: "brick",
+    onAccent: "paper",
+    primary: "ink",
+    onPrimary: "paper",
+    secondary: "paper",
+    onSecondary: "ink",
+    border: `${bg}-line`,
+  } satisfies RoleMap,
+});
+
+export const smossieTheme = defineTheme({
+  id: "smossie",
+  name: "Smossie Puddles",
+  description: "Playful smoothie brand: cream paper, coral, navy ink and six pastels.",
+  modeStrategy: "light",
+  palette: [
+    { id: "coral", name: "Coral", group: "brand", locked: true, value: "#EE5934", description: "Signature coral. Primary buttons on cream." },
+    { id: "ink", name: "Navy ink", group: "brand", locked: true, value: "#1F2A44", description: "All body text on light backgrounds; buttons on pastels." },
+    { id: "blue", name: "Puddle blue", group: "brand", value: "#3062B4", description: "Secondary buttons on cream." },
+    { id: "brick", name: "Brick", group: "accent", value: "#B82500", description: "Accent text, sale badges." },
+    { id: "tangerine", name: "Tangerine", group: "accent", value: "#FF9100", description: "Accent on the surface scheme." },
+    { id: "cream", name: "Cream", group: "neutral", value: "#FBF7EE", description: "Main page background." },
+    { id: "cream-light", name: "Cream light", group: "neutral", value: "#FFFCF2", description: "Second-layer background on cream." },
+    { id: "paper", name: "Paper", group: "neutral", value: "#FDFBF7", description: "Text on saturated backgrounds; button labels." },
+    { id: "sand-line", name: "Sand line", group: "neutral", value: "#E7E1D3", description: "Borders on cream." },
+    { id: "slate", name: "Slate", group: "neutral", value: "#4B5670", description: "Muted text on light backgrounds." },
+    { id: "navy", name: "Navy", group: "brand", value: "#374B79", description: "Dark spotlight sections." },
+    { id: "navy-line", name: "Navy line", group: "neutral", value: "#3F568B", description: "Borders on navy." },
+    { id: "periwinkle", name: "Periwinkle", group: "neutral", value: "#A5B3D6", description: "Muted text on navy." },
+    { id: "royal", name: "Royal blue", group: "brand", value: "#4169E1", description: "Bright blue sections." },
+    { id: "blue-mist", name: "Blue mist", group: "neutral", value: "#E1E7FA", description: "Muted text on royal." },
+    { id: "blue-line", name: "Blue line", group: "neutral", value: "#708EE9", description: "Borders on royal." },
+    { id: "coral-bright", name: "Coral bright", group: "accent", value: "#FF7350", description: "Coral section background." },
+    { id: "coral-mist", name: "Coral mist", group: "neutral", value: "#FFD2C7", description: "Muted text on deep coral." },
+    { id: "pink", name: "Pink", group: "accent", value: "#F6C1D1", description: "Pastel." },
+    { id: "pink-light", name: "Pink light", group: "accent", value: "#FDF2F6", description: "Pastel second layer." },
+    { id: "pink-line", name: "Pink line", group: "accent", value: "#E8A9BD", description: "Pastel border." },
+    { id: "sky", name: "Sky", group: "accent", value: "#AFCBEB", description: "Pastel." },
+    { id: "sky-light", name: "Sky light", group: "accent", value: "#DAE5F1", description: "Pastel second layer." },
+    { id: "sky-line", name: "Sky line", group: "accent", value: "#93B6DF", description: "Pastel border." },
+    { id: "butter", name: "Butter", group: "accent", value: "#F7E08C", description: "Pastel; accent on navy and blue." },
+    { id: "butter-light", name: "Butter light", group: "accent", value: "#FDF6DC", description: "Pastel second layer." },
+    { id: "butter-line", name: "Butter line", group: "accent", value: "#E6CB6B", description: "Pastel border." },
+    { id: "mint", name: "Mint", group: "accent", value: "#B3E6D0", description: "Pastel." },
+    { id: "mint-light", name: "Mint light", group: "accent", value: "#DCF3E9", description: "Pastel second layer." },
+    { id: "mint-line", name: "Mint line", group: "accent", value: "#93D9BC", description: "Pastel border." },
+    { id: "lilac", name: "Lilac", group: "accent", value: "#CFBDE6", description: "Pastel." },
+    { id: "lilac-light", name: "Lilac light", group: "accent", value: "#E4DCEF", description: "Pastel second layer." },
+    { id: "lilac-line", name: "Lilac line", group: "accent", value: "#B7A0D6", description: "Pastel border." },
+    { id: "blush", name: "Blush", group: "accent", value: "#F8D5CB", description: "Pastel." },
+    { id: "blush-light", name: "Blush light", group: "accent", value: "#FDE8E2", description: "Pastel second layer." },
+    { id: "blush-line", name: "Blush line", group: "accent", value: "#EEBFB2", description: "Pastel border." },
+    { id: "cocoa", name: "Cocoa", group: "neutral", value: "#6B5A55", description: "Muted text on blush." },
+  ],
+  schemes: [
+    {
+      id: "cream",
+      name: "Cream canvas",
+      description: "Default page background.",
+      light: { background: "cream", backgroundAlt: "cream-light", text: "ink", textMuted: "slate", accent: "brick", onAccent: "paper", primary: "coral", onPrimary: "paper", secondary: "blue", onSecondary: "paper", border: "sand-line", surface: "cream-light", onSurface: "ink" },
+    },
+    {
+      id: "surface",
+      name: "Paper surface",
+      description: "Product grids and cards that need to lift off the cream.",
+      light: { background: "cream-light", backgroundAlt: "cream", text: "ink", textMuted: "slate", accent: "tangerine", onAccent: "ink", primary: "coral", onPrimary: "paper", secondary: "blue", onSecondary: "paper", border: "sand-line" },
+    },
+    {
+      id: "navy",
+      name: "Navy spotlight",
+      description: "Hero bands and newsletter blocks.",
+      light: { background: "navy", backgroundAlt: "ink", text: "paper", textMuted: "periwinkle", accent: "butter", onAccent: "ink", primary: "coral", onPrimary: "paper", secondary: "paper", onSecondary: "ink", border: "navy-line", link: "butter" },
+    },
+    {
+      id: "royal",
+      name: "Royal puddle",
+      description: "Bright blue promo sections.",
+      light: { background: "royal", backgroundAlt: "blue", text: "paper", textMuted: "blue-mist", accent: "butter", onAccent: "ink", primary: "ink", onPrimary: "paper", secondary: "paper", onSecondary: "ink", border: "blue-line", link: "paper" },
+    },
+    {
+      id: "coral",
+      name: "Coral splash",
+      description: "Loud CTA bands.",
+      light: { background: "coral-bright", backgroundAlt: "coral", text: "ink", textMuted: "ink", accent: "cream-light", onAccent: "coral", primary: "ink", onPrimary: "paper", secondary: "paper", onSecondary: "ink", link: "ink" },
+    },
+    {
+      id: "coral-deep",
+      name: "Deep coral",
+      description: "Sale banners and announcement bars.",
+      light: { background: "coral", backgroundAlt: "brick", text: "paper", textMuted: "paper", accent: "butter", onAccent: "ink", primary: "ink", onPrimary: "paper", secondary: "paper", onSecondary: "ink", link: "paper" },
+    },
+    pastel("pink", "Pink pastel", "pink"),
+    pastel("sky", "Sky pastel", "sky"),
+    pastel("butter", "Butter pastel", "butter"),
+    pastel("mint", "Mint pastel", "mint"),
+    pastel("lilac", "Lilac pastel", "lilac"),
+    pastel("blush", "Blush pastel", "blush", "cocoa"),
+  ],
+  defaultScheme: "cream",
+  typeset: {
+    fonts: [
+      { id: "fredoka", family: "Fredoka", fallback: "system-ui, sans-serif", source: "google" },
+      { id: "bricolage", family: "Bricolage Grotesque", fallback: "system-ui, sans-serif", source: "google" },
+      { id: "dm-sans", family: "DM Sans", fallback: "system-ui, sans-serif", source: "google" },
+    ],
+    roles: {
+      display: { font: "fredoka", weight: 700, lineHeight: 1 },
+      heading: { font: "fredoka", weight: 600, lineHeight: 1.1 },
+      body: { font: "dm-sans", weight: 400, lineHeight: 1.55 },
+      accent: { font: "bricolage", weight: 700, tracking: 0.02, lineHeight: 1.2 },
+      mono: { font: "dm-sans", weight: 500 },
+    },
+    scale: { baseMin: 16, baseMax: 18, ratioMin: 1.22, ratioMax: 1.33 },
+  },
+  shape: {
+    radius: 14,
+    borderWidth: 2,
+    shadows: [
+      { id: "hard", name: "Hard offset", x: 4, y: 4, blur: 0, color: "ink" },
+      { id: "soft", name: "Soft", y: 10, blur: 30, color: { token: "ink", mix: { alpha: 0.12 } } },
+    ],
+  },
+  buttons: [
+    { id: "chunky", name: "Chunky 3D", radius: "full", borderWidth: 2, shadow: "hard", fontRole: "accent", hover: "press" },
+    { id: "soft-pill", name: "Soft pill", radius: "full", fontRole: "accent", hover: "lift" },
+    { id: "square", name: "Square", radius: "sm", fontRole: "body", weight: 600, hover: "darken" },
+  ],
+  defaultButton: "chunky",
+  motion: { profile: "lively", entrance: "rise" },
+  flavor: { id: "fancy" },
+});

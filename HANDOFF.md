@@ -34,6 +34,8 @@ peltier-stack/                     Turborepo + pnpm workspace
 │   ├── api/        @peltier/api   peltier-elysia: Elysia on Bun, auth + tenancy (:3333)
 │   ├── db/         @peltier/db    Drizzle schema + client (PostgreSQL)
 │   ├── shared/     @peltier/shared Zod validators, utils, constants
+│   ├── stylekit/   @peltier/stylekit themes: palette → schemes → CSS vars, Palette Doctor
+│   ├── blocks/     @peltier/blocks  schema-first Puck block library + render/editor configs
 │   └── storefront/ @peltier/storefront typed client for storefronts → API
 ├── caddy/Caddyfile
 ├── scripts/                       legacy archive + importer + link-env
@@ -171,6 +173,18 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    (`site_domain`). If storefronts keep direct DB
    access "just for reads", the API becomes decorative and you get two sources
    of truth.
+
+9. **Studio blocks are schema-first and self-styled** — every block is declared
+   once with `f.*` fields (Zod schema, Puck field, JSON Schema for AI,
+   translations, blueprint tokens all derive from it). Blocks ship their own CSS
+   (`blockCss`, emitted by `ThemeStyles`) driven by StyleKit CSS variables, so
+   a document renders identically in the Studio iframe and any storefront
+   without depending on the host app's Tailwind. Defaults are filled at render
+   time, so sparse/AI-written props never crash. Render proof:
+   `apps/hm-froid/app/studio-proof` (noindex).
+10. **StyleKit roles are semantic** — `accent` is a fill (paired with
+   `onAccent`); `accentText` is accent used as text (eyebrows, highlights) and
+   falls back to `link`. Schemes reference palette tokens only.
 
 ## Roadmap
 

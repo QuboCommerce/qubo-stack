@@ -10,9 +10,11 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10",
-    "@measured/puck": "^0.20.2",
+    "@peltier/blocks": "workspace:*",
     "@peltier/db": "workspace:*",
     "@peltier/shared": "workspace:*",
+    "@peltier/stylekit": "workspace:*",
+    "@puckeditor/core": "^0.23.0",
     "@radix-ui/react-alert-dialog": "^1.1",
     "@radix-ui/react-avatar": "^1.1",
     "@radix-ui/react-checkbox": "^1.1",
