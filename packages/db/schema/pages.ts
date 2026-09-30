@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { site } from "./site";
+import { document } from "./studio";
 
 export const publishStateEnum = pgEnum("publish_state", [
   "DRAFT",
@@ -43,6 +44,10 @@ export const page = pgTable(
 
     metaTitle: text("meta_title"),
     metaDescription: text("meta_description"),
+    /** Studio document holding this page's sections (supersedes draft/publishedData). */
+    documentId: uuid("document_id").references(() => document.id, { onDelete: "set null" }),
+    /** Alternate `page` template to render with; null = default. */
+    templateHandle: text("template_handle"),
     isHomepage: boolean("is_homepage").notNull().default(false),
 
     publishedAt: timestamp("published_at"),

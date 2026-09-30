@@ -44,6 +44,9 @@ export * from "./content";
 // Pages (Puck block JSON, revisions, navigation, redirects)
 export * from "./pages";
 
+// Studio: documents, templates, themes, media, fonts, translations, content types, forms
+export * from "./studio";
+
 // Reviews & Wishlist
 export * from "./reviews";
 

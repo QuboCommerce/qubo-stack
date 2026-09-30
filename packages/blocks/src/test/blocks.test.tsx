@@ -223,3 +223,17 @@ describe("puck & AI contracts", () => {
     expect(embedSrc("javascript:alert(1)")).toBeNull();
   });
 });
+
+describe("site type presets", () => {
+  it("every template starter validates for every site type", async () => {
+    const { siteTypePresets, templateStarter } = await import("../presets");
+    for (const preset of Object.values(siteTypePresets)) {
+      for (const t of preset.templates) {
+        const doc = templateStarter(t.kind, registry);
+        expect(validateDocument(doc, registry), `${preset.type}/${t.kind}`).toEqual([]);
+        expect(() => renderToString(<PeltierRender registry={registry} data={doc} metadata={{ theme: hmFroidTheme }} />)).not.toThrow();
+      }
+      expect(preset.templates.filter((t) => t.isSystem).map((t) => t.kind)).toEqual(["not_found", "password", "maintenance"]);
+    }
+  });
+});

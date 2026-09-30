@@ -58,6 +58,17 @@ export const siteTypeEnum = pgEnum("site_type", [
   "custom",
 ]);
 
+/** Feature switches; keep in sync with `capabilities` in @peltier/blocks. */
+export const siteCapabilityEnum = pgEnum("site_capability", [
+  "commerce",
+  "catalog",
+  "booking",
+  "leads",
+  "blog",
+  "accounts",
+  "locales",
+]);
+
 export const site = pgTable("site", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id")
@@ -66,6 +77,7 @@ export const site = pgTable("site", {
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
   type: siteTypeEnum("type").notNull().default("store"),
+  capabilities: siteCapabilityEnum("capabilities").array().notNull().default([]),
   description: text("description"),
   logo: text("logo"),
   ownerId: text("owner_id")
