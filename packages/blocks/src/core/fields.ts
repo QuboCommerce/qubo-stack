@@ -30,7 +30,13 @@ type Def<K extends string, T, X = {}> = {
   meta: FieldMeta;
 } & X;
 
-export type TextDef = Def<"text", string, { multiline: boolean; translatable: boolean; maxLength?: number }>;
+/**
+ * `inline`: editable directly on the canvas. In the editor Puck then passes the
+ * prop as a React element, so only enable it for copy rendered as children —
+ * never for values used in attributes, URLs or string logic. Defaults to
+ * `translatable`: non-translatable text is data (keys, URLs, addresses).
+ */
+export type TextDef = Def<"text", string, { multiline: boolean; translatable: boolean; inline: boolean; maxLength?: number }>;
 export type RichtextDef = Def<"richtext", string, { translatable: boolean }>;
 export type NumberDef = Def<"number", number, { min?: number; max?: number; step?: number; unit?: string }>;
 export type ToggleDef = Def<"toggle", boolean>;
@@ -169,7 +175,7 @@ const linkSchema = z.object({
 });
 
 export const f = {
-  text(o: Opts<string, { multiline?: boolean; translatable?: boolean; maxLength?: number }> = {}): TextDef {
+  text(o: Opts<string, { multiline?: boolean; translatable?: boolean; inline?: boolean; maxLength?: number }> = {}): TextDef {
     const m = meta(o, "Text");
     let s = z.string();
     if (o.maxLength) s = s.max(o.maxLength);
@@ -180,6 +186,7 @@ export const f = {
       meta: { group: "content", ...m },
       multiline: o.multiline ?? false,
       translatable: o.translatable ?? true,
+      inline: o.inline ?? o.translatable ?? true,
     };
     if (o.maxLength) def.maxLength = o.maxLength;
     return def;

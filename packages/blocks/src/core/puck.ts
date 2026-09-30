@@ -22,7 +22,7 @@ function editorField(def: AnyFieldDef, ctx: FieldAdapterContext, adapters: Field
   const label = def.meta.label;
   switch (def.kind) {
     case "text":
-      return { type: def.multiline ? "textarea" : "text", label, contentEditable: true, ...(def.meta.placeholder ? { placeholder: def.meta.placeholder } : {}) };
+      return { type: def.multiline ? "textarea" : "text", label, contentEditable: def.inline, ...(def.meta.placeholder ? { placeholder: def.meta.placeholder } : {}) };
     case "richtext":
       return { type: "richtext", label, contentEditable: true };
     case "number":

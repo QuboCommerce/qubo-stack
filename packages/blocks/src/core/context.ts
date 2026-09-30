@@ -28,6 +28,8 @@ export type RenderMetadata = {
   site?: { id: string; type: SiteType; capabilities: Capability[]; name?: string };
   locale?: string;
   theme?: Theme;
+  /** Preview light/dark for dual-mode themes (Studio toggle). */
+  mode?: "light" | "dark" | "system";
   /** assetId → delivery info, prefetched from `collectAssetIds()`. */
   assets?: Record<string, AssetInfo>;
   /** `page:about` / `product:slug` → href; unresolved links fall back to conventions. */
@@ -89,3 +91,16 @@ export function resolveLink(link: LinkValue | null | undefined, meta: RenderMeta
 
 export const linkTarget = (link: LinkValue | null | undefined) =>
   link?.newTab ? { target: "_blank", rel: "noopener noreferrer" } : {};
+
+/**
+ * The plain string behind a text prop. In the editor, inline-editable fields
+ * arrive as Puck's InlineTextField element carrying the raw `value`.
+ */
+export function textOf(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (value && typeof value === "object" && "props" in value) {
+    const inner = (value as { props?: { value?: unknown } }).props?.value;
+    if (typeof inner === "string") return inner;
+  }
+  return value == null ? "" : String(value);
+}

@@ -21,7 +21,7 @@ export const Newsletter = defineSection({
   keywords: ["email", "subscribe", "mailing list"],
   fields: {
     header: header({ title: "Stay in the loop", intro: "News and offers, never spam." }),
-    placeholder: f.text({ label: "Placeholder", default: "Your email" }),
+    placeholder: f.text({ label: "Placeholder", default: "Your email", inline: false }),
     buttonLabel: f.text({ label: "Button label", default: "Subscribe" }),
     consent: f.text({ label: "Consent note", multiline: true, default: "You can unsubscribe at any time." }),
     formKey: f.text({ label: "Form key", default: "newsletter", translatable: false, group: "advanced", audience: "builder" }),
@@ -62,7 +62,7 @@ export const ContactForm = defineSection({
           default: "text",
         }),
         required: f.toggle({ label: "Required" }),
-        options: f.text({ label: "Options (one per line, select only)", multiline: true }),
+        options: f.text({ label: "Options (one per line, select only)", multiline: true, inline: false }),
         width: f.select(["full", "half"], { label: "Width", default: "full" }),
       },
       {
@@ -78,7 +78,7 @@ export const ContactForm = defineSection({
       },
     ),
     submitLabel: f.text({ label: "Submit label", default: "Send" }),
-    successMessage: f.text({ label: "Success message", default: "Thanks! We'll get back to you within one business day." }),
+    successMessage: f.text({ label: "Success message", default: "Thanks! We'll get back to you within one business day.", inline: false }),
     formKey: f.text({ label: "Form key", default: "contact", translatable: false, group: "advanced", audience: "builder" }),
     details: f.group(
       {

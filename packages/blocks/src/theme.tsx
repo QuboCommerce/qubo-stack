@@ -1,4 +1,4 @@
-import { baseCss, compileTheme, type CompileOptions, type Theme } from "@peltier/stylekit";
+import { baseCss, compileTheme, googleFontsUrl, type CompileOptions, type Theme } from "@peltier/stylekit";
 import type { ReactNode } from "react";
 import type { RenderMetadata } from "./core";
 import { blockCss } from "./library/styles";
@@ -16,9 +16,19 @@ export function themeCss(theme: Theme, opts?: CompileOptions): string {
   return css;
 }
 
-export function ThemeStyles({ theme, includeBase = true }: { theme: Theme; includeBase?: boolean }) {
+/**
+ * Theme CSS plus its Google Fonts stylesheet. Apps that self-host the same
+ * fonts (e.g. via next/font) pass `fonts={false}`.
+ */
+export function ThemeStyles({ theme, includeBase = true, fonts = true }: { theme: Theme; includeBase?: boolean; fonts?: boolean }) {
   const css = (includeBase ? baseCss + blockCss : "") + themeCss(theme);
-  return <style data-peltier-theme={theme.id} dangerouslySetInnerHTML={{ __html: css }} />;
+  const href = fonts ? googleFontsUrl(theme) : null;
+  return (
+    <>
+      {href ? <link rel="stylesheet" href={href} data-peltier-fonts={theme.id} /> : null}
+      <style data-peltier-theme={theme.id} dangerouslySetInnerHTML={{ __html: css }} />
+    </>
+  );
 }
 
 export type ThemeMode = "light" | "dark" | "system";
@@ -59,6 +69,10 @@ export function ThemeRoot({
 type RootProps = { children: ReactNode; puck?: { metadata?: RenderMetadata } };
 
 export const themedRoot = {
-  render: ({ children, puck }: RootProps) => <ThemeRoot theme={puck?.metadata?.theme}>{children}</ThemeRoot>,
+  render: ({ children, puck }: RootProps) => (
+    <ThemeRoot theme={puck?.metadata?.theme} mode={puck?.metadata?.mode}>
+      {children}
+    </ThemeRoot>
+  ),
 };
 

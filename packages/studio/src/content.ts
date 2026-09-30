@@ -39,3 +39,19 @@ export function splitTranslationPath(p: string) {
   const i = p.indexOf(".");
   return i < 0 ? { nodeId: p, path: "" } : { nodeId: p.slice(0, i), path: p.slice(i + 1) };
 }
+
+/** JSON with sorted keys — jsonb reorders keys, so plain stringify can't compare. */
+export function stableStringify(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableStringify).join(",")}]`;
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return `{${Object.keys(obj)
+      .filter((k) => obj[k] !== undefined)
+      .sort()
+      .map((k) => `${JSON.stringify(k)}:${stableStringify(obj[k])}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value) ?? "null";
+}
+
+export const sameContent = (a: unknown, b: unknown) => stableStringify(a) === stableStringify(b);

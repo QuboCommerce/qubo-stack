@@ -1,6 +1,7 @@
 import { theme, themeRevision, user } from "@peltier/db/schema";
 import { ThemeSchema, diagnoseTheme, type DoctorReport, type Theme, type ThemeInput } from "@peltier/stylekit";
 import { and, desc, eq, max, sql } from "drizzle-orm";
+import { sameContent } from "./content";
 import { db, type Executor, type Scope } from "./db";
 import { ConflictError, NotFoundError, ValidationError } from "./errors";
 
@@ -19,7 +20,6 @@ export type StudioTheme = {
   updatedAt: Date;
 };
 
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 function view(row: typeof theme.$inferSelect): StudioTheme {
   return {
@@ -33,7 +33,7 @@ function view(row: typeof theme.$inferSelect): StudioTheme {
     publishedAt: row.publishedAt,
     health: row.health,
     richness: row.richness,
-    hasUnpublishedChanges: row.published == null || !same(row.draft, row.published),
+    hasUnpublishedChanges: row.published == null || !sameContent(row.draft, row.published),
     updatedAt: row.updatedAt,
   };
 }

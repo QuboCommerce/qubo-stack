@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { defineBlock, f, linkTarget, resolveLink, resolveMedia } from "../core";
+import { defineBlock, f, linkTarget, resolveLink, resolveMedia, textOf } from "../core";
 import { IconGlyph, iconNames } from "./icons";
 import { alignOptions, aspectOptions, cx, Empty, gap, radiusOptions, Richtext, textAlign, typeSize } from "./shared";
 
@@ -29,15 +29,18 @@ export const Eyebrow = defineBlock({
 
 const levelDefaults: Record<string, number> = { h1: 5, h2: 4, h3: 3, h4: 2, p: 1 };
 
-function highlightWords(text: string, highlight: string): ReactNode {
+function highlightWords(text: ReactNode, highlight: string): ReactNode {
   if (!highlight.trim()) return text;
-  const i = text.toLowerCase().indexOf(highlight.toLowerCase());
+  // In the editor `text` is Puck's inline-edit element; highlighted headings
+  // trade inline editing for an exact preview (edit them in the panel).
+  const raw = textOf(text);
+  const i = raw.toLowerCase().indexOf(highlight.toLowerCase());
   if (i < 0) return text;
   return (
     <>
-      {text.slice(0, i)}
-      <span className="pk-accent-text">{text.slice(i, i + highlight.length)}</span>
-      {text.slice(i + highlight.length)}
+      {raw.slice(0, i)}
+      <span className="pk-accent-text">{raw.slice(i, i + highlight.length)}</span>
+      {raw.slice(i + highlight.length)}
     </>
   );
 }
@@ -54,6 +57,7 @@ export const Heading = defineBlock({
       label: "Highlight words",
       description: "Words inside the heading painted in the accent color.",
       translatable: true,
+      inline: false,
     }),
     level: f.select(["h1", "h2", "h3", "h4", "p"], { label: "Level", default: "h2", group: "style" }),
     size: f.select(["auto", "1", "2", "3", "4", "5", "6"], { label: "Size", default: "auto", group: "style" }),

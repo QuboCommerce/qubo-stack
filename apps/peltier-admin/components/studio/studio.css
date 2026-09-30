@@ -1,0 +1,18 @@
+/* Puck panels restyled to sit inside the admin's shadcn chrome. */
+.studio {
+  --puck-font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --puck-color-azure-04: var(--primary);
+  --puck-color-azure-05: var(--primary);
+  --puck-color-azure-11: color-mix(in oklab, var(--primary) 10%, transparent);
+}
+
+.studio-puck-panel {
+  font-size: 13px;
+}
+
+.studio-canvas iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

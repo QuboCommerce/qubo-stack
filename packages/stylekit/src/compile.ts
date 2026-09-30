@@ -80,6 +80,25 @@ export type CompileOptions = {
   resolveAssetUrl?: (src: string) => string;
 };
 
+/**
+ * Google Fonts stylesheet for the theme's `google` fonts, requesting only the
+ * weights its type roles use (plus 400/700 for body copy and <strong>).
+ * Returns null when the theme uses no Google fonts.
+ */
+export function googleFontsUrl(theme: Theme): string | null {
+  const google = theme.typeset.fonts.filter((f) => f.source === "google");
+  if (!google.length) return null;
+  const families = google.map((font) => {
+    const weights = new Set<number>();
+    for (const role of Object.values(theme.typeset.roles)) if (role.font === font.id) weights.add(role.weight);
+    if (theme.typeset.roles.body.font === font.id) [400, 700].forEach((w) => weights.add(w));
+    if (!weights.size) weights.add(400);
+    const list = [...weights].sort((a, b) => a - b).join(";");
+    return `family=${encodeURIComponent(font.family).replace(/%20/g, "+")}:wght@${list}`;
+  });
+  return `https://fonts.googleapis.com/css2?${families.join("&")}&display=swap`;
+}
+
 function fontFaces(theme: Theme, opts: CompileOptions): string[] {
   const resolve = opts.resolveAssetUrl ?? ((s: string) => s);
   return theme.typeset.fonts.flatMap((font) =>

@@ -2,6 +2,7 @@ import { page, sectionGroup, site, template } from "@peltier/db/schema";
 import { and, asc, eq } from "drizzle-orm";
 import type { Capability } from "@peltier/blocks";
 import { document } from "@peltier/db/schema";
+import { sameContent } from "./content";
 import { db, type Scope } from "./db";
 import { NotFoundError } from "./errors";
 
@@ -40,8 +41,7 @@ export type ViewIndex = {
   sectionGroups: ViewEntry[];
 };
 
-const dirty = (d: { draft: unknown; published: unknown }) =>
-  d.published == null || JSON.stringify(d.draft) !== JSON.stringify(d.published);
+const dirty = (d: { draft: unknown; published: unknown }) => d.published == null || !sameContent(d.draft, d.published);
 
 export async function viewIndex(scope: Scope): Promise<ViewIndex> {
   const [s] = await db.select({ capabilities: site.capabilities }).from(site).where(eq(site.id, scope.siteId));

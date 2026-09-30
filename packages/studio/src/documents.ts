@@ -1,6 +1,6 @@
 import { asset, assetUsage, document, documentRevision, page, site, translation, user } from "@peltier/db/schema";
 import { and, desc, eq, inArray, max, ne, sql } from "drizzle-orm";
-import { assetIdsOf, prepare, stringsOf, translationPath, type DocumentData, type ValidationIssue } from "./content";
+import { assetIdsOf, prepare, sameContent, stringsOf, translationPath, type DocumentData, type ValidationIssue } from "./content";
 import { db, type Executor, type Scope, type Tx } from "./db";
 import { ConflictError, NotFoundError } from "./errors";
 
@@ -22,7 +22,7 @@ export type StudioDocument = {
   updatedById: string | null;
 };
 
-export type SaveResult = { version: number; updatedAt: Date; issues: ValidationIssue[] };
+export type SaveResult = { version: number; updatedAt: Date; issues: ValidationIssue[]; hasUnpublishedChanges: boolean };
 
 export type RevisionSummary = {
   id: string;
@@ -35,7 +35,6 @@ export type RevisionSummary = {
   isPublished: boolean;
 };
 
-const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
 
 function view(row: typeof document.$inferSelect): StudioDocument {
   return {
@@ -47,7 +46,7 @@ function view(row: typeof document.$inferSelect): StudioDocument {
     published: (row.publishedData as DocumentData | null) ?? null,
     publishedAt: row.publishedAt,
     publishedRevisionId: row.publishedRevisionId,
-    hasUnpublishedChanges: row.publishedData == null || !same(row.draftData, row.publishedData),
+    hasUnpublishedChanges: row.publishedData == null || !sameContent(row.draftData, row.publishedData),
     updatedAt: row.updatedAt,
     updatedById: row.updatedById,
   };
@@ -109,7 +108,7 @@ export async function saveDraft(
           eq(document.draftVersion, input.baseVersion),
         ),
       )
-      .returning({ version: document.draftVersion, updatedAt: document.updatedAt });
+      .returning({ version: document.draftVersion, updatedAt: document.updatedAt, published: document.publishedData });
 
     if (!row) {
       const current = await load(tx, scope, input.id);
@@ -122,7 +121,12 @@ export async function saveDraft(
 
     await syncAssetUsage(tx, scope, input.id, data);
     await markStaleTranslations(tx, scope, input.id, data);
-    return { ...row, issues };
+    return {
+      version: row.version,
+      updatedAt: row.updatedAt,
+      issues,
+      hasUnpublishedChanges: row.published == null || !sameContent(data, row.published),
+    };
   });
 }
 

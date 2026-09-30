@@ -120,6 +120,10 @@ describe("documents", () => {
 
     let current = await getDocument(a, doc.id);
     expect(current.hasUnpublishedChanges).toBe(false);
+    // Re-saving the published content (key order may differ) stays "clean".
+    const same = await saveDraft(a, { id: doc.id, data: JSON.parse(JSON.stringify(current.published)), baseVersion: current.draftVersion });
+    expect(same.hasUnpublishedChanges).toBe(false);
+    current = await getDocument(a, doc.id);
 
     const v2 = editFirstString(current.draft, "Changed headline");
     await saveDraft(a, { id: doc.id, data: v2, baseVersion: current.draftVersion });

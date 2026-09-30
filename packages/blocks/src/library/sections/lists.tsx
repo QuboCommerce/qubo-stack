@@ -492,7 +492,7 @@ export const PricingTable = defineSection({
         price: f.text({ label: "Price", default: "€49", translatable: false }),
         period: f.text({ label: "Period", default: "/ month" }),
         description: f.text({ label: "Description", multiline: true }),
-        features: f.text({ label: "Features (one per line)", multiline: true, default: "Feature one\nFeature two" }),
+        features: f.text({ label: "Features (one per line)", multiline: true, default: "Feature one\nFeature two", inline: false }),
         buttonLabel: f.text({ label: "Button label", default: "Choose" }),
         link: f.link({ label: "Button link" }),
         highlighted: f.toggle({ label: "Highlight" }),

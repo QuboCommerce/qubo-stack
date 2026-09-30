@@ -1,3 +1,4 @@
+import { studioHref } from "@/lib/view-meta";
 import Link from "next/link";
 import {
   BookOpen,
@@ -50,7 +51,6 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
   const { site, siteId } = await requireSite(slug);
   const [themeRow, templates] = await Promise.all([getActiveTheme(siteId), getTemplates(siteId)]);
   const theme = themeRow ? summarizeTheme(themeRow.published ?? themeRow.draft) : null;
-  const base = `/${site.slug}/online-store`;
 
   const groups = new Map<string, typeof templates>();
   for (const t of templates) {
@@ -109,7 +109,7 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
                   </div>
                 </div>
                 <div className="mt-auto flex flex-wrap gap-2 pt-2">
-                  <Button asChild><Link href={`${base}/editor`}><Paintbrush /> Customize</Link></Button>
+                  <Button asChild><Link href={`/${slug}/studio`}><Paintbrush /> Customize</Link></Button>
                   <Button variant="outline" size="icon" aria-label="More actions"><MoreHorizontal /></Button>
                 </div>
               </div>
@@ -133,7 +133,7 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
                       const Icon = kindMeta[t.kind]?.icon ?? FileText;
                       return (
                         <li key={t.id}>
-                          <Link href={`${base}/editor?template=${t.kind}${t.handle !== "default" ? `.${t.handle}` : ""}`} className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/50 sm:px-5">
+                          <Link href={studioHref(slug, `template:${t.id}`)} className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/50 sm:px-5">
                             <Icon className="size-4 shrink-0 text-muted-foreground" />
                             <span className="min-w-0 flex-1 truncate font-medium">{t.name}</span>
                             {t.isSystem && <Lock className="size-3.5 text-muted-foreground" aria-label="System page" />}
