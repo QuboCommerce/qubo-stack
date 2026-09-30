@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { defineSection, f, linkTarget, resolveLink, resolveMedia } from "../../core";
+import { defineSection, f, linkTarget, resolveLink, resolveMedia, textOf } from "../../core";
 import { CompareSlider } from "../compare";
 import { IconGlyph } from "../icons";
 import { aspectOptions, cx, Empty, radiusOptions } from "../shared";
@@ -207,8 +207,8 @@ export const Faq = defineSection({
           "@type": "FAQPage",
           mainEntity: items.map((it) => ({
             "@type": "Question",
-            name: it.question,
-            acceptedAnswer: { "@type": "Answer", text: it.answer },
+            name: textOf(it.question),
+            acceptedAnswer: { "@type": "Answer", text: textOf(it.answer) },
           })),
         }).replace(/</g, "\\u003c")
       : null;
