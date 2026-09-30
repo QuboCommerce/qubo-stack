@@ -40,5 +40,7 @@ export const localeLabel: Record<string, string> = {
 export function assetUrl(url: string | null | undefined) {
   if (!url) return null;
   if (/^https?:\/\//.test(url)) return url;
+  // Legacy images are served by the admin itself, so a relative URL works on any host/IP.
+  if (url.startsWith("/api/legacy-assets/")) return url;
   return `${process.env.PUBLIC_ASSET_URL ?? process.env.STOREFRONT_URL ?? process.env.NEXT_PUBLIC_MARKETING_URL ?? ""}${url}`;
 }

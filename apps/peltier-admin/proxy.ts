@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
 
-const publicRoutes = ["/sign-in", "/sign-up", "/api/auth"];
+const publicRoutes = ["/sign-in", "/sign-up", "/api/auth", "/api/legacy-assets"];
 
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some((route) => pathname.startsWith(route));
