@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { blueprintNode, instantiate, registry, type DocumentData } from "@peltier/blocks";
-import { sampleProducts } from "@peltier/blocks/fixtures";
+import { sampleProducts, withSampleMedia } from "@peltier/blocks/fixtures";
 import { PeltierRender } from "@peltier/blocks/render";
 import { requireSite } from "@/lib/admin";
 import { resolveCanvasTheme, siteMeta } from "@/lib/studio";
@@ -27,17 +27,21 @@ export default async function BlockCanvas({ params, searchParams }: { params: Pr
     }
     node = { ...node, props };
   }
-  if (blueprint) node = blueprintNode(registry, node);
+  // Previews show sections with photos, the way they read on a real page.
+  node = blueprint ? blueprintNode(registry, node) : withSampleMedia(node, registry);
   const data: DocumentData = { root: { props: {} }, content: [node] };
   const isSection = def.kind === "section";
-  const thumb = sp.thumb === "1" && !isSection;
+  const thumb = sp.thumb === "1";
 
   return (
     <div
       data-canvas-kind={def.kind}
       style={
         isSection
-          ? undefined
+          ? // Thumbnails: short bands (announcement, marquee) sit mid-frame; tall ones keep their top.
+            thumb
+            ? { minHeight: "100vh", display: "grid", alignContent: "safe center" }
+            : undefined
           : thumb
             ? { minHeight: "100vh", display: "grid", alignItems: "center", padding: "24px 32px", boxSizing: "border-box" }
             : { padding: "clamp(16px, 4vw, 48px)" }

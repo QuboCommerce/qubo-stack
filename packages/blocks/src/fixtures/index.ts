@@ -1,4 +1,4 @@
-import { instantiate, type DocumentData, type SlotNode } from "../core";
+import { instantiate, setPath, walkFields, type BlockRegistry, type DocumentData, type MediaValue, type SlotNode } from "../core";
 import { registry as defaultRegistry } from "../library";
 
 const n = (type: string, props: Record<string, unknown> = {}): SlotNode => ({ type, props });
@@ -145,3 +145,38 @@ export const sampleProducts = [
   { title: "Groupe frigorifique 1,5 CV", href: "/products/groupe-15cv", price: "€ 1 890" },
   { title: "Armoire négative 700 L", href: "/products/armoire-700", price: "€ 2 140", compareAt: "€ 2 390" },
 ];
+
+/** Neutral, brand-agnostic photos used to fill empty image fields in previews. */
+export const sampleImages = [
+  "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1400&q=70",
+  "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=1400&q=70",
+  "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=1400&q=70",
+  "https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=1400&q=70",
+  "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1400&q=70",
+  "https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1400&q=70",
+];
+
+/**
+ * Fills empty image fields (recursively through slots) with sample photos so
+ * library thumbnails show what a section looks like with real content.
+ * Section chrome (background media) is left alone.
+ */
+export function withSampleMedia(node: SlotNode, registry: BlockRegistry = defaultRegistry): SlotNode {
+  let i = 0;
+  const fill = (n: SlotNode): SlotNode => {
+    const def = registry.get(n.type);
+    if (!def) return n;
+    let props = n.props;
+    walkFields(def.fields, n.props, (field, value, path) => {
+      if (path === "section" || path.startsWith("section.")) return;
+      if (field.kind === "media" && field.accept !== "video") {
+        const v = value as MediaValue | null | undefined;
+        if (!v?.url && !v?.assetId) props = setPath(props, path, { url: sampleImages[i++ % sampleImages.length], alt: "" } satisfies MediaValue);
+      } else if (field.kind === "slot" && Array.isArray(value)) {
+        props = setPath(props, path, (value as SlotNode[]).map(fill));
+      }
+    });
+    return { ...n, props };
+  };
+  return fill(node);
+}

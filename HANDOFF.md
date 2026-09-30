@@ -149,8 +149,10 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 3. **No product descriptions or brands** in the source export.
 4. **`peltier-admin` has a real shell but little CRUD yet.** Site-scoped routes
    (`/[site]/…`), capability-driven sidebar, ⌘K palette, dashboard, paged
-   products/customers, orders, themes and settings hub. Still missing: product
-   editor, variant builder, media manager, the Studio editor itself. Unbuilt
+   products/customers, orders, themes and settings hub, and the Studio editor
+   (`/[site]/studio/…`: Puck canvas, view picker, autosave, publish, history,
+   Add-section modal with live thumbnails). Still missing: product editor,
+   variant builder, media manager, theme settings UI. Unbuilt
    sections render a "roadmap" placeholder via `app/[site]/[...rest]`.
 5. **Legacy admin password was shared in chat** — rotate it.
 
@@ -226,7 +228,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 - [x] Puck install + `page`/`pageRevision` schema in `peltier-admin`
 - [x] Rename `store` → `site` (+ `site.type`), move DB onto Supabase
 - [ ] Peltier Studio — Plan A foundation (stylekit, blocks, studio services done; media next)
-- [ ] Peltier Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings done)
+- [ ] Peltier Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings, B4 editor, B5 add-section done)
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders
 - [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)

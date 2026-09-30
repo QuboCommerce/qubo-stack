@@ -22,7 +22,7 @@ import {
 } from "../index";
 import { PeltierRender } from "../render";
 import { createEditorConfig } from "../editor";
-import { hmFroidHomeFixture, sampleProducts } from "../fixtures";
+import { hmFroidHomeFixture, sampleImages, sampleProducts, withSampleMedia } from "../fixtures";
 
 const doc = (...content: SlotNode[]): DocumentData => ({ root: { props: { title: "Test" } }, content });
 
@@ -184,6 +184,21 @@ describe("fixtures", () => {
     const item = (grid.props as Record<string, any>).items[0];
     expect(item.link).toEqual({ kind: "url", value: "" });
     expect(item.icon).toBe("check");
+  });
+});
+
+describe("sample media", () => {
+  it("fills empty images through slots and leaves section chrome and set media alone", () => {
+    const split = withSampleMedia(instantiate(registry, "SplitMedia"));
+    const props = split.props as Record<string, any>;
+    expect(sampleImages).toContain(props.media?.url);
+    expect(props.section?.background?.media?.url).toBeFalsy();
+    const set = instantiate(registry, "SplitMedia", { props: { media: { url: "https://x.test/a.jpg", alt: "a" } } });
+    expect((withSampleMedia(set).props as Record<string, any>).media.url).toBe("https://x.test/a.jpg");
+    for (const def of registry.list()) {
+      const node = withSampleMedia(instantiate(registry, def.name));
+      expect(validateDocument({ root: { props: {} }, content: [node] }, registry)).toEqual([]);
+    }
   });
 });
 

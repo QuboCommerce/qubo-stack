@@ -6,13 +6,14 @@ import "./studio.css";
 import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Puck, createUsePuck, type Config, type Data } from "@puckeditor/core";
-import { registry, type Capability, type DocumentData, type SiteType } from "@peltier/blocks";
+import { Puck, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
+import { instantiate, registry, type Capability, type DocumentData, type SiteType } from "@peltier/blocks";
 import { createEditorConfig } from "@peltier/blocks/editor";
 import type { Theme } from "@peltier/stylekit";
 import type { ViewIndex } from "@peltier/studio";
 import {
   AlertTriangle,
+  Blocks,
   Check,
   CloudOff,
   History,
@@ -36,6 +37,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@peltier/shared/utils";
+import type { SectionEntry } from "@/lib/section-catalog";
+import { AddSectionDialog } from "./add-section-dialog";
 import { discardDraftAction, loadDraftAction, publishAction } from "@/app/studio-actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -73,6 +76,7 @@ export type StudioEditorProps = {
 };
 
 const usePuck = createUsePuck();
+const ROOT_ZONE = "root:default-zone";
 
 // ------------------------------------------------------------ breakpoints ---
 
@@ -184,6 +188,8 @@ function StudioLayout({
   const [historyOpen, setHistoryOpen] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [addAt, setAddAt] = useState<{ index: number; after: string | null } | null>(null);
+  const getPuck = useGetPuck();
 
   const history = usePuck((s) => s.history);
   const selected = usePuck((s) => s.selectedItem);
@@ -254,6 +260,54 @@ function StudioLayout({
     if (!tabletUp && selected) setSheet("fields");
   }, [selected, tabletUp]);
 
+  // New sections go after the selected one (or its top-level ancestor), else at the end.
+  const openAddSection = useCallback(() => {
+    const { appState, selectedItem, config } = getPuck();
+    const content = appState.data.content ?? [];
+    let index = content.length;
+    let after: string | null = null;
+    if (selectedItem) {
+      const id = String(selectedItem.props.id);
+      const top = content.findIndex((n) => n.props.id === id || JSON.stringify(n.props).includes(`"${id}"`));
+      if (top >= 0) {
+        index = top + 1;
+        const t = content[top]!.type;
+        after = config.components[t]?.label ?? t;
+      }
+    }
+    setSheet(null);
+    setAddAt({ index, after });
+  }, [getPuck]);
+
+  const insertSection = useCallback(
+    (entry: SectionEntry) => {
+      if (!addAt) return;
+      const node = instantiate(registry, entry.type, { preset: entry.preset });
+      const { dispatch } = getPuck();
+      const index = addAt.index;
+      dispatch({
+        type: "setData",
+        recordHistory: true,
+        data: (prev) => {
+          const content = [...(prev.content ?? [])];
+          content.splice(Math.min(index, content.length), 0, node as (typeof content)[number]);
+          return { ...prev, content };
+        },
+      });
+      dispatch({ type: "setUi", ui: { itemSelector: { index, zone: ROOT_ZONE } } });
+      setAddAt(null);
+      toast.success(`${entry.label} added`, { duration: 1500 });
+      // Bring the new section into view once the canvas has rendered it.
+      setTimeout(() => {
+        const frame = window.document.querySelector<HTMLIFrameElement>("#preview-frame, iframe[title='Preview']");
+        frame?.contentDocument
+          ?.querySelector(`[data-puck-component="${CSS.escape(String(node.props.id))}"]`)
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 150);
+    },
+    [addAt, getPuck],
+  );
+
   const vp = viewports.find((v) => v.id === viewport)!;
 
   const left = (
@@ -262,7 +316,7 @@ function StudioLayout({
         {(
           [
             ["sections", "Sections", Layers],
-            ["add", "Add block", Plus],
+            ["add", "Blocks", Blocks],
           ] as const
         ).map(([id, label, Icon]) => (
           <button
@@ -279,7 +333,27 @@ function StudioLayout({
           </button>
         ))}
       </div>
-      <div className={cn("studio-puck-panel min-h-0 flex-1 overflow-y-auto", leftTab === "add" && "px-3 py-2")}>{leftTab === "sections" ? <Puck.Outline /> : <Puck.Components />}</div>
+      <div className={cn("studio-puck-panel min-h-0 flex-1 overflow-y-auto", leftTab === "add" && "px-3 py-2")}>
+        {leftTab === "sections" ? (
+          <Puck.Outline />
+        ) : (
+          <>
+            <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Drag a block into any section, or onto the page.</p>
+            <Puck.Components />
+          </>
+        )}
+      </div>
+      {leftTab === "sections" && (
+        <div className="shrink-0 border-t p-2">
+          <button
+            type="button"
+            onClick={openAddSection}
+            className="flex h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed text-[13px] font-medium text-primary transition-colors hover:border-primary/50 hover:bg-primary/5"
+          >
+            <Plus className="size-4" /> Add section
+          </button>
+        </div>
+      )}
     </div>
   );
 
@@ -468,7 +542,8 @@ function StudioLayout({
               <button
                 key={id}
                 onClick={() => {
-                  if (id !== "fields") setLeftTab(id);
+                  if (id === "add") return openAddSection();
+                  if (id === "sections") setLeftTab(id);
                   setSheet(id);
                 }}
                 className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium", id === "fields" && selected ? "text-primary" : "text-muted-foreground")}
@@ -488,6 +563,16 @@ function StudioLayout({
           </Sheet>
         </>
       )}
+
+      <AddSectionDialog
+        open={addAt !== null}
+        onOpenChange={(o) => !o && setAddAt(null)}
+        siteSlug={site.slug}
+        capabilities={site.capabilities}
+        insertAfter={addAt?.after ?? null}
+        themeName={theme?.name}
+        onInsert={insertSection}
+      />
 
       <HistorySheet
         open={historyOpen}
