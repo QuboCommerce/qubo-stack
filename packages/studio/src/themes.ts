@@ -21,6 +21,13 @@ export type StudioTheme = {
 };
 
 
+/** Compares themes after defaults are applied, so authored vs. normalised copies of the same theme are equal. */
+function sameTheme(a: unknown, b: unknown) {
+  const pa = ThemeSchema.safeParse(a);
+  const pb = ThemeSchema.safeParse(b);
+  return pa.success && pb.success ? sameContent(pa.data, pb.data) : sameContent(a, b);
+}
+
 function view(row: typeof theme.$inferSelect): StudioTheme {
   return {
     id: row.id,
@@ -33,7 +40,7 @@ function view(row: typeof theme.$inferSelect): StudioTheme {
     publishedAt: row.publishedAt,
     health: row.health,
     richness: row.richness,
-    hasUnpublishedChanges: row.published == null || !sameContent(row.draft, row.published),
+    hasUnpublishedChanges: row.published == null || !sameTheme(row.draft, row.published),
     updatedAt: row.updatedAt,
   };
 }

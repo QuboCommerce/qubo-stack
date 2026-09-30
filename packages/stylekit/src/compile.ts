@@ -89,10 +89,13 @@ export function googleFontsUrl(theme: Theme): string | null {
   const google = theme.typeset.fonts.filter((f) => f.source === "google");
   if (!google.length) return null;
   const families = google.map((font) => {
+    const available = font.weights;
+    const snap = (w: number) =>
+      available ? available.reduce((best, a) => (Math.abs(a - w) < Math.abs(best - w) ? a : best)) : w;
     const weights = new Set<number>();
-    for (const role of Object.values(theme.typeset.roles)) if (role.font === font.id) weights.add(role.weight);
-    if (theme.typeset.roles.body.font === font.id) [400, 700].forEach((w) => weights.add(w));
-    if (!weights.size) weights.add(400);
+    for (const role of Object.values(theme.typeset.roles)) if (role.font === font.id) weights.add(snap(role.weight));
+    if (theme.typeset.roles.body.font === font.id) [400, 700].forEach((w) => weights.add(snap(w)));
+    if (!weights.size) weights.add(snap(400));
     const list = [...weights].sort((a, b) => a - b).join(";");
     return `family=${encodeURIComponent(font.family).replace(/%20/g, "+")}:wght@${list}`;
   });

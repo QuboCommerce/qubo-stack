@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { saveDraftAction, type StudioConflict } from "@/app/studio-actions";
+import { saveDraftAction, type SaveOutcome, type StudioConflict } from "@/app/studio-actions";
 import { stableStringify } from "@/lib/stable-json";
 
 export type SyncStatus = "saved" | "dirty" | "saving" | "error" | "conflict";
@@ -14,6 +14,8 @@ type Options = {
   initialData: unknown;
   /** Quiet period after the last edit before autosaving. */
   delay?: number;
+  /** Custom persistence (theme drafts); defaults to the document draft action. */
+  save?: (input: { data: unknown; baseVersion: number; force: boolean }) => Promise<SaveOutcome>;
 };
 
 /**
@@ -22,7 +24,7 @@ type Options = {
  * tagged with the draftVersion it was based on. A 409 stops autosave and
  * surfaces a conflict for the user to resolve.
  */
-export function useDocumentSync({ site, documentId, version, hasUnpublishedChanges, initialData, delay = 1200 }: Options) {
+export function useDocumentSync({ site, documentId, version, hasUnpublishedChanges, initialData, delay = 1200, save }: Options) {
   const [status, setStatus] = useState<SyncStatus>("saved");
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [unpublished, setUnpublished] = useState(hasUnpublishedChanges);
@@ -52,7 +54,9 @@ export function useDocumentSync({ site, documentId, version, hasUnpublishedChang
       }
       setStatus("saving");
       const job = (async () => {
-        const res = await saveDraftAction(site, { documentId, data: next.data, baseVersion: versionRef.current, force });
+        const res = save
+          ? await save({ data: next.data, baseVersion: versionRef.current, force })
+          : await saveDraftAction(site, { documentId, data: next.data, baseVersion: versionRef.current, force });
         if (res.ok) {
           versionRef.current = res.version;
           savedJson.current = next.json;
@@ -82,7 +86,7 @@ export function useDocumentSync({ site, documentId, version, hasUnpublishedChang
         inflight.current = null;
       }
     },
-    [site, documentId],
+    [site, documentId, save],
   );
 
   const onChange = useCallback(

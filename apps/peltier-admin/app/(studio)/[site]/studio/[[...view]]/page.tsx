@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getDocument, isStudioError, resolveView, viewIndex } from "@peltier/studio";
+import { getDocument, getTheme, isStudioError, resolveView, viewIndex } from "@peltier/studio";
 import { ThemeSchema, type Theme } from "@peltier/stylekit";
 import { requireSite } from "@/lib/admin";
 import { getActiveTheme } from "@/lib/queries";
@@ -33,6 +33,7 @@ export default async function StudioPage({ params }: { params: Promise<Params> }
   // Studio previews the theme draft, so theme edits show up before they go live.
   const parsed = ThemeSchema.safeParse(themeRow?.draft);
   const theme: Theme | null = parsed.success ? parsed.data : ((themeRow?.published as Theme | null) ?? null);
+  const themeView = themeRow && parsed.success ? await getTheme(scope, themeRow.id) : null;
 
   return (
     <StudioEditor
@@ -47,6 +48,17 @@ export default async function StudioPage({ params }: { params: Promise<Params> }
         hasUnpublishedChanges: doc.hasUnpublishedChanges,
       }}
       theme={theme}
+      themeRecord={
+        themeView && parsed.success
+          ? {
+              id: themeView.id,
+              version: themeView.draftVersion,
+              hasUnpublishedChanges: themeView.hasUnpublishedChanges,
+              publishedAt: themeView.publishedAt?.toISOString() ?? null,
+              data: parsed.data,
+            }
+          : null
+      }
       audience={user.role === "ADMIN" ? "builder" : "merchant"}
       canPublish={site.memberRole === "OWNER" || site.memberRole === "ADMIN"}
       locale={site.locale}

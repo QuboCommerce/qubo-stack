@@ -3,8 +3,8 @@
 import "@puckeditor/core/puck.css";
 import "./studio.css";
 
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Puck, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
 import { instantiate, registry, type Capability, type DocumentData, type SiteType } from "@peltier/blocks";
@@ -22,6 +22,7 @@ import {
   Loader2,
   Monitor,
   Moon,
+  Paintbrush,
   MoreHorizontal,
   PanelLeft,
   Plus,
@@ -40,6 +41,7 @@ import { cn } from "@peltier/shared/utils";
 import type { SectionEntry } from "@/lib/section-catalog";
 import { AddSectionDialog } from "./add-section-dialog";
 import { discardDraftAction, loadDraftAction, publishAction } from "@/app/studio-actions";
+import { loadThemeAction, publishThemeAction } from "@/app/theme-actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -61,6 +63,8 @@ import { studioHref } from "@/lib/view-meta";
 import { HistorySheet } from "./history-sheet";
 import { useDocumentSync, type DocumentSync } from "./use-document-sync";
 import { ViewPicker } from "./view-picker";
+import { ThemePanel } from "./theme/theme-panel";
+import { useThemeEditor, type ThemeEditor, type ThemeRecord } from "./theme/use-theme-editor";
 
 type ViewEntry = ViewIndex["groups"][number]["entries"][number];
 
@@ -70,6 +74,8 @@ export type StudioEditorProps = {
   view: ViewEntry;
   document: { id: string; data: DocumentData; version: number; hasUnpublishedChanges: boolean };
   theme: Theme | null;
+  /** The active theme's editable draft (null when the site has no theme). */
+  themeRecord: ThemeRecord | null;
   audience: "merchant" | "builder";
   canPublish: boolean;
   locale: string;
@@ -103,9 +109,18 @@ const viewports: { id: Viewport; label: string; width: number | null; icon: type
 // ----------------------------------------------------------------- editor ---
 
 export function StudioEditor(props: StudioEditorProps) {
-  const { site, document: doc, theme, audience } = props;
+  const { site, document: doc, audience } = props;
   const [editor, setEditor] = useState({ key: 0, data: doc.data });
   const [mode, setMode] = useState<"light" | "dark">("light");
+  const themeEditor = useThemeEditor(site.slug, props.themeRecord);
+  // The canvas previews the theme draft live; deferring keeps sliders responsive.
+  const theme = useDeferredValue(themeEditor.theme ?? props.theme);
+  // Field options (scheme/button pickers) only change when those lists do.
+  const fieldThemeKey = theme
+    ? JSON.stringify([theme.schemes.map((s) => [s.id, s.name]), theme.buttons.map((b) => [b.id, b.name]), theme.defaultScheme, theme.defaultButton])
+    : "";
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const fieldTheme = useMemo(() => theme, [fieldThemeKey]);
   const sync = useDocumentSync({
     site: site.slug,
     documentId: doc.id,
@@ -118,9 +133,9 @@ export function StudioEditor(props: StudioEditorProps) {
     () =>
       createEditorConfig(registry, {
         capabilities: site.capabilities,
-        fieldContext: { theme: theme ?? undefined, audience },
+        fieldContext: { theme: fieldTheme ?? undefined, audience },
       }) as Config,
-    [site.capabilities, theme, audience],
+    [site.capabilities, fieldTheme, audience],
   );
 
   const metadata = useMemo(
@@ -153,7 +168,7 @@ export function StudioEditor(props: StudioEditorProps) {
         metadata={metadata}
         iframe={{ enabled: true }}
       >
-        <StudioLayout {...props} sync={sync} mode={mode} setMode={setMode} replace={replace} />
+        <StudioLayout {...props} theme={theme} themeEditor={themeEditor} sync={sync} mode={mode} setMode={setMode} replace={replace} />
       </Puck>
     </TooltipProvider>
   );
@@ -168,11 +183,14 @@ function StudioLayout({
   document: doc,
   theme,
   canPublish,
+  audience,
+  themeEditor,
   sync,
   mode,
   setMode,
   replace,
 }: StudioEditorProps & {
+  themeEditor: ThemeEditor;
   sync: DocumentSync;
   mode: "light" | "dark";
   setMode: (m: "light" | "dark") => void;
@@ -182,9 +200,10 @@ function StudioLayout({
   const wide = useMedia("(min-width: 1024px)");
   const tabletUp = useMedia("(min-width: 768px)");
   const [viewport, setViewport] = useState<Viewport>("fit");
-  const [leftTab, setLeftTab] = useState<"sections" | "add">("sections");
-  const [leftOpen, setLeftOpen] = useState(false);
-  const [sheet, setSheet] = useState<null | "sections" | "add" | "fields">(null);
+  const params = useSearchParams();
+  const [leftTab, setLeftTab] = useState<"sections" | "add" | "theme">(params.get("panel") === "theme" && themeEditor.draft ? "theme" : "sections");
+  const [leftOpen, setLeftOpen] = useState(params.get("panel") === "theme");
+  const [sheet, setSheet] = useState<null | "sections" | "add" | "fields" | "theme">(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -198,33 +217,61 @@ function StudioLayout({
   const dual = theme?.modeStrategy === "dual";
   const exitHref = `/${site.slug}/online-store`;
 
+  const themeSync = themeEditor.sync;
+  // While the Theme panel is open, undo/redo and the save status follow the theme.
+  const themeActive = !!themeEditor.draft && (tabletUp ? leftTab === "theme" && (wide || leftOpen) : sheet === "theme");
+  const undo = themeActive
+    ? { can: themeEditor.canUndo, run: themeEditor.undo, label: "Undo theme change" }
+    : { can: history.hasPast, run: () => history.back(), label: "Undo" };
+  const redo = themeActive
+    ? { can: themeEditor.canRedo, run: themeEditor.redo, label: "Redo theme change" }
+    : { can: history.hasFuture, run: () => history.forward(), label: "Redo" };
+  const themeDirty = !!themeEditor.draft && themeSync.hasUnpublishedChanges;
+  const docDirty = sync.hasUnpublishedChanges;
+
+  // One Publish for what you see: the page and, when edited, the theme.
   const publish = useCallback(async () => {
     if (!canPublish) return;
     setPublishing(true);
     try {
-      if (!(await sync.flush())) {
+      if (!(await sync.flush()) || (themeDirty && !(await themeSync.flush()))) {
         toast.error("Resolve the save problem before publishing.");
         return;
       }
-      const res = await publishAction(site.slug, { documentId: doc.id, baseVersion: sync.version() });
-      if (res.ok) {
-        sync.markPublished();
-        toast.success(`${view.label} is live`, { description: `Version ${res.version} published.` });
-        router.refresh();
-      } else if ("conflict" in res) {
-        toast.error("Someone saved a newer version. Reload before publishing.");
-      } else toast.error(res.error);
+      if (themeDirty && themeEditor.issues.length) {
+        toast.error("The theme has an invalid value. Fix it before publishing.");
+        return;
+      }
+      const done: string[] = [];
+      if (themeDirty) {
+        const res = await publishThemeAction(site.slug, { themeId: themeEditor.id });
+        if (!res.ok) return void toast.error(res.error);
+        themeSync.markPublished();
+        done.push(`theme v${res.version}`);
+      }
+      if (docDirty) {
+        const res = await publishAction(site.slug, { documentId: doc.id, baseVersion: sync.version() });
+        if (res.ok) {
+          sync.markPublished();
+          done.push(`page v${res.version}`);
+        } else if ("conflict" in res) {
+          return void toast.error("Someone saved a newer version. Reload before publishing.");
+        } else return void toast.error(res.error);
+      }
+      toast.success(docDirty ? `${view.label} is live` : "Theme is live", { description: `Published ${done.join(" and ")}.` });
+      router.refresh();
     } finally {
       setPublishing(false);
     }
-  }, [canPublish, sync, site.slug, doc.id, view.label, router]);
+  }, [canPublish, sync, themeSync, themeDirty, docDirty, themeEditor.id, themeEditor.issues.length, site.slug, doc.id, view.label, router]);
 
   const go = useCallback(
     async (key: string) => {
-      if (!(await sync.flush()) && !window.confirm("Your latest changes couldn't be saved. Leave anyway?")) return;
+      const saved = (await sync.flush()) && (await themeSync.flush());
+      if (!saved && !window.confirm("Your latest changes couldn't be saved. Leave anyway?")) return;
       router.push(studioHref(site.slug, key));
     },
-    [sync, router, site.slug],
+    [sync, themeSync, router, site.slug],
   );
 
   // ⌘S saves now — also when focus is inside the canvas iframe.
@@ -232,7 +279,7 @@ function StudioLayout({
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
         e.preventDefault();
-        void sync.flush().then((ok) => ok && toast.success("Saved", { duration: 1200 }));
+        void Promise.all([sync.flush(), themeSync.flush()]).then(([a, b]) => a && b && toast.success("Saved", { duration: 1200 }));
       }
     };
     window.addEventListener("keydown", onKey);
@@ -253,7 +300,25 @@ function StudioLayout({
       window.removeEventListener("keydown", onKey);
       frameDoc?.removeEventListener("keydown", onKey);
     };
-  }, [sync]);
+  }, [sync, themeSync]);
+
+  // ⌘Z / ⇧⌘Z drive the theme history while its panel is open (text fields keep native undo).
+  useEffect(() => {
+    if (!themeActive) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      const key = e.key.toLowerCase();
+      if (key !== "z" && key !== "y") return;
+      const t = e.target as HTMLElement | null;
+      if (t?.closest("input, textarea, select, [contenteditable='true']")) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if (key === "y" || e.shiftKey) themeEditor.redo();
+      else themeEditor.undo();
+    };
+    window.addEventListener("keydown", onKey, true);
+    return () => window.removeEventListener("keydown", onKey, true);
+  }, [themeActive, themeEditor]);
 
   // Phones: selecting a block opens its settings.
   useEffect(() => {
@@ -317,6 +382,7 @@ function StudioLayout({
           [
             ["sections", "Sections", Layers],
             ["add", "Blocks", Blocks],
+            ...(themeEditor.draft ? ([["theme", "Theme", Paintbrush]] as const) : []),
           ] as const
         ).map(([id, label, Icon]) => (
           <button
@@ -333,16 +399,22 @@ function StudioLayout({
           </button>
         ))}
       </div>
-      <div className={cn("studio-puck-panel min-h-0 flex-1 overflow-y-auto", leftTab === "add" && "px-3 py-2")}>
-        {leftTab === "sections" ? (
-          <Puck.Outline />
-        ) : (
-          <>
-            <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Drag a block into any section, or onto the page.</p>
-            <Puck.Components />
-          </>
-        )}
-      </div>
+      {leftTab === "theme" ? (
+        <div className="min-h-0 flex-1">
+          <ThemePanel site={site.slug} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} />
+        </div>
+      ) : (
+        <div className={cn("studio-puck-panel min-h-0 flex-1 overflow-y-auto", leftTab === "add" && "px-3 py-2")}>
+          {leftTab === "sections" ? (
+            <Puck.Outline />
+          ) : (
+            <>
+              <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Drag a block into any section, or onto the page.</p>
+              <Puck.Components />
+            </>
+          )}
+        </div>
+      )}
       {leftTab === "sections" && (
         <div className="shrink-0 border-t p-2">
           <button
@@ -388,7 +460,10 @@ function StudioLayout({
         )}
         <div className="hidden min-w-0 flex-col leading-tight xl:flex xl:w-56 2xl:w-72">
           <span className="truncate text-[13px] font-semibold">{site.name}</span>
-          <span className="truncate text-xs text-muted-foreground">{theme?.name ?? "No theme"}</span>
+          <span className="truncate text-xs text-muted-foreground">
+            {theme?.name ?? "No theme"}
+            {themeDirty && <span className="text-amber-600"> · edited</span>}
+          </span>
         </div>
 
         <div className="flex min-w-0 flex-1 justify-center">
@@ -432,23 +507,23 @@ function StudioLayout({
           <div className="flex items-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="size-8" disabled={!history.hasPast} onClick={() => history.back()} aria-label="Undo">
+                <Button variant="ghost" size="icon" className="size-8" disabled={!undo.can} onClick={undo.run} aria-label={undo.label}>
                   <Undo2 />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Undo <Kbd>⌘Z</Kbd></TooltipContent>
+              <TooltipContent>{undo.label} <Kbd>⌘Z</Kbd></TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="hidden size-8 sm:inline-flex" disabled={!history.hasFuture} onClick={() => history.forward()} aria-label="Redo">
+                <Button variant="ghost" size="icon" className="hidden size-8 sm:inline-flex" disabled={!redo.can} onClick={redo.run} aria-label={redo.label}>
                   <Redo2 />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Redo <Kbd>⇧⌘Z</Kbd></TooltipContent>
+              <TooltipContent>{redo.label} <Kbd>⇧⌘Z</Kbd></TooltipContent>
             </Tooltip>
           </div>
 
-          <SaveStatus sync={sync} compact={!wide} />
+          <SaveStatus sync={themeActive ? themeSync : sync} compact={!wide} />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -463,7 +538,7 @@ function StudioLayout({
                       <DropdownMenuRadioItem key={v.id} value={v.id}>{v.label}</DropdownMenuRadioItem>
                     ))}
                   </DropdownMenuRadioGroup>
-                  <DropdownMenuItem disabled={!history.hasFuture} onSelect={() => history.forward()}><Redo2 /> Redo</DropdownMenuItem>
+                  <DropdownMenuItem disabled={!redo.can} onSelect={redo.run}><Redo2 /> {redo.label}</DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
@@ -486,16 +561,24 @@ function StudioLayout({
                 <Button
                   size="sm"
                   className="h-8 gap-1.5 px-3"
-                  disabled={!canPublish || publishing || !sync.hasUnpublishedChanges || sync.status === "conflict"}
+                  disabled={!canPublish || publishing || (!docDirty && !themeDirty) || sync.status === "conflict" || themeSync.status === "conflict"}
                   onClick={publish}
                 >
                   {publishing ? <Loader2 className="animate-spin" /> : <Rocket className="sm:hidden" />}
-                  <span className="hidden sm:inline">{sync.hasUnpublishedChanges ? "Publish" : "Published"}</span>
+                  <span className="hidden sm:inline">{docDirty || themeDirty ? "Publish" : "Published"}</span>
                 </Button>
               </span>
             </TooltipTrigger>
             <TooltipContent>
-              {!canPublish ? "Only owners and admins can publish" : sync.hasUnpublishedChanges ? "Make your draft live" : "Everything is live"}
+              {!canPublish
+                ? "Only owners and admins can publish"
+                : docDirty && themeDirty
+                  ? "Publish this page and the theme changes"
+                  : themeDirty
+                    ? "Publish the theme changes (all pages)"
+                    : docDirty
+                      ? "Make your draft live"
+                      : "Everything is live"}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -504,9 +587,16 @@ function StudioLayout({
       {/* -------------------------------------------------------- body --- */}
       <div className="relative flex min-h-0 flex-1">
         {wide ? (
-          <aside className="flex w-68 shrink-0 flex-col border-r bg-background 2xl:w-76 min-[1920px]:w-84">{left}</aside>
+          <aside
+            className={cn(
+              "flex shrink-0 flex-col border-r bg-background transition-[width] duration-200",
+              leftTab === "theme" ? "w-80 2xl:w-88 min-[1920px]:w-96" : "w-68 2xl:w-76 min-[1920px]:w-84",
+            )}
+          >
+            {left}
+          </aside>
         ) : tabletUp && leftOpen ? (
-          <aside className="absolute inset-y-0 left-0 z-10 flex w-72 flex-col border-r bg-background shadow-xl">{left}</aside>
+          <aside className={cn("absolute inset-y-0 left-0 z-10 flex flex-col border-r bg-background shadow-xl", leftTab === "theme" ? "w-80" : "w-72")}>{left}</aside>
         ) : null}
 
         <main className="relative flex min-w-0 flex-1 flex-col overflow-auto">
@@ -531,11 +621,12 @@ function StudioLayout({
       {/* phones: bottom bar + sheets */}
       {!tabletUp && (
         <>
-          <nav className="grid shrink-0 grid-cols-3 border-t bg-background pb-[env(safe-area-inset-bottom)]">
+          <nav className={cn("grid shrink-0 border-t bg-background pb-[env(safe-area-inset-bottom)]", themeEditor.draft ? "grid-cols-4" : "grid-cols-3")}>
             {(
               [
                 ["sections", "Sections", Layers],
                 ["add", "Add", Plus],
+                ...(themeEditor.draft ? ([["theme", "Theme", Paintbrush]] as const) : []),
                 ["fields", selected ? "Edit block" : "Settings", SlidersHorizontal],
               ] as const
             ).map(([id, label, Icon]) => (
@@ -543,7 +634,7 @@ function StudioLayout({
                 key={id}
                 onClick={() => {
                   if (id === "add") return openAddSection();
-                  if (id === "sections") setLeftTab(id);
+                  if (id === "sections" || id === "theme") setLeftTab(id);
                   setSheet(id);
                 }}
                 className={cn("flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium", id === "fields" && selected ? "text-primary" : "text-muted-foreground")}
@@ -553,12 +644,14 @@ function StudioLayout({
             ))}
           </nav>
           <Sheet open={sheet !== null} onOpenChange={(o) => !o && setSheet(null)}>
-            <SheetContent side="bottom" className="h-[72dvh] gap-0 rounded-t-2xl p-0">
+            <SheetContent side="bottom" onOpenAutoFocus={(e) => e.preventDefault()} className={cn("gap-0 rounded-t-2xl p-0", sheet === "theme" ? "h-[86dvh]" : "h-[72dvh]")}>
               <SheetHeader className="sr-only">
-                <SheetTitle>{sheet === "fields" ? "Block settings" : sheet === "add" ? "Add block" : "Sections"}</SheetTitle>
+                <SheetTitle>{sheet === "fields" ? "Block settings" : sheet === "add" ? "Add block" : sheet === "theme" ? "Theme" : "Sections"}</SheetTitle>
               </SheetHeader>
               <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/30" aria-hidden />
-              <div className="min-h-0 flex-1">{sheet === "fields" ? right : left}</div>
+              <div className="min-h-0 flex-1">
+                {sheet === "fields" ? right : sheet === "theme" ? <ThemePanel site={site.slug} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} /> : left}
+              </div>
             </SheetContent>
           </Sheet>
         </>
@@ -584,7 +677,10 @@ function StudioLayout({
         onReplaced={replace}
       />
 
-      <ConflictDialog sync={sync} site={site.slug} documentId={doc.id} onReplaced={replace} />
+      <ConflictDialog sync={sync} load={() => loadDraftAction(site.slug, doc.id)} onReplaced={replace} />
+      {themeEditor.draft && (
+        <ConflictDialog sync={themeSync} what="theme" load={() => loadThemeAction(site.slug, themeEditor.id)} onReplaced={themeEditor.replace} />
+      )}
 
       <Dialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <DialogContent className="sm:max-w-md">
@@ -654,13 +750,13 @@ function SaveStatus({ sync, compact }: { sync: DocumentSync; compact: boolean })
 
 function ConflictDialog({
   sync,
-  site,
-  documentId,
+  load,
+  what = "page",
   onReplaced,
 }: {
   sync: DocumentSync;
-  site: string;
-  documentId: string;
+  load: () => Promise<{ ok: true; data: unknown; version: number; hasUnpublishedChanges: boolean } | { ok: false; error: string }>;
+  what?: "page" | "theme";
   onReplaced: (next: { data: unknown; version: number; hasUnpublishedChanges: boolean }) => void;
 }) {
   const [busy, setBusy] = useState<null | "theirs" | "mine">(null);
@@ -669,7 +765,7 @@ function ConflictDialog({
     <Dialog open={!!c}>
       <DialogContent showCloseButton={false} className="sm:max-w-md" onEscapeKeyDown={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><AlertTriangle className="size-4 text-amber-600" /> This was changed elsewhere</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><AlertTriangle className="size-4 text-amber-600" /> {what === "theme" ? "The theme" : "This page"} was changed elsewhere</DialogTitle>
           <DialogDescription>
             {c?.updatedByName ?? "Someone"} saved a newer draft {c ? relativeTime(c.updatedAt) : ""}, maybe in another tab.
             Load their version, or keep yours and replace theirs.
@@ -681,7 +777,7 @@ function ConflictDialog({
             disabled={!!busy}
             onClick={async () => {
               setBusy("theirs");
-              const res = await loadDraftAction(site, documentId);
+              const res = await load();
               setBusy(null);
               if (!res.ok) return toast.error(res.error);
               onReplaced(res);

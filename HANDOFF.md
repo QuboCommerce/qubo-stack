@@ -151,8 +151,8 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    (`/[site]/…`), capability-driven sidebar, ⌘K palette, dashboard, paged
    products/customers, orders, themes and settings hub, and the Studio editor
    (`/[site]/studio/…`: Puck canvas, view picker, autosave, publish, history,
-   Add-section modal with live thumbnails). Still missing: product editor,
-   variant builder, media manager, theme settings UI. Unbuilt
+   Add-section modal with live thumbnails, Theme panel). Still missing: product editor,
+   variant builder, media manager. Unbuilt
    sections render a "roadmap" placeholder via `app/[site]/[...rest]`.
 5. **Legacy admin password was shared in chat** — rotate it.
 
@@ -218,6 +218,19 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    `?preview=` tokens). Drafts accept prop-level warnings; publish is strict.
    Integration tests (`pnpm --filter @peltier/studio test`) build a throwaway
    org and delete it via cascade.
+15. **Theme editing lives in the Studio** — the left rail's Theme tab
+   (`components/studio/theme/*`, or `studio?panel=theme`) edits the theme
+   *draft* next to the live canvas: palette tokens (OKLCH editor, lock,
+   "used by", safe rename), named schemes per mode with mixes, light/dark
+   strategy (collapse/expand), typography, radius/buttons/shadows, motion,
+   spacing, flavor, and the Palette Doctor with jump-to-fix. It has its own
+   undo history (`useThemeEditor`; top-bar undo/⌘Z follow it while the panel is
+   open) and autosaves through the same `useDocumentSync` as pages. Publish is
+   combined: theme first, then the page. Theme "unpublished" is compared after
+   `ThemeSchema` defaults, so authored vs. normalised copies match.
+   Fonts may declare `weights` (set from the admin font catalog);
+   `googleFontsUrl` snaps requested weights to them, so a family without 700
+   can't fail the css2 request.
 
 ## Roadmap
 
@@ -228,7 +241,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 - [x] Puck install + `page`/`pageRevision` schema in `peltier-admin`
 - [x] Rename `store` → `site` (+ `site.type`), move DB onto Supabase
 - [ ] Peltier Studio — Plan A foundation (stylekit, blocks, studio services done; media next)
-- [ ] Peltier Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings, B4 editor, B5 add-section done)
+- [ ] Peltier Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings, B4 editor, B5 add-section, B6 theme settings done)
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders
 - [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)

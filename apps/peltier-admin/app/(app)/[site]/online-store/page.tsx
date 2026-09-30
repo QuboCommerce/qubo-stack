@@ -6,7 +6,7 @@ import {
   FileText,
   Home,
   Lock,
-  MoreHorizontal,
+  Palette,
   Package,
   Paintbrush,
   Search,
@@ -110,7 +110,7 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
                 </div>
                 <div className="mt-auto flex flex-wrap gap-2 pt-2">
                   <Button asChild><Link href={`/${slug}/studio`}><Paintbrush /> Customize</Link></Button>
-                  <Button variant="outline" size="icon" aria-label="More actions"><MoreHorizontal /></Button>
+                  <Button variant="outline" asChild><Link href={`/${slug}/studio?panel=theme`}><Palette /> Theme settings</Link></Button>
                 </div>
               </div>
             </div>

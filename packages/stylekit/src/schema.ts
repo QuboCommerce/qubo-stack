@@ -148,6 +148,8 @@ export const FontSchema = z.object({
   fallback: z.string().default("system-ui, sans-serif"),
   source: z.enum(["system", "asset", "google"]).default("system"),
   files: z.array(FontFaceFileSchema).default([]),
+  /** Weights the source provides. Requests snap to these so a missing weight can't break the font load. */
+  weights: z.array(z.number().int().min(1).max(1000)).min(1).optional(),
 });
 export type Font = z.infer<typeof FontSchema>;
 

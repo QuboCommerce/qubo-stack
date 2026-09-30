@@ -117,6 +117,25 @@ describe("compile", () => {
     );
   });
 
+  it("snaps requested weights to the weights a font provides", () => {
+    const url = googleFontsUrl(
+      defineTheme({
+        ...minimal,
+        typeset: {
+          fonts: [{ id: "dm", family: "DM Serif Display", source: "google", weights: [400] }],
+          roles: {
+            display: { font: "dm", weight: 400 },
+            heading: { font: "dm", weight: 700 },
+            body: { font: "dm", weight: 400 },
+            accent: { font: "dm", weight: 600 },
+            mono: { font: "dm", weight: 500 },
+          },
+        },
+      }),
+    );
+    expect(url).toBe("https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400&display=swap");
+  });
+
   it("emits scoped tokens, schemes and buttons", () => {
     const { css, hash } = compileTheme(defineTheme(minimal));
     expect(css).toContain('[data-theme="mini"] {');
