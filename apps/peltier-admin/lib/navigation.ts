@@ -94,6 +94,7 @@ const groups: NavGroup[] = [
         icon: Paintbrush,
         children: [
           { label: "Themes", href: "/online-store" },
+          { label: "Block library", href: "/online-store/blocks" },
           { label: "Pages", href: "/online-store/pages" },
           { label: "Navigation", href: "/online-store/navigation" },
           { label: "Fonts", href: "/online-store/fonts" },

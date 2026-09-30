@@ -69,7 +69,7 @@ function Item({ item, base, pathname, mode, counts, onNavigate }: {
         <div className="relative mb-1 mt-0.5 space-y-0.5 pl-[1.625rem]">
           {item.children.map((child) => {
             const childHref = `${base}${child.href}`;
-            const childActive = pathname === childHref;
+            const childActive = child.href === item.href ? pathname === childHref : isActive(pathname, childHref);
             return (
               <Link
                 key={child.href}

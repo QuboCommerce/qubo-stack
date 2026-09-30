@@ -33,6 +33,7 @@ export const getUserSites = cache(async () => {
       type: site.type,
       capabilities: site.capabilities,
       currency: site.currency,
+      description: site.description,
       locale: site.locale,
       logo: site.logo,
       organizationId: site.organizationId,

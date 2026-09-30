@@ -6,6 +6,8 @@ import {
   form,
   formSubmission,
   order,
+  organizationMember,
+  siteDomain,
   product,
   productCategory,
   productImage,
@@ -222,4 +224,17 @@ export async function getTemplates(siteId: string) {
 
 export async function getLocales(siteId: string) {
   return db.select().from(siteLocale).where(eq(siteLocale.siteId, siteId)).orderBy(desc(siteLocale.isPrimary), siteLocale.locale);
+}
+
+export async function getDomains(siteId: string) {
+  return db.select().from(siteDomain).where(eq(siteDomain.siteId, siteId)).orderBy(desc(siteDomain.isPrimary), siteDomain.hostname);
+}
+
+export async function getMembers(organizationId: string) {
+  return db
+    .select({ id: organizationMember.id, role: organizationMember.role, since: organizationMember.createdAt, name: user.name, email: user.email, image: user.image })
+    .from(organizationMember)
+    .innerJoin(user, eq(user.id, organizationMember.userId))
+    .where(eq(organizationMember.organizationId, organizationId))
+    .orderBy(organizationMember.role, user.name);
 }

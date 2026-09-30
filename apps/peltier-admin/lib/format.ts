@@ -25,12 +25,15 @@ export function relativeTime(d: Date | string) {
   return shortDate(d);
 }
 
+export const supportedLocales = ["fr-BE", "nl-BE", "en", "fr", "nl", "de"] as const;
+
 export const localeLabel: Record<string, string> = {
   "fr-BE": "French (Belgium)",
   "nl-BE": "Dutch (Belgium)",
   en: "English",
   fr: "French",
   nl: "Dutch",
+  de: "German",
 };
 
 /** Legacy product images are served by the storefront; absolute URLs pass through. */

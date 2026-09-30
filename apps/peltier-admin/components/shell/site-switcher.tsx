@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Blocks, Building2, CalendarCheck, Check, ChevronsUpDown, Newspaper, Plus, Store, type LucideIcon } from "lucide-react";
+import { Check, ChevronsUpDown, Plus, Store } from "lucide-react";
+import { siteTypeIcon } from "@/lib/site-type-icons";
 import { cn } from "@peltier/shared/utils";
 import {
   DropdownMenu,
@@ -15,14 +16,6 @@ import {
 import { siteTypeLabel } from "@/lib/navigation";
 import { SiteAvatar } from "./peltier-mark";
 import type { ShellSite } from "./types";
-
-export const siteTypeIcon: Record<string, LucideIcon> = {
-  store: Store,
-  services: CalendarCheck,
-  business: Building2,
-  editorial: Newspaper,
-  custom: Blocks,
-};
 
 /** Keeps the current section when switching sites (/hm-froid/products → /tailg/products). */
 function switchHref(pathname: string, from: string, to: string) {

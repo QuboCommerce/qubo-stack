@@ -193,6 +193,19 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    derived from `site.capabilities` (`lib/navigation.ts`), so a services site
    never sees Orders/Products. Pages use `<Page width>` tiers and
    `@container` queries; breakpoints go up to `5xl` (3440px ultrawide).
+12. **Admin route groups** — `app/(app)` holds the admin (its own root layout +
+   `globals.css`); `app/(canvas)` is a bare root layout used for iframed block
+   previews (`/canvas/{site}/{BlockType}?preset=&mode=blueprint&theme=`), so
+   storefront blocks never inherit admin CSS. The block library
+   (`/{site}/online-store/blocks`) and inspector render through it.
+13. **Settings pattern** — two-pane shell (`components/settings/*`): the list
+   is the index on phones, a sticky sidebar from 52rem container width. Pages
+   use `SettingsGroup` (annotated layout ≥72rem) + `Surface`. Editable pages
+   wrap fields in `SettingsForm` (useActionState, Shopify contextual save bar,
+   ⌘S, discard, beforeunload, read-only for non OWNER/ADMIN). Its dirty
+   tracking uses native input/change listeners because `form.reset()` bypasses
+   React's value tracker. Section list lives in `components/settings/sections.ts`;
+   unbuilt sections render a placeholder via `settings/[section]`.
 
 ## Roadmap
 
@@ -203,7 +216,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 - [x] Puck install + `page`/`pageRevision` schema in `peltier-admin`
 - [x] Rename `store` → `site` (+ `site.type`), move DB onto Supabase
 - [ ] Peltier Studio — Plan A foundation (packages/stylekit, packages/blocks, documents, media)
-- [ ] Peltier Studio — Plan B native Studio UI
+- [ ] Peltier Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings done)
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders
 - [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)
