@@ -40,5 +40,5 @@ export const localeLabel: Record<string, string> = {
 export function assetUrl(url: string | null | undefined) {
   if (!url) return null;
   if (/^https?:\/\//.test(url)) return url;
-  return `${process.env.STOREFRONT_URL ?? process.env.NEXT_PUBLIC_MARKETING_URL ?? ""}${url}`;
+  return `${process.env.PUBLIC_ASSET_URL ?? process.env.STOREFRONT_URL ?? process.env.NEXT_PUBLIC_MARKETING_URL ?? ""}${url}`;
 }

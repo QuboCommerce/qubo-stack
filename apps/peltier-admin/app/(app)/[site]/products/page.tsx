@@ -1,4 +1,5 @@
-import { Archive, ArchiveRestore, ImageOff, Package, Plus, Upload } from "lucide-react";
+import Link from "next/link";
+import { Archive, ArchiveRestore, ImageOff, LayoutGrid, List, Package, Plus, Upload } from "lucide-react";
 import { toggleProductArchive } from "@/app/actions";
 import { IndexToolbar, Pagination, td, th } from "@/components/index-table";
 import { EmptyState, Page, Panel } from "@/components/page";
@@ -9,7 +10,7 @@ import { assetUrl, money, number, relativeTime } from "@/lib/format";
 import { getCatalogHealth, getProducts } from "@/lib/queries";
 import { cn } from "@peltier/shared/utils";
 
-type Search = { q?: string; status?: string; page?: string };
+type Search = { q?: string; status?: string; page?: string; view?: string };
 
 export default async function ProductsPage({ params, searchParams }: { params: Promise<{ site: string }>; searchParams: Promise<Search> }) {
   const [{ site: slug }, sp] = await Promise.all([params, searchParams]);
@@ -21,7 +22,10 @@ export default async function ProductsPage({ params, searchParams }: { params: P
     getCatalogHealth(siteId),
   ]);
   const base = `/${site.slug}/products`;
-  const qs = (p: number) => `${base}?status=${status}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}&page=${p}`;
+  const view = sp.view === "grid" ? "grid" : "list";
+  const keep = view === "grid" ? { view } : undefined;
+  const qs = (p: number) => `${base}?status=${status}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}${view === "grid" ? "&view=grid" : ""}&page=${p}`;
+  const viewHref = (v: string) => `${base}?status=${status}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}${v === "grid" ? "&view=grid" : ""}`;
   const currency = site.currency ?? "EUR";
 
   return (
@@ -31,7 +35,7 @@ export default async function ProductsPage({ params, searchParams }: { params: P
       actions={
         <>
           <Button variant="outline" size="sm" className="flex-1 xs:flex-none"><Upload /> Import</Button>
-          <Button size="sm" className="flex-1 xs:flex-none"><Plus /> Add product</Button>
+          <Button size="sm" className="flex-1 xs:flex-none" asChild><Link href={`/${site.slug}/products/new`}><Plus /> Add product</Link></Button>
         </>
       }
     >
@@ -46,6 +50,17 @@ export default async function ProductsPage({ params, searchParams }: { params: P
             active={status}
             q={sp.q}
             placeholder="Search by name, brand or handle"
+            keep={keep}
+            extra={
+              <div className="flex shrink-0 self-end rounded-lg border p-0.5 @min-[40rem]:self-auto" role="group" aria-label="View">
+                {([["list", List, "List view"], ["grid", LayoutGrid, "Grid view"]] as const).map(([id, Icon, label]) => (
+                  <Link key={id} href={viewHref(id)} title={label} aria-label={label} aria-current={view === id ? "true" : undefined}
+                    className={cn("grid size-7 place-items-center rounded-md transition-colors", view === id ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                    <Icon className="size-4" />
+                  </Link>
+                ))}
+              </div>
+            }
             tabs={[
               { id: "all", label: "All", count: health.total },
               { id: "active", label: "Active", count: health.active },
@@ -54,6 +69,34 @@ export default async function ProductsPage({ params, searchParams }: { params: P
           />
           {result.rows.length === 0 ? (
             <EmptyState icon={Package} title="No products found" description="Try changing the filters or search term." />
+          ) : view === "grid" ? (
+            <ul className="grid grid-cols-2 gap-3 p-3 @min-[36rem]:grid-cols-3 @min-[56rem]:grid-cols-4 @min-[72rem]:grid-cols-5 @min-[96rem]:grid-cols-6 @min-[120rem]:grid-cols-8">
+              {result.rows.map((p) => {
+                const img = assetUrl(p.image);
+                return (
+                  <li key={p.id}>
+                    <Link href={`${base}/${p.id}`} className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card transition hover:border-foreground/20 hover:shadow-md">
+                      <div className="relative grid aspect-square place-items-center bg-white p-3">
+                        {img ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={img} alt="" loading="lazy" className="size-full object-contain transition-transform group-hover:scale-[1.03]" />
+                        ) : (
+                          <ImageOff className="size-6 text-muted-foreground" />
+                        )}
+                        {p.isArchived && <Badge variant="secondary" className="absolute left-2 top-2">Archived</Badge>}
+                      </div>
+                      <div className="flex flex-1 flex-col gap-1 border-t p-3">
+                        <p className="line-clamp-2 text-[13px] font-medium leading-snug">{p.name}</p>
+                        <p className="mt-auto flex items-baseline justify-between gap-2 text-xs text-muted-foreground">
+                          <span className="font-semibold text-foreground tabular-nums">{money(p.basePrice, currency)}</span>
+                          <span className="truncate">{p.inventory == null ? "" : `${number(p.inventory)} in stock`}</span>
+                        </p>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-[13px]">
@@ -85,7 +128,7 @@ export default async function ProductsPage({ params, searchParams }: { params: P
                               )}
                             </div>
                             <div className="min-w-0">
-                              <p className="line-clamp-2 font-medium @min-[56rem]:line-clamp-1">{p.name}</p>
+                              <Link href={`${base}/${p.id}`} className="line-clamp-2 font-medium hover:underline @min-[56rem]:line-clamp-1">{p.name}</Link>
                               <p className="truncate text-xs text-muted-foreground">
                                 <span className="@min-[36rem]:hidden">{p.isArchived ? "Archived · " : ""}</span>
                                 {p.slug}

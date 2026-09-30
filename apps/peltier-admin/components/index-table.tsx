@@ -1,3 +1,4 @@
+import type React from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import { cn } from "@peltier/shared/utils";
@@ -9,20 +10,27 @@ export function IndexToolbar({
   active,
   q,
   placeholder = "Search",
+  keep,
+  extra,
 }: {
   basePath: string;
   tabs: { id: string; label: string; count?: number }[];
   active: string;
   q?: string;
   placeholder?: string;
+  /** Extra query params preserved by tabs and search (e.g. the view mode). */
+  keep?: Record<string, string>;
+  /** Rendered after the search box. */
+  extra?: React.ReactNode;
 }) {
+  const keepQs = keep ? Object.entries(keep).map(([k, v]) => `&${k}=${encodeURIComponent(v)}`).join("") : "";
   return (
     <div className="flex flex-col gap-2 border-b px-2 py-2 @min-[40rem]:flex-row @min-[40rem]:items-center">
       <nav className="-mx-0.5 flex gap-0.5 overflow-x-auto">
         {tabs.map((t) => (
           <Link
             key={t.id}
-            href={`${basePath}?status=${t.id}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
+            href={`${basePath}?status=${t.id}${q ? `&q=${encodeURIComponent(q)}` : ""}${keepQs}`}
             className={cn(
               "flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium transition-colors",
               active === t.id ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
@@ -35,6 +43,7 @@ export function IndexToolbar({
       </nav>
       <form className="relative @min-[40rem]:ml-auto @min-[40rem]:w-64 @min-[80rem]:w-80" action={basePath}>
         <input type="hidden" name="status" value={active} />
+        {keep && Object.entries(keep).map(([k, v]) => <input key={k} type="hidden" name={k} value={v} />)}
         <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <input
           name="q"
@@ -43,6 +52,7 @@ export function IndexToolbar({
           className="h-8 w-full rounded-lg border bg-background pl-8 pr-3 text-[13px] outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
         />
       </form>
+      {extra}
     </div>
   );
 }
