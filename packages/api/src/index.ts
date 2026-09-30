@@ -5,6 +5,7 @@ import { db } from "@peltier/db/client";
 import { auth } from "./lib/auth";
 import { catalog } from "./routes/catalog";
 import { sites } from "./routes/sites";
+import { studioPublic, studioRoutes } from "./routes/studio";
 
 const allowedOrigins = (process.env.PELTIER_TRUSTED_ORIGINS ?? "")
   .split(",")
@@ -31,6 +32,8 @@ export const app = new Elysia()
   // Better Auth owns every /api/auth/* route across the platform.
   .mount("/api/auth", auth.handler)
   .use(sites)
-  .use(catalog);
+  .use(catalog)
+  .use(studioRoutes)
+  .use(studioPublic);
 
 export type App = typeof app;

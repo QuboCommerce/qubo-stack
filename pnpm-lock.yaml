@@ -180,6 +180,9 @@ importers:
       '@peltier/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@peltier/studio':
+        specifier: workspace:*
+        version: link:../../packages/studio
       '@peltier/stylekit':
         specifier: workspace:*
         version: link:../../packages/stylekit
@@ -340,6 +343,9 @@ importers:
       '@peltier/shared':
         specifier: workspace:*
         version: link:../shared
+      '@peltier/studio':
+        specifier: workspace:*
+        version: link:../studio
       better-auth:
         specifier: ^1.2
         version: 1.6.26(drizzle-orm@0.44.7(bun-types@1.4.2)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9))(next@16.3.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -432,6 +438,34 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/studio:
+    dependencies:
+      '@peltier/blocks':
+        specifier: workspace:*
+        version: link:../blocks
+      '@peltier/db':
+        specifier: workspace:*
+        version: link:../db
+      '@peltier/stylekit':
+        specifier: workspace:*
+        version: link:../stylekit
+      drizzle-orm:
+        specifier: ^0.44
+        version: 0.44.7(bun-types@1.4.2)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9)
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.1
+      dotenv:
+        specifier: ^18.0.4
+        version: 18.0.4
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^5.0.2
+        version: 5.0.2(@types/node@22.20.1)(happy-dom@20.14.5)(vite@8.3.1(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/stylekit:
     dependencies:

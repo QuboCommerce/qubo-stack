@@ -17,6 +17,7 @@
     "@elysiajs/cors": "^1.2",
     "@peltier/db": "workspace:*",
     "@peltier/shared": "workspace:*",
+    "@peltier/studio": "workspace:*",
     "better-auth": "^1.2",
     "drizzle-orm": "^0.44",
     "elysia": "^1.2"

@@ -36,6 +36,7 @@ peltier-stack/                     Turborepo + pnpm workspace
 │   ├── shared/     @peltier/shared Zod validators, utils, constants
 │   ├── stylekit/   @peltier/stylekit themes: palette → schemes → CSS vars, Palette Doctor
 │   ├── blocks/     @peltier/blocks  schema-first Puck block library + render/editor configs
+│   ├── studio/     @peltier/studio  server services: documents, revisions, themes, translations, pages
 │   └── storefront/ @peltier/storefront typed client for storefronts → API
 ├── caddy/Caddyfile
 ├── scripts/                       legacy archive + importer + link-env
@@ -206,6 +207,15 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    tracking uses native input/change listeners because `form.reset()` bypasses
    React's value tracker. Section list lives in `components/settings/sections.ts`;
    unbuilt sections render a placeholder via `settings/[section]`.
+14. **Studio services** — `@peltier/studio` owns every Studio rule (site
+   scoping, optimistic `draftVersion`, migrate→validate on save, publish
+   revisions, restore/rollback, asset usage, translation staleness). The admin
+   calls it from server actions; `packages/api` exposes the same services at
+   `/studio/*` (admin, `If-Match` → 409) and `/render/*` (anonymous storefront
+   reads: published docs + locale overlay, `theme.css` with ETag, signed
+   `?preview=` tokens). Drafts accept prop-level warnings; publish is strict.
+   Integration tests (`pnpm --filter @peltier/studio test`) build a throwaway
+   org and delete it via cascade.
 
 ## Roadmap
 
@@ -215,7 +225,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 - [x] Multi-storefront seams (`@peltier/storefront`)
 - [x] Puck install + `page`/`pageRevision` schema in `peltier-admin`
 - [x] Rename `store` → `site` (+ `site.type`), move DB onto Supabase
-- [ ] Peltier Studio — Plan A foundation (packages/stylekit, packages/blocks, documents, media)
+- [ ] Peltier Studio — Plan A foundation (stylekit, blocks, studio services done; media next)
 - [ ] Peltier Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings done)
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders

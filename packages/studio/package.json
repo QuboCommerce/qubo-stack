@@ -1,0 +1,27 @@
+{
+  "name": "@peltier/studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Server-side Studio services: documents, revisions, themes, translations, previews. Shared by peltier-admin and the API.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./preview": "./src/preview.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@peltier/blocks": "workspace:*",
+    "@peltier/db": "workspace:*",
+    "@peltier/stylekit": "workspace:*",
+    "drizzle-orm": "^0.44"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "dotenv": "^18.0.4",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.2"
+  }
+}
