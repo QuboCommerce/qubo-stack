@@ -5,7 +5,7 @@ import { order, orderStatusHistory, product } from "@peltier/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { requireAdminContext } from "@/lib/admin";
+import { requireSiteFromForm } from "@/lib/admin";
 
 const idSchema = z.uuid();
 const orderStatusSchema = z.enum([
@@ -20,7 +20,7 @@ const orderStatusSchema = z.enum([
 ]);
 
 export async function toggleProductArchive(formData: FormData) {
-  const { siteId } = await requireAdminContext();
+  const { siteId, site } = await requireSiteFromForm(formData);
   const id = idSchema.parse(formData.get("id"));
   const archive = formData.get("archive") === "true";
 
@@ -30,13 +30,13 @@ export async function toggleProductArchive(formData: FormData) {
     .where(and(eq(product.id, id), eq(product.siteId, siteId)))
     .returning({ id: product.id });
 
-  if (!updated) throw new Error("Produit introuvable dans cette boutique.");
-  revalidatePath("/products");
-  revalidatePath("/");
+  if (!updated) throw new Error("Product not found on this site.");
+  revalidatePath(`/${site.slug}/products`);
+  revalidatePath(`/${site.slug}`);
 }
 
 export async function updateOrderStatus(formData: FormData) {
-  const { siteId, user: currentUser } = await requireAdminContext();
+  const { siteId, site, user: currentUser } = await requireSiteFromForm(formData);
   const id = idSchema.parse(formData.get("id"));
   const status = orderStatusSchema.parse(formData.get("status"));
 
@@ -47,7 +47,7 @@ export async function updateOrderStatus(formData: FormData) {
       .where(and(eq(order.id, id), eq(order.siteId, siteId)))
       .limit(1);
 
-    if (!existing) throw new Error("Commande introuvable dans cette boutique.");
+    if (!existing) throw new Error("Order not found on this site.");
     if (existing.status === status) return;
 
     const [updated] = await tx
@@ -66,7 +66,7 @@ export async function updateOrderStatus(formData: FormData) {
       )
       .returning({ id: order.id });
 
-    if (!updated) throw new Error("La commande a été modifiée. Réessayez.");
+    if (!updated) throw new Error("The order changed meanwhile. Try again.");
 
     await tx.insert(orderStatusHistory).values({
       orderId: id,
@@ -76,6 +76,6 @@ export async function updateOrderStatus(formData: FormData) {
     });
   });
 
-  revalidatePath("/orders");
-  revalidatePath("/");
+  revalidatePath(`/${site.slug}/orders`);
+  revalidatePath(`/${site.slug}`);
 }

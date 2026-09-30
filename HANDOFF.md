@@ -146,9 +146,11 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 2. **216 products missing.** 3949 of 4165 imported; 1172 duplicates collapsed,
    30 invalid. Admin reported 3174 active + 991 inactive.
 3. **No product descriptions or brands** in the source export.
-4. **`peltier-admin` is thin.** Read-only lists for products/orders/customers.
-   No product CRUD, no variant builder, no media manager. This is the real gap
-   between "skeleton" and "product".
+4. **`peltier-admin` has a real shell but little CRUD yet.** Site-scoped routes
+   (`/[site]/…`), capability-driven sidebar, ⌘K palette, dashboard, paged
+   products/customers, orders, themes and settings hub. Still missing: product
+   editor, variant builder, media manager, the Studio editor itself. Unbuilt
+   sections render a "roadmap" placeholder via `app/[site]/[...rest]`.
 5. **Legacy admin password was shared in chat** — rotate it.
 
 ## Key decisions
@@ -185,6 +187,12 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 10. **StyleKit roles are semantic** — `accent` is a fill (paired with
    `onAccent`); `accentText` is accent used as text (eyebrows, highlights) and
    falls back to `link`. Schemes reference palette tokens only.
+11. **Admin URLs are site-scoped** — `/{siteSlug}/products` etc. Layout calls
+   `requireSite(slug)` (membership check → 404). Server actions receive the
+   slug via a hidden `site` input and call `requireSiteFromForm`. Navigation is
+   derived from `site.capabilities` (`lib/navigation.ts`), so a services site
+   never sees Orders/Products. Pages use `<Page width>` tiers and
+   `@container` queries; breakpoints go up to `5xl` (3440px ultrawide).
 
 ## Roadmap
 
