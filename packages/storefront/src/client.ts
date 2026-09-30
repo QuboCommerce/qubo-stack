@@ -2,7 +2,7 @@ import type {
   CategoriesResponse,
   ProductDetailResponse,
   ProductListResponse,
-  StoreSummary,
+  SiteSummary,
 } from "./types";
 
 export class PeltierApiError extends Error {
@@ -19,8 +19,8 @@ export class PeltierApiError extends Error {
 export type StorefrontClientOptions = {
   /** Base URL of peltier-elysia, e.g. http://peltier-elysia:3333 */
   baseUrl?: string;
-  /** Store slug this storefront serves, e.g. "hm-froid" or "tailg-belgium". */
-  storeSlug: string;
+  /** Site slug this storefront serves, e.g. "hm-froid" or "tailg-belgium". */
+  siteSlug: string;
   /**
    * Forwarded so the API can resolve the logged-in customer and therefore
    * their reseller price list. Without this every caller sees list price.
@@ -33,7 +33,7 @@ export type StorefrontClientOptions = {
  * The single way a storefront talks to Peltier.
  *
  * Every storefront gets identical catalogue, pricing and tenancy behaviour by
- * construction, which is what makes adding a second store a configuration
+ * construction, which is what makes adding a second site a configuration
  * change rather than a port.
  */
 export function createStorefrontClient(options: StorefrontClientOptions) {
@@ -49,7 +49,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     const response = await doFetch(`${baseUrl}${path}`, {
       ...init,
       headers: {
-        "x-peltier-store": options.storeSlug,
+        "x-peltier-site": options.siteSlug,
         ...options.headers,
         ...init?.headers,
       },
@@ -70,10 +70,10 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
 
   return {
     baseUrl,
-    storeSlug: options.storeSlug,
+    siteSlug: options.siteSlug,
 
-    getStore: () =>
-      request<{ store: StoreSummary }>("/stores/current").then((r) => r.store),
+    getSite: () =>
+      request<{ site: SiteSummary }>("/sites/current").then((r) => r.site),
 
     getCategories: () =>
       request<CategoriesResponse>("/catalog/categories").then(

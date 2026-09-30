@@ -8,7 +8,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { productVariant } from "./variants";
-import { store } from "./store";
+import { site } from "./site";
 
 export const cartStatusEnum = pgEnum("cart_status", [
   "ACTIVE",
@@ -19,9 +19,9 @@ export const cartStatusEnum = pgEnum("cart_status", [
 
 export const cart = pgTable("cart", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
   sessionId: text("session_id"),
   status: cartStatusEnum("status").notNull().default("ACTIVE"),

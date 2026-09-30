@@ -7,13 +7,13 @@ import {
   boolean,
   integer,
 } from "drizzle-orm/pg-core";
-import { store } from "./store";
+import { site } from "./site";
 
 export const taxZone = pgTable("tax_zone", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   country: text("country").notNull(),
   state: text("state"),

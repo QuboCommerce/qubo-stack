@@ -1,16 +1,19 @@
 import { db } from "@peltier/db/client";
 import {
   organizationMember,
-  store,
-  storeDomain,
+  site,
+  siteDomain,
   user,
 } from "@peltier/db/schema";
 import { and, eq } from "drizzle-orm";
 
-export type StoreContext = {
+export type SiteType = (typeof site.$inferSelect)["type"];
+
+export type SiteContext = {
   id: string;
   slug: string;
   name: string;
+  type: SiteType;
   currency: string;
   locale: string;
   organizationId: string;
@@ -23,34 +26,35 @@ export type ActorContext = {
 };
 
 /**
- * Resolves which store a request is acting on.
+ * Resolves which site a request is acting on.
  *
  * Order of precedence:
- *   1. `x-peltier-store` header  — used by peltier-admin's store switcher
+ *   1. `x-peltier-site` header  — used by peltier-admin's site switcher
  *   2. request hostname          — used by storefronts via store_domain
  *
  * Every tenant-scoped query must go through this. Trusting a caller-supplied
- * store id without the membership check in `assertStoreAccess` would let any
+ * site id without the membership check in `assertSiteAccess` would let any
  * authenticated user read another tenant's catalogue.
  */
-export async function resolveStore(
+export async function resolveSite(
   headers: Headers,
-): Promise<StoreContext | null> {
+): Promise<SiteContext | null> {
   const columns = {
-    id: store.id,
-    slug: store.slug,
-    name: store.name,
-    currency: store.currency,
-    locale: store.locale,
-    organizationId: store.organizationId,
+    id: site.id,
+    slug: site.slug,
+    name: site.name,
+    type: site.type,
+    currency: site.currency,
+    locale: site.locale,
+    organizationId: site.organizationId,
   };
 
-  const slug = headers.get("x-peltier-store")?.trim();
+  const slug = headers.get("x-peltier-site")?.trim();
   if (slug) {
     const [row] = await db
       .select(columns)
-      .from(store)
-      .where(eq(store.slug, slug))
+      .from(site)
+      .where(eq(site.slug, slug))
       .limit(1);
     return row ?? null;
   }
@@ -64,9 +68,9 @@ export async function resolveStore(
 
   const [row] = await db
     .select(columns)
-    .from(storeDomain)
-    .innerJoin(store, eq(store.id, storeDomain.storeId))
-    .where(eq(storeDomain.hostname, host))
+    .from(siteDomain)
+    .innerJoin(site, eq(site.id, siteDomain.siteId))
+    .where(eq(siteDomain.hostname, host))
     .limit(1);
 
   return row ?? null;
@@ -88,12 +92,12 @@ export async function resolveActor(
 }
 
 /**
- * Confirms the actor may administer the given store. Storefront reads do not
+ * Confirms the actor may administer the given site. Storefront reads do not
  * need this; anything that mutates or exposes back-office data does.
  */
-export async function assertStoreAccess(
+export async function assertSiteAccess(
   actor: ActorContext | null,
-  storeContext: StoreContext,
+  siteContext: SiteContext,
 ): Promise<boolean> {
   if (!actor) return false;
   if (!["ADMIN", "STAFF"].includes(actor.role)) return false;
@@ -104,7 +108,7 @@ export async function assertStoreAccess(
     .where(
       and(
         eq(organizationMember.userId, actor.id),
-        eq(organizationMember.organizationId, storeContext.organizationId),
+        eq(organizationMember.organizationId, siteContext.organizationId),
       ),
     )
     .limit(1);
@@ -112,22 +116,23 @@ export async function assertStoreAccess(
   return Boolean(membership);
 }
 
-/** Every store the actor can switch between, for the admin store picker. */
-export async function listAccessibleStores(actor: ActorContext) {
+/** Every site the actor can switch between, for the admin site picker. */
+export async function listAccessibleSites(actor: ActorContext) {
   return db
     .select({
-      id: store.id,
-      slug: store.slug,
-      name: store.name,
-      currency: store.currency,
-      locale: store.locale,
-      organizationId: store.organizationId,
+      id: site.id,
+      slug: site.slug,
+      name: site.name,
+      type: site.type,
+      currency: site.currency,
+      locale: site.locale,
+      organizationId: site.organizationId,
     })
     .from(organizationMember)
     .innerJoin(
-      store,
-      eq(store.organizationId, organizationMember.organizationId),
+      site,
+      eq(site.organizationId, organizationMember.organizationId),
     )
     .where(eq(organizationMember.userId, actor.id))
-    .orderBy(store.name);
+    .orderBy(site.name);
 }

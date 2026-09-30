@@ -9,7 +9,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { product } from "./catalog";
-import { store } from "./store";
+import { site } from "./site";
 
 export const productOption = pgTable("product_option", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -34,9 +34,9 @@ export const productVariant = pgTable(
   "product_variant",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     productId: uuid("product_id")
       .notNull()
       .references(() => product.id, { onDelete: "cascade" }),
@@ -54,9 +54,9 @@ export const productVariant = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("variant_store_sku_idx").on(table.storeId, table.sku),
+    uniqueIndex("variant_site_sku_idx").on(table.siteId, table.sku),
     uniqueIndex("variant_legacy_source_idx").on(
-      table.storeId,
+      table.siteId,
       table.legacySystem,
       table.legacyId,
     ),

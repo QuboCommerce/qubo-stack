@@ -20,14 +20,14 @@ const orderStatusSchema = z.enum([
 ]);
 
 export async function toggleProductArchive(formData: FormData) {
-  const { storeId } = await requireAdminContext();
+  const { siteId } = await requireAdminContext();
   const id = idSchema.parse(formData.get("id"));
   const archive = formData.get("archive") === "true";
 
   const [updated] = await db
     .update(product)
     .set({ isArchived: archive, updatedAt: new Date() })
-    .where(and(eq(product.id, id), eq(product.storeId, storeId)))
+    .where(and(eq(product.id, id), eq(product.siteId, siteId)))
     .returning({ id: product.id });
 
   if (!updated) throw new Error("Produit introuvable dans cette boutique.");
@@ -36,7 +36,7 @@ export async function toggleProductArchive(formData: FormData) {
 }
 
 export async function updateOrderStatus(formData: FormData) {
-  const { storeId, user: currentUser } = await requireAdminContext();
+  const { siteId, user: currentUser } = await requireAdminContext();
   const id = idSchema.parse(formData.get("id"));
   const status = orderStatusSchema.parse(formData.get("status"));
 
@@ -44,7 +44,7 @@ export async function updateOrderStatus(formData: FormData) {
     const [existing] = await tx
       .select({ status: order.status })
       .from(order)
-      .where(and(eq(order.id, id), eq(order.storeId, storeId)))
+      .where(and(eq(order.id, id), eq(order.siteId, siteId)))
       .limit(1);
 
     if (!existing) throw new Error("Commande introuvable dans cette boutique.");
@@ -60,7 +60,7 @@ export async function updateOrderStatus(formData: FormData) {
       .where(
         and(
           eq(order.id, id),
-          eq(order.storeId, storeId),
+          eq(order.siteId, siteId),
           eq(order.status, existing.status),
         ),
       )

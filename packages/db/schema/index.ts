@@ -1,10 +1,10 @@
 // Auth
 export * from "./auth";
 
-// Store
-export * from "./store";
+// Site
+export * from "./site";
 
-// Store customers & price lists
+// Site customers & price lists
 export * from "./customers";
 export * from "./pricing";
 

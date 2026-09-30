@@ -9,16 +9,16 @@ import {
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { product } from "./catalog";
-import { store } from "./store";
+import { site } from "./site";
 import { productVariant } from "./variants";
 
 export const customerGroup = pgTable(
   "customer_group",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     legacySystem: text("legacy_system"),
@@ -27,7 +27,7 @@ export const customerGroup = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("customer_group_store_slug_idx").on(table.storeId, table.slug),
+    uniqueIndex("customer_group_site_slug_idx").on(table.siteId, table.slug),
   ],
 );
 
@@ -52,9 +52,9 @@ export const priceList = pgTable(
   "price_list",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     customerGroupId: uuid("customer_group_id").references(
       () => customerGroup.id,
       { onDelete: "set null" },
@@ -70,7 +70,7 @@ export const priceList = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("price_list_store_slug_idx").on(table.storeId, table.slug),
+    uniqueIndex("price_list_site_slug_idx").on(table.siteId, table.slug),
   ],
 );
 

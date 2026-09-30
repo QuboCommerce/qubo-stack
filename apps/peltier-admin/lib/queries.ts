@@ -5,25 +5,25 @@ import {
   order,
   product,
   productVariant,
-  storeCustomer,
+  siteCustomer,
   user,
 } from "@peltier/db/schema";
 import { and, count, desc, eq, sql } from "drizzle-orm";
 import { requireAdminContext } from "@/lib/admin";
 
 export async function getDashboardData() {
-  const { storeId } = await requireAdminContext();
+  const { siteId } = await requireAdminContext();
   const [[products], [customers], [orders], [revenue], recentOrders] =
     await Promise.all([
-      db.select({ value: count() }).from(product).where(eq(product.storeId, storeId)),
-      db.select({ value: count() }).from(storeCustomer).where(eq(storeCustomer.storeId, storeId)),
-      db.select({ value: count() }).from(order).where(eq(order.storeId, storeId)),
+      db.select({ value: count() }).from(product).where(eq(product.siteId, siteId)),
+      db.select({ value: count() }).from(siteCustomer).where(eq(siteCustomer.siteId, siteId)),
+      db.select({ value: count() }).from(order).where(eq(order.siteId, siteId)),
       db
         .select({ value: sql<string>`coalesce(sum(${order.total}), 0)` })
         .from(order)
         .where(
           and(
-            eq(order.storeId, storeId),
+            eq(order.siteId, siteId),
             sql`${order.status} not in ('CANCELLED', 'REFUNDED')`,
           ),
         ),
@@ -40,7 +40,7 @@ export async function getDashboardData() {
 }
 
 export async function getProducts() {
-  const { storeId } = await requireAdminContext();
+  const { siteId } = await requireAdminContext();
   return db
     .select({
       id: product.id,
@@ -56,36 +56,36 @@ export async function getProducts() {
       productVariant,
       and(
         eq(productVariant.productId, product.id),
-        eq(productVariant.storeId, storeId),
+        eq(productVariant.siteId, siteId),
       ),
     )
-    .where(eq(product.storeId, storeId))
+    .where(eq(product.siteId, siteId))
     .groupBy(product.id)
     .orderBy(desc(product.updatedAt))
     .limit(200);
 }
 
 export async function getCustomers() {
-  const { storeId } = await requireAdminContext();
+  const { siteId } = await requireAdminContext();
   return db
     .select({
-      id: storeCustomer.id,
-      firstName: storeCustomer.firstName,
-      lastName: storeCustomer.lastName,
-      email: storeCustomer.email,
-      phone: storeCustomer.phone,
-      company: storeCustomer.company,
-      acceptsMarketing: storeCustomer.acceptsMarketing,
-      createdAt: storeCustomer.createdAt,
+      id: siteCustomer.id,
+      firstName: siteCustomer.firstName,
+      lastName: siteCustomer.lastName,
+      email: siteCustomer.email,
+      phone: siteCustomer.phone,
+      company: siteCustomer.company,
+      acceptsMarketing: siteCustomer.acceptsMarketing,
+      createdAt: siteCustomer.createdAt,
     })
-    .from(storeCustomer)
-    .where(eq(storeCustomer.storeId, storeId))
-    .orderBy(desc(storeCustomer.createdAt))
+    .from(siteCustomer)
+    .where(eq(siteCustomer.siteId, siteId))
+    .orderBy(desc(siteCustomer.createdAt))
     .limit(200);
 }
 
 export async function getOrders(limit = 200) {
-  const { storeId } = await requireAdminContext();
+  const { siteId } = await requireAdminContext();
   return db
     .select({
       id: order.id,
@@ -99,7 +99,7 @@ export async function getOrders(limit = 200) {
     })
     .from(order)
     .leftJoin(user, eq(user.id, order.customerId))
-    .where(eq(order.storeId, storeId))
+    .where(eq(order.siteId, siteId))
     .orderBy(desc(order.createdAt))
     .limit(limit);
 }

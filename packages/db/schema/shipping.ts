@@ -7,7 +7,7 @@ import {
   decimal,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { store } from "./store";
+import { site } from "./site";
 import { order } from "./orders";
 
 export const shippingRateTypeEnum = pgEnum("shipping_rate_type", [
@@ -27,9 +27,9 @@ export const shipmentStatusEnum = pgEnum("shipment_status", [
 
 export const shippingZone = pgTable("shipping_zone", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   countries: text("countries").array().notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

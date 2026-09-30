@@ -108,10 +108,10 @@ export const postSchema = z.object({
 });
 
 // ============================================================================
-// Store Settings
+// Site Settings
 // ============================================================================
 
-export const storeSettingsSchema = z.object({
+export const siteSettingsSchema = z.object({
   maintenanceMode: z.boolean(),
   maintenanceMessage: z.string().optional(),
   maintenanceEnd: z.string().optional(),
@@ -132,4 +132,4 @@ export type AddressInput = z.infer<typeof addressSchema>;
 export type CheckoutInput = z.infer<typeof checkoutSchema>;
 export type DiscountInput = z.infer<typeof discountSchema>;
 export type PostInput = z.infer<typeof postSchema>;
-export type StoreSettingsInput = z.infer<typeof storeSettingsSchema>;
+export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>;

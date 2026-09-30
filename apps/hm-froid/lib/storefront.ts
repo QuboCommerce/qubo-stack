@@ -8,7 +8,7 @@ import {
   productCategory,
   productImage,
   productVariant,
-  store,
+  site,
 } from "@peltier/db";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
@@ -31,24 +31,24 @@ export type StorefrontVariant = {
   available: number | null;
 };
 
-function getStoreSlug() {
-  return process.env.STOREFRONT_STORE_SLUG?.trim() || "hm-froid";
+function getSiteSlug() {
+  return process.env.STOREFRONT_SITE_SLUG?.trim() || "hm-froid";
 }
 
-export async function getStore() {
-  return db.query.store.findFirst({
-    where: eq(store.slug, getStoreSlug()),
+export async function getSite() {
+  return db.query.site.findFirst({
+    where: eq(site.slug, getSiteSlug()),
   });
 }
 
 export async function getCategories() {
-  const currentStore = await getStore();
-  if (!currentStore) return [];
+  const currentSite = await getSite();
+  if (!currentSite) return [];
 
   return db
     .select({ name: category.name, slug: category.slug })
     .from(category)
-    .where(eq(category.storeId, currentStore.id))
+    .where(eq(category.siteId, currentSite.id))
     .orderBy(asc(category.position), asc(category.name));
 }
 
@@ -57,11 +57,11 @@ export async function getProducts(input: {
   categorySlug?: string;
   limit?: number;
 }) {
-  const currentStore = await getStore();
-  if (!currentStore) return [];
+  const currentSite = await getSite();
+  if (!currentSite) return [];
 
   const conditions = [
-    eq(product.storeId, currentStore.id),
+    eq(product.siteId, currentSite.id),
     eq(product.isArchived, false),
   ];
 
@@ -79,7 +79,7 @@ export async function getProducts(input: {
   if (input.categorySlug) {
     const matchingCategory = await db.query.category.findFirst({
       where: and(
-        eq(category.storeId, currentStore.id),
+        eq(category.siteId, currentSite.id),
         eq(category.slug, input.categorySlug),
       ),
     });
@@ -120,12 +120,12 @@ export async function getProducts(input: {
 }
 
 export async function getProduct(slug: string) {
-  const currentStore = await getStore();
-  if (!currentStore) return null;
+  const currentSite = await getSite();
+  if (!currentSite) return null;
 
   const item = await db.query.product.findFirst({
     where: and(
-      eq(product.storeId, currentStore.id),
+      eq(product.siteId, currentSite.id),
       eq(product.slug, slug),
       eq(product.isArchived, false),
     ),

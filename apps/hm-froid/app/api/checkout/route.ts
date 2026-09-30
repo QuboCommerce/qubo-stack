@@ -3,7 +3,7 @@ import {
   inventoryItem,
   product,
   productVariant,
-  store,
+  site,
 } from "@peltier/db";
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -37,11 +37,11 @@ export async function POST(request: Request) {
       return Response.json({ error: "Panier invalide." }, { status: 400 });
     }
 
-    const storeSlug = process.env.STOREFRONT_STORE_SLUG?.trim() || "hm-froid";
-    const currentStore = await db.query.store.findFirst({
-      where: eq(store.slug, storeSlug),
+    const siteSlug = process.env.STOREFRONT_SITE_SLUG?.trim() || "hm-froid";
+    const currentSite = await db.query.site.findFirst({
+      where: eq(site.slug, siteSlug),
     });
-    if (!currentStore) {
+    if (!currentSite) {
       return Response.json({ error: "Boutique indisponible." }, { status: 503 });
     }
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
       .leftJoin(inventoryItem, eq(inventoryItem.variantId, productVariant.id))
       .where(
         and(
-          eq(productVariant.storeId, currentStore.id),
+          eq(productVariant.siteId, currentSite.id),
           eq(product.isArchived, false),
           inArray(productVariant.id, [...requested.keys()]),
         ),
@@ -106,10 +106,10 @@ export async function POST(request: Request) {
       );
       form.set(
         "shipping_options[0][shipping_rate_data][fixed_amount][currency]",
-        currentStore.currency.toLowerCase(),
+        currentSite.currency.toLowerCase(),
       );
     }
-    form.set("metadata[store_id]", currentStore.id);
+    form.set("metadata[site_id]", currentSite.id);
     form.set(
       "metadata[cart]",
       parsed.data.items
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
         throw new Error(`Prix invalide pour ${variant.productName}.`);
       }
       form.set(`line_items[${index}][quantity]`, String(quantity));
-      form.set(`line_items[${index}][price_data][currency]`, currentStore.currency.toLowerCase());
+      form.set(`line_items[${index}][price_data][currency]`, currentSite.currency.toLowerCase());
       form.set(`line_items[${index}][price_data][unit_amount]`, String(cents));
       form.set(
         `line_items[${index}][price_data][product_data][name]`,

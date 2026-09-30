@@ -1,24 +1,24 @@
 import { Elysia } from "elysia";
 import { db } from "@peltier/db/client";
-import { order, product, storeCustomer } from "@peltier/db/schema";
+import { order, product, siteCustomer } from "@peltier/db/schema";
 import { and, count, eq, sql } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
-import { assertStoreAccess, listAccessibleStores } from "../lib/tenancy";
+import { assertSiteAccess, listAccessibleSites } from "../lib/tenancy";
 
-export const stores = new Elysia({ prefix: "/stores" })
+export const sites = new Elysia({ prefix: "/sites" })
   .use(tenancy)
-  /** Powers the admin store switcher. */
+  /** Powers the admin site switcher. */
   .get("/", async ({ actor, status }) => {
     if (!actor) return status(401, { error: "unauthenticated" });
-    return { stores: await listAccessibleStores(actor) };
+    return { sites: await listAccessibleSites(actor) };
   })
-  .get("/current", async ({ store, status }) => {
-    if (!store) return status(400, { error: "store_not_resolved" });
-    return { store };
+  .get("/current", async ({ site, status }) => {
+    if (!site) return status(400, { error: "site_not_resolved" });
+    return { site };
   })
-  .get("/current/stats", async ({ store, actor, status }) => {
-    if (!store) return status(400, { error: "store_not_resolved" });
-    if (!(await assertStoreAccess(actor, store))) {
+  .get("/current/stats", async ({ site, actor, status }) => {
+    if (!site) return status(400, { error: "site_not_resolved" });
+    if (!(await assertSiteAccess(actor, site))) {
       return status(403, { error: "forbidden" });
     }
 
@@ -26,29 +26,29 @@ export const stores = new Elysia({ prefix: "/stores" })
       db
         .select({ value: count() })
         .from(product)
-        .where(eq(product.storeId, store.id)),
+        .where(eq(product.siteId, site.id)),
       db
         .select({ value: count() })
-        .from(storeCustomer)
-        .where(eq(storeCustomer.storeId, store.id)),
+        .from(siteCustomer)
+        .where(eq(siteCustomer.siteId, site.id)),
       db
         .select({ value: count() })
         .from(order)
-        .where(eq(order.storeId, store.id)),
+        .where(eq(order.siteId, site.id)),
       db
         .select({ value: sql<string>`coalesce(sum(${order.total}), 0)` })
         .from(order)
         .where(
           and(
-            eq(order.storeId, store.id),
+            eq(order.siteId, site.id),
             sql`${order.status} not in ('CANCELLED', 'REFUNDED')`,
           ),
         ),
     ]);
 
     return {
-      store: store.slug,
-      currency: store.currency,
+      site: site.slug,
+      currency: site.currency,
       productCount: products.value,
       customerCount: customers.value,
       orderCount: orders.value,

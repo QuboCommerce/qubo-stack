@@ -8,7 +8,7 @@ import {
   boolean,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { store } from "./store";
+import { site } from "./site";
 import { order } from "./orders";
 import { user } from "./auth";
 
@@ -27,9 +27,9 @@ export const discountConditionTypeEnum = pgEnum("discount_condition_type", [
 
 export const discount = pgTable("discount", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   code: text("code").notNull().unique(),
   type: discountTypeEnum("type").notNull(),
   value: decimal("value", { precision: 10, scale: 2 }).notNull(),

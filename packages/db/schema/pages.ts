@@ -10,7 +10,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { store } from "./store";
+import { site } from "./site";
 
 export const publishStateEnum = pgEnum("publish_state", [
   "DRAFT",
@@ -28,9 +28,9 @@ export const page = pgTable(
   "page",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     slug: text("slug").notNull(),
     title: text("title").notNull(),
     locale: text("locale").notNull().default("fr-BE"),
@@ -50,9 +50,9 @@ export const page = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    // Same slug may exist per locale, but not twice within one store+locale.
-    uniqueIndex("page_store_locale_slug_idx").on(
-      table.storeId,
+    // Same slug may exist per locale, but not twice within one site+locale.
+    uniqueIndex("page_site_locale_slug_idx").on(
+      table.siteId,
       table.locale,
       table.slug,
     ),
@@ -87,9 +87,9 @@ export const navigation = pgTable(
   "navigation",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     handle: text("handle").notNull(),
     locale: text("locale").notNull().default("fr-BE"),
     items: jsonb("items").notNull().default([]),
@@ -97,8 +97,8 @@ export const navigation = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("navigation_store_locale_handle_idx").on(
-      table.storeId,
+    uniqueIndex("navigation_site_locale_handle_idx").on(
+      table.siteId,
       table.locale,
       table.handle,
     ),
@@ -113,9 +113,9 @@ export const redirect = pgTable(
   "redirect",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     fromPath: text("from_path").notNull(),
     toPath: text("to_path").notNull(),
     statusCode: integer("status_code").notNull().default(301),
@@ -123,6 +123,6 @@ export const redirect = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("redirect_store_from_idx").on(table.storeId, table.fromPath),
+    uniqueIndex("redirect_site_from_idx").on(table.siteId, table.fromPath),
   ],
 );

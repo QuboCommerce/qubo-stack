@@ -19,7 +19,7 @@ export async function AdminShell({ children }: { children: React.ReactNode }) {
         <div className="border-b px-6 py-5">
           <p className="text-lg font-semibold">HM Froid</p>
           <p className="truncate text-sm text-muted-foreground">
-            {context.storeName}
+            {context.siteName}
           </p>
         </div>
         <nav className="space-y-1 p-3">

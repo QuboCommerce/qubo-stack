@@ -9,15 +9,15 @@ import {
   jsonb,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { store } from "./store";
+import { site } from "./site";
 
 export const category = pgTable(
   "category",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),
@@ -31,9 +31,9 @@ export const category = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("category_store_slug_idx").on(table.storeId, table.slug),
+    uniqueIndex("category_site_slug_idx").on(table.siteId, table.slug),
     uniqueIndex("category_legacy_source_idx").on(
-      table.storeId,
+      table.siteId,
       table.legacySystem,
       table.legacyId,
     ),
@@ -44,9 +44,9 @@ export const product = pgTable(
   "product",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     description: text("description"),
@@ -71,9 +71,9 @@ export const product = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("product_store_slug_idx").on(table.storeId, table.slug),
+    uniqueIndex("product_site_slug_idx").on(table.siteId, table.slug),
     uniqueIndex("product_legacy_source_idx").on(
-      table.storeId,
+      table.siteId,
       table.legacySystem,
       table.legacyId,
     ),
@@ -103,13 +103,13 @@ export const tag = pgTable(
   "tag",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
   },
-  (table) => [uniqueIndex("tag_store_slug_idx").on(table.storeId, table.slug)],
+  (table) => [uniqueIndex("tag_site_slug_idx").on(table.siteId, table.slug)],
 );
 
 export const productTag = pgTable("product_tag", {

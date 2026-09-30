@@ -36,7 +36,7 @@ export type ResolvedPrice = {
 
 /** Active price lists that apply to this user, most specific group first. */
 export async function getApplicablePriceLists(
-  storeId: string,
+  siteId: string,
   userId: string | null,
 ) {
   const groupIds = userId
@@ -65,7 +65,7 @@ export async function getApplicablePriceLists(
     .from(priceList)
     .where(
       and(
-        eq(priceList.storeId, storeId),
+        eq(priceList.siteId, siteId),
         eq(priceList.isActive, true),
         groupCondition,
         // Compared in SQL so validity windows use the database clock.
@@ -82,7 +82,7 @@ export async function getApplicablePriceLists(
  * because product listings resolve 48+ prices per page.
  */
 export async function resolvePrices(
-  storeId: string,
+  siteId: string,
   userId: string | null,
   items: PriceInput[],
 ): Promise<Map<string, ResolvedPrice>> {
@@ -94,7 +94,7 @@ export async function resolvePrices(
       ? { amount: item.variantPrice, source: "variant", priceListId: null }
       : { amount: item.basePrice, source: "base", priceListId: null };
 
-  const lists = await getApplicablePriceLists(storeId, userId);
+  const lists = await getApplicablePriceLists(siteId, userId);
   if (!lists.length) {
     for (const item of items) result.set(keyOf(item), fallback(item));
     return result;

@@ -6,7 +6,7 @@ import {
   boolean,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { store } from "./store";
+import { site } from "./site";
 import { order } from "./orders";
 import { user } from "./auth";
 
@@ -18,9 +18,9 @@ export const discussionStatusEnum = pgEnum("discussion_status", [
 
 export const discussion = pgTable("discussion", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   orderId: uuid("order_id").references(() => order.id, {
     onDelete: "set null",
   }),

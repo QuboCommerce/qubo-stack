@@ -1,22 +1,22 @@
 import type { MetadataRoute } from "next";
-import { db, product, store } from "@peltier/db";
+import { db, product, site } from "@peltier/db";
 import { and, eq } from "drizzle-orm";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = (
     process.env.STOREFRONT_URL?.trim() || "https://hmfroid.be"
   ).replace(/\/$/, "");
-  const storeSlug = process.env.STOREFRONT_STORE_SLUG?.trim() || "hm-froid";
-  const currentStore = await db.query.store.findFirst({
-    where: eq(store.slug, storeSlug),
+  const siteSlug = process.env.STOREFRONT_SITE_SLUG?.trim() || "hm-froid";
+  const currentSite = await db.query.site.findFirst({
+    where: eq(site.slug, siteSlug),
   });
-  const products = currentStore
+  const products = currentSite
     ? await db
         .select({ slug: product.slug, updatedAt: product.updatedAt })
         .from(product)
         .where(
           and(
-            eq(product.storeId, currentStore.id),
+            eq(product.siteId, currentSite.id),
             eq(product.isArchived, false),
           ),
         )

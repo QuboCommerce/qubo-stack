@@ -47,10 +47,15 @@ const sessionSchema = z.object({
     .nullable()
     .optional(),
   payment_method_types: z.array(z.string()).optional(),
-  metadata: z.object({
-    store_id: z.string().uuid(),
-    cart: z.string().min(1).max(500),
-  }),
+  metadata: z
+    .object({
+      site_id: z.string().uuid().optional(),
+      // Sessions created before the store -> site rename carry `store_id`.
+      store_id: z.string().uuid().optional(),
+      cart: z.string().min(1).max(500),
+    })
+    .refine((m) => m.site_id ?? m.store_id, { message: "site_id missing" })
+    .transform(({ store_id, ...m }) => ({ ...m, site_id: (m.site_id ?? store_id)! })),
 });
 
 const eventSchema = z.object({
@@ -118,7 +123,7 @@ export async function POST(request: Request) {
       .innerJoin(product, eq(product.id, productVariant.productId))
       .where(
         and(
-          eq(productVariant.storeId, session.metadata.store_id),
+          eq(productVariant.siteId, session.metadata.site_id),
           inArray(productVariant.id, variantIds),
         ),
       )
@@ -153,7 +158,7 @@ export async function POST(request: Request) {
       const [createdOrder] = await tx
         .insert(orderTable)
         .values({
-          storeId: session.metadata.store_id,
+          siteId: session.metadata.site_id,
           customerEmail: session.customer_details?.email ?? null,
           customerName:
             session.customer_details?.name ??

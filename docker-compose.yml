@@ -81,7 +81,7 @@ services:
       - NEXT_PUBLIC_PANEL_URL=https://admin.peltier.be
       - NEXT_PUBLIC_MARKETING_URL=https://hmfroid.be
       - STOREFRONT_URL=https://hmfroid.be
-      - STOREFRONT_STORE_SLUG=hm-froid
+      - STOREFRONT_SITE_SLUG=hm-froid
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
       - HMF_SHIPPING_RATE_CENTS=${HMF_SHIPPING_RATE_CENTS:-0}

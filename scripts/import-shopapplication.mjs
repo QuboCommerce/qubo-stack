@@ -227,7 +227,8 @@ async function importDatabase(products, customers) {
 
   const sql = postgres(databaseUrl, { max: 1 });
   const organizationId = stableUuid("organization", "wooster");
-  const storeId = stableUuid("store", "hm-froid");
+  // Namespace stays "store": changing it would mint new ids on re-import.
+  const siteId = stableUuid("store", "hm-froid");
   const defaultGroupId = stableUuid("customer-group", "hm-froid:default");
   const resellerGroupId = stableUuid("customer-group", "hm-froid:resellers");
   const defaultPriceListId = stableUuid("price-list", "hm-froid:default");
@@ -244,45 +245,45 @@ async function importDatabase(products, customers) {
       await tx`insert into organization_member (id, organization_id, user_id, role)
         values (${stableUuid("organization-member", `${organizationId}:${ownerId}`)}, ${organizationId}, ${ownerId}, 'OWNER')
         on conflict (organization_id, user_id) do update set role = 'OWNER'`;
-      await tx`insert into store (id, organization_id, name, slug, owner_id, currency, locale)
-        values (${storeId}, ${organizationId}, 'HM Froid', 'hm-froid', ${ownerId}, 'EUR', 'fr-BE')
+      await tx`insert into site (id, organization_id, name, slug, owner_id, currency, locale)
+        values (${siteId}, ${organizationId}, 'HM Froid', 'hm-froid', ${ownerId}, 'EUR', 'fr-BE')
         on conflict (slug) do update set name = excluded.name, organization_id = excluded.organization_id`;
-      await tx`insert into store_settings (id, store_id, timezone)
-        values (${stableUuid("store-settings", storeId)}, ${storeId}, 'Europe/Brussels')
-        on conflict (store_id) do nothing`;
+      await tx`insert into site_settings (id, site_id, timezone)
+        values (${stableUuid("store-settings", siteId)}, ${siteId}, 'Europe/Brussels')
+        on conflict (site_id) do nothing`;
 
       for (const [id, name, slug, legacyId] of [
         [defaultGroupId, "Défaut", "default", "1"],
         [resellerGroupId, "Revendeurs", "resellers", "4"],
       ]) {
         await tx`insert into customer_group
-          (id, store_id, name, slug, legacy_system, legacy_id)
-          values (${id}, ${storeId}, ${name}, ${slug}, ${LEGACY_SYSTEM}, ${legacyId})
-          on conflict (store_id, slug) do update set name = excluded.name`;
+          (id, site_id, name, slug, legacy_system, legacy_id)
+          values (${id}, ${siteId}, ${name}, ${slug}, ${LEGACY_SYSTEM}, ${legacyId})
+          on conflict (site_id, slug) do update set name = excluded.name`;
       }
       for (const [id, groupId, name, slug] of [
         [defaultPriceListId, defaultGroupId, "Prix public", "default"],
         [resellerPriceListId, resellerGroupId, "Prix revendeurs", "resellers"],
       ]) {
         await tx`insert into price_list
-          (id, store_id, customer_group_id, name, slug, currency, includes_tax)
-          values (${id}, ${storeId}, ${groupId}, ${name}, ${slug}, 'EUR', true)
-          on conflict (store_id, slug) do update set name = excluded.name`;
+          (id, site_id, customer_group_id, name, slug, currency, includes_tax)
+          values (${id}, ${siteId}, ${groupId}, ${name}, ${slug}, 'EUR', true)
+          on conflict (site_id, slug) do update set name = excluded.name`;
       }
 
       for (const item of products) {
         await tx`insert into product
-          (id, store_id, name, slug, base_price, attributes, legacy_system, legacy_id, source_snapshot, is_archived)
-          values (${item.id}, ${storeId}, ${item.name}, ${item.slug}, ${item.defaultPrice},
+          (id, site_id, name, slug, base_price, attributes, legacy_system, legacy_id, source_snapshot, is_archived)
+          values (${item.id}, ${siteId}, ${item.name}, ${item.slug}, ${item.defaultPrice},
             ${tx.json(item.attributes)}, ${LEGACY_SYSTEM}, ${item.legacyId}, ${tx.json(item.source)}, false)
-          on conflict (store_id, legacy_system, legacy_id) do update set
+          on conflict (site_id, legacy_system, legacy_id) do update set
             name = excluded.name, slug = excluded.slug, base_price = excluded.base_price,
             attributes = excluded.attributes, source_snapshot = excluded.source_snapshot`;
         await tx`insert into product_variant
-          (id, store_id, product_id, sku, name, price, barcode, legacy_system, legacy_id, source_snapshot)
-          values (${item.variantId}, ${storeId}, ${item.id}, ${item.reference}, ${item.name},
+          (id, site_id, product_id, sku, name, price, barcode, legacy_system, legacy_id, source_snapshot)
+          values (${item.variantId}, ${siteId}, ${item.id}, ${item.reference}, ${item.name},
             ${item.defaultPrice}, ${item.barcode}, ${LEGACY_SYSTEM}, ${item.legacyId}, ${tx.json(item.source)})
-          on conflict (store_id, legacy_system, legacy_id) do update set
+          on conflict (site_id, legacy_system, legacy_id) do update set
             sku = excluded.sku, name = excluded.name, price = excluded.price,
             barcode = excluded.barcode, source_snapshot = excluded.source_snapshot`;
         await tx`insert into inventory_item
@@ -311,13 +312,13 @@ async function importDatabase(products, customers) {
       }
 
       for (const customer of customers) {
-        await tx`insert into store_customer
-          (id, store_id, email, first_name, last_name, phone, company, vat_number,
+        await tx`insert into site_customer
+          (id, site_id, email, first_name, last_name, phone, company, vat_number,
             accepts_marketing, legacy_system, legacy_id, source_snapshot)
-          values (${customer.id}, ${storeId}, ${customer.email}, ${customer.firstName}, ${customer.lastName},
+          values (${customer.id}, ${siteId}, ${customer.email}, ${customer.firstName}, ${customer.lastName},
             ${customer.phone}, ${customer.company}, ${customer.vatNumber}, ${customer.acceptsMarketing},
             ${LEGACY_SYSTEM}, ${customer.legacyId}, ${tx.json(customer.source)})
-          on conflict (store_id, legacy_system, legacy_id) do update set
+          on conflict (site_id, legacy_system, legacy_id) do update set
             email = excluded.email, first_name = excluded.first_name, last_name = excluded.last_name,
             phone = excluded.phone, company = excluded.company, vat_number = excluded.vat_number,
             accepts_marketing = excluded.accepts_marketing, source_snapshot = excluded.source_snapshot`;
@@ -326,7 +327,7 @@ async function importDatabase(products, customers) {
   } finally {
     await sql.end();
   }
-  return { organizationId, storeId };
+  return { organizationId, siteId };
 }
 
 const productText = await readFile(source, "utf8");

@@ -3,7 +3,7 @@ import "server-only";
 import { db } from "@peltier/db/client";
 import {
   organizationMember,
-  store,
+  site,
   user,
 } from "@peltier/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
@@ -32,18 +32,18 @@ export const requireAdminContext = cache(async () => {
 
   const [membership] = await db
     .select({
-      storeId: store.id,
-      storeName: store.name,
-      currency: store.currency,
-      organizationId: store.organizationId,
+      siteId: site.id,
+      siteName: site.name,
+      currency: site.currency,
+      organizationId: site.organizationId,
     })
     .from(organizationMember)
     .innerJoin(
-      store,
-      eq(store.organizationId, organizationMember.organizationId),
+      site,
+      eq(site.organizationId, organizationMember.organizationId),
     )
     .where(eq(organizationMember.userId, authorizedUser.id))
-    .orderBy(store.name)
+    .orderBy(site.name)
     .limit(1);
 
   if (!membership) redirect("/sign-in?error=no-store");

@@ -1,13 +1,13 @@
 import { Elysia } from "elysia";
 import { auth } from "../lib/auth";
-import { resolveActor, resolveStore } from "../lib/tenancy";
+import { resolveActor, resolveSite } from "../lib/tenancy";
 
 /**
- * Derives `actor` (authenticated user, if any) and `store` (the tenant this
+ * Derives `actor` (authenticated user, if any) and `site` (the tenant this
  * request acts on) for every downstream handler.
  *
  * Kept as a derive rather than a guard because storefront traffic is
- * legitimately anonymous; routes that need an admin call assertStoreAccess.
+ * legitimately anonymous; routes that need an admin call assertSiteAccess.
  */
 export const tenancy = new Elysia({ name: "tenancy" })
   .derive({ as: "scoped" }, async ({ request }) => {
@@ -15,11 +15,11 @@ export const tenancy = new Elysia({ name: "tenancy" })
       .getSession({ headers: request.headers })
       .catch(() => null);
 
-    const [actor, store] = await Promise.all([
+    const [actor, site] = await Promise.all([
       resolveActor(session?.user?.id),
-      resolveStore(request.headers),
+      resolveSite(request.headers),
     ]);
 
-    return { actor, store, session };
+    return { actor, site, session };
   })
   .as("scoped");

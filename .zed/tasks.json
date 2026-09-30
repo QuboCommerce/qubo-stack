@@ -70,7 +70,7 @@
   },
   {
     "label": "db: psql shell",
-    "command": "docker exec -it peltier-postgres psql -U peltier -d peltier",
+    "command": "docker exec -it supabase_db_react psql \"$(grep ^DATABASE_URL= .env | cut -d'\"' -f2 | sed 's/:54322/:5432/')\"",
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": true,
     "reveal": "always",
@@ -78,14 +78,14 @@
   },
   {
     "label": "db: backup dump",
-    "command": "mkdir -p .private/backups && docker exec peltier-postgres pg_dump -U peltier -d peltier --format=custom --no-owner --no-acl > .private/backups/peltier-$(date +%Y-%m-%d-%H%M).dump && ls -lh .private/backups",
+    "command": "mkdir -p .private/backups && docker exec supabase_db_react pg_dump \"$(grep ^DATABASE_URL= .env | cut -d'\"' -f2 | sed 's/:54322/:5432/')\" --format=custom --no-owner --no-acl > .private/backups/peltier-$(date +%Y-%m-%d-%H%M).dump && ls -lh .private/backups",
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
     "tags": ["peltier", "db"]
   },
   {
-    "label": "docker: up (postgres only)",
+    "label": "docker: up (legacy postgres only)",
     "command": "docker compose up -d peltier-postgres",
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,

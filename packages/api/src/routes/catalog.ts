@@ -16,8 +16,8 @@ export const catalog = new Elysia({ prefix: "/catalog" })
   .use(tenancy)
   .get(
     "/categories",
-    async ({ store, status }) => {
-      if (!store) return status(400, { error: "store_not_resolved" });
+    async ({ site, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
 
       const rows = await db
         .select({
@@ -28,21 +28,21 @@ export const catalog = new Elysia({ prefix: "/catalog" })
           position: category.position,
         })
         .from(category)
-        .where(eq(category.storeId, store.id))
+        .where(eq(category.siteId, site.id))
         .orderBy(asc(category.position), asc(category.name));
 
-      return { store: store.slug, categories: rows };
+      return { site: site.slug, categories: rows };
     },
-    { detail: { summary: "Category tree for the resolved store" } },
+    { detail: { summary: "Category tree for the resolved site" } },
   )
   .get(
     "/products",
-    async ({ store, actor, query, status }) => {
-      if (!store) return status(400, { error: "store_not_resolved" });
+    async ({ site, actor, query, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
 
       const limit = Math.min(Number(query.limit ?? 48), 100);
       const conditions = [
-        eq(product.storeId, store.id),
+        eq(product.siteId, site.id),
         eq(product.isArchived, false),
       ];
 
@@ -63,20 +63,20 @@ export const catalog = new Elysia({ prefix: "/catalog" })
           .from(category)
           .where(
             and(
-              eq(category.storeId, store.id),
+              eq(category.siteId, site.id),
               eq(category.slug, query.category),
             ),
           )
           .limit(1);
 
-        if (!matched) return { store: store.slug, products: [] };
+        if (!matched) return { site: site.slug, products: [] };
 
         const memberships = await db
           .select({ productId: productCategory.productId })
           .from(productCategory)
           .where(eq(productCategory.categoryId, matched.id));
 
-        if (!memberships.length) return { store: store.slug, products: [] };
+        if (!memberships.length) return { site: site.slug, products: [] };
         conditions.push(
           inArray(
             product.id,
@@ -106,14 +106,14 @@ export const catalog = new Elysia({ prefix: "/catalog" })
         .limit(limit);
 
       const prices = await resolvePrices(
-        store.id,
+        site.id,
         actor?.id ?? null,
         rows.map((row) => ({ productId: row.id, basePrice: row.basePrice })),
       );
 
       return {
-        store: store.slug,
-        currency: store.currency,
+        site: site.slug,
+        currency: site.currency,
         products: rows.map((row) => {
           const price = prices.get(keyOf({ productId: row.id }))!;
           return {
@@ -141,15 +141,15 @@ export const catalog = new Elysia({ prefix: "/catalog" })
   )
   .get(
     "/products/:slug",
-    async ({ store, actor, params, status }) => {
-      if (!store) return status(400, { error: "store_not_resolved" });
+    async ({ site, actor, params, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
 
       const [item] = await db
         .select()
         .from(product)
         .where(
           and(
-            eq(product.storeId, store.id),
+            eq(product.siteId, site.id),
             eq(product.slug, params.slug),
             eq(product.isArchived, false),
           ),
@@ -183,7 +183,7 @@ export const catalog = new Elysia({ prefix: "/catalog" })
       ]);
 
       const prices = await resolvePrices(
-        store.id,
+        site.id,
         actor?.id ?? null,
         variants.map((variant) => ({
           productId: item.id,
@@ -194,8 +194,8 @@ export const catalog = new Elysia({ prefix: "/catalog" })
       );
 
       return {
-        store: store.slug,
-        currency: store.currency,
+        site: site.slug,
+        currency: site.currency,
         product: {
           ...item,
           images,

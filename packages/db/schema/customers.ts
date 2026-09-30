@@ -8,15 +8,15 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
-import { store } from "./store";
+import { site } from "./site";
 
-export const storeCustomer = pgTable(
-  "store_customer",
+export const siteCustomer = pgTable(
+  "site_customer",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    storeId: uuid("store_id")
+    siteId: uuid("site_id")
       .notNull()
-      .references(() => store.id, { onDelete: "cascade" }),
+      .references(() => site.id, { onDelete: "cascade" }),
     userId: text("user_id").references(() => user.id, {
       onDelete: "set null",
     }),
@@ -34,9 +34,9 @@ export const storeCustomer = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
-    uniqueIndex("store_customer_email_idx").on(table.storeId, table.email),
-    uniqueIndex("store_customer_legacy_idx").on(
-      table.storeId,
+    uniqueIndex("site_customer_email_idx").on(table.siteId, table.email),
+    uniqueIndex("site_customer_legacy_idx").on(
+      table.siteId,
       table.legacySystem,
       table.legacyId,
     ),

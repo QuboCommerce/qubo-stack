@@ -45,13 +45,27 @@ export const organizationMember = pgTable(
   ],
 );
 
-export const store = pgTable("store", {
+/**
+ * A Site's type is the preset it was created from: it seeds capabilities,
+ * system templates and the default flavor. Capabilities stay individually
+ * toggleable afterwards, so the type never gates features on its own.
+ */
+export const siteTypeEnum = pgEnum("site_type", [
+  "store",
+  "services",
+  "business",
+  "editorial",
+  "custom",
+]);
+
+export const site = pgTable("site", {
   id: uuid("id").primaryKey().defaultRandom(),
   organizationId: uuid("organization_id")
     .notNull()
     .references(() => organization.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  type: siteTypeEnum("type").notNull().default("store"),
   description: text("description"),
   logo: text("logo"),
   ownerId: text("owner_id")
@@ -63,23 +77,23 @@ export const store = pgTable("store", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const storeDomain = pgTable("store_domain", {
+export const siteDomain = pgTable("site_domain", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   hostname: text("hostname").notNull().unique(),
   isPrimary: boolean("is_primary").notNull().default(false),
   verifiedAt: timestamp("verified_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
-export const storeSettings = pgTable("store_settings", {
+export const siteSettings = pgTable("site_settings", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
     .unique()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   maintenanceMode: boolean("maintenance_mode").notNull().default(false),
   maintenanceMessage: text("maintenance_message"),
   maintenanceEnd: timestamp("maintenance_end"),

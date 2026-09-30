@@ -8,7 +8,7 @@ import {
   pgEnum,
   jsonb,
 } from "drizzle-orm/pg-core";
-import { store } from "./store";
+import { site } from "./site";
 import { user } from "./auth";
 import { productVariant } from "./variants";
 import { address } from "./addresses";
@@ -26,9 +26,9 @@ export const orderStatusEnum = pgEnum("order_status", [
 
 export const order = pgTable("order", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   customerId: text("customer_id").references(() => user.id, {
     onDelete: "set null",
   }),

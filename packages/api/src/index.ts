@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@peltier/db/client";
 import { auth } from "./lib/auth";
 import { catalog } from "./routes/catalog";
-import { stores } from "./routes/stores";
+import { sites } from "./routes/sites";
 
 const allowedOrigins = (process.env.PELTIER_TRUSTED_ORIGINS ?? "")
   .split(",")
@@ -30,7 +30,7 @@ export const app = new Elysia()
   })
   // Better Auth owns every /api/auth/* route across the platform.
   .mount("/api/auth", auth.handler)
-  .use(stores)
+  .use(sites)
   .use(catalog);
 
 export type App = typeof app;

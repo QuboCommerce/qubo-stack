@@ -5,7 +5,7 @@ import {
   uuid,
   pgEnum,
 } from "drizzle-orm/pg-core";
-import { store } from "./store";
+import { site } from "./site";
 import { user } from "./auth";
 
 export const postStatusEnum = pgEnum("post_status", [
@@ -16,9 +16,9 @@ export const postStatusEnum = pgEnum("post_status", [
 
 export const blogCategory = pgTable("blog_category", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   slug: text("slug").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -26,9 +26,9 @@ export const blogCategory = pgTable("blog_category", {
 
 export const post = pgTable("post", {
   id: uuid("id").primaryKey().defaultRandom(),
-  storeId: uuid("store_id")
+  siteId: uuid("site_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => site.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   slug: text("slug").notNull(),
   content: text("content"),

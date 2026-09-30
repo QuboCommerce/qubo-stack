@@ -1,11 +1,11 @@
 # Peltier Stack — Handoff
 
 > Entry point for any new chat session. Read this before making changes.
-> Last verified: 2026-09-28.
+> Last verified: 2026-09-30.
 
 ## What this is
 
-**Peltier Stack** is a self-hosted, multi-store commerce platform built for
+**Peltier Stack** is a self-hosted, multi-site business platform built for
 Mostapha Hilal (aka Wooster), who runs two businesses:
 
 | Business | What it sells | Status |
@@ -13,8 +13,10 @@ Mostapha Hilal (aka Wooster), who runs two businesses:
 | **HM Froid** | Industrial/commercial refrigeration (since 2008) | Migrating off ShopApplication — **urgent** |
 | **TailG Belgium** | Electric scooters | Still on Odoo, **not yet migrated** |
 
-One control plane (`peltier-admin`) manages many storefronts, Shopify-style
-store switching, but fully owned. A fridge and an e-scooter are ~98% the same
+One control plane (`peltier-admin`) manages many **Sites**, Shopify-style
+site switching, but fully owned. A Site has a **type** (`store`, `services`,
+`business`, `editorial`, `custom`) — the preset it was created from; both
+HM Froid and TailG are `store` sites. A fridge and an e-scooter are ~98% the same
 product shape, so a single catalog/variant/pricing model serves both.
 
 - **Repository:** https://github.com/aliaddas/peltier-stack (push via SSH)
@@ -29,8 +31,10 @@ peltier-stack/                     Turborepo + pnpm workspace
 │   ├── hm-froid/                  Next.js 16 storefront (:3000)
 │   └── (tailg-belgium/)           future second storefront
 ├── packages/
+│   ├── api/        @peltier/api   peltier-elysia: Elysia on Bun, auth + tenancy (:3333)
 │   ├── db/         @peltier/db    Drizzle schema + client (PostgreSQL)
-│   └── shared/     @peltier/shared Zod validators, utils, constants
+│   ├── shared/     @peltier/shared Zod validators, utils, constants
+│   └── storefront/ @peltier/storefront typed client for storefronts → API
 ├── caddy/Caddyfile
 ├── scripts/                       legacy archive + importer + link-env
 ├── .zed/                          settings.json + tasks.json
@@ -41,20 +45,36 @@ peltier-stack/                     Turborepo + pnpm workspace
 
 | Service | Container | Port |
 | --- | --- | --- |
-| Database | `peltier-postgres` | 127.0.0.1:55433 → 5432 |
+| Database (dev) | shared Supabase CLI stack `react`, database `peltier` | 127.0.0.1:54322 |
+| Database (legacy, retiring) | `peltier-postgres` | 127.0.0.1:55433 → 5432 |
+| API | `peltier-elysia` | 3333 |
 | Control plane | `peltier-admin` | 4000 |
 | Storefront | `hm-froid` | 3000 |
 | Edge proxy | `caddy-edge` | 80/443 |
 
 Network: `peltier-network`. Compose project name: `peltier`.
-A `peltier-elysia` API service is planned but **does not exist yet**.
+
+### Database: Supabase (since 2026-09-30)
+
+Dev runs on the machine-wide Supabase CLI stack (`supabase_*_react`), in its
+**own database** `peltier`, owned by a login role `peltier`. Isolation comes
+from Postgres itself: `CONNECT` on the database is revoked from `PUBLIC`, so
+Supabase's API roles (`anon`, `authenticated`, `service_role`) and PostgREST
+cannot reach it — PostgREST only serves the `postgres` database. Drizzle owns
+`public` inside `peltier`; nothing else writes there.
+
+Production gets its own VPS with a dedicated self-hosted Supabase; the same
+database-per-project layout applies. `peltier-postgres` stays in compose until
+that cutover. Storage (A9) will use Supabase Storage buckets; the local stack
+has S3 protocol and image transformation disabled, so dev serves plain object
+URLs.
 
 ## Running locally
 
 ```bash
 cp .env.example .env          # then fill values
 pnpm install                  # postinstall links root .env into each app
-docker compose up -d peltier-postgres
+# Database: the shared Supabase stack must be running (`docker ps | grep supabase_db_react`)
 pnpm dev                      # admin :4000, storefront :3000
 ```
 
@@ -89,7 +109,7 @@ connecting as the OS user.
 ## Database
 
 ~48 tables in `packages/db/schema/`, including `organization`,
-`organizationMember`, `store`, `storeDomain` (multi-tenancy), `customerGroup`
+`organizationMember`, `site`, `siteDomain`, `siteSettings` (multi-tenancy), `customerGroup`
 and `priceList` (B2B reseller pricing), and `legacySystem`/`legacyId`
 provenance columns so imports stay idempotent.
 
@@ -105,7 +125,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 | product | 3949 |
 | product_variant | 3949 |
 | product_image | 3946 |
-| store_customer | 2263 |
+| site_customer | 2263 |
 | price_list / customer_group | 2 / 2 |
 | **category / product_category** | **0 — see gaps** |
 | order | 0 (history intentionally not migrated) |
@@ -141,12 +161,14 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 5. **No Shopify** — ShopApplication's repricing is exactly the dependency risk
    being escaped. Same argument applies to any hosted CMS.
 6. **Odoo is being dropped entirely** for TailG — too complex for the need.
-7. **Puck (MIT) for page building** — store versioned block JSON, never
+7. **Puck (MIT) for page building** — persist versioned block JSON, never
    generated React source. AI should emit validated block trees from approved
    component schemas; executing merchant-authored React in the panel is a
    security and deployment hazard.
-8. **`peltier-elysia` planned** — justified once three consumers (admin + two
-   storefronts) share tenancy and pricing rules. If storefronts keep direct DB
+8. **`peltier-elysia` owns tenancy** — three consumers (admin + two
+   storefronts) share tenancy and pricing rules. The acting site comes from the
+   `x-peltier-site` header (admin switcher) or the request hostname
+   (`site_domain`). If storefronts keep direct DB
    access "just for reads", the API becomes decorative and you get two sources
    of truth.
 
@@ -154,9 +176,12 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 
 - [x] Rename/restructure to `peltier-stack`, push to GitHub
 - [x] Zed workspace (`.zed/settings.json`, `.zed/tasks.json`)
-- [ ] `packages/api` — Elysia on Bun, auth + tenancy middleware
-- [ ] Multi-storefront seams so `tailg-belgium` drops in frictionlessly
-- [ ] Puck install + `page`/`pageRevision` schema in `peltier-admin`
+- [x] `packages/api` — Elysia on Bun, auth + tenancy middleware
+- [x] Multi-storefront seams (`@peltier/storefront`)
+- [x] Puck install + `page`/`pageRevision` schema in `peltier-admin`
+- [x] Rename `store` → `site` (+ `site.type`), move DB onto Supabase
+- [ ] Peltier Studio — Plan A foundation (packages/stylekit, packages/blocks, documents, media)
+- [ ] Peltier Studio — Plan B native Studio UI
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders
 - [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)

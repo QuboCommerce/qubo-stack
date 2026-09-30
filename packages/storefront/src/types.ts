@@ -13,10 +13,14 @@ export type PriceSource =
   | "variant"
   | "base";
 
-export type StoreSummary = {
+/** Preset a Site was created from; mirrors the `site_type` enum in @peltier/db. */
+export type SiteType = "store" | "services" | "business" | "editorial" | "custom";
+
+export type SiteSummary = {
   id: string;
   slug: string;
   name: string;
+  type: SiteType;
   currency: string;
   locale: string;
   organizationId: string;
@@ -64,18 +68,18 @@ export type ProductDetail = {
 };
 
 export type ProductListResponse = {
-  store: string;
+  site: string;
   currency: string;
   products: ProductListItem[];
 };
 
 export type ProductDetailResponse = {
-  store: string;
+  site: string;
   currency: string;
   product: ProductDetail;
 };
 
 export type CategoriesResponse = {
-  store: string;
+  site: string;
   categories: CategoryNode[];
 };
