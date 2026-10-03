@@ -18,7 +18,7 @@ The site is then resolved in this order:
 
 | Route | Source |
 | --- | --- |
-| `/sitemap.xml` | `GET /render/sitemap`: home, published pages, and with `catalog` the collections and products |
+| `/sitemap.xml` | `GET /v1/render/sitemap`: home, published pages, and with `catalog` the collections and products |
 | `/robots.txt` | Blocks everything on dev/preview hosts, otherwise points at the sitemap |
 | `<link rel=canonical>` | Primary verified domain + path, query dropped |
 
@@ -38,7 +38,7 @@ to `QUBO_REVALIDATE_<SLUG>` or `QUBO_REVALIDATE_URL` (this app's `/api/revalidat
 
 Sites with the `commerce` capability get a client cart (`localStorage` key `qubo-cart:<siteId>`,
 max 10 lines × 20), the `ProductDetail` and `Cart` blocks, and `/checkout/success` (clears the cart).
-`/api/checkout` (this app) forwards the cart to qubo-api `POST /checkout` with the visitor's origin;
+`/api/checkout` (this app) forwards the cart to qubo-api `POST /v1/checkout` with the visitor's origin;
 the API re-prices every line, only accepts origins on the platform domain, verified site domains or
 `QUBO_DEV_SITE_HOSTS`, and creates a Stripe Checkout Session. `POST /webhooks/stripe` records the
 paid order (idempotent per session), decrements stock and emails the customer via Resend.

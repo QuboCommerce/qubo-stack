@@ -150,7 +150,10 @@ export const commerce = new Elysia()
       }),
       detail: { summary: "Creates a Stripe Checkout session for the resolved site's cart" },
     },
-  )
+  );
+
+/** Provider-facing webhooks stay unversioned: their URLs live in third-party dashboards. */
+export const webhooks = new Elysia()
   .post(
     "/webhooks/stripe",
     async ({ request, status }) => {

@@ -1,6 +1,6 @@
 {
   "name": "qubo-stack",
-  "version": "1.0.0",
+  "version": "0.0.2",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -17,9 +17,12 @@
     "legacy:categories": "node scripts/import-categories.mjs",
     "clean": "turbo run clean && rm -rf node_modules",
     "postinstall": "node scripts/link-env.mjs",
-    "setup:env": "node scripts/link-env.mjs"
+    "setup:env": "node scripts/link-env.mjs",
+    "changeset": "changeset",
+    "version-packages": "changeset version"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "dotenv": "^18.0.4",
     "turbo": "^2"
   },

@@ -1,3 +1,5 @@
+import { API_VERSION } from "@qubo/storefront";
+
 const FORWARD_REQUEST = ["cookie", "content-type", "origin", "referer", "user-agent", "accept-language", "x-forwarded-for"];
 
 /**
@@ -17,7 +19,9 @@ export async function forwardToApi(req: Request, slug: string, path: string): Pr
   headers.set("x-forwarded-proto", (req.headers.get("x-forwarded-proto") ?? url.protocol.replace(":", "")).split(",")[0].trim());
 
   const hasBody = req.method !== "GET" && req.method !== "HEAD";
-  const upstream = await fetch(`${base}${path}${url.search}`, {
+  // Better Auth lives outside the versioned API.
+  const target = path.startsWith("/api/auth/") ? path : `/${API_VERSION}${path}`;
+  const upstream = await fetch(`${base}${target}${url.search}`, {
     method: req.method,
     headers,
     body: hasBody ? await req.arrayBuffer() : undefined,

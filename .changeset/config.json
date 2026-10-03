@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [["qubo-stack", "qubo-admin", "qubo-storefront", "@qubo/api", "@qubo/blocks", "@qubo/db", "@qubo/shared", "@qubo/storefront", "@qubo/studio", "@qubo/stylekit"]],
+  "linked": [],
+  "access": "restricted",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": [],
+  "privatePackages": { "version": true, "tag": false }
+}

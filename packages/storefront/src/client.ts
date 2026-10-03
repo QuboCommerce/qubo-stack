@@ -63,6 +63,9 @@ const orNull = <T>(promise: Promise<T>) =>
  * construction, which is what makes adding a second site a configuration
  * change rather than a port.
  */
+/** API version this client speaks; every request path is prefixed with it. */
+export const API_VERSION = "v1";
+
 export function createStorefrontClient(options: StorefrontClientOptions) {
   const baseUrl = (
     options.baseUrl ??
@@ -79,7 +82,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     : { "x-forwarded-host": options.host! };
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
-    const response = await doFetch(`${baseUrl}${path}`, {
+    const response = await doFetch(`${baseUrl}/${API_VERSION}${path}`, {
       ...init,
       headers: {
         ...siteHeaders,

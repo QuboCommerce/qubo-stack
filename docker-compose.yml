@@ -43,6 +43,8 @@ services:
       - CHECKOUT_SHIPPING_LABEL=${CHECKOUT_SHIPPING_LABEL:-Livraison professionnelle}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - ORDER_EMAIL_FROM=${ORDER_EMAIL_FROM:-HM Froid <commandes@hmfroid.be>}
+      - PORTAL_URL=${PORTAL_URL:-}
+      - QUBO_CHANNEL=${QUBO_CHANNEL:-stable}
       - PORT=3333
     depends_on:
       qubo-postgres:
@@ -65,6 +67,7 @@ services:
       - BETTER_AUTH_URL=${ADMIN_URL:-https://qubo.hmfroid.be}
       - NEXT_PUBLIC_PANEL_URL=${ADMIN_URL:-https://qubo.hmfroid.be}
       - QUBO_API_URL=http://qubo-elysia:3333
+      - ADMIN_SUBDOMAIN=${ADMIN_SUBDOMAIN:-qubo}
     depends_on:
       qubo-postgres:
         condition: service_healthy
@@ -85,6 +88,9 @@ services:
     environment:
       - QUBO_API_URL=http://qubo-elysia:3333
       # Admin host = qubo.<site domain> (ADMIN_SUBDOMAIN); no override in production.
+      - ADMIN_SUBDOMAIN=${ADMIN_SUBDOMAIN:-qubo}
+      - PLATFORM_BASE_DOMAIN=${PLATFORM_BASE_DOMAIN:-}
+      - STOREFRONT_DEFAULT_SITE=${STOREFRONT_DEFAULT_SITE:-}
       - QUBO_REVALIDATE_SECRET=${QUBO_REVALIDATE_SECRET}
       - LEGACY_ASSET_ROOT=/data/legacy-products
     volumes:

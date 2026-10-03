@@ -1,6 +1,6 @@
 {
   "name": "@qubo/studio",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "private": true,
   "type": "module",
   "description": "Server-side Studio services: documents, revisions, themes, translations, previews. Shared by qubo-admin and the API.",

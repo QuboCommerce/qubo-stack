@@ -32,12 +32,14 @@ qubo-stack/                     Turborepo + pnpm workspace
 ├── packages/
 │   ├── api/        @qubo/api   qubo-elysia: Elysia on Bun, auth + tenancy (:3333)
 │   ├── db/         @qubo/db    Drizzle schema + client (PostgreSQL)
-│   ├── shared/     @qubo/shared Zod validators, utils, constants
+│   ├── shared/     @qubo/shared Zod validators, utils, constants, site-url/admin-url helpers
+│   ├── protocol/   @qubo/protocol instance ↔ Portal ↔ Cubicles schemas (own version)
 │   ├── stylekit/   @qubo/stylekit themes: palette → schemes → CSS vars, Palette Doctor
 │   ├── blocks/     @qubo/blocks  schema-first Puck block library + render/editor configs
 │   ├── studio/     @qubo/studio  server services: documents, revisions, themes, translations, pages
-│   └── storefront/ @qubo/storefront typed client for storefronts → API
-├── caddy/Caddyfile
+│   └── storefront/ @qubo/storefront typed client for storefronts → API (pinned to /v1)
+├── .changeset/                    Changesets; one fixed version for the product (0.0.2)
+├── caddy/Caddyfile                qubo.<domain> → admin, site domains → storefront
 ├── scripts/                       legacy archive + importer + link-env
 ├── .zed/                          settings.json + tasks.json
 └── docker-compose.yml
@@ -212,7 +214,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    scoping, optimistic `draftVersion`, migrate→validate on save, publish
    revisions, restore/rollback, asset usage, translation staleness). The admin
    calls it from server actions; `packages/api` exposes the same services at
-   `/studio/*` (admin, `If-Match` → 409) and `/render/*` (anonymous storefront
+   `/v1/studio/*` (admin, `If-Match` → 409) and `/v1/render/*` (anonymous storefront
    reads: published docs + locale overlay, `theme.css` with ETag, signed
    `?preview=` tokens). Drafts accept prop-level warnings; publish is strict.
    Integration tests (`pnpm --filter @qubo/studio test`) build a throwaway
@@ -241,6 +243,9 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 - [x] Rename `store` → `site` (+ `site.type`), move DB onto Supabase
 - [ ] Qubo Studio — Plan A foundation (stylekit, blocks, studio services done; media next)
 - [ ] Qubo Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings, B4 editor, B5 add-section, B6 theme settings done)
+- [x] Generic host-resolved storefront (`apps/qubo-storefront`): SEO, commerce, accounts, maintenance; `apps/hm-froid` deleted
+- [x] Panel on `qubo.<domain>`, staff hint cookie + storefront Edit pen
+- [x] Version 0.0.2, Changesets, API under `/v1`, `@qubo/protocol` skeleton
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders
 - [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)
@@ -251,6 +256,11 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 - Imports: `@/*` is the app root; shared code via `@qubo/db`,
   `@qubo/db/schema`, `@qubo/db/client`, `@qubo/shared`.
 - shadcn/ui is installed **per app**, not shared.
+- API: public routes live under `/v1` (`API_VERSION` in `@qubo/storefront`);
+  `/health`, `/api/auth/*` and `/webhooks/*` stay unversioned.
+- Never hardcode hostnames: `siteUrl()` / `adminUrl()` from `@qubo/shared`,
+  env `PLATFORM_BASE_DOMAIN`, `ADMIN_SUBDOMAIN`, `PORTAL_URL` (unset = pure self-host).
+- Every user-facing change gets a changeset (`pnpm changeset`).
 - Tailwind v4 CSS-first config (no `tailwind.config.js`); tokens in
   `app/globals.css`.
 - Route protection uses `proxy.ts` (Next.js 16 convention, replaces
