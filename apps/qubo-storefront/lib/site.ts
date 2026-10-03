@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { createStorefrontClient, QuboApiError, type LayoutResponse, type StorefrontClient } from "@qubo/storefront";
 import { defineTheme, type Theme } from "@qubo/stylekit";
-import { devSiteHosts } from "./hosts";
+import { devSiteHosts, platformSubdomainSlug } from "./hosts";
 
 export type Storefront = {
   host: string;
@@ -28,14 +28,19 @@ function parseTheme(input: unknown, host: string): Theme | undefined {
 }
 
 /**
- * Resolves the site for a host. Order: dev host map → `site_domain` (via the
- * API) → `STOREFRONT_DEFAULT_SITE` (single-site installs). Null = no site here.
- * Memoised per request.
+ * Resolves the site for a host. Order: dev host map → `<slug>.<PLATFORM_BASE_DOMAIN>`
+ * → `site_domain` (via the API) → `STOREFRONT_DEFAULT_SITE` (single-site installs).
+ * Null = no site here. Memoised per request.
  */
 export const getStorefront = cache(async (host: string): Promise<Storefront | null> => {
   const devSlug = devSiteHosts().get(host);
+  const platformSlug = devSlug ? null : platformSubdomainSlug(host);
   const fallbackSlug = process.env.STOREFRONT_DEFAULT_SITE?.trim();
-  const attempts = devSlug ? [{ siteSlug: devSlug }] : [{ host }, ...(fallbackSlug ? [{ siteSlug: fallbackSlug }] : [])];
+  const attempts = devSlug
+    ? [{ siteSlug: devSlug }]
+    : platformSlug
+      ? [{ siteSlug: platformSlug }]
+      : [{ host }, ...(fallbackSlug ? [{ siteSlug: fallbackSlug }] : [])];
 
   for (const target of attempts) {
     const client = createStorefrontClient({ ...target, host });

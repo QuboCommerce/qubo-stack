@@ -4,6 +4,8 @@ export type ShellSite = {
   type: string;
   capabilities: string[];
   domain: string | null;
+  /** Public storefront URL from siteUrl(); null = nowhere to view yet. */
+  url: string | null;
 };
 
 export type ShellUser = { name: string; email: string; role: string; image: string | null };

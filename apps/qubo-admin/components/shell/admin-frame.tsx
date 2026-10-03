@@ -66,9 +66,9 @@ export function AdminFrame({ site, sites, user, counts, children }: {
             <button type="button" onClick={() => setSearchOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-topbar-muted md:hidden" aria-label="Search">
               <Search className="size-[18px]" />
             </button>
-            {site.domain && (
+            {site.url && (
               <a
-                href={`https://${site.domain}`}
+                href={site.url}
                 target="_blank"
                 rel="noreferrer"
                 className="hidden size-9 place-items-center rounded-lg hover:bg-topbar-muted sm:grid"

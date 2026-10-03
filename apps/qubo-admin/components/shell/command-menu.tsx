@@ -57,8 +57,8 @@ export function CommandMenu({ open, onOpenChange, site, sites }: {
           <CommandItem onSelect={() => go("/online-store/pages")}>
             <Plus /> Create page
           </CommandItem>
-          {site.domain && (
-            <CommandItem onSelect={() => run(() => window.open(`https://${site.domain}`, "_blank"))}>
+          {site.url && (
+            <CommandItem onSelect={() => run(() => window.open(site.url!, "_blank"))}>
               <ExternalLink /> View live site
             </CommandItem>
           )}

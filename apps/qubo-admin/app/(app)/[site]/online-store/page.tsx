@@ -66,9 +66,9 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
       title="Themes"
       width="wide"
       actions={
-        site.domain ? (
+        site.url ? (
           <Button variant="outline" size="sm" asChild>
-            <a href={`https://${site.domain}`} target="_blank" rel="noreferrer">View your store</a>
+            <a href={site.url} target="_blank" rel="noreferrer">View your store</a>
           </Button>
         ) : undefined
       }

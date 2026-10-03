@@ -6,6 +6,7 @@ import { and, asc, eq, inArray } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
+import { siteUrl } from "@qubo/shared/site-url";
 import { auth } from "@/lib/auth";
 
 export const requireUser = cache(async () => {
@@ -46,11 +47,20 @@ export const getUserSites = cache(async () => {
 
   const domains = rows.length
     ? await db
-        .select({ siteId: siteDomain.siteId, hostname: siteDomain.hostname })
+        .select({ siteId: siteDomain.siteId, hostname: siteDomain.hostname, isPrimary: siteDomain.isPrimary, verifiedAt: siteDomain.verifiedAt })
         .from(siteDomain)
-        .where(and(inArray(siteDomain.siteId, rows.map((r) => r.id)), eq(siteDomain.isPrimary, true)))
+        .where(inArray(siteDomain.siteId, rows.map((r) => r.id)))
     : [];
-  return rows.map((r) => ({ ...r, domain: domains.find((d) => d.siteId === r.id)?.hostname ?? null }));
+  return rows.map((r) => {
+    const own = domains.filter((d) => d.siteId === r.id);
+    return {
+      ...r,
+      /** Primary domain as configured (may be unverified); for display only. */
+      domain: own.find((d) => d.isPrimary)?.hostname ?? null,
+      /** Where "View site" goes; null until the site has a reachable host. Never build this by hand. */
+      url: siteUrl({ slug: r.slug, domains: own.map((d) => ({ hostname: d.hostname, isPrimary: d.isPrimary, verified: d.verifiedAt != null })) }),
+    };
+  });
 });
 
 export type AdminSite = Awaited<ReturnType<typeof getUserSites>>[number];

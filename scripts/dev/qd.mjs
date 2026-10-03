@@ -62,7 +62,7 @@ function loadConfig() {
   const order = (local.order ?? base.order).filter((n) => services[n]);
   return {
     project: base.project, session: local.session ?? base.session, mode, devDigit, services, order,
-    bind: local.bind ?? "127.0.0.1", devSiteSlug: local.devSiteSlug ?? base.devSiteSlug ?? "hm-froid",
+    bind: local.bind ?? "127.0.0.1", sitesBaseDomain: local.sitesBaseDomain ?? base.sitesBaseDomain, devSiteSlug: local.devSiteSlug ?? base.devSiteSlug ?? "hm-froid",
     dataPlane: { ...base.dataPlane, ...local.dataPlane },
   };
 }
@@ -103,9 +103,11 @@ function serviceEnv(cfg, name) {
     // Server-to-server calls skip the proxy.
     QUBO_API_URL: s.api ? `http://127.0.0.1:${s.api.port}` : undefined,
     QUBO_TRUSTED_ORIGINS: [url("web"), url("admin")].filter(Boolean).join(","),
-    QUBO_DEV_ORIGINS: Object.values(s).map((x) => x.host).filter(Boolean).join(","),
+    QUBO_DEV_ORIGINS: [...Object.values(s).map((x) => x.host), cfg.mode === "remote" && cfg.sitesBaseDomain ? `*.${cfg.sitesBaseDomain}` : null].filter(Boolean).join(","),
     QUBO_ADMIN_HOSTS: hostOf("admin"),
-    QUBO_DEV_SITE_HOSTS: s.web ? `${hostOf("web")}=${cfg.devSiteSlug}` : undefined,
+    // Remote: sites are <slug>.<sitesBaseDomain>. Local: one site on localhost.
+    PLATFORM_BASE_DOMAIN: cfg.mode === "remote" ? cfg.sitesBaseDomain : undefined,
+    QUBO_DEV_SITE_HOSTS: s.web && !(cfg.mode === "remote" && cfg.sitesBaseDomain) ? `${hostOf("web")}=${cfg.devSiteSlug}` : undefined,
     BETTER_AUTH_URL: url(name),
     FORCE_COLOR: process.env.NO_COLOR ? undefined : process.env.FORCE_COLOR ?? "1",
   };

@@ -13,6 +13,7 @@ export default async function SiteLayout({ children, params }: { children: React
     type: s.type,
     capabilities: [...(s.capabilities ?? [])],
     domain: s.domain,
+    url: s.url,
   });
 
   return (

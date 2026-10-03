@@ -7,7 +7,8 @@
     ".": "./src/index.ts",
     "./utils": "./lib/utils.ts",
     "./validators": "./lib/validators.ts",
-    "./constants": "./lib/constants.ts"
+    "./constants": "./lib/constants.ts",
+    "./site-url": "./lib/site-url.ts"
   },
   "dependencies": {
     "clsx": "^2.1",

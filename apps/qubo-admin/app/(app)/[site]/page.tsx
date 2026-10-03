@@ -84,11 +84,17 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
             </h1>
           </div>
           <div className="flex w-full gap-2 xs:w-auto [&>*]:flex-1 xs:[&>*]:flex-none">
-            {site.domain && (
+            {site.url ? (
               <Button variant="outline" size="sm" asChild>
-                <a href={`https://${site.domain}`} target="_blank" rel="noreferrer">
+                <a href={site.url} target="_blank" rel="noreferrer">
                   <Eye /> View site
                 </a>
+              </Button>
+            ) : (
+              <Button variant="outline" size="sm" asChild>
+                <Link href={`${base}/settings/domains`} title="This site has no verified domain yet">
+                  <Eye /> Connect a domain
+                </Link>
               </Button>
             )}
             <Button size="sm" asChild>
