@@ -13,6 +13,37 @@ export type Channel = z.infer<typeof Channel>;
 
 // ---------------------------------------------------------------- heartbeat
 // POST {PORTAL_URL}/v1/heartbeat every 5 min, body signed with the instance key (Ed25519).
+// Headers: x-qubo-instance, x-qubo-timestamp (unix s), x-qubo-signature =
+// base64url(Ed25519(signingPayload(timestamp, rawBody))). The portal rejects >5 min clock skew.
+
+export const SIGNATURE_HEADERS = {
+  instance: "x-qubo-instance",
+  timestamp: "x-qubo-timestamp",
+  signature: "x-qubo-signature",
+} as const;
+export const MAX_CLOCK_SKEW_SECONDS = 300;
+export const signingPayload = (timestamp: number | string, rawBody: string) => `qubo-v1.${timestamp}.${rawBody}`;
+
+// ---------------------------------------------------------------- registration
+// The owner creates a one-time token in the portal; `qubo register <token>` on the instance
+// generates the Ed25519 keypair and POSTs {PORTAL_URL}/v1/instances/register.
+
+export const RegisterInstanceRequest = z.object({
+  token: z.string().min(1),
+  name: z.string().min(1).max(80),
+  /** Raw Ed25519 public key, base64url (32 bytes). */
+  publicKey: z.string().regex(/^[A-Za-z0-9_-]{43}$/),
+  appVersion: z.string(),
+  channel: Channel,
+});
+export type RegisterInstanceRequest = z.infer<typeof RegisterInstanceRequest>;
+
+export const RegisterInstanceResponse = z.object({
+  instanceId: z.string(),
+  organizationId: z.string(),
+  jwksUrl: z.url(),
+});
+export type RegisterInstanceResponse = z.infer<typeof RegisterInstanceResponse>;
 
 export const HeartbeatRequest = z.object({
   instanceId: z.string().min(1),
@@ -59,24 +90,29 @@ export type HeartbeatResponse = z.infer<typeof HeartbeatResponse>;
 
 // ---------------------------------------------------------------- licence
 
-export const Plan = z.enum(["free", "starter", "pro", "agency"]);
+export const Plan = z.enum(["free", "starter", "growth", "agency"]);
 export type Plan = z.infer<typeof Plan>;
 
 /** Claims inside `licenseToken`. Limits gate *creation* only; storefronts never degrade. */
 export const LicenseClaims = z.object({
   iss: z.string(),
   sub: z.string().describe("instanceId"),
-  accountId: z.string(),
+  /** The billing unit: the organisation that registered the instance. */
+  organizationId: z.string(),
   plan: Plan,
+  /** null = unlimited. */
   limits: z.object({
-    orgs: z.number().int().nullable(),
     sitesPerOrg: z.number().int().nullable(),
+    instances: z.number().int().nullable(),
     seats: z.number().int().nullable(),
     customDomainsPerSite: z.number().int().nullable(),
+    cubiclesPerSite: z.number().int().nullable(),
   }),
   features: z.array(z.string()),
   iat: z.number().int(),
   exp: z.number().int(),
+  /** Seconds after `exp` during which gated features keep working. */
+  grace: z.number().int().nonnegative(),
 });
 export type LicenseClaims = z.infer<typeof LicenseClaims>;
 

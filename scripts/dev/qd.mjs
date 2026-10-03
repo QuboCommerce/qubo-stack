@@ -89,7 +89,11 @@ function publicUrl(svc) {
 
 // Per-checkout secret shared by the admin/api (signer) and storefront (verifier) publish hook.
 function revalidateSecret() {
-  const file = join(ROOT, ".qubo", "revalidate.secret");
+  return checkoutSecret("revalidate");
+}
+
+function checkoutSecret(name) {
+  const file = join(ROOT, ".qubo", `${name}.secret`);
   if (!existsSync(file)) {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, randomBytes(24).toString("hex"), { mode: 0o600 });
@@ -124,6 +128,15 @@ function serviceEnv(cfg, name) {
     BETTER_AUTH_URL: url(name),
     FORCE_COLOR: process.env.NO_COLOR ? undefined : process.env.FORCE_COLOR ?? "1",
   };
+  // Per-service `env` in dev.config.json, so projects with other service names need no qd changes.
+  // Templates: {url:svc} public URL, {internal:svc} loopback URL, {port:svc}, {host:svc}, {secret:name}.
+  const tpl = (v) => String(v).replace(/\{(url|internal|port|host|secret):([A-Za-z0-9_-]+)\}/g, (_, kind, n) => {
+    if (kind === "secret") return checkoutSecret(n);
+    const t = s[n];
+    if (!t) fail(`services.${name}.env references unknown service "${n}"`);
+    return kind === "url" ? publicUrl(t) : kind === "internal" ? `http://127.0.0.1:${t.port}` : kind === "port" ? String(t.port) : t.host ?? `localhost:${t.port}`;
+  });
+  for (const [k, v] of Object.entries(s[name].env ?? {})) env[k] = v === null ? undefined : tpl(v);
   return Object.fromEntries(Object.entries(env).filter(([, v]) => v !== undefined));
 }
 
