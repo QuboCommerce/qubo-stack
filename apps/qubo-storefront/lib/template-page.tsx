@@ -34,7 +34,7 @@ export function templateRoute(
     async Page(props: Props) {
       const { sf, tpl, view } = await load(props);
       if (!sf || !tpl) notFound();
-      return <RenderView sf={sf} body={tpl.data} view={view} />;
+      return <RenderView sf={sf} body={tpl.data} view={view} documentId={tpl.documentId} />;
     },
   };
 }

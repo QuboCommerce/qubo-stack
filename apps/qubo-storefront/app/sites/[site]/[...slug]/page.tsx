@@ -21,5 +21,5 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function StudioPage({ params }: { params: Params }) {
   const { sf, hit } = await load(params);
   if (!hit) return notFoundOrRedirect(sf);
-  return <RenderView sf={hit.sf} body={hit.page.data} />;
+  return <RenderView sf={hit.sf} body={hit.page.data} documentId={hit.page.documentId} />;
 }

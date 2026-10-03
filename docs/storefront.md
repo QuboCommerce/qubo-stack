@@ -66,6 +66,25 @@ by `customer_id` (Stripe `client_reference_id` at checkout), never by email, bec
 not verify email yet. First visit registers a `site_customer` row. Password reset needs an email
 sender and is not wired yet.
 
+## Admin host and the Edit pen
+
+The panel lives at `qubo.<site domain>` (`ADMIN_SUBDOMAIN`, dev override `QUBO_ADMIN_HOSTS`);
+build its URLs with `@qubo/shared/admin-url`, never by hand. Caddy sends `qubo.*` to qubo-admin;
+the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the site of its host
+(`qubo.hmfroid.be` → HM Froid), trusts `https://qubo.<verified domain>` origins dynamically, sends
+`X-Robots-Tag: noindex` + a disallow-all `robots.txt`, and serves a per-site web-app manifest.
+
+- **Admin session:** `__Secure-qubo-admin.session_token`, HttpOnly, **host-only** on the panel host
+  (Better Auth only reads `__Secure-`, so no `__Host-` prefix). Never on the parent domain.
+- **`qubo_staff` hint:** after sign-in the panel sets `qubo_staff=<siteId>.<siteId>` on the
+  registrable parent domain (`tldts`), cleared on sign-out. It grants nothing.
+- **Edit pen:** `RenderView` mounts `StaffBar` (client). When the hint names this site it calls
+  `GET <panel>/api/me` with credentials (CORS: exact verified-domain origins; dev site hosts in dev)
+  and only then shows Edit page (`/<slug>/studio?doc=<documentId>`) · Theme · Dashboard, dismissible
+  per session. Pages stay fully cached; guests never see it.
+- **Open Qubo:** `/api/account` adds `panelUrl` (panel sign-in, e-mail prefilled) for staff of the
+  site; the Account block shows it as a button. One-time handoff tokens replace this in Phase 2.
+
 ## Maintenance
 
 When `site_settings.maintenance_mode` is on (and `maintenance_end` not passed), every page renders the
@@ -78,6 +97,7 @@ site's `maintenance` template, or a built-in notice with `maintenance_message`, 
 | `QUBO_API_URL` | qubo-api base URL (server-side) |
 | `PLATFORM_BASE_DOMAIN` | Platform subdomains, e.g. `dev.by-ali.dev` |
 | `STOREFRONT_DEFAULT_SITE` | Fallback site slug for single-site installs |
-| `QUBO_ADMIN_HOSTS` | Admin host for `/admin` redirects (default `qubo.<host>`) |
+| `QUBO_ADMIN_HOSTS` | Dev admin host override (default `qubo.<host>`) |
+| `ADMIN_SUBDOMAIN` | Admin host prefix (default `qubo`) |
 | `QUBO_REVALIDATE_SECRET` | Verifies publish hooks |
 | `LEGACY_ASSET_ROOT` | Folder behind `/api/legacy-assets/*` |

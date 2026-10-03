@@ -8,11 +8,13 @@
     "./utils": "./lib/utils.ts",
     "./validators": "./lib/validators.ts",
     "./constants": "./lib/constants.ts",
-    "./site-url": "./lib/site-url.ts"
+    "./site-url": "./lib/site-url.ts",
+    "./admin-url": "./lib/admin-url.ts"
   },
   "dependencies": {
     "clsx": "^2.1",
     "tailwind-merge": "^2.5",
+    "tldts": "^7.4.16",
     "zod": "^4.4"
   },
   "devDependencies": {

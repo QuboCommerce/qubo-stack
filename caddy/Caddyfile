@@ -1,7 +1,9 @@
-# Qubo edge proxy
-# One control plane (qubo-admin) fronting many storefronts.
+# Qubo edge proxy (customer instance)
+# `qubo.<site domain>` → the panel (qubo-admin); every site domain → qubo-storefront.
+# Phase 4 replaces these static blocks with on-demand TLS + an `ask` endpoint
+# driven by verified site_domain rows.
 
-qubo.by-ali.dev {
+qubo.hmfroid.be {
 	reverse_proxy qubo-admin:4000
 }
 
@@ -10,6 +12,9 @@ hmfroid.be, www.hmfroid.be {
 }
 
 # Every site is served by the same storefront; add its domains here.
+# qubo.tailg.be {
+# 	reverse_proxy qubo-admin:4000
+# }
 # tailg.be, www.tailg.be {
 # 	reverse_proxy qubo-storefront:3000
 # }

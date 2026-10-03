@@ -4,6 +4,8 @@ import type { ProductCard, ProductDetailData } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
 import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
 import { requestPath, type Storefront } from "./site";
+import { adminOrigin } from "./hosts";
+import { StaffBar } from "@/components/staff-bar";
 
 /** What the current route is about; dynamic blocks default to it. */
 export type ViewContext = {
@@ -112,7 +114,7 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
   return Object.fromEntries(await Promise.all(jobs));
 }
 
-export async function RenderView({ sf, body, view = {} }: { sf: Storefront; body: RenderDocument; view?: ViewContext }) {
+export async function RenderView({ sf, body, view = {}, documentId }: { sf: Storefront; body: RenderDocument; view?: ViewContext; documentId?: string }) {
   const data = compose(sf, body);
   const metadata: RenderMetadata = {
     site: {
@@ -127,7 +129,12 @@ export async function RenderView({ sf, body, view = {} }: { sf: Storefront; body
     theme: sf.theme,
     data: await loadBlockData(sf, data, view),
   };
-  return <QuboRender registry={registry} data={data} metadata={metadata} />;
+  return (
+    <>
+      <QuboRender registry={registry} data={data} metadata={metadata} />
+      <StaffBar siteId={sf.site.id} siteSlug={sf.site.slug} adminOrigin={adminOrigin(new URL(sf.origin).host)} documentId={documentId} />
+    </>
+  );
 }
 
 /** Page metadata: explicit title → document root title → site name; dev hosts are noindex. */

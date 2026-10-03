@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ["postgres"],
   output: "standalone",
+  // The panel is never indexed, on any host.
+  async headers() {
+    return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
+  },
 };
 
 export default nextConfig;

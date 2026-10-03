@@ -24,7 +24,7 @@ async function Maintenance({ sf }: { sf: Storefront }) {
       }),
     ],
   };
-  return <RenderView sf={sf} body={body} />;
+  return <RenderView sf={sf} body={body} documentId={tpl?.documentId} />;
 }
 
 // Root layout per host: <html lang> follows the site's locale.

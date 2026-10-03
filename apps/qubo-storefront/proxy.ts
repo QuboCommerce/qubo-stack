@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminHostFor, requestHost } from "./lib/hosts";
+import { adminOrigin, requestHost } from "./lib/hosts";
+import { siteHostFromAdminHost } from "@qubo/shared/admin-url";
 
 /**
  * One app, many sites: every request is rewritten to `/sites/<host>/<path>`
@@ -11,10 +12,10 @@ export function proxy(req: NextRequest) {
   const { pathname, search } = req.nextUrl;
 
   // Admin hosts are served by qubo-admin; never render a storefront on them.
-  if (!host || host.startsWith("qubo.")) return new NextResponse("Not found", { status: 404 });
+  if (!host || siteHostFromAdminHost(host)) return new NextResponse("Not found", { status: 404 });
 
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    return NextResponse.redirect(`https://${adminHostFor(host)}${pathname.slice("/admin".length) || "/"}`, 302);
+    return NextResponse.redirect(`${adminOrigin(host)}${pathname.slice("/admin".length) || "/"}`, 302);
   }
 
   const headers = new Headers(req.headers);

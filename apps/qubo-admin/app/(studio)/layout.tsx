@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Providers } from "@/providers";
+import { StaffHint } from "@/components/staff-hint";
 import "../(app)/globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
@@ -18,6 +19,7 @@ export default function StudioRootLayout({ children }: { children: React.ReactNo
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="overflow-hidden font-sans antialiased">
         <Providers>{children}</Providers>
+        <StaffHint />
       </body>
     </html>
   );

@@ -40,6 +40,7 @@ export const Account = defineSection({
         signIn: text("Sign-in button", "Sign in"),
         signUp: text("Create-account button", "Create account"),
         signOut: text("Sign-out button", "Sign out"),
+        openPanel: text("Open panel button (staff only)", "Open Qubo"),
       },
       { label: "Form labels", collapsed: true },
     ),

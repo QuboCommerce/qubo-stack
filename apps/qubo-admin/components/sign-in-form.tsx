@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-export function SignInForm() {
+export function SignInForm({ email }: { email?: string }) {
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
 
@@ -43,11 +43,11 @@ export function SignInForm() {
     >
       <label className="block space-y-1">
         <span className="text-sm font-medium">E-mail</span>
-        <input className="w-full rounded-md border bg-background px-3 py-2" name="email" required type="email" />
+        <input className="w-full rounded-md border bg-background px-3 py-2" name="email" required type="email" defaultValue={email} autoFocus={!email} />
       </label>
       <label className="block space-y-1">
         <span className="text-sm font-medium">Mot de passe</span>
-        <input className="w-full rounded-md border bg-background px-3 py-2" name="password" required type="password" />
+        <input className="w-full rounded-md border bg-background px-3 py-2" name="password" required type="password" autoFocus={Boolean(email)} />
       </label>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <button className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50" disabled={pending} type="submit">

@@ -3,6 +3,7 @@ import { db } from "@qubo/db/client";
 import { order as orderTable, orderItem, siteCustomer } from "@qubo/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
+import { assertSiteAccess } from "../lib/tenancy";
 
 /**
  * Signed-in customer's view of one site: profile and that site's orders.
@@ -11,7 +12,7 @@ import { tenancy } from "../plugins/tenancy";
  * by email: sign-up does not verify email yet, so an email match would let
  * anyone read a legacy customer's orders by registering their address.
  */
-export const account = new Elysia().use(tenancy).get("/account", async ({ site, session, status }) => {
+export const account = new Elysia().use(tenancy).get("/account", async ({ site, session, actor, status }) => {
   if (!site) return status(400, { error: "site_not_resolved" });
   if (!site.capabilities.includes("accounts")) return status(404, { error: "not_found" });
   if (!session) return status(401, { error: "unauthorized" });
@@ -45,8 +46,12 @@ export const account = new Elysia().use(tenancy).get("/account", async ({ site, 
         .where(inArray(orderItem.orderId, orders.map((o) => o.id)))
     : [];
 
+  // Staff of this site get an "Open Qubo" link on the storefront account page.
+  const staff = await assertSiteAccess(actor, site);
+
   return {
     user: { name: user.name, email: user.email },
+    staff,
     orders: orders.map((o) => ({
       number: o.number,
       status: o.status,

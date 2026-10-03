@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getDocument, getTheme, isStudioError, resolveView, viewIndex } from "@qubo/studio";
 import { ThemeSchema, type Theme } from "@qubo/stylekit";
 import { requireSite } from "@/lib/admin";
@@ -15,12 +15,17 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   return { title: current.name };
 }
 
-export default async function StudioPage({ params }: { params: Promise<Params> }) {
-  const { site: slug, view: segments = [] } = await params;
+export default async function StudioPage({ params, searchParams }: { params: Promise<Params>; searchParams: Promise<{ doc?: string }> }) {
+  const [{ site: slug, view: segments = [] }, { doc: docId }] = await Promise.all([params, searchParams]);
   const { user, site, siteId } = await requireSite(slug);
   const scope = { siteId, userId: user.id };
 
   const index = await viewIndex(scope);
+  // `?doc=<documentId>` (storefront Edit pen) → that document's view.
+  if (typeof docId === "string" && docId) {
+    const entry = [...index.groups.flatMap((g) => g.entries), ...index.sectionGroups].find((e) => e.documentId === docId);
+    if (entry) redirect(`/${slug}/studio/${entry.key.split(":").map(encodeURIComponent).join("/")}`);
+  }
   const key = segments.length === 2 ? `${segments[0]}:${segments[1]}` : segments.length === 0 ? index.groups[0]?.entries[0]?.key : null;
   if (!key) notFound();
 

@@ -117,6 +117,7 @@ const templates: [ResourceKind, ReturnType<typeof instantiate>[]][] = [
             signIn: "Se connecter",
             signUp: "Créer mon compte",
             signOut: "Se déconnecter",
+            openPanel: "Ouvrir Qubo",
           },
           errors: {
             invalidCredentials: "E-mail ou mot de passe incorrect.",

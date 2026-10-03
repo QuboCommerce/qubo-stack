@@ -452,6 +452,7 @@ textarea.pk-input { resize: vertical; }
 .pk-account-error { margin: 0; color: var(--pk-danger, #b91c1c); font-size: var(--pk-step-n1); }
 .pk-account-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--pk-gap-sm); padding-bottom: var(--pk-gap-sm); border-bottom: 1px solid var(--pk-border); }
 .pk-account-head p { margin: 0; }
+.pk-account-actions { display: flex; flex-wrap: wrap; gap: var(--pk-gap-xs); }
 .pk-account-orders { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--pk-gap-xs); }
 .pk-account-order { padding: var(--pk-gap-sm); border: 1px solid var(--pk-border); border-radius: var(--pk-radius-md); background: var(--pk-surface); }
 .pk-account-order p { margin: 0.4em 0 0; }

@@ -27,8 +27,5 @@ export function platformSubdomainSlug(host: string): string | null {
   return /^[a-z0-9-]+$/.test(label) ? label : null;
 }
 
-/** The admin host for a storefront host: dev override, else `qubo.<domain>`. */
-export function adminHostFor(host: string): string {
-  const dev = (process.env.QUBO_ADMIN_HOSTS ?? "").split(",")[0]?.trim();
-  return dev || `qubo.${host.replace(/^www\./, "")}`;
-}
+/** The admin host for a storefront host: dev override, else `qubo.<domain>` (ADMIN_SUBDOMAIN). */
+export { adminHost as adminHostFor, adminOrigin } from "@qubo/shared/admin-url";

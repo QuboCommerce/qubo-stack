@@ -14,5 +14,5 @@ export default async function NotFound() {
       </main>
     );
   }
-  return <RenderView sf={sf} body={tpl.data} />;
+  return <RenderView sf={sf} body={tpl.data} documentId={tpl.documentId} />;
 }

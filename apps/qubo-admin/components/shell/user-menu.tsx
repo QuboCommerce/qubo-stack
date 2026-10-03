@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth-client";
+import { clearStaffHint } from "@/components/staff-hint";
 import type { ShellUser } from "./types";
 
 export const initials = (name: string) =>
@@ -54,6 +55,7 @@ export function UserMenu({ user }: { user: ShellUser }) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={async () => {
+            await clearStaffHint();
             await signOut();
             window.location.assign("/sign-in");
           }}

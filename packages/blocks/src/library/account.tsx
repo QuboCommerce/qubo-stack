@@ -10,7 +10,7 @@ export type AccountOrder = {
   createdAt: string;
   items: { name: string; variant: string | null; quantity: number }[];
 };
-export type AccountData = { user: { name: string; email: string }; orders: AccountOrder[] };
+export type AccountData = { user: { name: string; email: string }; orders: AccountOrder[]; /** Staff only: sign-in link to the Qubo panel. */ panelUrl?: string };
 
 export type AccountLabels = {
   signInTab: string;
@@ -21,6 +21,7 @@ export type AccountLabels = {
   signIn: string;
   signUp: string;
   signOut: string;
+  openPanel: string;
   greeting: string;
   ordersTitle: string;
   noOrders: string;
@@ -165,7 +166,7 @@ export function AccountView({ labels, locale, preview }: { labels: AccountLabels
     );
   }
 
-  const { user, orders } = state.data;
+  const { user, orders, panelUrl } = state.data;
   const date = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
   const money = (value: string, currency: string) => {
     try {
@@ -184,9 +185,16 @@ export function AccountView({ labels, locale, preview }: { labels: AccountLabels
           </p>
           <p className="pk-muted pk-small">{user.email}</p>
         </div>
-        <button type="button" className="pk-button" data-emphasis="secondary" onClick={signOut} disabled={busy}>
-          {labels.signOut}
-        </button>
+        <div className="pk-account-actions">
+          {panelUrl && (
+            <a className="pk-button" data-emphasis="primary" href={panelUrl}>
+              {labels.openPanel}
+            </a>
+          )}
+          <button type="button" className="pk-button" data-emphasis="secondary" onClick={signOut} disabled={busy}>
+            {labels.signOut}
+          </button>
+        </div>
       </div>
       <h2 className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-1)" }}>
         {labels.ordersTitle}
