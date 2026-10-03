@@ -13,6 +13,7 @@ import { Surface } from "@/components/settings/settings-group";
 import { Badge } from "@/components/ui/badge";
 import { requireSite } from "@/lib/admin";
 import { getCategoryTree } from "@/lib/categories";
+import { productValues } from "@/lib/form-specs";
 import { assetUrl, money, relativeTime } from "@/lib/format";
 
 const uuid = /^[0-9a-f-]{36}$/i;
@@ -59,7 +60,13 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
       width="wide"
       badge={p ? (p.isArchived ? <Badge variant="secondary">Archived</Badge> : <Badge className="border-transparent bg-success/15 text-success">Active</Badge>) : undefined}
     >
-      <SettingsForm action={saveProduct} className="@container">
+      <SettingsForm
+        action={saveProduct}
+        className="@container"
+        noun="product"
+        base={p ? productValues(p, linked) : undefined}
+        watch={p ? { table: "product", id: p.id } : undefined}
+      >
         <input type="hidden" name="site" value={site.slug} />
         <input type="hidden" name="id" value={id} />
         <div className="grid items-start gap-4 @min-[64rem]:grid-cols-[minmax(0,1fr)_20rem] @min-[96rem]:grid-cols-[minmax(0,1fr)_24rem]">

@@ -11,6 +11,8 @@ import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
 import { getCategoryTree, subtreeIds } from "@/lib/categories";
 import { emitEntity } from "@/lib/events";
+import { categorySpec, categoryValues } from "@/lib/form-specs";
+import { RACE, reconcile, unchangedSince } from "@/lib/merge-server";
 
 const idSchema = z.uuid();
 const schema = z.object({
@@ -52,10 +54,16 @@ const revalidate = (slug: string) => {
   revalidatePath(`/${slug}/products`);
 };
 
-export async function saveCategory(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function saveCategory(_prev: ActionState, submitted: FormData): Promise<ActionState> {
   try {
-    const { siteId, site } = await requireSiteFromForm(formData);
-    const id = idSchema.parse(formData.get("id"));
+    const { siteId, site } = await requireSiteFromForm(submitted);
+    const id = idSchema.parse(submitted.get("id"));
+    const [row] = await db.select().from(category).where(and(eq(category.id, id), eq(category.siteId, siteId))).limit(1);
+    if (!row) return { error: "This category was deleted by someone else." };
+    const names = await db.select({ id: category.id, name: category.name }).from(category).where(eq(category.siteId, siteId));
+    const r = await reconcile(submitted, categorySpec(new Map(names.map((c) => [c.id, c.name]))), categoryValues(row), { siteId, table: "category", id });
+    if ("conflict" in r) return { conflict: r.conflict };
+    const formData = r.formData;
     const str = (k: string) => String(formData.get(k) ?? "");
     const parsed = schema.safeParse({
       name: str("name"),
@@ -83,7 +91,7 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
     if (clash) return { error: "Another category already uses this handle." };
 
     const moved = (current.parentId ?? null) !== parentId;
-    await db
+    const saved = await db
       .update(category)
       .set({
         name: d.name,
@@ -93,8 +101,10 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
         ...(moved ? { position: await nextPosition(siteId, parentId) } : {}),
         updatedAt: new Date(),
       })
-      .where(and(eq(category.id, id), eq(category.siteId, siteId)));
-    await emitEntity(siteId, "category", "tree");
+      .where(and(eq(category.id, id), eq(category.siteId, siteId), unchangedSince(category.updatedAt, row.updatedAt)))
+      .returning({ id: category.id });
+    if (!saved.length) return { error: RACE };
+    await emitEntity(siteId, "category", id);
     revalidate(site.slug);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Something went wrong." };

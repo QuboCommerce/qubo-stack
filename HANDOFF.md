@@ -273,6 +273,19 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    path `$QUBO_GEO_DB` or `.private/geo/dbip-city-lite.mmdb`. Missing DB →
    locations are just blank. Storefront → admin one-time handoff tokens are
    deferred to p4-domains.
+19. **Forms merge instead of overwriting.** A form renders with `base` (its
+   values as the server produced them, from `lib/form-specs.ts`) and posts it
+   as hidden `_base`. The action loads the current row and calls `reconcile`
+   (`lib/merge-server.ts`): it does a three-way merge per field. Fields only they changed
+   are folded in silently, and fields both changed return `{ conflict }`, which
+   `SettingsForm` shows as `MergeSheet` (keep mine / use theirs per field). The
+   write is a CAS on `updated_at` (`unchangedSince`, ms-truncated). With
+   `watch={{table,id}}` a clean form `router.refresh()`es and remounts on
+   `entity.updated`; a dirty one keeps its original base and shows a
+   "saved changes · Review" banner (`_preview=1` = dry-run merge). No `version`
+   columns: the base snapshot catches strictly more and needs no migration.
+   New form = add a `*Values`/`*Spec` pair, pass `base`/`watch`/`noun`, call
+   `reconcile` before validating. Wired: product, category, site general.
 
 ## Roadmap
 
