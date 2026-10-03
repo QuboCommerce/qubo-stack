@@ -17,7 +17,10 @@ export type SiteContext = {
   currency: string;
   locale: string;
   organizationId: string;
+  capabilities: SiteCapability[];
 };
+
+export type SiteCapability = (typeof site.$inferSelect)["capabilities"][number];
 
 export type ActorContext = {
   id: string;
@@ -47,6 +50,7 @@ export async function resolveSite(
     currency: site.currency,
     locale: site.locale,
     organizationId: site.organizationId,
+    capabilities: site.capabilities,
   };
 
   const slug = headers.get("x-qubo-site")?.trim();

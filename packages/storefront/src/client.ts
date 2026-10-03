@@ -1,5 +1,9 @@
 import type {
   CategoriesResponse,
+  LayoutResponse,
+  PageResponse,
+  TemplateKind,
+  TemplateResponse,
   ProductDetailResponse,
   ProductListResponse,
   SiteSummary,
@@ -20,7 +24,12 @@ export type StorefrontClientOptions = {
   /** Base URL of qubo-elysia, e.g. http://qubo-elysia:3333 */
   baseUrl?: string;
   /** Site slug this storefront serves, e.g. "hm-froid" or "tailg-belgium". */
-  siteSlug: string;
+  siteSlug?: string;
+  /**
+   * Public hostname the visitor asked for. Used when no slug is known: the API
+   * resolves it against `site_domain`. Ignored when `siteSlug` is set.
+   */
+  host?: string;
   /**
    * Forwarded so the API can resolve the logged-in customer and therefore
    * their reseller price list. Without this every caller sees list price.
@@ -28,6 +37,19 @@ export type StorefrontClientOptions = {
   headers?: HeadersInit;
   fetch?: typeof fetch;
 };
+
+const qs = (params: Record<string, string | undefined>) => {
+  const search = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) if (value) search.set(key, value);
+  const out = search.toString();
+  return out ? `?${out}` : "";
+};
+
+const orNull = <T>(promise: Promise<T>) =>
+  promise.catch((error: unknown) => {
+    if (error instanceof QuboApiError && error.status === 404) return null;
+    throw error;
+  });
 
 /**
  * The single way a storefront talks to Qubo.
@@ -44,12 +66,18 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
   ).replace(/\/$/, "");
 
   const doFetch = options.fetch ?? fetch;
+  if (!options.siteSlug && !options.host) {
+    throw new Error("createStorefrontClient: pass siteSlug or host");
+  }
+  const siteHeaders: Record<string, string> = options.siteSlug
+    ? { "x-qubo-site": options.siteSlug }
+    : { "x-forwarded-host": options.host! };
 
   async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const response = await doFetch(`${baseUrl}${path}`, {
       ...init,
       headers: {
-        "x-qubo-site": options.siteSlug,
+        ...siteHeaders,
         ...options.headers,
         ...init?.headers,
       },
@@ -71,6 +99,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
   return {
     baseUrl,
     siteSlug: options.siteSlug,
+    host: options.host,
 
     getSite: () =>
       request<{ site: SiteSummary }>("/sites/current").then((r) => r.site),
@@ -98,6 +127,22 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     getProduct: (slug: string) =>
       request<ProductDetailResponse>(
         `/catalog/products/${encodeURIComponent(slug)}`,
+      ),
+
+    /** Site, header/footer section groups and the live theme in one call. */
+    getLayout: (locale?: string) =>
+      request<LayoutResponse>(`/render/layout${qs({ locale })}`),
+
+    /** Published template for a resource kind; null when the site has none. */
+    getTemplate: (kind: TemplateKind, params: { handle?: string; locale?: string } = {}) =>
+      orNull(request<TemplateResponse>(`/render/templates/${encodeURIComponent(kind)}${qs(params)}`)),
+
+    /** Published standalone page by slug; null when missing or unpublished. */
+    getPage: (slug: string, locale?: string) =>
+      orNull(
+        request<PageResponse>(
+          `/render/pages/${slug.split("/").map(encodeURIComponent).join("/")}${qs({ locale })}`,
+        ),
       ),
   };
 }

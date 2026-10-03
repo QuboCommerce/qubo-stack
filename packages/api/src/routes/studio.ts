@@ -335,6 +335,31 @@ export const studioPublic = new Elysia({ prefix: "/render" })
     },
     { query: t.Object({ locale: t.Optional(t.String()), handle: t.Optional(t.String()) }) },
   )
+  .get(
+    "/layout",
+    async ({ site, query, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
+      const load = async (kind: studio.SectionGroupKind) => {
+        const id = await studio.sectionGroupDocumentId(site.id, kind);
+        return id ? studio.renderableDocument(site.id, id, query.locale) : null;
+      };
+      const [header, footer, theme] = await Promise.all([load("header"), load("footer"), studio.getLiveTheme(site.id)]);
+      return { site, header, footer, theme };
+    },
+    { query: t.Object({ locale: t.Optional(t.String()) }) },
+  )
+  .get(
+    "/pages/*",
+    async ({ site, params, query, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
+      const found = await studio.publishedPage(site.id, decodeURIComponent(params["*"] ?? "").replace(/^\/+|\/+$/g, ""));
+      if (!found?.documentId) return status(404, { error: "not_found" });
+      const data = await studio.renderableDocument(site.id, found.documentId, query.locale);
+      if (!data) return status(404, { error: "not_found" });
+      return { documentId: found.documentId, title: found.title, metaTitle: found.metaTitle, metaDescription: found.metaDescription, data };
+    },
+    { query: t.Object({ locale: t.Optional(t.String()) }) },
+  )
   .get("/theme.css", async ({ site, status, set, headers }) => {
     if (!site) return status(400, { error: "site_not_resolved" });
     const compiled = await studio.liveThemeCss(site.id);

@@ -151,3 +151,25 @@ export async function templateDocumentId(siteId: string, kind: ResourceKind, han
     .limit(1);
   return row?.documentId ?? null;
 }
+
+export type SectionGroupKind = (typeof sectionGroup.$inferSelect)["kind"];
+
+/** Used by storefronts: the document behind a site-wide section group (header, footer). */
+export async function sectionGroupDocumentId(siteId: string, kind: SectionGroupKind) {
+  const [row] = await db
+    .select({ documentId: sectionGroup.documentId })
+    .from(sectionGroup)
+    .where(and(eq(sectionGroup.siteId, siteId), eq(sectionGroup.kind, kind)))
+    .limit(1);
+  return row?.documentId ?? null;
+}
+
+/** Used by storefronts: a published standalone page by slug (`""` = homepage). */
+export async function publishedPage(siteId: string, slug: string) {
+  const [row] = await db
+    .select({ documentId: page.documentId, title: page.title, metaTitle: page.metaTitle, metaDescription: page.metaDescription })
+    .from(page)
+    .where(and(eq(page.siteId, siteId), slug ? eq(page.slug, slug) : eq(page.isHomepage, true), eq(page.state, "PUBLISHED")))
+    .limit(1);
+  return row?.documentId ? row : null;
+}

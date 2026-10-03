@@ -6,29 +6,58 @@
   "services": {
     "api": {
       "cwd": "packages/api",
-      "cmd": ["bun", "--watch", "src/server.ts"],
+      "cmd": [
+        "bun",
+        "--watch",
+        "src/server.ts"
+      ],
       "portSlot": 3,
       "health": "/health",
       "host": "qubo-api.by-ali.dev"
     },
     "admin": {
       "cwd": "apps/qubo-admin",
-      "cmd": ["pnpm", "exec", "next", "dev", "--port", "{port}", "--hostname", "{bind}"],
+      "cmd": [
+        "pnpm",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "{port}",
+        "--hostname",
+        "{bind}"
+      ],
       "portSlot": 2,
       "health": "/login",
       "host": "qubo-admin.by-ali.dev"
     },
     "web": {
-      "cwd": "apps/hm-froid",
-      "cmd": ["pnpm", "exec", "next", "dev", "--port", "{port}", "--hostname", "{bind}"],
+      "cwd": "apps/qubo-storefront",
+      "cmd": [
+        "pnpm",
+        "exec",
+        "next",
+        "dev",
+        "--port",
+        "{port}",
+        "--hostname",
+        "localhost"
+      ],
       "portSlot": 1,
       "health": "/",
-      "host": "qubo-web.by-ali.dev"
+      "host": "qubo-web.by-ali.dev",
+      "$comment": "--hostname localhost (not {bind}): Next dev builds proxy URLs as localhost:<port>, and host-based rewrites only stay internal when the bind hostname matches. localhost resolves to 127.0.0.1, so it stays loopback-only."
     }
   },
-  "order": ["api", "admin", "web"],
+  "order": [
+    "api",
+    "admin",
+    "web"
+  ],
   "dataPlane": {
-    "containers": ["supabase_db_react"],
+    "containers": [
+      "supabase_db_react"
+    ],
     "databaseUrlEnv": "DATABASE_URL",
     "localHint": "Start Docker, then `supabase start` (or `docker start supabase_db_react`)."
   }

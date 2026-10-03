@@ -24,6 +24,7 @@ export type SiteSummary = {
   currency: string;
   locale: string;
   organizationId: string;
+  capabilities: string[];
 };
 
 export type CategoryNode = {
@@ -82,4 +83,44 @@ export type ProductDetailResponse = {
 export type CategoriesResponse = {
   site: string;
   categories: CategoryNode[];
+};
+
+/** A Puck document as stored by Studio (opaque to this package). */
+export type RenderDocument = {
+  root: { props?: Record<string, unknown> };
+  content: { type: string; props: Record<string, unknown> }[];
+  zones?: Record<string, { type: string; props: Record<string, unknown> }[]>;
+};
+
+/** Studio template kinds (mirrors `resource_kind` in @qubo/db). */
+export type TemplateKind =
+  | "home"
+  | "page"
+  | "search"
+  | "product"
+  | "collection"
+  | "collection_list"
+  | "cart"
+  | "account"
+  | "not_found"
+  | "password"
+  | "maintenance"
+  | (string & {});
+
+export type LayoutResponse = {
+  site: SiteSummary;
+  header: RenderDocument | null;
+  footer: RenderDocument | null;
+  /** Published theme JSON (validated by @qubo/stylekit on the storefront). */
+  theme: unknown;
+};
+
+export type TemplateResponse = { documentId: string; data: RenderDocument };
+
+export type PageResponse = {
+  documentId: string;
+  title: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  data: RenderDocument;
 };

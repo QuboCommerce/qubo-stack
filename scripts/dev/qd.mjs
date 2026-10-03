@@ -213,7 +213,7 @@ async function ensureDataPlane(cfg, { fix = true } = {}) {
 // ---------------------------------------------------------------- screen (remote)
 
 function screenSessions(name) {
-  const r = run("screen", ["-ls"]);
+  const r = run("screen", ["-ls"], { timeout: 5000 });
   const esc = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return [...`${r.out}\n${r.err}`.matchAll(new RegExp(`^\\s*(\\d+)\\.(${esc})\\s`, "gm"))].map((m) => `${m[1]}.${m[2]}`);
 }
@@ -224,7 +224,8 @@ function screenTarget(cfg, { warn = true } = {}) {
   return s[0] ?? null;
 }
 
-const scr = (target, ...args) => run("screen", ["-S", target, ...args]);
+// screen can block indefinitely when its socket is busy; never let that wedge qd or the hub.
+const scr = (target, ...args) => run("screen", ["-S", target, ...args], { timeout: 5000 });
 // `screen -Q` uses a temporary "<session>-queryA" socket, so two concurrent queries (e.g. the hub's
 // status refresh and `qd up`) collide and one fails. One `-Q windows` per check, retried with jitter.
 function windowTitles(target) {
