@@ -47,7 +47,8 @@ export async function getDashboardData(siteId: string) {
   };
 }
 
-export type ProductFilter = { q?: string; status?: "active" | "archived" | "all"; page?: number; perPage?: number };
+/** `categoryIds` matches products in any of the ids (pass a whole subtree); "none" matches uncategorised products. */
+export type ProductFilter = { q?: string; status?: "active" | "archived" | "all"; categoryIds?: string[] | "none"; page?: number; perPage?: number };
 
 export async function getProducts(siteId: string, filter: ProductFilter = {}) {
   const perPage = filter.perPage ?? 50;
@@ -58,6 +59,14 @@ export async function getProducts(siteId: string, filter: ProductFilter = {}) {
   if (filter.q?.trim()) {
     const q = `%${filter.q.trim()}%`;
     conds.push(sql`(${product.name} ilike ${q} or ${product.slug} ilike ${q} or ${product.brand} ilike ${q})`);
+  }
+  if (filter.categoryIds === "none") {
+    conds.push(sql`not exists (select 1 from ${productCategory} pc where pc.product_id = "product"."id")`);
+  } else if (filter.categoryIds) {
+    const ids = filter.categoryIds.length ? filter.categoryIds : ["00000000-0000-0000-0000-000000000000"];
+    conds.push(
+      sql`exists (select 1 from ${productCategory} pc where pc.product_id = "product"."id" and pc.category_id in (${sql.join(ids.map((i) => sql`${i}::uuid`), sql`, `)}))`,
+    );
   }
   const where = and(...conds);
   const [rows, [total]] = await Promise.all([

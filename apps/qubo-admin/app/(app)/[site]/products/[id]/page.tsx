@@ -1,15 +1,18 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ImageOff } from "lucide-react";
 import { db } from "@qubo/db/client";
-import { product, productImage, productVariant } from "@qubo/db/schema";
+import { product, productCategory, productImage, productVariant } from "@qubo/db/schema";
 import { and, asc, eq } from "drizzle-orm";
 import { saveProduct } from "@/app/product-actions";
+import { CategoryTree } from "@/components/categories/category-tree";
 import { Page } from "@/components/page";
 import { Field, Select, SwitchRow, TextArea, TextInput } from "@/components/settings/controls";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { Surface } from "@/components/settings/settings-group";
 import { Badge } from "@/components/ui/badge";
 import { requireSite } from "@/lib/admin";
+import { getCategoryTree } from "@/lib/categories";
 import { assetUrl, money, relativeTime } from "@/lib/format";
 
 const uuid = /^[0-9a-f-]{36}$/i;
@@ -36,12 +39,16 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
     ? [null]
     : await db.select().from(product).where(and(eq(product.id, id), eq(product.siteId, siteId))).limit(1);
   if (!isNew && !row) notFound();
-  const [images, variants] = isNew
-    ? [[], []]
+  const [images, variants, links, tree] = isNew
+    ? [[], [], [], await getCategoryTree(siteId)]
     : await Promise.all([
         db.select().from(productImage).where(eq(productImage.productId, id)).orderBy(asc(productImage.position)),
         db.select().from(productVariant).where(eq(productVariant.productId, id)).orderBy(asc(productVariant.position)),
+        db.select({ id: productCategory.categoryId }).from(productCategory).where(eq(productCategory.productId, id)),
+        getCategoryTree(siteId),
       ]);
+  const order = new Map(tree.map((n, i) => [n.id, i]));
+  const linked = links.map((l) => l.id).sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
   const currency = site.currency ?? "EUR";
   const p = row;
 
@@ -145,6 +152,23 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
               <Field label="Brand" htmlFor="brand">
                 <TextInput id="brand" name="brand" defaultValue={p?.brand ?? ""} />
               </Field>
+              <div className="space-y-2">
+                <p className="flex items-baseline justify-between text-[13px] font-medium">
+                  Categories
+                  <Link href={`/${site.slug}/products/categories`} className="text-xs font-normal text-muted-foreground hover:text-foreground">Manage</Link>
+                </p>
+                {tree.length ? (
+                  <CategoryTree
+                    mode="select"
+                    name="categoryIds"
+                    items={tree.map(({ id, name, parentId, depth, total, childCount }) => ({ id, name, parentId, depth, total, childCount }))}
+                    defaultSelected={linked}
+                    className="max-h-80"
+                  />
+                ) : (
+                  <p className="text-xs text-muted-foreground">No categories yet.</p>
+                )}
+              </div>
             </Card>
             {p && (
               <p className="px-1 text-xs text-muted-foreground">

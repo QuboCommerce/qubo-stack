@@ -8,6 +8,9 @@ import {
   decimal,
   jsonb,
   uniqueIndex,
+  index,
+  primaryKey,
+  foreignKey,
 } from "drizzle-orm/pg-core";
 import { site } from "./site";
 
@@ -31,6 +34,8 @@ export const category = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (table) => [
+    foreignKey({ columns: [table.parentId], foreignColumns: [table.id], name: "category_parent_fk" }).onDelete("set null"),
+    index("category_site_parent_idx").on(table.siteId, table.parentId, table.position),
     uniqueIndex("category_site_slug_idx").on(table.siteId, table.slug),
     uniqueIndex("category_legacy_source_idx").on(
       table.siteId,
@@ -90,14 +95,21 @@ export const productImage = pgTable("product_image", {
   position: integer("position").notNull().default(0),
 });
 
-export const productCategory = pgTable("product_category", {
-  productId: uuid("product_id")
-    .notNull()
-    .references(() => product.id, { onDelete: "cascade" }),
-  categoryId: uuid("category_id")
-    .notNull()
-    .references(() => category.id, { onDelete: "cascade" }),
-});
+export const productCategory = pgTable(
+  "product_category",
+  {
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    categoryId: uuid("category_id")
+      .notNull()
+      .references(() => category.id, { onDelete: "cascade" }),
+  },
+  (table) => [
+    primaryKey({ columns: [table.productId, table.categoryId] }),
+    index("product_category_category_idx").on(table.categoryId),
+  ],
+);
 
 export const tag = pgTable(
   "tag",

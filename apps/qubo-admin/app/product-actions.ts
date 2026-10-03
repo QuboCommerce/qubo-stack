@@ -1,13 +1,15 @@
 "use server";
 
 import { db } from "@qubo/db/client";
-import { product } from "@qubo/db/schema";
-import { and, eq, ne } from "drizzle-orm";
+import { category, product, productCategory } from "@qubo/db/schema";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
+
+const uuid = /^[0-9a-f-]{36}$/i;
 
 const money = z
   .string()
@@ -85,6 +87,12 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       .limit(1);
     if (clash.length) return { error: "Another product already uses this handle." };
 
+    const requested = [...new Set(formData.getAll("categoryIds").map(String).filter((v) => uuid.test(v)))];
+    const categoryIds = requested.length
+      ? (await db.select({ id: category.id }).from(category).where(and(eq(category.siteId, siteId), inArray(category.id, requested)))).map((r) => r.id)
+      : [];
+    if (categoryIds.length !== requested.length) return { error: "One of the categories no longer exists. Reload the page and try again." };
+
     const values = {
       name: d.name,
       slug: d.slug,
@@ -102,20 +110,25 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       isFeatured: d.isFeatured,
       updatedAt: new Date(),
     };
-    if (id === "new" || !id) {
-      const [row] = await db.insert(product).values({ ...values, siteId }).returning({ id: product.id });
-      createdId = row!.id;
+    const isNew = id === "new" || !id;
+    const savedId = await db.transaction(async (tx) => {
+      const [row] = isNew
+        ? await tx.insert(product).values({ ...values, siteId }).returning({ id: product.id })
+        : await tx.update(product).set(values).where(and(eq(product.id, id), eq(product.siteId, siteId))).returning({ id: product.id });
+      if (!row) return null;
+      await tx.delete(productCategory).where(eq(productCategory.productId, row.id));
+      if (categoryIds.length) await tx.insert(productCategory).values(categoryIds.map((categoryId) => ({ productId: row.id, categoryId })));
+      return row.id;
+    });
+    if (!savedId) return { error: "Product not found on this site." };
+    if (isNew) {
+      createdId = savedId;
       slugForRedirect = site.slug;
     } else {
-      const [row] = await db
-        .update(product)
-        .set(values)
-        .where(and(eq(product.id, id), eq(product.siteId, siteId)))
-        .returning({ id: product.id });
-      if (!row) return { error: "Product not found on this site." };
       revalidatePath(`/${site.slug}/products/${id}`);
     }
     revalidatePath(`/${site.slug}/products`);
+    revalidatePath(`/${site.slug}/products/categories`);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Something went wrong." };
   }

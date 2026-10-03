@@ -47,6 +47,7 @@ const groups: NavGroup[] = [
         icon: Tag,
         requires: ["catalog"],
         children: [
+          { label: "Categories", href: "/products/categories" },
           { label: "Collections", href: "/products/collections" },
           { label: "Inventory", href: "/products/inventory", requires: ["commerce"] },
           { label: "Gift cards", href: "/products/gift-cards", requires: ["commerce"] },

@@ -2,30 +2,45 @@ import Link from "next/link";
 import { Archive, ArchiveRestore, ImageOff, LayoutGrid, List, Package, Plus, Upload } from "lucide-react";
 import { toggleProductArchive } from "@/app/actions";
 import { IndexToolbar, Pagination, td, th } from "@/components/index-table";
+import { CategoryFilter } from "@/components/categories/category-filter";
 import { EmptyState, Page, Panel } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireSite } from "@/lib/admin";
+import { getCategoryTree, subtreeIds } from "@/lib/categories";
 import { assetUrl, money, number, relativeTime } from "@/lib/format";
 import { getCatalogHealth, getProducts } from "@/lib/queries";
 import { cn } from "@qubo/shared/utils";
 
-type Search = { q?: string; status?: string; page?: string; view?: string };
+type Search = { q?: string; status?: string; page?: string; view?: string; category?: string };
+
+const uuid = /^[0-9a-f-]{36}$/i;
 
 export default async function ProductsPage({ params, searchParams }: { params: Promise<{ site: string }>; searchParams: Promise<Search> }) {
   const [{ site: slug }, sp] = await Promise.all([params, searchParams]);
   const { site, siteId } = await requireSite(slug);
   const status = sp.status === "active" || sp.status === "archived" ? sp.status : "all";
   const page = Number(sp.page) || 1;
+  const tree = await getCategoryTree(siteId);
+  const activeCategory = sp.category === "none" ? null : sp.category && uuid.test(sp.category) ? tree.find((n) => n.id === sp.category) : undefined;
+  const category = sp.category === "none" ? "none" : activeCategory ? activeCategory.id : "";
   const [result, health] = await Promise.all([
-    getProducts(siteId, { q: sp.q, status, page }),
+    getProducts(siteId, { q: sp.q, status, page, categoryIds: category === "none" ? "none" : activeCategory ? [...subtreeIds(tree, activeCategory.id)] : undefined }),
     getCatalogHealth(siteId),
   ]);
   const base = `/${site.slug}/products`;
   const view = sp.view === "grid" ? "grid" : "list";
-  const keep = view === "grid" ? { view } : undefined;
-  const qs = (p: number) => `${base}?status=${status}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}${view === "grid" ? "&view=grid" : ""}&page=${p}`;
-  const viewHref = (v: string) => `${base}?status=${status}${sp.q ? `&q=${encodeURIComponent(sp.q)}` : ""}${v === "grid" ? "&view=grid" : ""}`;
+  const keep = { ...(view === "grid" ? { view } : {}), ...(category ? { category } : {}) };
+  const href = (o: { view?: string; category?: string; page?: number }) => {
+    const p = new URLSearchParams({ status });
+    if (sp.q) p.set("q", sp.q);
+    if (o.view === "grid") p.set("view", "grid");
+    if (o.category) p.set("category", o.category);
+    if (o.page) p.set("page", String(o.page));
+    return `${base}?${p}`;
+  };
+  const qs = (n: number) => href({ view, category, page: n });
+  const viewHref = (v: string) => href({ view: v, category });
   const currency = site.currency ?? "EUR";
 
   return (
@@ -52,13 +67,18 @@ export default async function ProductsPage({ params, searchParams }: { params: P
             placeholder="Search by name, brand or handle"
             keep={keep}
             extra={
-              <div className="flex shrink-0 self-end rounded-lg border p-0.5 @min-[40rem]:self-auto" role="group" aria-label="View">
+              <div className="flex min-w-0 items-center gap-2 self-stretch @min-[40rem]:self-auto">
+              {tree.length > 0 && (
+                <CategoryFilter options={tree.map(({ id, name, depth }) => ({ id, name, depth }))} value={category} hrefBase={href({ view })} />
+              )}
+              <div className="ml-auto flex shrink-0 rounded-lg border p-0.5" role="group" aria-label="View">
                 {([["list", List, "List view"], ["grid", LayoutGrid, "Grid view"]] as const).map(([id, Icon, label]) => (
                   <Link key={id} href={viewHref(id)} title={label} aria-label={label} aria-current={view === id ? "true" : undefined}
                     className={cn("grid size-7 place-items-center rounded-md transition-colors", view === id ? "bg-accent text-foreground" : "text-muted-foreground hover:text-foreground")}>
                     <Icon className="size-4" />
                   </Link>
                 ))}
+              </div>
               </div>
             }
             tabs={[
@@ -68,7 +88,12 @@ export default async function ProductsPage({ params, searchParams }: { params: P
             ]}
           />
           {result.rows.length === 0 ? (
-            <EmptyState icon={Package} title="No products found" description="Try changing the filters or search term." />
+            <EmptyState
+              icon={Package}
+              title="No products found"
+              description={category ? "Nothing matches in this category. Try another one or clear the filter." : "Try changing the filters or search term."}
+              action={category ? <Button variant="outline" size="sm" asChild><Link href={href({ view })}>Clear category</Link></Button> : undefined}
+            />
           ) : view === "grid" ? (
             <ul className="grid grid-cols-2 gap-3 p-3 @min-[36rem]:grid-cols-3 @min-[56rem]:grid-cols-4 @min-[72rem]:grid-cols-5 @min-[96rem]:grid-cols-6 @min-[120rem]:grid-cols-8">
               {result.rows.map((p) => {

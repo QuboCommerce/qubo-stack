@@ -12,6 +12,7 @@
     "db:studio": "pnpm --filter @qubo/db studio",
     "legacy:archive": "node scripts/archive-legacy.mjs",
     "legacy:import": "node scripts/import-shopapplication.mjs",
+    "legacy:categories": "node scripts/import-categories.mjs",
     "clean": "turbo run clean && rm -rf node_modules",
     "postinstall": "node scripts/link-env.mjs",
     "setup:env": "node scripts/link-env.mjs"
