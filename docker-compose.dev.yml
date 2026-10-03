@@ -14,17 +14,9 @@ services:
     ports:
       - "4000:4000"
 
-  hm-froid:
-    build:
-      target: deps
-    command: ["pnpm", "--filter", "hm-froid", "dev"]
-    volumes:
-      - ./apps/hm-froid:/app/apps/hm-froid
-      - ./packages:/app/packages
-      - /app/apps/hm-froid/node_modules
-      - /app/apps/hm-froid/.next
-    ports:
-      - "3000:3000"
+  qubo-storefront:
+    profiles:
+      - production
 
   caddy-edge:
     profiles:

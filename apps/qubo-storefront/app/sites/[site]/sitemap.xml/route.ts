@@ -1,5 +1,8 @@
 import { getStorefront, hostFromParam } from "@/lib/site";
 
+// Host-resolved at request time; never prerender at build (no API there).
+export const dynamic = "force-dynamic";
+
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 /** Per-host sitemap: home, published pages and (with `catalog`) collections + products, on the canonical origin. */

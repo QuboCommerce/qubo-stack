@@ -28,8 +28,7 @@ product shape, so a single catalog/variant/pricing model serves both.
 qubo-stack/                     Turborepo + pnpm workspace
 ├── apps/
 │   ├── qubo-admin/             Next.js 16 control plane (:4000)
-│   ├── hm-froid/                  Next.js 16 storefront (:3000)
-│   └── (tailg-belgium/)           future second storefront
+│   └── qubo-storefront/        Next.js 16 storefront for every site, resolved by host (:3000)
 ├── packages/
 │   ├── api/        @qubo/api   qubo-elysia: Elysia on Bun, auth + tenancy (:3333)
 │   ├── db/         @qubo/db    Drizzle schema + client (PostgreSQL)
@@ -52,7 +51,7 @@ qubo-stack/                     Turborepo + pnpm workspace
 | Database (legacy, retiring) | `qubo-postgres` | 127.0.0.1:55433 → 5432 |
 | API | `qubo-elysia` | 3333 |
 | Control plane | `qubo-admin` | 4000 |
-| Storefront | `hm-froid` | 3000 |
+| Storefront (all sites) | `qubo-storefront` | 3000 |
 | Edge proxy | `caddy-edge` | 80/443 |
 
 Network: `qubo-network`. Compose project name: `qubo`.
@@ -185,8 +184,8 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    (`blockCss`, emitted by `ThemeStyles`) driven by StyleKit CSS variables, so
    a document renders identically in the Studio iframe and any storefront
    without depending on the host app's Tailwind. Defaults are filled at render
-   time, so sparse/AI-written props never crash. Render proof:
-   `apps/hm-froid/app/studio-proof` (noindex).
+   time, so sparse/AI-written props never crash. Rendered by
+   `apps/qubo-storefront` (see `docs/storefront.md`).
 10. **StyleKit roles are semantic** — `accent` is a fill (paired with
    `onAccent`); `accentText` is accent used as text (eyebrows, highlights) and
    falls back to `link`. Schemes reference palette tokens only.

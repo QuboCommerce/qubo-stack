@@ -6,10 +6,10 @@ qubo.by-ali.dev {
 }
 
 hmfroid.be, www.hmfroid.be {
-	reverse_proxy hm-froid:3000
+	reverse_proxy qubo-storefront:3000
 }
 
-# Second storefront — enable when tailg-belgium lands in apps/.
+# Every site is served by the same storefront; add its domains here.
 # tailg.be, www.tailg.be {
-# 	reverse_proxy tailg-belgium:3001
+# 	reverse_proxy qubo-storefront:3000
 # }

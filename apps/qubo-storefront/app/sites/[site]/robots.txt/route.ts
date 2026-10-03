@@ -1,5 +1,8 @@
 import { getStorefront, hostFromParam } from "@/lib/site";
 
+// Host-resolved at request time; never prerender at build (no API there).
+export const dynamic = "force-dynamic";
+
 /** Per-host robots.txt. Dev, preview and alias hosts block everything. */
 export async function GET(_req: Request, { params }: { params: Promise<{ site: string }> }) {
   const sf = await getStorefront(hostFromParam((await params).site));
