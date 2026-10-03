@@ -55,6 +55,17 @@ and `checkout.session.async_payment_succeeded`.
 | `CHECKOUT_SHIPPING_CENTS` / `CHECKOUT_SHIPPING_LABEL` | Optional flat shipping rate |
 | `RESEND_API_KEY` / `ORDER_EMAIL_FROM` | Order confirmation email |
 
+## Customer accounts
+
+Sites with the `accounts` capability proxy `/api/auth/*` to qubo-api's Better Auth (one identity
+across the platform) and serve `/api/account` (profile + this site's orders). The proxy forwards
+`x-qubo-site` and `x-forwarded-host/proto`, so session cookies are `__Secure-`, HttpOnly and
+**host-only on the site's own domain**; the API trusts a request origin only if it serves that site.
+The `Account` block renders sign-in / create-account, then profile and orders. Orders are linked
+by `customer_id` (Stripe `client_reference_id` at checkout), never by email, because sign-up does
+not verify email yet. First visit registers a `site_customer` row. Password reset needs an email
+sender and is not wired yet.
+
 ## Maintenance
 
 When `site_settings.maintenance_mode` is on (and `maintenance_end` not passed), every page renders the

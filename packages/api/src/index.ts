@@ -5,6 +5,7 @@ import { db } from "@qubo/db/client";
 import { auth } from "./lib/auth";
 import { catalog } from "./routes/catalog";
 import { commerce } from "./routes/commerce";
+import { account } from "./routes/account";
 import { seo } from "./routes/seo";
 import { sites } from "./routes/sites";
 import { studioPublic, studioRoutes } from "./routes/studio";
@@ -33,10 +34,13 @@ export const app = new Elysia()
     return { ok: true, database: "up", latencyMs: Date.now() - started };
   })
   // Better Auth owns every /api/auth/* route across the platform.
-  .mount("/api/auth", auth.handler)
+  // Better Auth owns every /api/auth/* route. Not `.mount()`: that strips the prefix Better Auth
+  // matches on, and Elysia must not parse the body before Better Auth reads it.
+  .all("/api/auth/*", ({ request }) => auth.handler(request), { parse: "none" })
   .use(sites)
   .use(catalog)
   .use(commerce)
+  .use(account)
   .use(studioRoutes)
   .use(studioPublic)
   .use(seo);

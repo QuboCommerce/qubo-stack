@@ -10,13 +10,14 @@ import {
   productImage,
   productVariant,
   site as siteTable,
-  siteDomain,
+  user,
 } from "@qubo/db/schema";
-import { and, asc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
 import { keyOf, resolvePrices } from "../lib/pricing";
 import { StripeConfigError, stripeRequest, verifyStripeSignature } from "../lib/stripe";
 import { sendOrderConfirmation } from "../lib/order-email";
+import { allowedSiteOrigin } from "../lib/origins";
 
 const MAX_LINES = 10;
 const MAX_QTY = 20;
@@ -51,33 +52,6 @@ function orderPrefix(slug: string) {
   return initials.slice(0, 4);
 }
 
-/**
- * Stripe's return URLs must point back at a host that serves this site, never
- * at an arbitrary caller-supplied origin.
- */
-async function allowedReturnOrigin(site: { id: string; slug: string }, origin: string) {
-  let url: URL;
-  try {
-    url = new URL(origin);
-  } catch {
-    return null;
-  }
-  const host = url.hostname.toLowerCase();
-  const dev = process.env.QUBO_DEV === "1";
-  if (url.protocol !== "https:" && !(dev && url.protocol === "http:")) return null;
-  const base = process.env.PLATFORM_BASE_DOMAIN?.trim().toLowerCase();
-  if (base && host === `${site.slug}.${base}`) return url.origin;
-  if (dev && (host === "localhost" || host === "127.0.0.1")) return url.origin;
-  const devHosts = (process.env.QUBO_DEV_SITE_HOSTS ?? "").split(",").map((pair) => pair.trim().split("="));
-  if (devHosts.some(([h, slug]) => slug === site.slug && h?.split(":")[0] === host)) return url.origin;
-  const [verified] = await db
-    .select({ id: siteDomain.id })
-    .from(siteDomain)
-    .where(and(eq(siteDomain.siteId, site.id), eq(siteDomain.hostname, host.replace(/^www\./, "")), isNotNull(siteDomain.verifiedAt)))
-    .limit(1);
-  return verified ? url.origin : null;
-}
-
 type CheckoutSession = { id: string; url: string | null };
 
 export const commerce = new Elysia()
@@ -89,7 +63,7 @@ export const commerce = new Elysia()
       if (!site.capabilities.includes("commerce")) return status(404, { error: "not_found" });
       const ids = body.items.map((i) => i.variantId);
       if (new Set(ids).size !== ids.length) return status(400, { error: "duplicate_variants" });
-      const origin = await allowedReturnOrigin(site, body.returnOrigin);
+      const origin = await allowedSiteOrigin(site, body.returnOrigin);
       if (!origin) return status(400, { error: "invalid_return_origin" });
 
       const variants = await db
@@ -143,6 +117,11 @@ export const commerce = new Elysia()
         form.set("shipping_options[0][shipping_rate_data][fixed_amount][currency]", currency);
       }
       form.set("metadata[site_id]", site.id);
+      if (actor) {
+        // Links the order to the signed-in customer (see /account) and prefills their email.
+        form.set("client_reference_id", actor.id);
+        form.set("customer_email", actor.email);
+      }
       form.set("metadata[cart]", encodeCart(lines));
       lines.forEach((l, i) => {
         form.set(`line_items[${i}][quantity]`, String(l.quantity));
@@ -211,6 +190,7 @@ type StripeSession = {
   shipping_details?: { name?: string | null; address?: StripeAddress } | null;
   collected_information?: { shipping_details?: { name?: string | null; address?: StripeAddress } | null } | null;
   payment_method_types?: string[];
+  client_reference_id?: string | null;
   metadata?: { site_id?: string; store_id?: string; cart?: string };
 };
 
@@ -227,6 +207,9 @@ async function recordOrder(eventId: string, session: StripeSession) {
     .where(eq(siteTable.id, siteId))
     .limit(1);
   if (!owner) throw new Error("Unknown site");
+  const customerId = session.client_reference_id
+    ? ((await db.select({ id: user.id }).from(user).where(eq(user.id, session.client_reference_id)).limit(1))[0]?.id ?? null)
+    : null;
 
   const variants = await db
     .select({
@@ -262,6 +245,7 @@ async function recordOrder(eventId: string, session: StripeSession) {
       .insert(orderTable)
       .values({
         siteId,
+        customerId,
         customerEmail: email,
         customerName,
         orderNumber,

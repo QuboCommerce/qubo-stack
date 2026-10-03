@@ -9,6 +9,8 @@ STATE="$ROOT/.private/dev/state/$SVC"
 LOG="$ROOT/.private/dev/logs/$SVC.log"
 QD=(node "$ROOT/scripts/dev/qd.mjs")
 cd "$ROOT" || exit 1
+# The screen session keeps the PATH it was created with; prefer the user's bun over a stale /usr/bin one.
+[ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
 mkdir -p "$(dirname "$STATE")"
 
 if [ "$SVC" = hub ]; then

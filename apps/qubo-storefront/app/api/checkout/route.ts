@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     const { url } = await sf.client.checkout({
       items: body.items as { variantId: string; quantity: number }[],
       returnOrigin: `${proto}://${rawHost}`,
-    });
+    }, req.headers.get("cookie"));
     return Response.json({ url });
   } catch (error) {
     if (error instanceof QuboApiError) {

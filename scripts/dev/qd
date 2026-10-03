@@ -24,4 +24,6 @@ done
 pick="${pick:-$fallback}"
 [ -n "$pick" ] || { echo "qd: Node $want+ not found (fnm install $want)" >&2; exit 127; }
 export PATH="$(dirname "$pick"):$PATH"
+# The Node dir may be /usr/bin, which can hold a stale distro bun; the user's bun install wins.
+[ -x "$HOME/.bun/bin/bun" ] && export PATH="$HOME/.bun/bin:$PATH"
 exec "$pick" "$DIR/qd.mjs" "$@"

@@ -1,5 +1,5 @@
 /**
- * Seeds HM Froid's product, cart, search and maintenance templates with the commerce
+ * Seeds HM Froid's product, cart, search, account and maintenance templates with the commerce
  * blocks (French copy) and publishes them. Idempotent.
  *
  *   cd packages/studio && bun --env-file=../../.env scripts/seed-hm-froid-commerce.ts
@@ -94,6 +94,46 @@ const templates: [ResourceKind, ReturnType<typeof instantiate>[]][] = [
           limit: 24,
           emptyText: "Aucun produit ne correspond à votre recherche.",
           section: { width: "wide", spacingTop: "md" },
+        },
+      }),
+    ],
+  ],
+  [
+    "account",
+    [
+      heading("Mon compte"),
+      instantiate(registry, "Account", {
+        props: {
+          section: { width: "wide", spacingTop: "md" },
+          greeting: "Bonjour, {name}",
+          ordersTitle: "Vos commandes",
+          noOrders: "Vous n'avez pas encore passé de commande.",
+          form: {
+            signInTab: "Se connecter",
+            signUpTab: "Créer un compte",
+            name: "Nom complet",
+            email: "E-mail",
+            password: "Mot de passe (8 caractères min.)",
+            signIn: "Se connecter",
+            signUp: "Créer mon compte",
+            signOut: "Se déconnecter",
+          },
+          errors: {
+            invalidCredentials: "E-mail ou mot de passe incorrect.",
+            emailTaken: "Un compte existe déjà pour cet e-mail. Connectez-vous.",
+            weakPassword: "Utilisez au moins 8 caractères.",
+            error: "Une erreur est survenue. Réessayez.",
+          },
+          statuses: {
+            PENDING: "En attente",
+            CONFIRMED: "Confirmée",
+            PROCESSING: "En préparation",
+            SHIPPED: "Expédiée",
+            DELIVERED: "Livrée",
+            COMPLETED: "Terminée",
+            CANCELLED: "Annulée",
+            REFUNDED: "Remboursée",
+          },
         },
       }),
     ],

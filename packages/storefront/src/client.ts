@@ -152,10 +152,11 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     getRedirect: (path: string) => orNull(request<RedirectResponse>(`/render/redirect${qs({ path })}`)),
 
     /** Starts a Stripe Checkout session; returns the URL to send the visitor to. */
-    checkout: (body: CheckoutRequest) =>
+    /** `cookie`: the visitor's session cookie, so the order is linked to their account. */
+    checkout: (body: CheckoutRequest, cookie?: string | null) =>
       request<CheckoutResponse>("/checkout", {
         method: "POST",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) },
         body: JSON.stringify(body),
       }),
 

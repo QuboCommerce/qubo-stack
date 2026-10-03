@@ -257,7 +257,7 @@ export const RichText = defineSection({
   render: ({ content: Content, align }) => (
     <Content
       className="pk-stack pk-rich-text"
-      style={{ "--pk-dir": "column", gap: gap("sm"), textAlign: align, alignItems: align === "center" ? "center" : "stretch" } as CSSProperties}
+      style={{ "--pk-dir": "column", gap: gap("sm"), textAlign: align, alignItems: align === "center" ? "center" : "stretch", ...(align === "start" ? { marginInline: 0 } : {}) } as CSSProperties}
     />
   ),
 });
