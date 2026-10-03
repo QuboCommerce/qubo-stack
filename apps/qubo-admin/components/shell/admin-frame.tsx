@@ -12,6 +12,7 @@ import { SidebarNav } from "./sidebar-nav";
 import { SiteSwitcher } from "./site-switcher";
 import type { ShellCounts, ShellSite, ShellUser } from "./types";
 import { UserMenu } from "./user-menu";
+import { PresenceStack } from "@/components/presence";
 
 /**
  * Responsive shell:
@@ -81,6 +82,7 @@ export function AdminFrame({ site, sites, user, counts, children }: {
               <Bell className="size-[18px]" />
               {counts.leads > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-brand-hot ring-2 ring-topbar" />}
             </button>
+            <PresenceStack className="hidden xs:flex" />
             <UserMenu user={user} />
           </div>
         </header>

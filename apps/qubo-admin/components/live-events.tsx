@@ -1,14 +1,22 @@
 "use client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useRef } from "react";
-import { EventsProvider, useEvent } from "@qubo/realtime/client";
+import { EventsProvider, PresenceProvider, useEvent } from "@qubo/realtime/client";
+import { FieldPresenceOverlay } from "@/components/presence";
 
-/** One event connection per tab. A replay gap ("reset") refreshes server data. */
-export function LiveEvents({ children }: { children: React.ReactNode }) {
+/**
+ * One event connection per tab, plus this tab's presence on `siteId`.
+ * A replay gap ("reset") refreshes server data.
+ */
+export function LiveEvents({ siteId, userId, children }: { siteId: string; userId: string; children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   return (
     <EventsProvider url="/api/events" onReset={() => router.refresh()}>
-      {children}
+      <PresenceProvider url="/api/presence" siteId={siteId} userId={userId} route={pathname}>
+        {children}
+        <FieldPresenceOverlay />
+      </PresenceProvider>
     </EventsProvider>
   );
 }

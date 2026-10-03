@@ -6,6 +6,7 @@ import { requireSite } from "@/lib/admin";
 import { getActiveTheme } from "@/lib/queries";
 import { siteMeta } from "@/lib/studio";
 import { StudioEditor } from "@/components/studio/studio-editor";
+import { LiveEvents } from "@/components/live-events";
 
 type Params = { site: string; view?: string[] };
 
@@ -41,6 +42,7 @@ export default async function StudioPage({ params, searchParams }: { params: Pro
   const themeView = themeRow && parsed.success ? await getTheme(scope, themeRow.id) : null;
 
   return (
+    <LiveEvents siteId={siteId} userId={user.id}>
     <StudioEditor
       key={view.key}
       site={{ ...siteMeta(site), slug: site.slug }}
@@ -68,5 +70,6 @@ export default async function StudioPage({ params, searchParams }: { params: Pro
       canPublish={site.memberRole === "OWNER" || site.memberRole === "ADMIN"}
       locale={site.locale}
     />
+    </LiveEvents>
   );
 }

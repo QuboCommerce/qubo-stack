@@ -18,7 +18,12 @@ export function connectEvents(url: string, opts: { onEvent: Handler; onReset?: (
   let retryTimer: ReturnType<typeof setTimeout> | null = null;
   let closed = false;
   const seen = (id: string) => cursor !== null && BigInt(id) <= BigInt(cursor);
-  const deliver = (e: DeliveredEvent) => { if (seen(e.id)) return; cursor = e.id; opts.onEvent(e); };
+  const deliver = (e: DeliveredEvent) => {
+    if (e.id === "") return opts.onEvent(e); // ephemeral: no cursor
+    if (seen(e.id)) return;
+    cursor = e.id;
+    opts.onEvent(e);
+  };
 
   function openSse() {
     if (closed) return;
@@ -93,3 +98,5 @@ export function useEvent<T extends EventType>(type: T | T[], handler: (e: EventO
 }
 
 export const useConnectionState = () => useContext(EventsContext)?.state ?? "offline";
+
+export { PresenceProvider, usePresence, usePeers, useReportPresence, type Peer } from "./presence";

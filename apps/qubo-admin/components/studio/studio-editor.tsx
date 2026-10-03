@@ -61,6 +61,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { relativeTime } from "@/lib/format";
 import { studioHref } from "@/lib/view-meta";
 import { HistorySheet } from "./history-sheet";
+import { useReportPresence } from "@qubo/realtime/client";
+import { BlockPresenceOverlay, DocumentPresence } from "@/components/presence";
 import { useDocumentSync, type DocumentSync } from "./use-document-sync";
 import { ViewPicker } from "./view-picker";
 import { ThemePanel } from "./theme/theme-panel";
@@ -212,6 +214,7 @@ function StudioLayout({
 
   const history = usePuck((s) => s.history);
   const selected = usePuck((s) => s.selectedItem);
+  useReportPresence({ documentId: doc.id, blockId: selected ? String(selected.props.id) : undefined });
   const componentLabel = usePuck((s) => (s.selectedItem ? s.config.components[s.selectedItem.type]?.label ?? s.selectedItem.type : null));
 
   const dual = theme?.modeStrategy === "dual";
@@ -523,6 +526,7 @@ function StudioLayout({
             </Tooltip>
           </div>
 
+          <DocumentPresence documentId={doc.id} />
           <SaveStatus sync={themeActive ? themeSync : sync} compact={!wide} />
 
           <DropdownMenu>
@@ -667,6 +671,7 @@ function StudioLayout({
         onInsert={insertSection}
       />
 
+      <BlockPresenceOverlay documentId={doc.id} />
       <HistorySheet
         open={historyOpen}
         onOpenChange={setHistoryOpen}
