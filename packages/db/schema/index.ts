@@ -58,3 +58,6 @@ export * from "./notifications";
 
 // Realtime event bus
 export * from "./realtime";
+
+// Session devices (geo, takeover)
+export * from "./sessions";

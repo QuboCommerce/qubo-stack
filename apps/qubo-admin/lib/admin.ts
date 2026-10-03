@@ -8,6 +8,7 @@ import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { siteUrl } from "@qubo/shared/site-url";
 import { auth } from "@/lib/auth";
+import { touchActivity } from "@/lib/sessions";
 
 export const requireUser = cache(async () => {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -20,7 +21,8 @@ export const requireUser = cache(async () => {
     .limit(1);
 
   if (!authorizedUser) redirect("/sign-in?error=forbidden");
-  return authorizedUser;
+  void touchActivity(session.session.id);
+  return { ...authorizedUser, sessionId: session.session.id };
 });
 
 /** Every site the user can reach through an organization membership. */

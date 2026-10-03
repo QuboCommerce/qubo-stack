@@ -1,6 +1,7 @@
 import { getPresence } from "@qubo/realtime/server";
 import { z } from "zod";
 import { viewerOf } from "@/lib/audience";
+import { setFocus } from "@/lib/sessions";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -33,6 +34,7 @@ export async function POST(request: Request) {
     presence.leave(viewer.user.id, body.clientId);
     return new Response(null, { status: 204 });
   }
+  void setFocus(viewer.sessionId, body.focused);
   const entries = presence.touch({ ...body, userId: viewer.user.id, name: viewer.user.name, image: viewer.user.image });
   return Response.json({ entries });
 }

@@ -5,7 +5,7 @@ import type { Audience } from "@qubo/realtime";
 import { and, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 
-export type Viewer = { user: { id: string; name: string; image: string | null }; audience: Audience };
+export type Viewer = { user: { id: string; name: string; image: string | null }; sessionId: string; audience: Audience };
 
 /** The signed-in staff user + every site/org they're a member of. Null = not allowed. */
 export async function viewerOf(headers: Headers): Promise<Viewer | null> {
@@ -24,6 +24,7 @@ export async function viewerOf(headers: Headers): Promise<Viewer | null> {
     .where(eq(organizationMember.userId, staff.id));
   return {
     user: staff,
+    sessionId: session.session.id,
     audience: {
       userId: staff.id,
       siteIds: new Set(rows.flatMap((r) => (r.siteId ? [r.siteId] : []))),

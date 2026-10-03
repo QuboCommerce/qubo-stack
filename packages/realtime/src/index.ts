@@ -40,7 +40,7 @@ export const PlatformEvent = z.discriminatedUnion("type", [
   def("theme.published", z.object({ themeId: z.string(), by: Actor })),
   // Full snapshot of a site's presence; ephemeral (no id, not replayed).
   def("presence.changed", z.object({ entries: z.array(PresenceEntry) })),
-  def("session.revoked", z.object({ sessionId: z.string(), by: z.object({ city: z.string().nullable(), deviceLabel: z.string().nullable() }) })),
+  def("session.revoked", z.object({ sessionId: z.string(), reason: z.enum(["takeover", "revoked"]), by: z.object({ city: z.string().nullable(), deviceLabel: z.string().nullable() }) })),
   def("conversation.created", z.object({ conversationId: z.string() })),
   def("conversation.message", z.object({ conversationId: z.string(), messageId: z.string() })),
   def("site.domain.changed", z.object({ hostname: z.string() })),

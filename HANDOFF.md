@@ -258,6 +258,21 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    by `LiveEvents`), `DocumentPresence` + `BlockPresenceOverlay` (Studio; drawn
    inside Puck's iframe with inline styles). Multiple admin processes would each
    see only their own tabs; fine on one VPS, a shared store is the scale-out step.
+18. **Sessions are tracked per device and signing in again asks before kicking.**
+   Better Auth's `session.create.after` hook writes a `session_device` row
+   (parsed UA, IP, geo city; no FK so ended rows survive the session delete).
+   `cookieCache` is **off** so a deleted session is rejected immediately. After
+   sign-in the form calls `/api/sessions`; if another device was active in the
+   last 30 min it offers "Sign out that device" (`/api/sessions/takeover`) or
+   Cancel (signs the new session out), so it never kicks without asking. `endSession`
+   emits `session.revoked` (`reason: takeover|revoked`) to that user; the
+   ended tab shows a blocking dialog, and the sign-in page explains why via
+   `endedNotice`. Settings → Security & sessions lists devices with revoke.
+   Geo is `@qubo/geo`: a local DB-IP Lite mmdb (CC BY 4.0, attribution shown),
+   no external calls. Refresh monthly with `pnpm --filter @qubo/geo update`;
+   path `$QUBO_GEO_DB` or `.private/geo/dbip-city-lite.mmdb`. Missing DB →
+   locations are just blank. Storefront → admin one-time handoff tokens are
+   deferred to p4-domains.
 
 ## Roadmap
 

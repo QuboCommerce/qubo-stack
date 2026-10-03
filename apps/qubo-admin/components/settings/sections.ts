@@ -13,6 +13,7 @@ import {
   Plug,
   Receipt,
   Scale,
+  ShieldCheck,
   Truck,
   Users,
   type LucideIcon,
@@ -45,6 +46,12 @@ export const settingsGroups: { label: string; items: SettingsSection[] }[] = [
     items: [
       { slug: "users", label: "Users & permissions", description: "Who can access this organization and what they can do.", icon: Users, ready: true },
       { slug: "sites", label: "Sites", description: "Every site this organization runs from one admin.", icon: AppWindow, ready: true },
+    ],
+  },
+  {
+    label: "Your account",
+    items: [
+      { slug: "security", label: "Security & sessions", description: "Devices signed in to your account and where they are.", icon: ShieldCheck, ready: true },
     ],
   },
   {
