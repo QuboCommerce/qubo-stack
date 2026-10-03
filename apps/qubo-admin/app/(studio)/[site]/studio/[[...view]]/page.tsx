@@ -42,7 +42,7 @@ export default async function StudioPage({ params, searchParams }: { params: Pro
   const themeView = themeRow && parsed.success ? await getTheme(scope, themeRow.id) : null;
 
   return (
-    <LiveEvents siteId={siteId} userId={user.id}>
+    <LiveEvents siteId={siteId} userId={user.id} sessionId={user.sessionId}>
     <StudioEditor
       key={view.key}
       site={{ ...siteMeta(site), slug: site.slug }}

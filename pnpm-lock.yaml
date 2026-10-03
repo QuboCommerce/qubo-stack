@@ -32,6 +32,9 @@ importers:
       '@qubo/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@qubo/geo':
+        specifier: workspace:*
+        version: link:../../packages/geo
       '@qubo/realtime':
         specifier: workspace:*
         version: link:../../packages/realtime
@@ -304,6 +307,19 @@ importers:
       drizzle-kit:
         specifier: ^0.30
         version: 0.30.6
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/geo:
+    dependencies:
+      mmdb-lib:
+        specifier: ^3.0.3
+        version: 3.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.1
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -3191,6 +3207,10 @@ packages:
 
   memoirist@0.4.0:
     resolution: {integrity: sha512-zxTgA0mSYELa66DimuNQDvyLq36AwDlTuVRbnQtB+VuTcKWm5Qc4z3WkSpgsFWHNhexqkIooqpv4hdcqrX5Nmg==}
+
+  mmdb-lib@3.0.3:
+    resolution: {integrity: sha512-xQPoBXcNjjHiOvOraFBKtA++uNWF6aCVHL9dRKFXEov8eI3QJwtgiw3qApsonFT5SpoqsEVISUTg3HIDs2DiXw==}
+    engines: {node: '>=10', npm: '>=6'}
 
   motion-dom@12.43.0:
     resolution: {integrity: sha512-azKON4d9S65PEoFUiQTMTgPheEmzf2QngdRc50AKfJp9Q9mmcBVw22c8eMq9k8kxOFHdL7+WZY7N/5F/lwiDag==}
@@ -6154,6 +6174,8 @@ snapshots:
       '@jridgewell/sourcemap-codec': 1.6.0
 
   memoirist@0.4.0: {}
+
+  mmdb-lib@3.0.3: {}
 
   motion-dom@12.43.0:
     dependencies:

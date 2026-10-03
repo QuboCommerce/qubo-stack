@@ -56,7 +56,8 @@
     "vaul": "^1.1",
     "zod": "^4.4",
     "zustand": "^5",
-    "@qubo/realtime": "workspace:*"
+    "@qubo/realtime": "workspace:*",
+    "@qubo/geo": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1",

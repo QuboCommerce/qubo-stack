@@ -1,0 +1,11 @@
+{
+  "name": "@qubo/geo",
+  "version": "0.0.2",
+  "private": true,
+  "type": "module",
+  "description": "Local IP geolocation (DB-IP Lite City mmdb) and user-agent labels. No runtime third-party calls.",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc -p .", "update": "node scripts/geo-update.mjs", "test": "bun test" },
+  "dependencies": { "mmdb-lib": "^3.0.3" },
+  "devDependencies": { "@types/node": "^22", "typescript": "^5" }
+}
