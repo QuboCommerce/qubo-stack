@@ -267,3 +267,12 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
   `middleware.ts`) — export a named `proxy` function.
 - `.private/` holds the legacy archive, customer data and DB backups. It is
   gitignored and must never be committed.
+
+### Branches and PRs (solo mode)
+
+- Work on `ali/<type>-<slug>` (`qd branch new feat my-thing`, from fresh `origin/staging`), open the
+  PR with `qd pr` → `staging`. `staging` → `main` releases. `hotfix/<slug>` → `main` (and back to staging).
+- `scripts/check-branch-governance.mjs` (CI: `.github/workflows/governance.yml`) enforces the grammar
+  and merge direction; `SOLO_MODE=1` (repo variable, default on) allows work → staging without a sprint branch.
+- `stale-work.yml` labels PRs idle for 7 days; it never closes anything.
+- Owner for `qd branch new` comes from `.qubo/dev.local.json` → `{"owner":"ali"}`.
