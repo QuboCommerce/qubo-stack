@@ -16,6 +16,7 @@ export const baseCss = /* css */ `
 }
 :where([data-theme]) *, :where([data-theme]) *::before, :where([data-theme]) *::after {
   border-color: var(--${p}-border);
+  box-sizing: border-box;
 }
 
 /* ---- typography roles -------------------------------------------------- */

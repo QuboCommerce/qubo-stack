@@ -4,12 +4,14 @@ import { layoutBlocks } from "./layout";
 import { composableSections } from "./sections/composable";
 import { listSections } from "./sections/lists";
 import { dataSections, formSections, siteSections } from "./sections/more";
+import { siteChromeSections } from "./sections/site";
 
 export * from "./elements";
 export * from "./layout";
 export * from "./sections/composable";
 export * from "./sections/lists";
 export * from "./sections/more";
+export * from "./sections/site";
 export { header, headerFields, SectionHeader, type HeaderValue } from "./sections/header";
 export { iconNames, iconSet, IconGlyph } from "./icons";
 export { blockCss } from "./styles";
@@ -19,6 +21,7 @@ export const library = [
   ...composableSections,
   ...listSections,
   ...formSections,
+  ...siteChromeSections,
   ...siteSections,
   ...dataSections,
   ...layoutBlocks,

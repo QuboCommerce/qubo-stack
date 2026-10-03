@@ -4,7 +4,7 @@ import {
   Package, Phone, Plug, Quote, Recycle, Rocket, Ruler, Scissors, Settings, Shield, ShieldCheck, ShoppingBag,
   ShoppingCart, Smile, Snowflake, Sparkles, Star, Sun, Thermometer, ThumbsUp, Timer, Truck, User, Users, Wind,
   Wrench, Zap, Plus, Minus, X, Navigation, ChevronDown, ChevronRight, ArrowUpRight, Instagram, Facebook, Linkedin,
-  Youtube, Bike, BatteryCharging, Flower2, Dumbbell, Sparkle, Building2, Hammer, type LucideIcon, type LucideProps,
+  Youtube, Search, Menu, Bike, BatteryCharging, Flower2, Dumbbell, Sparkle, Building2, Hammer, type LucideIcon, type LucideProps,
 } from "lucide-react";
 
 /**
@@ -24,7 +24,7 @@ export const iconSet: Record<string, LucideIcon> = {
   plus: Plus, minus: Minus, x: X, navigation: Navigation, "chevron-down": ChevronDown, "chevron-right": ChevronRight,
   "arrow-up-right": ArrowUpRight, instagram: Instagram, facebook: Facebook, linkedin: Linkedin, youtube: Youtube,
   bike: Bike, "battery-charging": BatteryCharging, flower: Flower2, dumbbell: Dumbbell, sparkle: Sparkle,
-  building: Building2, hammer: Hammer,
+  building: Building2, hammer: Hammer, search: Search, menu: Menu,
 };
 
 export const iconNames = Object.keys(iconSet);
