@@ -1,4 +1,4 @@
-import { builtInThemes, hmFroidTheme } from "@peltier/stylekit";
+import { builtInThemes, hmFroidTheme } from "@qubo/stylekit";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
@@ -20,7 +20,7 @@ import {
   type DocumentData,
   type SlotNode,
 } from "../index";
-import { PeltierRender } from "../render";
+import { QuboRender } from "../render";
 import { createEditorConfig } from "../editor";
 import { hmFroidHomeFixture, sampleImages, sampleProducts, withSampleMedia } from "../fixtures";
 
@@ -125,7 +125,7 @@ describe("rendering", () => {
     const data = doc(...everyBlockAndPreset());
     for (const theme of Object.values(builtInThemes)) {
       const html = renderToString(
-        <PeltierRender registry={registry} data={data} metadata={{ theme, site: { id: "s", type: "store", capabilities: ["commerce", "blog"] } }} />,
+        <QuboRender registry={registry} data={data} metadata={{ theme, site: { id: "s", type: "store", capabilities: ["commerce", "blog"] } }} />,
       );
       expect(html).toContain(`data-theme="${theme.id}"`);
       expect(html).toContain("pk-section");
@@ -136,7 +136,7 @@ describe("rendering", () => {
     const hero = instantiate(registry, "Hero", {
       props: { section: { scheme: "polar-night", anchorId: "top", edges: { bottom: "wave" } } },
     });
-    const html = renderToString(<PeltierRender registry={registry} data={doc(hero)} metadata={{ theme: hmFroidTheme }} />);
+    const html = renderToString(<QuboRender registry={registry} data={doc(hero)} metadata={{ theme: hmFroidTheme }} />);
     expect(html).toContain('id="top"');
     expect(html).toContain('data-scheme="polar-night"');
     expect(html).toContain('data-edge-side="bottom"');
@@ -147,16 +147,16 @@ describe("rendering", () => {
 
   it("renders sparse props from Puck without crashing", () => {
     const sparse = doc({ type: "Heading", props: { id: "h", text: "Hi" } }, { type: "Section", props: { id: "s" } });
-    expect(() => renderToString(<PeltierRender registry={registry} data={sparse} metadata={{ theme: hmFroidTheme }} />)).not.toThrow();
+    expect(() => renderToString(<QuboRender registry={registry} data={sparse} metadata={{ theme: hmFroidTheme }} />)).not.toThrow();
   });
 
   it("renders blueprints with schema placeholders", () => {
     const bp = blueprintNode(registry, instantiate(registry, "Faq"));
-    const html = renderToString(<PeltierRender registry={registry} data={doc(bp)} metadata={{ theme: hmFroidTheme, blueprint: true }} />);
+    const html = renderToString(<QuboRender registry={registry} data={doc(bp)} metadata={{ theme: hmFroidTheme, blueprint: true }} />);
     expect(html).toContain("{{section.header.title}}");
     expect(html).toContain("{{section.items[0].question}}");
     const hero = blueprintNode(registry, instantiate(registry, "Hero"));
-    const heroHtml = renderToString(<PeltierRender registry={registry} data={doc(hero)} metadata={{ theme: hmFroidTheme }} />);
+    const heroHtml = renderToString(<QuboRender registry={registry} data={doc(hero)} metadata={{ theme: hmFroidTheme }} />);
     expect(heroHtml).toContain("{{section.content[1].text}}");
   });
 });
@@ -167,7 +167,7 @@ describe("fixtures", () => {
     expect(validateDocument(data, registry)).toEqual([]);
     const grid = data.content.find((n) => n.type === "ProductGrid")!;
     const html = renderToString(
-      <PeltierRender
+      <QuboRender
         registry={registry}
         data={data}
         metadata={{ theme: hmFroidTheme, locale: "fr", data: { [grid.props.id as string]: sampleProducts } }}
@@ -246,7 +246,7 @@ describe("site type presets", () => {
       for (const t of preset.templates) {
         const doc = templateStarter(t.kind, registry);
         expect(validateDocument(doc, registry), `${preset.type}/${t.kind}`).toEqual([]);
-        expect(() => renderToString(<PeltierRender registry={registry} data={doc} metadata={{ theme: hmFroidTheme }} />)).not.toThrow();
+        expect(() => renderToString(<QuboRender registry={registry} data={doc} metadata={{ theme: hmFroidTheme }} />)).not.toThrow();
       }
       expect(preset.templates.filter((t) => t.isSystem).map((t) => t.kind)).toEqual(["not_found", "password", "maintenance"]);
     }

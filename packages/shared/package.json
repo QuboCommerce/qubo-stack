@@ -1,5 +1,5 @@
 {
-  "name": "@peltier/shared",
+  "name": "@qubo/shared",
   "version": "0.1.0",
   "private": true,
   "type": "module",

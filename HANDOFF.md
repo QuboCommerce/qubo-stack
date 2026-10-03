@@ -1,11 +1,11 @@
-# Peltier Stack — Handoff
+# Qubo Stack — Handoff
 
 > Entry point for any new chat session. Read this before making changes.
 > Last verified: 2026-09-30.
 
 ## What this is
 
-**Peltier Stack** is a self-hosted, multi-site business platform built for
+**Qubo Stack** is a self-hosted, multi-site business platform built for
 Mostapha Hilal (aka Wooster), who runs two businesses:
 
 | Business | What it sells | Status |
@@ -13,31 +13,31 @@ Mostapha Hilal (aka Wooster), who runs two businesses:
 | **HM Froid** | Industrial/commercial refrigeration (since 2008) | Migrating off ShopApplication — **urgent** |
 | **TailG Belgium** | Electric scooters | Still on Odoo, **not yet migrated** |
 
-One control plane (`peltier-admin`) manages many **Sites**, Shopify-style
+One control plane (`qubo-admin`) manages many **Sites**, Shopify-style
 site switching, but fully owned. A Site has a **type** (`store`, `services`,
 `business`, `editorial`, `custom`) — the preset it was created from; both
 HM Froid and TailG are `store` sites. A fridge and an e-scooter are ~98% the same
 product shape, so a single catalog/variant/pricing model serves both.
 
-- **Repository:** https://github.com/aliaddas/peltier-stack (push via SSH)
+- **Repository:** https://github.com/aliaddas/qubo-stack (push via SSH)
 - **Live legacy site being replaced:** hmfroid.be
 
 ## Architecture
 
 ```
-peltier-stack/                     Turborepo + pnpm workspace
+qubo-stack/                     Turborepo + pnpm workspace
 ├── apps/
-│   ├── peltier-admin/             Next.js 16 control plane (:4000)
+│   ├── qubo-admin/             Next.js 16 control plane (:4000)
 │   ├── hm-froid/                  Next.js 16 storefront (:3000)
 │   └── (tailg-belgium/)           future second storefront
 ├── packages/
-│   ├── api/        @peltier/api   peltier-elysia: Elysia on Bun, auth + tenancy (:3333)
-│   ├── db/         @peltier/db    Drizzle schema + client (PostgreSQL)
-│   ├── shared/     @peltier/shared Zod validators, utils, constants
-│   ├── stylekit/   @peltier/stylekit themes: palette → schemes → CSS vars, Palette Doctor
-│   ├── blocks/     @peltier/blocks  schema-first Puck block library + render/editor configs
-│   ├── studio/     @peltier/studio  server services: documents, revisions, themes, translations, pages
-│   └── storefront/ @peltier/storefront typed client for storefronts → API
+│   ├── api/        @qubo/api   qubo-elysia: Elysia on Bun, auth + tenancy (:3333)
+│   ├── db/         @qubo/db    Drizzle schema + client (PostgreSQL)
+│   ├── shared/     @qubo/shared Zod validators, utils, constants
+│   ├── stylekit/   @qubo/stylekit themes: palette → schemes → CSS vars, Palette Doctor
+│   ├── blocks/     @qubo/blocks  schema-first Puck block library + render/editor configs
+│   ├── studio/     @qubo/studio  server services: documents, revisions, themes, translations, pages
+│   └── storefront/ @qubo/storefront typed client for storefronts → API
 ├── caddy/Caddyfile
 ├── scripts/                       legacy archive + importer + link-env
 ├── .zed/                          settings.json + tasks.json
@@ -48,26 +48,26 @@ peltier-stack/                     Turborepo + pnpm workspace
 
 | Service | Container | Port |
 | --- | --- | --- |
-| Database (dev) | shared Supabase CLI stack `react`, database `peltier` | 127.0.0.1:54322 |
-| Database (legacy, retiring) | `peltier-postgres` | 127.0.0.1:55433 → 5432 |
-| API | `peltier-elysia` | 3333 |
-| Control plane | `peltier-admin` | 4000 |
+| Database (dev) | shared Supabase CLI stack `react`, database `qubo` | 127.0.0.1:54322 |
+| Database (legacy, retiring) | `qubo-postgres` | 127.0.0.1:55433 → 5432 |
+| API | `qubo-elysia` | 3333 |
+| Control plane | `qubo-admin` | 4000 |
 | Storefront | `hm-froid` | 3000 |
 | Edge proxy | `caddy-edge` | 80/443 |
 
-Network: `peltier-network`. Compose project name: `peltier`.
+Network: `qubo-network`. Compose project name: `qubo`.
 
 ### Database: Supabase (since 2026-09-30)
 
 Dev runs on the machine-wide Supabase CLI stack (`supabase_*_react`), in its
-**own database** `peltier`, owned by a login role `peltier`. Isolation comes
+**own database** `qubo`, owned by a login role `qubo`. Isolation comes
 from Postgres itself: `CONNECT` on the database is revoked from `PUBLIC`, so
 Supabase's API roles (`anon`, `authenticated`, `service_role`) and PostgREST
 cannot reach it — PostgREST only serves the `postgres` database. Drizzle owns
-`public` inside `peltier`; nothing else writes there.
+`public` inside `qubo`; nothing else writes there.
 
 Production gets its own VPS with a dedicated self-hosted Supabase; the same
-database-per-project layout applies. `peltier-postgres` stays in compose until
+database-per-project layout applies. `qubo-postgres` stays in compose until
 that cutover. Storage (A9) will use Supabase Storage buckets; the local stack
 has S3 protocol and image transformation disabled, so dev serves plain object
 URLs.
@@ -90,7 +90,7 @@ Next only reads `.env` from its own app directory, and `@next/env` resets
 from `next.config.ts`. So `scripts/link-env.mjs` symlinks the root `.env` into
 each app on `postinstall`. If env vars go missing, run `pnpm setup:env`.
 
-`@peltier/db` throws on a missing `DATABASE_URL` rather than silently
+`@qubo/db` throws on a missing `DATABASE_URL` rather than silently
 connecting as the OS user.
 
 ## Tech stack
@@ -147,7 +147,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 2. **216 products missing.** 3949 of 4165 imported; 1172 duplicates collapsed,
    30 invalid. Admin reported 3174 active + 991 inactive.
 3. **No product descriptions or brands** in the source export.
-4. **`peltier-admin` has a real shell but little CRUD yet.** Site-scoped routes
+4. **`qubo-admin` has a real shell but little CRUD yet.** Site-scoped routes
    (`/[site]/…`), capability-driven sidebar, ⌘K palette, dashboard, paged
    products/customers, orders, themes and settings hub, and the Studio editor
    (`/[site]/studio/…`: Puck canvas, view picker, autosave, publish, history,
@@ -172,9 +172,9 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    generated React source. AI should emit validated block trees from approved
    component schemas; executing merchant-authored React in the panel is a
    security and deployment hazard.
-8. **`peltier-elysia` owns tenancy** — three consumers (admin + two
+8. **`qubo-elysia` owns tenancy** — three consumers (admin + two
    storefronts) share tenancy and pricing rules. The acting site comes from the
-   `x-peltier-site` header (admin switcher) or the request hostname
+   `x-qubo-site` header (admin switcher) or the request hostname
    (`site_domain`). If storefronts keep direct DB
    access "just for reads", the API becomes decorative and you get two sources
    of truth.
@@ -209,14 +209,14 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    tracking uses native input/change listeners because `form.reset()` bypasses
    React's value tracker. Section list lives in `components/settings/sections.ts`;
    unbuilt sections render a placeholder via `settings/[section]`.
-14. **Studio services** — `@peltier/studio` owns every Studio rule (site
+14. **Studio services** — `@qubo/studio` owns every Studio rule (site
    scoping, optimistic `draftVersion`, migrate→validate on save, publish
    revisions, restore/rollback, asset usage, translation staleness). The admin
    calls it from server actions; `packages/api` exposes the same services at
    `/studio/*` (admin, `If-Match` → 409) and `/render/*` (anonymous storefront
    reads: published docs + locale overlay, `theme.css` with ETag, signed
    `?preview=` tokens). Drafts accept prop-level warnings; publish is strict.
-   Integration tests (`pnpm --filter @peltier/studio test`) build a throwaway
+   Integration tests (`pnpm --filter @qubo/studio test`) build a throwaway
    org and delete it via cascade.
 15. **Theme editing lives in the Studio** — the left rail's Theme tab
    (`components/studio/theme/*`, or `studio?panel=theme`) edits the theme
@@ -234,14 +234,14 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 
 ## Roadmap
 
-- [x] Rename/restructure to `peltier-stack`, push to GitHub
+- [x] Rename/restructure to `qubo-stack`, push to GitHub
 - [x] Zed workspace (`.zed/settings.json`, `.zed/tasks.json`)
 - [x] `packages/api` — Elysia on Bun, auth + tenancy middleware
-- [x] Multi-storefront seams (`@peltier/storefront`)
-- [x] Puck install + `page`/`pageRevision` schema in `peltier-admin`
+- [x] Multi-storefront seams (`@qubo/storefront`)
+- [x] Puck install + `page`/`pageRevision` schema in `qubo-admin`
 - [x] Rename `store` → `site` (+ `site.type`), move DB onto Supabase
-- [ ] Peltier Studio — Plan A foundation (stylekit, blocks, studio services done; media next)
-- [ ] Peltier Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings, B4 editor, B5 add-section, B6 theme settings done)
+- [ ] Qubo Studio — Plan A foundation (stylekit, blocks, studio services done; media next)
+- [ ] Qubo Studio — Plan B native Studio UI (B1 shell, block library explorer, B2 settings, B4 editor, B5 add-section, B6 theme settings done)
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders
 - [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)
@@ -249,8 +249,8 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 
 ## Conventions
 
-- Imports: `@/*` is the app root; shared code via `@peltier/db`,
-  `@peltier/db/schema`, `@peltier/db/client`, `@peltier/shared`.
+- Imports: `@/*` is the app root; shared code via `@qubo/db`,
+  `@qubo/db/schema`, `@qubo/db/client`, `@qubo/shared`.
 - shadcn/ui is installed **per app**, not shared.
 - Tailwind v4 CSS-first config (no `tailwind.config.js`); tokens in
   `app/globals.css`.

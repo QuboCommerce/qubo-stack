@@ -1,5 +1,5 @@
 {
-  "name": "@peltier/blocks",
+  "name": "@qubo/blocks",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@peltier/stylekit": "workspace:*",
+    "@qubo/stylekit": "workspace:*",
     "@puckeditor/core": "^0.23.0",
     "lucide-react": "^0.460.0",
     "zod": "^4.4.3"

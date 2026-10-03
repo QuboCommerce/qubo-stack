@@ -1,9 +1,9 @@
-import { db } from "@peltier/db/client";
+import { db } from "@qubo/db/client";
 import {
   customerGroupMember,
   priceList,
   priceListPrice,
-} from "@peltier/db/schema";
+} from "@qubo/db/schema";
 import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 /**

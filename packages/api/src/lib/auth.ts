@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@peltier/db/client";
-import * as schema from "@peltier/db/schema";
+import { db } from "@qubo/db/client";
+import * as schema from "@qubo/db/schema";
 
 /**
  * Single Better Auth instance for the whole platform.
@@ -11,7 +11,7 @@ import * as schema from "@peltier/db/schema";
  * and call here instead, so session handling lives in exactly one place.
  */
 export const auth = betterAuth({
-  trustedOrigins: (process.env.PELTIER_TRUSTED_ORIGINS ?? "")
+  trustedOrigins: (process.env.QUBO_TRUSTED_ORIGINS ?? "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean),

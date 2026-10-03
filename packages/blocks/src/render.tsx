@@ -11,8 +11,8 @@ export function createRenderConfig(registry: BlockRegistry) {
 
 const configCache = new WeakMap<BlockRegistry, ReturnType<typeof createRenderConfig>>();
 
-/** Renders a Peltier document. Works in Server Components and on the client. */
-export function PeltierRender({
+/** Renders a Qubo document. Works in Server Components and on the client. */
+export function QuboRender({
   registry,
   data,
   metadata = {},

@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
-import { db } from "@peltier/db/client";
-import { order, product, siteCustomer } from "@peltier/db/schema";
+import { db } from "@qubo/db/client";
+import { order, product, siteCustomer } from "@qubo/db/schema";
 import { and, count, eq, sql } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
 import { assertSiteAccess, listAccessibleSites } from "../lib/tenancy";

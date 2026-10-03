@@ -1,11 +1,11 @@
 import { Elysia, t } from "elysia";
-import * as studio from "@peltier/studio";
+import * as studio from "@qubo/studio";
 import { tenancy } from "../plugins/tenancy";
 import { assertSiteAccess } from "../lib/tenancy";
 
 /**
  * Studio documents, themes and translations. Thin HTTP adapter over
- * @peltier/studio — peltier-admin calls the same services directly from
+ * @qubo/studio — qubo-admin calls the same services directly from
  * server actions, so rules (tenancy, versions, validation) live there.
  *
  * Draft saves use HTTP preconditions: `If-Match: <draftVersion>`; a stale

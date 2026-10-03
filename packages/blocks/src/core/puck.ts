@@ -1,6 +1,6 @@
 import type { Config, Field, Fields } from "@puckeditor/core";
-import type { Theme } from "@peltier/stylekit";
-import { buttonEmphases, fontRoles } from "@peltier/stylekit";
+import type { Theme } from "@qubo/stylekit";
+import { buttonEmphases, fontRoles } from "@qubo/stylekit";
 import type { Capability } from "./context";
 import { blockCategories, type BlockDefinition, type BlockRegistry } from "./define";
 import { anchorPoints, defaultsOf, linkKinds, type AnyFieldDef, type FieldKind, type FieldMap } from "./fields";

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { db, product, site } from "@peltier/db";
+import { db, product, site } from "@qubo/db";
 import { and, eq } from "drizzle-orm";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

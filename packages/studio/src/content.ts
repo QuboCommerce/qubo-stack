@@ -6,7 +6,7 @@ import {
   validateDocument,
   type DocumentData,
   type ValidationIssue,
-} from "@peltier/blocks";
+} from "@qubo/blocks";
 import { ValidationError } from "./errors";
 
 export type { DocumentData, ValidationIssue };

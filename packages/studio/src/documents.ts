@@ -1,4 +1,4 @@
-import { asset, assetUsage, document, documentRevision, page, site, translation, user } from "@peltier/db/schema";
+import { asset, assetUsage, document, documentRevision, page, site, translation, user } from "@qubo/db/schema";
 import { and, desc, eq, inArray, max, ne, sql } from "drizzle-orm";
 import { assetIdsOf, prepare, sameContent, stringsOf, translationPath, type DocumentData, type ValidationIssue } from "./content";
 import { db, type Executor, type Scope, type Tx } from "./db";

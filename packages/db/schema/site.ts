@@ -58,7 +58,7 @@ export const siteTypeEnum = pgEnum("site_type", [
   "custom",
 ]);
 
-/** Feature switches; keep in sync with `capabilities` in @peltier/blocks. */
+/** Feature switches; keep in sync with `capabilities` in @qubo/blocks. */
 export const siteCapabilityEnum = pgEnum("site_capability", [
   "commerce",
   "catalog",

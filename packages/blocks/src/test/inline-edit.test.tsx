@@ -1,4 +1,4 @@
-import { hmFroidTheme } from "@peltier/stylekit";
+import { hmFroidTheme } from "@qubo/stylekit";
 import { createElement, type ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";

@@ -1,8 +1,8 @@
-# Peltier edge proxy
-# One control plane (peltier-admin) fronting many storefronts.
+# Qubo edge proxy
+# One control plane (qubo-admin) fronting many storefronts.
 
-admin.peltier.be {
-	reverse_proxy peltier-admin:4000
+qubo.by-ali.dev {
+	reverse_proxy qubo-admin:4000
 }
 
 hmfroid.be, www.hmfroid.be {

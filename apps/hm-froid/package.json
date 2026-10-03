@@ -9,10 +9,10 @@
     "start": "next start"
   },
   "dependencies": {
-    "@peltier/blocks": "workspace:*",
-    "@peltier/db": "workspace:*",
-    "@peltier/shared": "workspace:*",
-    "@peltier/stylekit": "workspace:*",
+    "@qubo/blocks": "workspace:*",
+    "@qubo/db": "workspace:*",
+    "@qubo/shared": "workspace:*",
+    "@qubo/stylekit": "workspace:*",
     "@radix-ui/react-accordion": "^1.2",
     "@radix-ui/react-avatar": "^1.1",
     "@radix-ui/react-dialog": "^1.1",
@@ -39,7 +39,7 @@
     "framer-motion": "latest",
     "lucide-react": "^0.460",
     "motion": "^12",
-    "next": "^16.3.8",
+    "next": "^16.3",
     "next-themes": "latest",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",

@@ -21,7 +21,7 @@ export function toJsonSchema(registry: BlockRegistry, opts: { capabilities?: rea
   }));
   return {
     $schema: "https://json-schema.org/draft/2020-12/schema",
-    title: "Peltier page content",
+    title: "Qubo page content",
     type: "object",
     properties: { content: { type: "array", items: { oneOf: variants } } },
     required: ["content"],

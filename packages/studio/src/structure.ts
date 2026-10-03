@@ -1,5 +1,5 @@
-import { baseCss, compileTheme, ThemeSchema, type CompileOptions } from "@peltier/stylekit";
-import { document, page, sectionGroup, site, template, translation } from "@peltier/db/schema";
+import { baseCss, compileTheme, ThemeSchema, type CompileOptions } from "@qubo/stylekit";
+import { document, page, sectionGroup, site, template, translation } from "@qubo/db/schema";
 import { and, asc, eq, ne } from "drizzle-orm";
 import { db, type Scope } from "./db";
 import { createDocument, getDocument } from "./documents";

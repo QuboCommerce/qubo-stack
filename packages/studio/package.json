@@ -1,9 +1,9 @@
 {
-  "name": "@peltier/studio",
+  "name": "@qubo/studio",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Server-side Studio services: documents, revisions, themes, translations, previews. Shared by peltier-admin and the API.",
+  "description": "Server-side Studio services: documents, revisions, themes, translations, previews. Shared by qubo-admin and the API.",
   "exports": {
     ".": "./src/index.ts",
     "./preview": "./src/preview.ts"
@@ -13,9 +13,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@peltier/blocks": "workspace:*",
-    "@peltier/db": "workspace:*",
-    "@peltier/stylekit": "workspace:*",
+    "@qubo/blocks": "workspace:*",
+    "@qubo/db": "workspace:*",
+    "@qubo/stylekit": "workspace:*",
     "drizzle-orm": "^0.44"
   },
   "devDependencies": {

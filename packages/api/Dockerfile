@@ -6,7 +6,7 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/api/package.json ./packages/api/
 COPY packages/db/package.json ./packages/db/
 COPY packages/shared/package.json ./packages/shared/
-RUN corepack enable && pnpm install --frozen-lockfile --filter @peltier/api...
+RUN corepack enable && pnpm install --frozen-lockfile --filter @qubo/api...
 
 FROM base AS runner
 ENV NODE_ENV=production

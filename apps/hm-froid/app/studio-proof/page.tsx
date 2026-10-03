@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { registry } from "@peltier/blocks";
-import { hmFroidHomeFixture, sampleProducts } from "@peltier/blocks/fixtures";
-import { PeltierRender } from "@peltier/blocks/render";
-import { hmFroidTheme } from "@peltier/stylekit";
+import { registry } from "@qubo/blocks";
+import { hmFroidHomeFixture, sampleProducts } from "@qubo/blocks/fixtures";
+import { QuboRender } from "@qubo/blocks/render";
+import { hmFroidTheme } from "@qubo/stylekit";
 
 // Render proof: a Studio document rendered as a Server Component with the
 // HM Froid theme. Not linked anywhere and excluded from indexing.
@@ -15,7 +15,7 @@ export default function StudioProofPage() {
   const data = hmFroidHomeFixture();
   const grid = data.content.find((node) => node.type === "ProductGrid");
   return (
-    <PeltierRender
+    <QuboRender
       registry={registry}
       data={data}
       metadata={{

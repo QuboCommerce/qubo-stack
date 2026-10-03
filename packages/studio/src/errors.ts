@@ -1,4 +1,4 @@
-import type { ValidationIssue } from "@peltier/blocks";
+import type { ValidationIssue } from "@qubo/blocks";
 
 export class StudioError extends Error {
   constructor(

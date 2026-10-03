@@ -1,5 +1,5 @@
-import { db } from "@peltier/db/client";
-import { siteSettings } from "@peltier/db/schema";
+import { db } from "@qubo/db/client";
+import { siteSettings } from "@qubo/db/schema";
 import { eq } from "drizzle-orm";
 
 let cachedMaintenance: { value: boolean; timestamp: number } | null = null;

@@ -1,5 +1,5 @@
-import { registry, applyTranslations, type DocumentData } from "@peltier/blocks";
-import { document, siteLocale, translation } from "@peltier/db/schema";
+import { registry, applyTranslations, type DocumentData } from "@qubo/blocks";
+import { document, siteLocale, translation } from "@qubo/db/schema";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { splitTranslationPath, stringsOf, translationPath } from "./content";
 import { db, type Scope } from "./db";

@@ -14,7 +14,7 @@ import { user } from "./auth";
 import { organization, site } from "./site";
 
 /**
- * Peltier Studio storage. Every editable surface (template, page, section
+ * Qubo Studio storage. Every editable surface (template, page, section
  * group, linked section) is a `document`: a Puck block tree with a draft and a
  * published copy. Publishing appends an immutable `document_revision`, so any
  * publish can be rolled back. Undo/redo is client-only and never persisted.

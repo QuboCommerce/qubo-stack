@@ -1,7 +1,7 @@
-import { page, sectionGroup, site, template } from "@peltier/db/schema";
+import { page, sectionGroup, site, template } from "@qubo/db/schema";
 import { and, asc, eq } from "drizzle-orm";
-import type { Capability } from "@peltier/blocks";
-import { document } from "@peltier/db/schema";
+import type { Capability } from "@qubo/blocks";
+import { document } from "@qubo/db/schema";
 import { sameContent } from "./content";
 import { db, type Scope } from "./db";
 import { NotFoundError } from "./errors";

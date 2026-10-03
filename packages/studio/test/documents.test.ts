@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { db } from "@peltier/db/client";
-import { asset, assetUsage, document, organization, site, siteLocale, translation, user } from "@peltier/db/schema";
-import { hmFroidHomeFixture } from "@peltier/blocks/fixtures";
-import { registry, setPath, instantiate, collectTranslatableStrings, type DocumentData } from "@peltier/blocks";
+import { db } from "@qubo/db/client";
+import { asset, assetUsage, document, organization, site, siteLocale, translation, user } from "@qubo/db/schema";
+import { hmFroidHomeFixture } from "@qubo/blocks/fixtures";
+import { registry, setPath, instantiate, collectTranslatableStrings, type DocumentData } from "@qubo/blocks";
 import { eq } from "drizzle-orm";
 import {
   ConflictError,

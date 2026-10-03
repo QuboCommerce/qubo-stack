@@ -1,5 +1,5 @@
 import { Elysia, t } from "elysia";
-import { db } from "@peltier/db/client";
+import { db } from "@qubo/db/client";
 import {
   category,
   inventoryItem,
@@ -7,7 +7,7 @@ import {
   productCategory,
   productImage,
   productVariant,
-} from "@peltier/db/schema";
+} from "@qubo/db/schema";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
 import { keyOf, resolvePrices } from "../lib/pricing";

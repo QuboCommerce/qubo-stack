@@ -1,5 +1,5 @@
 {
-  "name": "@peltier/api",
+  "name": "@qubo/api",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -15,9 +15,9 @@
   },
   "dependencies": {
     "@elysiajs/cors": "^1.2",
-    "@peltier/db": "workspace:*",
-    "@peltier/shared": "workspace:*",
-    "@peltier/studio": "workspace:*",
+    "@qubo/db": "workspace:*",
+    "@qubo/shared": "workspace:*",
+    "@qubo/studio": "workspace:*",
     "better-auth": "^1.2",
     "drizzle-orm": "^0.44",
     "elysia": "^1.2"

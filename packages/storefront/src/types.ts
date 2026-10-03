@@ -1,5 +1,5 @@
 /**
- * Wire types for the Peltier API.
+ * Wire types for the Qubo API.
  *
  * Deliberately hand-written rather than inferred from the Elysia app, so a
  * Next.js storefront never has to pull Bun types into its build. If these
@@ -13,7 +13,7 @@ export type PriceSource =
   | "variant"
   | "base";
 
-/** Preset a Site was created from; mirrors the `site_type` enum in @peltier/db. */
+/** Preset a Site was created from; mirrors the `site_type` enum in @qubo/db. */
 export type SiteType = "store" | "services" | "business" | "editorial" | "custom";
 
 export type SiteSummary = {

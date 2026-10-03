@@ -2,15 +2,15 @@
 # Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
 
 services:
-  peltier-admin:
+  qubo-admin:
     build:
       target: deps
-    command: ["pnpm", "--filter", "peltier-admin", "dev"]
+    command: ["pnpm", "--filter", "qubo-admin", "dev"]
     volumes:
-      - ./apps/peltier-admin:/app/apps/peltier-admin
+      - ./apps/qubo-admin:/app/apps/qubo-admin
       - ./packages:/app/packages
-      - /app/apps/peltier-admin/node_modules
-      - /app/apps/peltier-admin/.next
+      - /app/apps/qubo-admin/node_modules
+      - /app/apps/qubo-admin/.next
     ports:
       - "4000:4000"
 

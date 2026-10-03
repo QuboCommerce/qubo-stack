@@ -1,5 +1,5 @@
 {
-  "name": "@peltier/storefront",
+  "name": "@qubo/storefront",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -9,7 +9,7 @@
     "./types": "./src/types.ts"
   },
   "dependencies": {
-    "@peltier/shared": "workspace:*"
+    "@qubo/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5"

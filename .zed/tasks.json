@@ -6,16 +6,16 @@
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["peltier"]
+    "tags": ["qubo"]
   },
   {
-    "label": "dev: peltier-admin (:4000)",
-    "command": "pnpm --filter peltier-admin dev",
+    "label": "dev: qubo-admin (:4000)",
+    "command": "pnpm --filter qubo-admin dev",
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["peltier"]
+    "tags": ["qubo"]
   },
   {
     "label": "dev: hm-froid (:3000)",
@@ -24,7 +24,7 @@
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["peltier"]
+    "tags": ["qubo"]
   },
   {
     "label": "build: all",
@@ -33,7 +33,7 @@
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["peltier"]
+    "tags": ["qubo"]
   },
   {
     "label": "lint: all",
@@ -41,7 +41,7 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier"]
+    "tags": ["qubo"]
   },
   {
     "label": "db: studio",
@@ -50,7 +50,7 @@
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["peltier", "db"]
+    "tags": ["qubo", "db"]
   },
   {
     "label": "db: generate migration",
@@ -58,7 +58,7 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier", "db"]
+    "tags": ["qubo", "db"]
   },
   {
     "label": "db: migrate",
@@ -66,7 +66,7 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier", "db"]
+    "tags": ["qubo", "db"]
   },
   {
     "label": "db: psql shell",
@@ -74,23 +74,23 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": true,
     "reveal": "always",
-    "tags": ["peltier", "db"]
+    "tags": ["qubo", "db"]
   },
   {
     "label": "db: backup dump",
-    "command": "mkdir -p .private/backups && docker exec supabase_db_react pg_dump \"$(grep ^DATABASE_URL= .env | cut -d'\"' -f2 | sed 's/:54322/:5432/')\" --format=custom --no-owner --no-acl > .private/backups/peltier-$(date +%Y-%m-%d-%H%M).dump && ls -lh .private/backups",
+    "command": "mkdir -p .private/backups && docker exec supabase_db_react pg_dump \"$(grep ^DATABASE_URL= .env | cut -d'\"' -f2 | sed 's/:54322/:5432/')\" --format=custom --no-owner --no-acl > .private/backups/qubo-$(date +%Y-%m-%d-%H%M).dump && ls -lh .private/backups",
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier", "db"]
+    "tags": ["qubo", "db"]
   },
   {
     "label": "docker: up (legacy postgres only)",
-    "command": "docker compose up -d peltier-postgres",
+    "command": "docker compose up -d qubo-postgres",
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier", "docker"]
+    "tags": ["qubo", "docker"]
   },
   {
     "label": "docker: down",
@@ -98,7 +98,7 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier", "docker"]
+    "tags": ["qubo", "docker"]
   },
   {
     "label": "docker: logs",
@@ -106,7 +106,7 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier", "docker"]
+    "tags": ["qubo", "docker"]
   },
   {
     "label": "setup: link root .env into apps",
@@ -114,6 +114,6 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["peltier"]
+    "tags": ["qubo"]
   }
 ]

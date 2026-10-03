@@ -9,8 +9,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 type Payload = { d: string; s: string; e: number };
 
 function secret() {
-  const s = process.env.PELTIER_PREVIEW_SECRET ?? process.env.BETTER_AUTH_SECRET;
-  if (!s) throw new Error("PELTIER_PREVIEW_SECRET (or BETTER_AUTH_SECRET) must be set to sign previews.");
+  const s = process.env.QUBO_PREVIEW_SECRET ?? process.env.BETTER_AUTH_SECRET;
+  if (!s) throw new Error("QUBO_PREVIEW_SECRET (or BETTER_AUTH_SECRET) must be set to sign previews.");
   return s;
 }
 

@@ -5,19 +5,19 @@ import type {
   SiteSummary,
 } from "./types";
 
-export class PeltierApiError extends Error {
+export class QuboApiError extends Error {
   constructor(
     readonly status: number,
     readonly code: string,
     message?: string,
   ) {
-    super(message ?? `Peltier API error ${status}: ${code}`);
-    this.name = "PeltierApiError";
+    super(message ?? `Qubo API error ${status}: ${code}`);
+    this.name = "QuboApiError";
   }
 }
 
 export type StorefrontClientOptions = {
-  /** Base URL of peltier-elysia, e.g. http://peltier-elysia:3333 */
+  /** Base URL of qubo-elysia, e.g. http://qubo-elysia:3333 */
   baseUrl?: string;
   /** Site slug this storefront serves, e.g. "hm-froid" or "tailg-belgium". */
   siteSlug: string;
@@ -30,7 +30,7 @@ export type StorefrontClientOptions = {
 };
 
 /**
- * The single way a storefront talks to Peltier.
+ * The single way a storefront talks to Qubo.
  *
  * Every storefront gets identical catalogue, pricing and tenancy behaviour by
  * construction, which is what makes adding a second site a configuration
@@ -39,7 +39,7 @@ export type StorefrontClientOptions = {
 export function createStorefrontClient(options: StorefrontClientOptions) {
   const baseUrl = (
     options.baseUrl ??
-    process.env.PELTIER_API_URL ??
+    process.env.QUBO_API_URL ??
     "http://localhost:3333"
   ).replace(/\/$/, "");
 
@@ -49,7 +49,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     const response = await doFetch(`${baseUrl}${path}`, {
       ...init,
       headers: {
-        "x-peltier-site": options.siteSlug,
+        "x-qubo-site": options.siteSlug,
         ...options.headers,
         ...init?.headers,
       },
@@ -62,7 +62,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
       } catch {
         // Non-JSON error body; the status code is the useful signal.
       }
-      throw new PeltierApiError(response.status, code);
+      throw new QuboApiError(response.status, code);
     }
 
     return (await response.json()) as T;

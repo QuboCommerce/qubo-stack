@@ -36,3 +36,6 @@ coverage/
 
 # Misc
 *.tsbuildinfo
+
+# Local thread transcripts (contain credentials)
+docs/thread-recovery.md

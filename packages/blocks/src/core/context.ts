@@ -1,4 +1,4 @@
-import type { Theme } from "@peltier/stylekit";
+import type { Theme } from "@qubo/stylekit";
 import type { LinkValue, MediaValue } from "./fields";
 
 export const siteTypes = ["store", "services", "business", "editorial", "custom"] as const;

@@ -1,4 +1,4 @@
-import { buttonEmphases, entrancePresets, fontRoles, spaceSteps, typeSteps } from "@peltier/stylekit";
+import { buttonEmphases, entrancePresets, fontRoles, spaceSteps, typeSteps } from "@qubo/stylekit";
 import { z } from "zod";
 
 /**

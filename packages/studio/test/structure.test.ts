@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { db } from "@peltier/db/client";
-import { document, organization, page, site, template, theme, user } from "@peltier/db/schema";
-import { hmFroidHomeFixture } from "@peltier/blocks/fixtures";
-import { registry } from "@peltier/blocks";
-import { hmFroidTheme } from "@peltier/stylekit";
+import { db } from "@qubo/db/client";
+import { document, organization, page, site, template, theme, user } from "@qubo/db/schema";
+import { hmFroidHomeFixture } from "@qubo/blocks/fixtures";
+import { registry } from "@qubo/blocks";
+import { hmFroidTheme } from "@qubo/stylekit";
 import { eq } from "drizzle-orm";
 import {
   NotFoundError,

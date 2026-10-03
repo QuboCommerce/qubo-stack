@@ -3,7 +3,7 @@ import { CSS_PREFIX as p } from "./compile";
 /**
  * Theme-independent CSS that consumes the variables emitted by compileTheme.
  * Shipped once per storefront (and into the Studio canvas). Block-specific
- * layout CSS lives in @peltier/blocks (blockCss); nothing here depends on a theme.
+ * layout CSS lives in @qubo/blocks (blockCss); nothing here depends on a theme.
  */
 export const baseCss = /* css */ `
 :where([data-theme]) {

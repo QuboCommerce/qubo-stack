@@ -1,5 +1,5 @@
-import { theme, themeRevision, user } from "@peltier/db/schema";
-import { ThemeSchema, diagnoseTheme, type DoctorReport, type Theme, type ThemeInput } from "@peltier/stylekit";
+import { theme, themeRevision, user } from "@qubo/db/schema";
+import { ThemeSchema, diagnoseTheme, type DoctorReport, type Theme, type ThemeInput } from "@qubo/stylekit";
 import { and, desc, eq, max, sql } from "drizzle-orm";
 import { sameContent } from "./content";
 import { db, type Executor, type Scope } from "./db";

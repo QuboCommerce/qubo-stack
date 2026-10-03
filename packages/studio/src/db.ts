@@ -1,4 +1,4 @@
-import { db } from "@peltier/db/client";
+import { db } from "@qubo/db/client";
 
 export { db };
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];

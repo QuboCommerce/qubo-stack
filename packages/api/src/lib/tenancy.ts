@@ -1,10 +1,10 @@
-import { db } from "@peltier/db/client";
+import { db } from "@qubo/db/client";
 import {
   organizationMember,
   site,
   siteDomain,
   user,
-} from "@peltier/db/schema";
+} from "@qubo/db/schema";
 import { and, eq } from "drizzle-orm";
 
 export type SiteType = (typeof site.$inferSelect)["type"];
@@ -29,7 +29,7 @@ export type ActorContext = {
  * Resolves which site a request is acting on.
  *
  * Order of precedence:
- *   1. `x-peltier-site` header  — used by peltier-admin's site switcher
+ *   1. `x-qubo-site` header  — used by qubo-admin's site switcher
  *   2. request hostname          — used by storefronts via store_domain
  *
  * Every tenant-scoped query must go through this. Trusting a caller-supplied
@@ -49,7 +49,7 @@ export async function resolveSite(
     organizationId: site.organizationId,
   };
 
-  const slug = headers.get("x-peltier-site")?.trim();
+  const slug = headers.get("x-qubo-site")?.trim();
   if (slug) {
     const [row] = await db
       .select(columns)

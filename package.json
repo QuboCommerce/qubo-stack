@@ -1,5 +1,5 @@
 {
-  "name": "peltier-stack",
+  "name": "qubo-stack",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "db:push": "turbo run db:push",
-    "db:studio": "pnpm --filter @peltier/db studio",
+    "db:studio": "pnpm --filter @qubo/db studio",
     "legacy:archive": "node scripts/archive-legacy.mjs",
     "legacy:import": "node scripts/import-shopapplication.mjs",
     "clean": "turbo run clean && rm -rf node_modules",

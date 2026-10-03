@@ -1,7 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { db } from "@peltier/db/client";
-import * as schema from "@peltier/db/schema";
+import { db } from "@qubo/db/client";
+import * as schema from "@qubo/db/schema";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {

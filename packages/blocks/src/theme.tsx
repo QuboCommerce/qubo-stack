@@ -1,4 +1,4 @@
-import { baseCss, compileTheme, googleFontsUrl, type CompileOptions, type Theme } from "@peltier/stylekit";
+import { baseCss, compileTheme, googleFontsUrl, type CompileOptions, type Theme } from "@qubo/stylekit";
 import type { ReactNode } from "react";
 import type { RenderMetadata } from "./core";
 import { blockCss } from "./library/styles";
@@ -25,8 +25,8 @@ export function ThemeStyles({ theme, includeBase = true, fonts = true }: { theme
   const href = fonts ? googleFontsUrl(theme) : null;
   return (
     <>
-      {href ? <link rel="stylesheet" href={href} data-peltier-fonts={theme.id} /> : null}
-      <style data-peltier-theme={theme.id} dangerouslySetInnerHTML={{ __html: css }} />
+      {href ? <link rel="stylesheet" href={href} data-qubo-fonts={theme.id} /> : null}
+      <style data-qubo-theme={theme.id} dangerouslySetInnerHTML={{ __html: css }} />
     </>
   );
 }

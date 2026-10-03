@@ -1,70 +1,70 @@
-name: peltier
+name: qubo
 
 services:
-  peltier-postgres:
+  qubo-postgres:
     image: postgres:17-alpine
-    container_name: peltier-postgres
+    container_name: qubo-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-peltier}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-peltier_secret}
-      POSTGRES_DB: ${POSTGRES_DB:-peltier}
+      POSTGRES_USER: ${POSTGRES_USER:-qubo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-qubo_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-qubo}
     ports:
       - "127.0.0.1:55433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      - peltier-network
+      - qubo-network
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-peltier} -d ${POSTGRES_DB:-peltier}",
+          "pg_isready -U ${POSTGRES_USER:-qubo} -d ${POSTGRES_DB:-qubo}",
         ]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  peltier-elysia:
+  qubo-elysia:
     build:
       context: .
       dockerfile: packages/api/Dockerfile
-    container_name: peltier-elysia
+    container_name: qubo-elysia
     restart: unless-stopped
     expose:
       - "3333"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-peltier}:${POSTGRES_PASSWORD:-peltier_secret}@peltier-postgres:5432/${POSTGRES_DB:-peltier}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-qubo}:${POSTGRES_PASSWORD:-qubo_secret}@qubo-postgres:5432/${POSTGRES_DB:-qubo}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - PELTIER_TRUSTED_ORIGINS=${PELTIER_TRUSTED_ORIGINS:-https://admin.peltier.be,https://hmfroid.be}
+      - QUBO_TRUSTED_ORIGINS=${QUBO_TRUSTED_ORIGINS:-https://qubo.by-ali.dev,https://hmfroid.be}
       - PORT=3333
     depends_on:
-      peltier-postgres:
+      qubo-postgres:
         condition: service_healthy
     networks:
-      - peltier-network
+      - qubo-network
 
-  peltier-admin:
+  qubo-admin:
     build:
       context: .
-      dockerfile: apps/peltier-admin/Dockerfile
-    container_name: peltier-admin
+      dockerfile: apps/qubo-admin/Dockerfile
+    container_name: qubo-admin
     restart: unless-stopped
     expose:
       - "4000"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-peltier}:${POSTGRES_PASSWORD:-peltier_secret}@peltier-postgres:5432/${POSTGRES_DB:-peltier}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-qubo}:${POSTGRES_PASSWORD:-qubo_secret}@qubo-postgres:5432/${POSTGRES_DB:-qubo}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-      - BETTER_AUTH_URL=https://admin.peltier.be
-      - NEXT_PUBLIC_PANEL_URL=https://admin.peltier.be
-      - PELTIER_API_URL=http://peltier-elysia:3333
+      - BETTER_AUTH_URL=https://qubo.by-ali.dev
+      - NEXT_PUBLIC_PANEL_URL=https://qubo.by-ali.dev
+      - QUBO_API_URL=http://qubo-elysia:3333
     depends_on:
-      peltier-postgres:
+      qubo-postgres:
         condition: service_healthy
-      peltier-elysia:
+      qubo-elysia:
         condition: service_started
     networks:
-      - peltier-network
+      - qubo-network
 
   hm-froid:
     build:
@@ -75,10 +75,10 @@ services:
     expose:
       - "3000"
     environment:
-      - DATABASE_URL=postgresql://${POSTGRES_USER:-peltier}:${POSTGRES_PASSWORD:-peltier_secret}@peltier-postgres:5432/${POSTGRES_DB:-peltier}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-qubo}:${POSTGRES_PASSWORD:-qubo_secret}@qubo-postgres:5432/${POSTGRES_DB:-qubo}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - BETTER_AUTH_URL=https://hmfroid.be
-      - NEXT_PUBLIC_PANEL_URL=https://admin.peltier.be
+      - NEXT_PUBLIC_PANEL_URL=https://qubo.by-ali.dev
       - NEXT_PUBLIC_MARKETING_URL=https://hmfroid.be
       - STOREFRONT_URL=https://hmfroid.be
       - STOREFRONT_SITE_SLUG=hm-froid
@@ -88,15 +88,15 @@ services:
       - HMF_SHIPPING_LABEL=${HMF_SHIPPING_LABEL:-Livraison professionnelle}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - ORDER_EMAIL_FROM=${ORDER_EMAIL_FROM:-HM Froid <commandes@hmfroid.be>}
-      - PELTIER_API_URL=http://peltier-elysia:3333
+      - QUBO_API_URL=http://qubo-elysia:3333
       - LEGACY_ASSET_ROOT=/data/legacy-products
     volumes:
       - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro
     depends_on:
-      peltier-postgres:
+      qubo-postgres:
         condition: service_healthy
     networks:
-      - peltier-network
+      - qubo-network
 
   caddy-edge:
     image: caddy:2-alpine
@@ -111,14 +111,14 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     networks:
-      - peltier-network
+      - qubo-network
     depends_on:
-      - peltier-admin
+      - qubo-admin
       - hm-froid
 
 networks:
-  peltier-network:
-    name: peltier-network
+  qubo-network:
+    name: qubo-network
 
 volumes:
   pgdata:

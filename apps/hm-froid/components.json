@@ -11,7 +11,7 @@
   },
   "aliases": {
     "components": "@/components",
-    "utils": "@peltier/shared/utils",
+    "utils": "@qubo/shared/utils",
     "ui": "@/components/ui",
     "lib": "@/lib",
     "hooks": "@/hooks"

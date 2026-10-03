@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { db } from "@peltier/db/client";
-import { organization, site, theme, user } from "@peltier/db/schema";
-import { hmFroidTheme, lumeTheme } from "@peltier/stylekit";
+import { db } from "@qubo/db/client";
+import { organization, site, theme, user } from "@qubo/db/schema";
+import { hmFroidTheme, lumeTheme } from "@qubo/stylekit";
 import { eq } from "drizzle-orm";
 import {
   ConflictError,

@@ -1,13 +1,13 @@
 import { Elysia } from "elysia";
 import { cors } from "@elysiajs/cors";
 import { sql } from "drizzle-orm";
-import { db } from "@peltier/db/client";
+import { db } from "@qubo/db/client";
 import { auth } from "./lib/auth";
 import { catalog } from "./routes/catalog";
 import { sites } from "./routes/sites";
 import { studioPublic, studioRoutes } from "./routes/studio";
 
-const allowedOrigins = (process.env.PELTIER_TRUSTED_ORIGINS ?? "")
+const allowedOrigins = (process.env.QUBO_TRUSTED_ORIGINS ?? "")
   .split(",")
   .map((origin) => origin.trim())
   .filter(Boolean);
@@ -21,7 +21,7 @@ export const app = new Elysia()
   )
   .onError(({ code, error, status }) => {
     if (code === "NOT_FOUND") return status(404, { error: "not_found" });
-    console.error("[peltier-api]", error);
+    console.error("[qubo-api]", error);
     return status(500, { error: "internal_error" });
   })
   .get("/health", async () => {

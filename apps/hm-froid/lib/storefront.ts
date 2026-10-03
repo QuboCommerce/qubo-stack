@@ -9,7 +9,7 @@ import {
   productImage,
   productVariant,
   site,
-} from "@peltier/db";
+} from "@qubo/db";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
 export type StorefrontProduct = {
