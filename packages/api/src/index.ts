@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@qubo/db/client";
 import { auth } from "./lib/auth";
 import { catalog } from "./routes/catalog";
+import { seo } from "./routes/seo";
 import { sites } from "./routes/sites";
 import { studioPublic, studioRoutes } from "./routes/studio";
 
@@ -34,6 +35,7 @@ export const app = new Elysia()
   .use(sites)
   .use(catalog)
   .use(studioRoutes)
-  .use(studioPublic);
+  .use(studioPublic)
+  .use(seo);
 
 export type App = typeof app;

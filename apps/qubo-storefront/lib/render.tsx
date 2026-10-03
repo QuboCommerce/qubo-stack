@@ -3,7 +3,7 @@ import { registry, walkNodes, type DocumentData, type RenderMetadata, type SiteT
 import type { ProductCard } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
 import type { ProductListItem, RenderDocument } from "@qubo/storefront";
-import type { Storefront } from "./site";
+import { requestPath, type Storefront } from "./site";
 
 /** What the current route is about; dynamic blocks default to it. */
 export type ViewContext = {
@@ -100,15 +100,18 @@ export async function RenderView({ sf, body, view = {} }: { sf: Storefront; body
 }
 
 /** Page metadata: explicit title → document root title → site name; dev hosts are noindex. */
-export function viewMetadata(sf: Storefront | null, opts: { title?: string | null; description?: string | null; body?: RenderDocument | null } = {}): Metadata {
+export async function viewMetadata(sf: Storefront | null, opts: { title?: string | null; description?: string | null; body?: RenderDocument | null } = {}): Promise<Metadata> {
   if (!sf) return { title: "No site on this host", robots: { index: false, follow: false } };
+  // Canonical drops the query: filters/sorting/tracking params are the same page.
+  const path = (await requestPath()).split("?")[0];
   const rootTitle = opts.body?.root?.props?.title;
   const title = opts.title || (typeof rootTitle === "string" && rootTitle) || sf.site.name;
   return {
     title: title === sf.site.name ? title : { absolute: opts.title ? `${title} · ${sf.site.name}` : title },
     description: opts.description ?? undefined,
-    metadataBase: new URL(`https://${sf.host}`),
-    openGraph: { siteName: sf.site.name, title, locale: sf.site.locale.replace("-", "_"), type: "website" },
+    metadataBase: new URL(sf.origin),
+    alternates: { canonical: path },
+    openGraph: { siteName: sf.site.name, title, url: path, locale: sf.site.locale.replace("-", "_"), type: "website" },
     robots: sf.noindex ? { index: false, follow: false } : undefined,
   };
 }

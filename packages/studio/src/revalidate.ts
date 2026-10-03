@@ -1,16 +1,18 @@
 /**
- * Tells storefronts to drop cached pages after a publish. Each site may set
- * `QUBO_REVALIDATE_<SLUG>` (e.g. QUBO_REVALIDATE_HM_FROID) to a URL that
- * accepts `POST { tags: string[] }` with `x-qubo-signature`. Unconfigured
- * sites are skipped — the storefront then relies on its own ISR window.
+ * Tells storefronts to drop cached pages after a publish. Target: the site's
+ * own `QUBO_REVALIDATE_<SLUG>` (e.g. QUBO_REVALIDATE_HM_FROID), else the shared
+ * `QUBO_REVALIDATE_URL` (qubo-storefront's /api/revalidate). The endpoint
+ * accepts `POST { site, tags }` with `x-qubo-signature`. Unconfigured installs
+ * are skipped — the storefront then relies on its cache TTL.
  */
 import { createHmac } from "node:crypto";
 
 export async function notifyRevalidate(siteSlug: string, tags: string[]) {
-  const url = process.env[`QUBO_REVALIDATE_${siteSlug.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`];
+  const url =
+    process.env[`QUBO_REVALIDATE_${siteSlug.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`] ?? process.env.QUBO_REVALIDATE_URL;
   const secret = process.env.QUBO_REVALIDATE_SECRET;
   if (!url || !secret) return { sent: false as const };
-  const body = JSON.stringify({ tags });
+  const body = JSON.stringify({ site: siteSlug, tags });
   try {
     const res = await fetch(url, {
       method: "POST",

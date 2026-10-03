@@ -1,6 +1,9 @@
 import type {
   CategoriesResponse,
+  DomainsResponse,
   LayoutResponse,
+  RedirectResponse,
+  SitemapResponse,
   PageResponse,
   TemplateKind,
   TemplateResponse,
@@ -35,7 +38,7 @@ export type StorefrontClientOptions = {
    * their reseller price list. Without this every caller sees list price.
    */
   headers?: HeadersInit;
-  fetch?: typeof fetch;
+  fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 };
 
 const qs = (params: Record<string, string | undefined>) => {
@@ -136,6 +139,15 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     /** Published template for a resource kind; null when the site has none. */
     getTemplate: (kind: TemplateKind, params: { handle?: string; locale?: string } = {}) =>
       orNull(request<TemplateResponse>(`/render/templates/${encodeURIComponent(kind)}${qs(params)}`)),
+
+    /** Verified domains; the primary one is the canonical host. */
+    getDomains: () => request<DomainsResponse>("/render/domains"),
+
+    /** Every indexable URL of the site (products, categories, published pages). */
+    getSitemap: () => request<SitemapResponse>("/render/sitemap"),
+
+    /** Legacy URL redirect for an exact path; null when none. */
+    getRedirect: (path: string) => orNull(request<RedirectResponse>(`/render/redirect${qs({ path })}`)),
 
     /** Published standalone page by slug; null when missing or unpublished. */
     getPage: (slug: string, locale?: string) =>

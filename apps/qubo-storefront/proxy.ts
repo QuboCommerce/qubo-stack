@@ -19,6 +19,7 @@ export function proxy(req: NextRequest) {
 
   const headers = new Headers(req.headers);
   headers.set("x-qubo-host", host);
+  headers.set("x-qubo-path", `${pathname}${search}`);
   const url = req.nextUrl.clone();
   url.pathname = `/sites/${encodeURIComponent(host)}${pathname === "/" ? "" : pathname}`;
   url.search = search;

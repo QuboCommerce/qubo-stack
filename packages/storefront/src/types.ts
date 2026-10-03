@@ -124,3 +124,16 @@ export type PageResponse = {
   metaDescription: string | null;
   data: RenderDocument;
 };
+
+/** Verified public domains; `primary` is the canonical host (null = none verified). */
+export type DomainsResponse = { primary: string | null; verified: string[] };
+
+export type SitemapEntry = { slug: string; updatedAt: string };
+
+export type SitemapResponse = {
+  products: SitemapEntry[];
+  categories: SitemapEntry[];
+  pages: SitemapEntry[];
+};
+
+export type RedirectResponse = { to: string; status: number };

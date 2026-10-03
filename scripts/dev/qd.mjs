@@ -4,7 +4,8 @@
 // Local (laptop/desktop): services run in the foreground with prefixed output.
 // Run `qd help` for commands.
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
 import { request as httpsRequest } from "node:https";
 import { connect } from "node:net";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -86,6 +87,16 @@ function publicUrl(svc) {
   return svc.host ? `https://${svc.host}` : `http://localhost:${svc.port}`;
 }
 
+// Per-checkout secret shared by the admin/api (signer) and storefront (verifier) publish hook.
+function revalidateSecret() {
+  const file = join(ROOT, ".qubo", "revalidate.secret");
+  if (!existsSync(file)) {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, randomBytes(24).toString("hex"), { mode: 0o600 });
+  }
+  return readFileSync(file, "utf8").trim();
+}
+
 // Env for one service. Process env beats .env files in both Next and Bun, so these win.
 function serviceEnv(cfg, name) {
   const s = cfg.services;
@@ -108,6 +119,8 @@ function serviceEnv(cfg, name) {
     // Remote: sites are <slug>.<sitesBaseDomain>. Local: one site on localhost.
     PLATFORM_BASE_DOMAIN: cfg.mode === "remote" ? cfg.sitesBaseDomain : undefined,
     QUBO_DEV_SITE_HOSTS: s.web && !(cfg.mode === "remote" && cfg.sitesBaseDomain) ? `${hostOf("web")}=${cfg.devSiteSlug}` : undefined,
+    QUBO_REVALIDATE_URL: s.web ? `http://localhost:${s.web.port}/api/revalidate` : undefined,
+    QUBO_REVALIDATE_SECRET: s.web ? revalidateSecret() : undefined,
     BETTER_AUTH_URL: url(name),
     FORCE_COLOR: process.env.NO_COLOR ? undefined : process.env.FORCE_COLOR ?? "1",
   };
