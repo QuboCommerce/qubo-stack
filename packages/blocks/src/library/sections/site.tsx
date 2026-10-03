@@ -1,5 +1,6 @@
 import { defineSection, f, linkTarget, resolveLink, resolveMedia, textOf, type BlockContext, type LinkValue } from "../../core";
 import { IconGlyph } from "../icons";
+import { CartCount } from "../cart";
 
 const has = (ctx: BlockContext, capability: string) =>
   (ctx.metadata.site?.capabilities as string[] | undefined)?.includes(capability) ?? true;
@@ -126,6 +127,7 @@ export const SiteHeader = defineSection({
           {showCart && commerce ? (
             <a className="pk-site-icon" href={ctx.isEditing ? undefined : "/cart"} aria-label="Cart">
               <IconGlyph name="shopping-bag" size="1.25em" />
+              {ctx.metadata.site?.id && !ctx.isEditing ? <CartCount siteId={ctx.metadata.site.id} /> : null}
             </a>
           ) : null}
           {cta}

@@ -18,6 +18,7 @@ export type Storefront = {
   origin: string;
   /** Set when this host is a non-primary alias of the site; the layout 301s there. */
   redirectHost: string | null;
+  maintenance: NonNullable<LayoutResponse["maintenance"]> | null;
 };
 
 /**
@@ -30,7 +31,9 @@ export const siteTag = (slug: string) => `site:${slug}`;
 export const LAYOUTS_TAG = "layouts";
 
 const cachedFetch = (tags: string[]) => (input: RequestInfo | URL, init?: RequestInit) =>
-  fetch(input, { ...init, next: { revalidate: CACHE_SECONDS, tags } });
+  init?.method && init.method !== "GET"
+    ? fetch(input, { ...init, cache: "no-store" })
+    : fetch(input, { ...init, next: { revalidate: CACHE_SECONDS, tags } });
 
 const clientFor = (target: { siteSlug: string } | { host: string }, host: string, tags: string[]) =>
   createStorefrontClient({ ...target, host, fetch: cachedFetch(tags) });
@@ -82,6 +85,7 @@ export const getStorefront = cache(async (host: string): Promise<Storefront | nu
         noindex,
         origin: `https://${primary ?? host}`,
         redirectHost: isAlias ? primary : null,
+        maintenance: layout.maintenance?.active ? layout.maintenance : null,
       };
     } catch (error) {
       if (error instanceof QuboApiError && error.status === 400) continue; // site_not_resolved

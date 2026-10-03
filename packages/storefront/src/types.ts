@@ -113,7 +113,17 @@ export type LayoutResponse = {
   footer: RenderDocument | null;
   /** Published theme JSON (validated by @qubo/stylekit on the storefront). */
   theme: unknown;
+  /** Maintenance mode from site settings; `active` already accounts for `endsAt`. */
+  maintenance?: { active: boolean; message: string | null; endsAt: string | null };
 };
+
+export type CheckoutRequest = {
+  items: { variantId: string; quantity: number }[];
+  /** Origin Stripe returns to; must be a host that serves this site. */
+  returnOrigin: string;
+};
+
+export type CheckoutResponse = { url: string };
 
 export type TemplateResponse = { documentId: string; data: RenderDocument };
 

@@ -2,6 +2,9 @@ import { Elysia, t } from "elysia";
 import * as studio from "@qubo/studio";
 import { tenancy } from "../plugins/tenancy";
 import { assertSiteAccess } from "../lib/tenancy";
+import { db } from "@qubo/db/client";
+import { siteSettings } from "@qubo/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Studio documents, themes and translations. Thin HTTP adapter over
@@ -343,8 +346,19 @@ export const studioPublic = new Elysia({ prefix: "/render" })
         const id = await studio.sectionGroupDocumentId(site.id, kind);
         return id ? studio.renderableDocument(site.id, id, query.locale) : null;
       };
-      const [header, footer, theme] = await Promise.all([load("header"), load("footer"), studio.getLiveTheme(site.id)]);
-      return { site, header, footer, theme };
+      const [header, footer, theme, settings] = await Promise.all([
+        load("header"),
+        load("footer"),
+        studio.getLiveTheme(site.id),
+        db.query.siteSettings.findFirst({ where: eq(siteSettings.siteId, site.id) }),
+      ]);
+      const endsAt = settings?.maintenanceEnd ?? null;
+      const maintenance = {
+        active: Boolean(settings?.maintenanceMode) && !(endsAt && endsAt < new Date()),
+        message: settings?.maintenanceMessage ?? null,
+        endsAt,
+      };
+      return { site, header, footer, theme, maintenance };
     },
     { query: t.Object({ locale: t.Optional(t.String()) }) },
   )

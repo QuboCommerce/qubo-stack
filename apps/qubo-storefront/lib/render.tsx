@@ -1,17 +1,34 @@
 import type { Metadata } from "next";
 import { registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
-import type { ProductCard } from "@qubo/blocks";
+import type { ProductCard, ProductDetailData } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
-import type { ProductListItem, RenderDocument } from "@qubo/storefront";
+import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
 import { requestPath, type Storefront } from "./site";
 
 /** What the current route is about; dynamic blocks default to it. */
 export type ViewContext = {
   /** Collection (category) handle on /collections/<handle>. */
   collection?: string;
-  /** Product slug on /products/<slug>; excluded from its own grids. */
-  product?: string;
+  /** Product on /products/<slug>; feeds ProductDetail and is excluded from its own grids. */
+  product?: ProductDetail;
+  /** Search query on /search?q=. */
+  query?: string;
 };
+
+function toDetail(p: ProductDetail): ProductDetailData {
+  const first = p.variants[0];
+  return {
+    slug: p.slug,
+    title: p.name,
+    brand: p.brand,
+    description: p.description,
+    sku: p.variants.length === 1 ? (first?.sku ?? null) : null,
+    images: p.images.map((i) => ({ src: i.url, alt: i.alt ?? p.name })),
+    price: first?.price ?? p.basePrice,
+    compareAt: p.compareAtPrice,
+    variants: p.variants.map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available })),
+  };
+}
 
 const empty: RenderDocument = { root: { props: {} }, content: [] };
 
@@ -46,6 +63,11 @@ function toCard(sf: Storefront, p: ProductListItem): ProductCard {
 async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewContext) {
   const jobs: Promise<[string, unknown]>[] = [];
   walkNodes(data, registry, ({ node }) => {
+    if (node.type === "ProductDetail") {
+      const id = (node.props as { id: string }).id;
+      if (view.product) jobs.push(Promise.resolve([id, toDetail(view.product)]));
+      return;
+    }
     if (node.type !== "ProductGrid") return;
     const props = node.props as { id: string; source?: string; collection?: string; products?: string; limit?: number };
     const limit = Math.min(Math.max(Number(props.limit) || 8, 1), 24);
@@ -73,12 +95,14 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
             ),
           );
           items = found.filter((p): p is ProductListItem => Boolean(p));
+        } else if (props.source === "search") {
+          items = view.query ? (await sf.client.getProducts({ query: view.query, limit: limit + 1 })).products : [];
         } else {
           const handle = props.source === "collection" ? props.collection?.trim() || view.collection : undefined;
           const category = handle && handle !== "all" ? handle : undefined;
           items = (await sf.client.getProducts({ category, limit: limit + 1 })).products;
         }
-        return [props.id, items.filter((p) => p.slug !== view.product).slice(0, limit).map((p) => toCard(sf, p))];
+        return [props.id, items.filter((p) => p.slug !== view.product?.slug).slice(0, limit).map((p) => toCard(sf, p))];
       })().catch((error) => {
         console.warn(`[storefront] ProductGrid ${props.id} failed`, error);
         return [props.id, []];
@@ -91,7 +115,14 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
 export async function RenderView({ sf, body, view = {} }: { sf: Storefront; body: RenderDocument; view?: ViewContext }) {
   const data = compose(sf, body);
   const metadata: RenderMetadata = {
-    site: { id: sf.site.id, type: sf.site.type as SiteType, capabilities: sf.site.capabilities as Capability[], name: sf.site.name },
+    site: {
+      id: sf.site.id,
+      type: sf.site.type as SiteType,
+      capabilities: sf.site.capabilities as Capability[],
+      name: sf.site.name,
+      currency: sf.site.currency,
+      locale: sf.site.locale,
+    },
     locale: sf.site.locale.split("-")[0],
     theme: sf.theme,
     data: await loadBlockData(sf, data, view),

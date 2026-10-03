@@ -25,7 +25,7 @@ export type AssetInfo = {
  * works identically in the editor canvas and in RSC. Plain data only.
  */
 export type RenderMetadata = {
-  site?: { id: string; type: SiteType; capabilities: Capability[]; name?: string };
+  site?: { id: string; type: SiteType; capabilities: Capability[]; name?: string; currency?: string; locale?: string };
   locale?: string;
   theme?: Theme;
   /** Preview light/dark for dual-mode themes (Studio toggle). */

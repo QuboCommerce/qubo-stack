@@ -34,6 +34,32 @@ to `QUBO_REVALIDATE_<SLUG>` or `QUBO_REVALIDATE_URL` (this app's `/api/revalidat
 `QUBO_REVALIDATE_SECRET` (HMAC-SHA256 in `x-qubo-signature`). The site's cache is dropped at once.
 `qd` sets both variables in dev (secret in `.qubo/revalidate.secret`).
 
+## Commerce
+
+Sites with the `commerce` capability get a client cart (`localStorage` key `qubo-cart:<siteId>`,
+max 10 lines × 20), the `ProductDetail` and `Cart` blocks, and `/checkout/success` (clears the cart).
+`/api/checkout` (this app) forwards the cart to qubo-api `POST /checkout` with the visitor's origin;
+the API re-prices every line, only accepts origins on the platform domain, verified site domains or
+`QUBO_DEV_SITE_HOSTS`, and creates a Stripe Checkout Session. `POST /webhooks/stripe` records the
+paid order (idempotent per session), decrements stock and emails the customer via Resend.
+Without `STRIPE_SECRET_KEY` checkout answers 503 and the cart shows its error label.
+
+Webhook endpoint: `https://api.<base>/webhooks/stripe`, events `checkout.session.completed`
+and `checkout.session.async_payment_succeeded`.
+
+| API var | Purpose |
+| --- | --- |
+| `STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` | Stripe API key and webhook signing secret |
+| `CHECKOUT_COUNTRIES` | Shipping countries (default `BE,FR,LU,NL`) |
+| `CHECKOUT_AUTOMATIC_TAX` | `0` disables Stripe Tax |
+| `CHECKOUT_SHIPPING_CENTS` / `CHECKOUT_SHIPPING_LABEL` | Optional flat shipping rate |
+| `RESEND_API_KEY` / `ORDER_EMAIL_FROM` | Order confirmation email |
+
+## Maintenance
+
+When `site_settings.maintenance_mode` is on (and `maintenance_end` not passed), every page renders the
+site's `maintenance` template, or a built-in notice with `maintenance_message`, with status 200.
+
 ## Env
 
 | Var | Purpose |

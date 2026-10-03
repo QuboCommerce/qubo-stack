@@ -10,6 +10,8 @@ import type {
   ProductDetailResponse,
   ProductListResponse,
   SiteSummary,
+  CheckoutRequest,
+  CheckoutResponse,
 } from "./types";
 
 export class QuboApiError extends Error {
@@ -148,6 +150,14 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
 
     /** Legacy URL redirect for an exact path; null when none. */
     getRedirect: (path: string) => orNull(request<RedirectResponse>(`/render/redirect${qs({ path })}`)),
+
+    /** Starts a Stripe Checkout session; returns the URL to send the visitor to. */
+    checkout: (body: CheckoutRequest) =>
+      request<CheckoutResponse>("/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      }),
 
     /** Published standalone page by slug; null when missing or unpublished. */
     getPage: (slug: string, locale?: string) =>

@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@qubo/db/client";
 import { auth } from "./lib/auth";
 import { catalog } from "./routes/catalog";
+import { commerce } from "./routes/commerce";
 import { seo } from "./routes/seo";
 import { sites } from "./routes/sites";
 import { studioPublic, studioRoutes } from "./routes/studio";
@@ -22,6 +23,7 @@ export const app = new Elysia()
   )
   .onError(({ code, error, status }) => {
     if (code === "NOT_FOUND") return status(404, { error: "not_found" });
+    if (code === "VALIDATION" || code === "PARSE") return status(400, { error: "invalid_request" });
     console.error("[qubo-api]", error);
     return status(500, { error: "internal_error" });
   })
@@ -34,6 +36,7 @@ export const app = new Elysia()
   .mount("/api/auth", auth.handler)
   .use(sites)
   .use(catalog)
+  .use(commerce)
   .use(studioRoutes)
   .use(studioPublic)
   .use(seo);

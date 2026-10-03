@@ -282,6 +282,7 @@ export const ProductGrid = defineSection({
         { value: "collection", label: "Collection" },
         { value: "manual", label: "Pick products" },
         { value: "newest", label: "Newest" },
+        { value: "search", label: "Search results" },
       ],
       { label: "Source", default: "collection" },
     ),
@@ -291,13 +292,15 @@ export const ProductGrid = defineSection({
     columns: columnsField(2, 3, 4),
     imageAspect: f.select(["1/1", "4/5", "3/4", "4/3"], { label: "Image ratio", default: "1/1", group: "style" }),
     showPrice: f.toggle({ label: "Show price", default: true, group: "style" }),
+    emptyText: f.text({ label: "Text when nothing matches", default: "No products found.", inline: false }),
   },
-  render: ({ header: h, limit, columns, imageAspect, showPrice }, ctx) => {
+  render: ({ header: h, limit, columns, imageAspect, showPrice, emptyText }, ctx) => {
     const data = ctx.metadata.data?.[ctx.id] as ProductCard[] | undefined;
     const items = (data ?? (ctx.isEditing || ctx.metadata.blueprint ? placeholderProducts(limit) : [])).slice(0, limit);
     return (
       <>
         <SectionHeader value={h} ctx={ctx} />
+        {!items.length && emptyText ? <p className="pk-muted pk-products-empty">{emptyText}</p> : null}
         <ul className="pk-grid pk-products" style={{ ...colsStyle(columns, "md"), "--pk-media-aspect": imageAspect } as CSSProperties}>
           {items.map((p, i) => (
             <li key={i} className="pk-product-card">

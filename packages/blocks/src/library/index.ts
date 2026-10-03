@@ -5,6 +5,7 @@ import { composableSections } from "./sections/composable";
 import { listSections } from "./sections/lists";
 import { dataSections, formSections, siteSections } from "./sections/more";
 import { siteChromeSections } from "./sections/site";
+import { commerceSections } from "./sections/commerce";
 
 export * from "./elements";
 export * from "./layout";
@@ -12,6 +13,8 @@ export * from "./sections/composable";
 export * from "./sections/lists";
 export * from "./sections/more";
 export * from "./sections/site";
+export * from "./sections/commerce";
+export { useCart, CartCount, ClearCart, type CartLine } from "./cart";
 export { header, headerFields, SectionHeader, type HeaderValue } from "./sections/header";
 export { iconNames, iconSet, IconGlyph } from "./icons";
 export { blockCss } from "./styles";
@@ -24,6 +27,7 @@ export const library = [
   ...siteChromeSections,
   ...siteSections,
   ...dataSections,
+  ...commerceSections,
   ...layoutBlocks,
   ...elementBlocks,
 ];

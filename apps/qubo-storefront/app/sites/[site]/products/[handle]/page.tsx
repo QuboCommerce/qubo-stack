@@ -30,5 +30,5 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function ProductPage({ params }: { params: Params }) {
   const { sf, hit } = await load(params);
   if (!hit) return notFoundOrRedirect(sf);
-  return <RenderView sf={hit.sf} body={hit.tpl.data} view={{ product: hit.product.slug }} />;
+  return <RenderView sf={hit.sf} body={hit.tpl.data} view={{ product: hit.product }} />;
 }
