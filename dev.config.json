@@ -1,0 +1,35 @@
+{
+  "$comment": "Dev runner config for scripts/dev/qd. Paths are relative to the repo root. Ports = <devDigit>0<portSlot>0 (Ali: devDigit 4 -> web 4010, admin 4020, api 4030). Per-machine overrides live in .qubo/dev.local.json (gitignored).",
+  "project": "qubo",
+  "session": "qubo",
+  "devDigit": 4,
+  "services": {
+    "api": {
+      "cwd": "packages/api",
+      "cmd": ["bun", "--watch", "src/server.ts"],
+      "portSlot": 3,
+      "health": "/health",
+      "host": "qubo-api.by-ali.dev"
+    },
+    "admin": {
+      "cwd": "apps/qubo-admin",
+      "cmd": ["pnpm", "exec", "next", "dev", "--port", "{port}", "--hostname", "{bind}"],
+      "portSlot": 2,
+      "health": "/login",
+      "host": "qubo-admin.by-ali.dev"
+    },
+    "web": {
+      "cwd": "apps/hm-froid",
+      "cmd": ["pnpm", "exec", "next", "dev", "--port", "{port}", "--hostname", "{bind}"],
+      "portSlot": 1,
+      "health": "/",
+      "host": "qubo-web.by-ali.dev"
+    }
+  },
+  "order": ["api", "admin", "web"],
+  "dataPlane": {
+    "containers": ["supabase_db_react"],
+    "databaseUrlEnv": "DATABASE_URL",
+    "localHint": "Start Docker, then `supabase start` (or `docker start supabase_db_react`)."
+  }
+}

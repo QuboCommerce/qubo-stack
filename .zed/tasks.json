@@ -1,30 +1,191 @@
 [
   {
-    "label": "dev: all apps",
-    "command": "pnpm dev",
-    "cwd": "$ZED_WORKTREE_ROOT",
+    "label": "▶ qd up (start all)",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" up",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["qubo"]
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ]
   },
   {
-    "label": "dev: qubo-admin (:4000)",
-    "command": "pnpm --filter qubo-admin dev",
-    "cwd": "$ZED_WORKTREE_ROOT",
-    "use_new_terminal": false,
+    "label": "⚙ api (attach)",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" attach api",
+    "use_new_terminal": true,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["qubo"]
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ],
+    "reveal_target": "center",
+    "hide": "never"
   },
   {
-    "label": "dev: hm-froid (:3000)",
-    "command": "pnpm --filter hm-froid dev",
-    "cwd": "$ZED_WORKTREE_ROOT",
+    "label": "🛠 admin (attach)",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" attach admin",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ],
+    "reveal_target": "center",
+    "hide": "never"
+  },
+  {
+    "label": "🛍 web (attach)",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" attach web",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ],
+    "reveal_target": "center",
+    "hide": "never"
+  },
+  {
+    "label": "🧭 qubo session (attach)",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" attach",
+    "use_new_terminal": true,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ],
+    "reveal_target": "center",
+    "hide": "never"
+  },
+  {
+    "label": "📋 qd status",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" status",
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["qubo"]
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ]
+  },
+  {
+    "label": "🩺 qd doctor",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" doctor",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ]
+  },
+  {
+    "label": "↻ qd restart all",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" restart api admin web",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ]
+  },
+  {
+    "label": "⏹ qd down",
+    "command": "r=\"$ZED_WORKTREE_ROOT\"; [ -x \"$r/scripts/dev/qd\" ] || r=\"$r/qubo-stack\"; \"$r/scripts/dev/qd\" down",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "shell": {
+      "with_arguments": {
+        "program": "/bin/bash",
+        "args": [
+          "--noprofile",
+          "--norc"
+        ]
+      }
+    },
+    "tags": [
+      "qubo",
+      "qd"
+    ]
   },
   {
     "label": "build: all",
@@ -33,7 +194,9 @@
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["qubo"]
+    "tags": [
+      "qubo"
+    ]
   },
   {
     "label": "lint: all",
@@ -41,7 +204,9 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo"]
+    "tags": [
+      "qubo"
+    ]
   },
   {
     "label": "db: studio",
@@ -50,7 +215,10 @@
     "use_new_terminal": false,
     "allow_concurrent_runs": false,
     "reveal": "always",
-    "tags": ["qubo", "db"]
+    "tags": [
+      "qubo",
+      "db"
+    ]
   },
   {
     "label": "db: generate migration",
@@ -58,7 +226,10 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo", "db"]
+    "tags": [
+      "qubo",
+      "db"
+    ]
   },
   {
     "label": "db: migrate",
@@ -66,7 +237,10 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo", "db"]
+    "tags": [
+      "qubo",
+      "db"
+    ]
   },
   {
     "label": "db: psql shell",
@@ -74,7 +248,10 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": true,
     "reveal": "always",
-    "tags": ["qubo", "db"]
+    "tags": [
+      "qubo",
+      "db"
+    ]
   },
   {
     "label": "db: backup dump",
@@ -82,7 +259,10 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo", "db"]
+    "tags": [
+      "qubo",
+      "db"
+    ]
   },
   {
     "label": "docker: up (legacy postgres only)",
@@ -90,7 +270,10 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo", "docker"]
+    "tags": [
+      "qubo",
+      "docker"
+    ]
   },
   {
     "label": "docker: down",
@@ -98,7 +281,10 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo", "docker"]
+    "tags": [
+      "qubo",
+      "docker"
+    ]
   },
   {
     "label": "docker: logs",
@@ -106,7 +292,10 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo", "docker"]
+    "tags": [
+      "qubo",
+      "docker"
+    ]
   },
   {
     "label": "setup: link root .env into apps",
@@ -114,6 +303,8 @@
     "cwd": "$ZED_WORKTREE_ROOT",
     "use_new_terminal": false,
     "reveal": "always",
-    "tags": ["qubo"]
+    "tags": [
+      "qubo"
+    ]
   }
 ]

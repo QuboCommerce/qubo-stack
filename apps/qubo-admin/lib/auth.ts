@@ -7,8 +7,8 @@ export const auth = betterAuth({
   trustedOrigins: [
     "http://localhost:4000",
     "http://127.0.0.1:4000",
-    "http://94.104.198.159:4000",
     process.env.BETTER_AUTH_URL,
+    ...(process.env.QUBO_TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()),
   ].filter((origin): origin is string => Boolean(origin)),
   database: drizzleAdapter(db, {
     provider: "pg",

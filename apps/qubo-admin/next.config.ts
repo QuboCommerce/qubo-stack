@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
+
+// Hosts allowed to load dev assets/HMR (set by scripts/dev/qd, e.g. qubo-admin.by-ali.dev).
+const devOrigins = (process.env.QUBO_DEV_ORIGINS ?? "").split(",").map((h) => h.trim()).filter(Boolean);
+
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["94.104.198.159"],
+  allowedDevOrigins: devOrigins,
   images: {
     unoptimized: true,
   },
