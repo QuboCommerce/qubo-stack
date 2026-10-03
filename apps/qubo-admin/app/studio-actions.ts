@@ -6,6 +6,7 @@ import * as studio from "@qubo/studio";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireSite } from "@/lib/admin";
+import { emitDocumentPublished } from "@/lib/events";
 
 /**
  * Studio server actions. Rules live in @qubo/studio; these only resolve
@@ -83,6 +84,7 @@ export async function publishAction(slug: string, input: { documentId: string; b
   try {
     const { scope, site } = await context(slug, true);
     const res = await studio.publish(scope, { id: input.documentId, baseVersion: input.baseVersion, label: input.label });
+    await emitDocumentPublished(site.id, input.documentId, res.version);
     await studio.notifyRevalidate(site.slug, [studio.documentTag(input.documentId)]);
     revalidatePath(`/${site.slug}/online-store`);
     return { ok: true, version: res.version, publishedAt: res.publishedAt.toISOString() };

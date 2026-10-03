@@ -37,6 +37,7 @@ qubo-stack/                     Turborepo + pnpm workspace
 │   ├── stylekit/   @qubo/stylekit themes: palette → schemes → CSS vars, Palette Doctor
 │   ├── blocks/     @qubo/blocks  schema-first Puck block library + render/editor configs
 │   ├── studio/     @qubo/studio  server services: documents, revisions, themes, translations, pages
+│   ├── realtime/   @qubo/realtime platform event bus: Postgres outbox + LISTEN/NOTIFY → SSE
 │   └── storefront/ @qubo/storefront typed client for storefronts → API (pinned to /v1)
 ├── .changeset/                    Changesets; one fixed version for the product (0.0.2)
 ├── caddy/Caddyfile                qubo.<domain> → admin, site domains → storefront
@@ -232,6 +233,19 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    Fonts may declare `weights` (set from the admin font catalog);
    `googleFontsUrl` snaps requested weights to them, so a family without 700
    can't fail the css2 request.
+16. **Realtime = Postgres outbox + SSE** (`@qubo/realtime`, no Redis/WebSocket
+   server). `publish()` inserts into `platform_event` and `pg_notify`s the id in
+   one statement (NOTIFY caps payloads at 8 kB); one LISTEN connection per process
+   fans out to subscribers. Events carry `siteId`/`orgId`/`userId` scope and are
+   filtered per audience. Rows live 7 days: SSE resumes from `Last-Event-ID`
+   or `?since=`, and an older cursor gets `event: reset` (the client refetches).
+   The admin mounts it at `/api/events` (same-origin session cookie; ADMIN/STAFF
+   only) and `/api/events/poll` (JSON fallback the client switches to after
+   repeated SSE failures). Server actions call `lib/events.ts` (`emitEntity`,
+   `emitDocumentPublished`, `emitThemePublished`), which never throws. Read-only
+   pages add `<LiveRefresh tables={[…]}/>` to debounce `router.refresh()` on
+   other users' changes; forms do **not** auto-refresh (conflicts are
+   p3-form-conflicts). New event types go in `packages/realtime/src/index.ts`.
 
 ## Roadmap
 

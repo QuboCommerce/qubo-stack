@@ -55,3 +55,6 @@ export * from "./support";
 
 // Notifications
 export * from "./notifications";
+
+// Realtime event bus
+export * from "./realtime";

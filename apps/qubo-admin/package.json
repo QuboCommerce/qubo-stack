@@ -55,7 +55,8 @@
     "tailwind-merge": "^2.5",
     "vaul": "^1.1",
     "zod": "^4.4",
-    "zustand": "^5"
+    "zustand": "^5",
+    "@qubo/realtime": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1",

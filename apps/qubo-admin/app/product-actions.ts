@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
+import { emitEntity } from "@/lib/events";
 
 const uuid = /^[0-9a-f-]{36}$/i;
 
@@ -121,6 +122,7 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       return row.id;
     });
     if (!savedId) return { error: "Product not found on this site." };
+    await emitEntity(siteId, "product", savedId, isNew ? "created" : "updated");
     if (isNew) {
       createdId = savedId;
       slugForRedirect = site.slug;
