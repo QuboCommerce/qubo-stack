@@ -246,6 +246,18 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    pages add `<LiveRefresh tables={[…]}/>` to debounce `router.refresh()` on
    other users' changes; forms do **not** auto-refresh (conflicts are
    p3-form-conflicts). New event types go in `packages/realtime/src/index.ts`.
+17. **Presence is in memory, never stored.** Each tab POSTs `/api/presence`
+   (route, document, selected block, focused field; debounced 2 s, heartbeat
+   30 s visible / 60 s hidden, `sendBeacon` leave on pagehide). `createPresence`
+   keeps entries per process with a 90 s TTL and broadcasts the site's full
+   snapshot as the *ephemeral* `presence.changed` (`hub.broadcast`: no row, no
+   id, not replayed). The focused field is picked up automatically from
+   `focusin` on any named control inside a `<form>` (override with
+   `data-presence-field`). UI in `components/presence.tsx`: `PresenceStack`
+   (top bar), `RowPresence path` (index rows), `FieldPresenceOverlay` (mounted
+   by `LiveEvents`), `DocumentPresence` + `BlockPresenceOverlay` (Studio; drawn
+   inside Puck's iframe with inline styles). Multiple admin processes would each
+   see only their own tabs; fine on one VPS, a shared store is the scale-out step.
 
 ## Roadmap
 

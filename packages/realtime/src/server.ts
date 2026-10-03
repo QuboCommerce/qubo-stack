@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import { CHANNEL, PlatformEvent, RETENTION_DAYS, visibleTo, type Audience, type DeliveredEvent } from "./index";
+import { CHANNEL, EPHEMERAL_TYPES, PlatformEvent, PresenceEntry, RETENTION_DAYS, visibleTo, type Audience, type DeliveredEvent } from "./index";
 
 type Sql = postgres.Sql;
 type Row = { id: string; type: string; site_id: string | null; org_id: string | null; user_id: string | null; payload: unknown; created_at: Date };
@@ -21,6 +21,7 @@ const toEvent = (r: Row) =>
  */
 export async function publish(sql: Sql, event: PlatformEvent): Promise<string> {
   const e = PlatformEvent.parse(event);
+  if (EPHEMERAL_TYPES.has(e.type)) throw new Error(`${e.type} is ephemeral: use hub.broadcast`);
   if (!e.siteId && !e.orgId && !e.userId) throw new Error(`event ${e.type} has no scope (siteId/orgId/userId)`);
   const [row] = await sql<{ id: string }[]>`
     with e as (
@@ -61,6 +62,11 @@ export function createHub(databaseUrl: string) {
     sql,
     ready,
     publish: (event: PlatformEvent) => publish(sql, event),
+    /** Live-only delivery to this process's subscribers (no row, no NOTIFY). For ephemeral types. */
+    broadcast(event: PlatformEvent) {
+      const ev = { ...event, id: "", createdAt: new Date().toISOString() } as DeliveredEvent;
+      for (const l of listeners) if (visibleTo(ev, l.audience)) l.send(ev);
+    },
     subscribe(audience: Audience, send: (e: DeliveredEvent) => void) {
       const l = { audience, send };
       listeners.add(l);
@@ -102,7 +108,8 @@ export function getHub(databaseUrl = process.env.DATABASE_URL) {
 }
 
 const enc = new TextEncoder();
-const frame = (e: DeliveredEvent) => enc.encode(`id: ${e.id}\nevent: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`);
+const frame = (e: DeliveredEvent) =>
+  enc.encode(`${e.id ? `id: ${e.id}\n` : ""}event: ${e.type}\ndata: ${JSON.stringify(e)}\n\n`);
 
 /**
  * Server-Sent Events response: replays from `Last-Event-ID` (or `?since=`), then
@@ -122,7 +129,8 @@ export async function sseResponse(hub: Hub, audience: Audience, request: Request
       let replayedUpTo = BigInt(0);
       const buffered: DeliveredEvent[] = [];
       let replaying = true;
-      const unsubscribe = hub.subscribe(audience, (e) => (replaying ? buffered.push(e) : BigInt(e.id) > replayedUpTo && send(frame(e))));
+      const fresh = (e: DeliveredEvent) => e.id === "" || BigInt(e.id) > replayedUpTo;
+      const unsubscribe = hub.subscribe(audience, (e) => (replaying ? buffered.push(e) : fresh(e) && send(frame(e))));
       const ping = setInterval(() => send(enc.encode(`: ping\n\n`)), 25_000);
       cleanup = () => { clearInterval(ping); unsubscribe(); };
       request.signal.addEventListener("abort", () => { cleanup(); try { controller.close(); } catch {} });
@@ -139,7 +147,7 @@ export async function sseResponse(hub: Hub, audience: Audience, request: Request
         replayedUpTo = BigInt(latest);
       }
       replaying = false;
-      for (const e of buffered) if (BigInt(e.id) > replayedUpTo) send(frame(e));
+      for (const e of buffered) if (fresh(e)) send(frame(e));
     },
     cancel() { cleanup(); },
   });
@@ -162,3 +170,59 @@ export async function pollResponse(hub: Hub, audience: Audience, request: Reques
   if (gap || more) return Response.json({ events: [], cursor: await hub.latestId(), reset: true });
   return Response.json({ events, cursor: events.at(-1)?.id ?? since, reset: false });
 }
+
+// ---------------------------------------------------------------- presence ---
+
+export type PresenceInput = Omit<PresenceEntry, "at">;
+
+/**
+ * In-memory presence for one process. Tabs heartbeat with `touch`; entries expire
+ * after `ttlMs`. Any change that matters to others broadcasts the site's snapshot
+ * as `presence.changed`. Entries are keyed by user + client id, so a client can
+ * only move its own entries.
+ */
+export function createPresence(hub: Pick<Hub, "broadcast">, { ttlMs = 90_000, sweepMs = 15_000 } = {}) {
+  const entries = new Map<string, PresenceEntry & { expires: number }>();
+  const key = (userId: string, clientId: string) => `${userId}\u0000${clientId}`;
+  const strip = ({ expires: _, ...e }: PresenceEntry & { expires: number }): PresenceEntry => e;
+  const shape = (e: PresenceInput) => [e.siteId, e.route, e.documentId, e.blockId, e.fieldPath, e.focused, e.name, e.image].join("\u0000");
+
+  const snapshot = (siteId: string) => [...entries.values()].filter((e) => e.siteId === siteId).map(strip);
+  const announce = (siteId: string) => hub.broadcast({ type: "presence.changed", siteId, payload: { entries: snapshot(siteId) } });
+
+  const sweep = setInterval(() => {
+    const now = Date.now(), sites = new Set<string>();
+    for (const [k, e] of entries) if (e.expires <= now) { entries.delete(k); sites.add(e.siteId); }
+    sites.forEach(announce);
+  }, sweepMs);
+  (sweep as { unref?: () => void }).unref?.();
+
+  return {
+    /** Records a heartbeat and returns the site's current snapshot. */
+    touch(input: PresenceInput): PresenceEntry[] {
+      const k = key(input.userId, input.clientId);
+      const prev = entries.get(k);
+      const now = Date.now();
+      entries.set(k, { ...PresenceEntry.parse({ ...input, at: now }), expires: now + ttlMs });
+      if (!prev || shape(prev) !== shape(input)) {
+        announce(input.siteId);
+        if (prev && prev.siteId !== input.siteId) announce(prev.siteId);
+      }
+      return snapshot(input.siteId);
+    },
+    leave(userId: string, clientId: string) {
+      const prev = entries.get(key(userId, clientId));
+      if (!prev) return;
+      entries.delete(key(userId, clientId));
+      announce(prev.siteId);
+    },
+    snapshot,
+    stop: () => clearInterval(sweep),
+  };
+}
+
+export type Presence = ReturnType<typeof createPresence>;
+
+const gp = globalThis as unknown as { __quboPresence?: Presence };
+/** Process-wide presence bound to `getHub()`. */
+export const getPresence = () => (gp.__quboPresence ??= createPresence(getHub()));

@@ -18,7 +18,7 @@ export default async function SiteLayout({ children, params }: { children: React
   });
 
   return (
-    <LiveEvents>
+    <LiveEvents siteId={siteId} userId={user.id}>
     <AdminFrame
       site={toShell(site)}
       sites={sites.map(toShell)}
