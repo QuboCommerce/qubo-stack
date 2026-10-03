@@ -13,6 +13,7 @@ import { Surface } from "@/components/settings/settings-group";
 import { Button } from "@/components/ui/button";
 import { requireSite } from "@/lib/admin";
 import { getCategoryTree, subtreeIds } from "@/lib/categories";
+import { categoryValues } from "@/lib/form-specs";
 import { assetUrl, money, number } from "@/lib/format";
 import { getCatalogHealth } from "@/lib/queries";
 
@@ -132,7 +133,13 @@ export default async function CategoriesPage({ params, searchParams }: { params:
                   <span className="font-medium text-foreground">{selected.name}</span>
                 </nav>
 
-                <SettingsForm key={selected.id} action={saveCategory}>
+                <SettingsForm
+                  key={selected.id}
+                  action={saveCategory}
+                  noun="category"
+                  base={categoryValues({ name: selected.name, slug: selected.slug, parentId: selected.parentId ?? null, description: detail?.description ?? null })}
+                  watch={{ table: "category", id: selected.id }}
+                >
                   <input type="hidden" name="site" value={site.slug} />
                   <input type="hidden" name="id" value={selected.id} />
                   <Surface className="space-y-4">

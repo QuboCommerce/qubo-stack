@@ -9,6 +9,8 @@ import { z } from "zod";
 import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
 import { emitEntity } from "@/lib/events";
+import { productSpec, productValues } from "@/lib/form-specs";
+import { RACE, reconcile, unchangedSince } from "@/lib/merge-server";
 
 const uuid = /^[0-9a-f-]{36}$/i;
 
@@ -53,12 +55,33 @@ export const slugify = async (s: string) =>
     .replace(/^-|-$/g, "")
     .slice(0, 80);
 
-export async function saveProduct(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function saveProduct(_prev: ActionState, submitted: FormData): Promise<ActionState> {
   let createdId: string | null = null;
   let slugForRedirect = "";
   try {
-    const { siteId, site } = await requireSiteFromForm(formData);
-    const id = String(formData.get("id") ?? "");
+    const { siteId, site } = await requireSiteFromForm(submitted);
+    const id = String(submitted.get("id") ?? "");
+    const isNew = id === "new" || !id;
+    let formData = submitted;
+    let seenAt: Date | null = null;
+    if (!isNew) {
+      if (!uuid.test(id)) return { error: "Product not found on this site." };
+      const [current] = await db.select().from(product).where(and(eq(product.id, id), eq(product.siteId, siteId))).limit(1);
+      if (!current) return { error: "This product was deleted by someone else." };
+      seenAt = current.updatedAt;
+      const [links, cats] = await Promise.all([
+        db.select({ id: productCategory.categoryId }).from(productCategory).where(eq(productCategory.productId, id)),
+        db.select({ id: category.id, name: category.name }).from(category).where(eq(category.siteId, siteId)),
+      ]);
+      const r = await reconcile(
+        submitted,
+        productSpec(new Map(cats.map((c) => [c.id, c.name]))),
+        productValues(current, links.map((l) => l.id)),
+        { siteId, table: "product", id },
+      );
+      if ("conflict" in r) return { conflict: r.conflict };
+      formData = r.formData;
+    }
     const str = (k: string) => String(formData.get(k) ?? "");
     const rawSlug = str("slug") || (await slugify(str("name")));
     const parsed = schema.safeParse({
@@ -111,17 +134,20 @@ export async function saveProduct(_prev: ActionState, formData: FormData): Promi
       isFeatured: d.isFeatured,
       updatedAt: new Date(),
     };
-    const isNew = id === "new" || !id;
     const savedId = await db.transaction(async (tx) => {
       const [row] = isNew
         ? await tx.insert(product).values({ ...values, siteId }).returning({ id: product.id })
-        : await tx.update(product).set(values).where(and(eq(product.id, id), eq(product.siteId, siteId))).returning({ id: product.id });
+        : await tx
+            .update(product)
+            .set(values)
+            .where(and(eq(product.id, id), eq(product.siteId, siteId), seenAt ? unchangedSince(product.updatedAt, seenAt) : undefined))
+            .returning({ id: product.id });
       if (!row) return null;
       await tx.delete(productCategory).where(eq(productCategory.productId, row.id));
       if (categoryIds.length) await tx.insert(productCategory).values(categoryIds.map((categoryId) => ({ productId: row.id, categoryId })));
       return row.id;
     });
-    if (!savedId) return { error: "Product not found on this site." };
+    if (!savedId) return { error: RACE };
     await emitEntity(siteId, "product", savedId, isNew ? "created" : "updated");
     if (isNew) {
       createdId = savedId;

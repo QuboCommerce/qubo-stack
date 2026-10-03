@@ -1,9 +1,13 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { createContext, useContext, useRef, useState } from "react";
 import { EventsProvider, PresenceProvider, useEvent } from "@qubo/realtime/client";
 import { FieldPresenceOverlay } from "@/components/presence";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+const ViewerContext = createContext<{ userId: string } | null>(null);
+/** The signed-in user inside `LiveEvents`. */
+export const useViewer = () => useContext(ViewerContext);
 
 /**
  * One event connection per tab, plus this tab's presence on `siteId`.
@@ -13,6 +17,7 @@ export function LiveEvents({ siteId, userId, sessionId, children }: { siteId: st
   const router = useRouter();
   const pathname = usePathname();
   return (
+    <ViewerContext.Provider value={{ userId }}>
     <EventsProvider url="/api/events" onReset={() => router.refresh()}>
       <PresenceProvider url="/api/presence" siteId={siteId} userId={userId} route={pathname}>
         {children}
@@ -20,6 +25,7 @@ export function LiveEvents({ siteId, userId, sessionId, children }: { siteId: st
         <SessionEnded sessionId={sessionId} />
       </PresenceProvider>
     </EventsProvider>
+    </ViewerContext.Provider>
   );
 }
 

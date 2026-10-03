@@ -10,6 +10,7 @@ import { SettingsGroup, Surface } from "@/components/settings/settings-group";
 import { SettingsPage } from "@/components/settings/settings-page";
 import { requireSite } from "@/lib/admin";
 import { localeLabel } from "@/lib/format";
+import { siteGeneralValues } from "@/lib/form-specs";
 import { siteTypeIcon } from "@/lib/site-type-icons";
 
 const currencies = [
@@ -23,14 +24,21 @@ const capabilityOrder = ["commerce", "catalog", "accounts", "booking", "leads", 
 
 export default async function GeneralSettings({ params }: { params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
-  const { site } = await requireSite(slug);
+  const { site, siteId } = await requireSite(slug);
   const readOnly = !canManage(site.memberRole);
   const caps = new Set(site.capabilities ?? []);
 
   return (
     <SettingsPage site={site.slug} title="General" description="How this site is named, what it does and how it formats money.">
       {readOnly && <ReadOnlyNote />}
-      <SettingsForm action={updateSiteGeneral} readOnly={readOnly} className="space-y-6 @min-[72rem]:space-y-10">
+      <SettingsForm
+        action={updateSiteGeneral}
+        readOnly={readOnly}
+        className="space-y-6 @min-[72rem]:space-y-10"
+        noun="site"
+        base={siteGeneralValues(site)}
+        watch={{ table: "site", id: siteId }}
+      >
         <input type="hidden" name="site" value={site.slug} />
 
         <SettingsGroup title="Details" description="Shown in the admin, browser tabs and search results.">

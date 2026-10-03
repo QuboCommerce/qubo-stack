@@ -10,6 +10,10 @@ import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
 import { supportedLocales } from "@/lib/format";
 import { emitEntity } from "@/lib/events";
+import { siteGeneralSpec, siteGeneralValues } from "@/lib/form-specs";
+import { RACE, reconcile, unchangedSince } from "@/lib/merge-server";
+import { siteTypePresets } from "@qubo/blocks/presets";
+import { capabilityMeta } from "@/components/settings/capabilities";
 
 /** Only organization owners/admins may change site settings. */
 async function requireManager(formData: FormData) {
@@ -28,9 +32,18 @@ const generalSchema = z.object({
   capabilities: z.array(z.enum(capabilities)),
 });
 
-export async function updateSiteGeneral(_prev: ActionState, formData: FormData): Promise<ActionState> {
+export async function updateSiteGeneral(_prev: ActionState, submitted: FormData): Promise<ActionState> {
   try {
-    const { siteId, site } = await requireManager(formData);
+    const { siteId, site } = await requireManager(submitted);
+    const [row] = await db.select().from(siteTable).where(eq(siteTable.id, siteId)).limit(1);
+    if (!row) return { error: "Site not found." };
+    const spec = siteGeneralSpec({
+      type: (t) => siteTypePresets[t as keyof typeof siteTypePresets]?.label ?? t,
+      capability: (c) => capabilityMeta[c]?.label ?? c,
+    });
+    const r = await reconcile(submitted, spec, siteGeneralValues(row), { siteId, table: "site", id: siteId });
+    if ("conflict" in r) return { conflict: r.conflict };
+    const formData = r.formData;
     const parsed = generalSchema.safeParse({
       name: formData.get("name"),
       description: formData.get("description") ?? "",
@@ -40,10 +53,12 @@ export async function updateSiteGeneral(_prev: ActionState, formData: FormData):
     });
     if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the highlighted fields." };
     const data = parsed.data;
-    await db
+    const saved = await db
       .update(siteTable)
       .set({ ...data, description: data.description || null, updatedAt: new Date() })
-      .where(eq(siteTable.id, siteId));
+      .where(and(eq(siteTable.id, siteId), unchangedSince(siteTable.updatedAt, row.updatedAt)))
+      .returning({ id: siteTable.id });
+    if (!saved.length) return { error: RACE };
     await emitEntity(siteId, "site", siteId);
     refresh(site.slug);
     return { ok: true, at: Date.now() };
