@@ -2,6 +2,7 @@ import { AdminFrame } from "@/components/shell/admin-frame";
 import type { ShellSite } from "@/components/shell/types";
 import { requireSite } from "@/lib/admin";
 import { getShellCounts } from "@/lib/queries";
+import { LiveEvents } from "@/components/live-events";
 
 export default async function SiteLayout({ children, params }: { children: React.ReactNode; params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
@@ -17,6 +18,7 @@ export default async function SiteLayout({ children, params }: { children: React
   });
 
   return (
+    <LiveEvents>
     <AdminFrame
       site={toShell(site)}
       sites={sites.map(toShell)}
@@ -25,5 +27,6 @@ export default async function SiteLayout({ children, params }: { children: React
     >
       {children}
     </AdminFrame>
+    </LiveEvents>
   );
 }

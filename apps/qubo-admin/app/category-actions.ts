@@ -10,6 +10,7 @@ import { slugify } from "@/app/product-actions";
 import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
 import { getCategoryTree, subtreeIds } from "@/lib/categories";
+import { emitEntity } from "@/lib/events";
 
 const idSchema = z.uuid();
 const schema = z.object({
@@ -93,6 +94,7 @@ export async function saveCategory(_prev: ActionState, formData: FormData): Prom
         updatedAt: new Date(),
       })
       .where(and(eq(category.id, id), eq(category.siteId, siteId)));
+    await emitEntity(siteId, "category", "tree");
     revalidate(site.slug);
   } catch (e) {
     return { error: e instanceof Error ? e.message : "Something went wrong." };
@@ -123,6 +125,7 @@ export async function createCategory(formData: FormData) {
       position: await nextPosition(siteId, parentId),
     })
     .returning({ id: category.id });
+  await emitEntity(siteId, "category", "tree");
   revalidate(site.slug);
   redirect(`/${site.slug}/products/categories?id=${row!.id}`);
 }
@@ -154,6 +157,7 @@ export async function moveCategory(formData: FormData) {
       await tx.update(category).set({ position }).where(eq(category.id, s.id));
     }
   });
+  await emitEntity(siteId, "category", "tree");
   revalidate(site.slug);
 }
 
@@ -186,6 +190,7 @@ export async function deleteCategory(formData: FormData) {
     }
     await tx.delete(category).where(and(eq(category.id, id), eq(category.siteId, siteId)));
   });
+  await emitEntity(siteId, "category", "tree");
   revalidate(site.slug);
   redirect(`/${site.slug}/products/categories${current.parentId ? `?id=${current.parentId}` : ""}`);
 }

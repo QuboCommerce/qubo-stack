@@ -4,6 +4,7 @@ import * as studio from "@qubo/studio";
 import { revalidatePath } from "next/cache";
 import { requireSite } from "@/lib/admin";
 import type { SaveOutcome } from "./studio-actions";
+import { emitThemePublished } from "@/lib/events";
 
 /**
  * Theme server actions for the Studio theme editor. Theme drafts autosave
@@ -65,6 +66,7 @@ export async function publishThemeAction(slug: string, input: { themeId: string;
   try {
     const { scope, site } = await context(slug, true);
     const res = await studio.publishTheme(scope, { id: input.themeId, label: input.label });
+    await emitThemePublished(site.id, input.themeId);
     const t = await studio.getTheme(scope, input.themeId);
     // Every page renders with the theme, so the whole site is stale.
     if (t.isActive) await studio.notifyRevalidate(site.slug, [studio.themeTag(site.id)]);

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
 import { supportedLocales } from "@/lib/format";
+import { emitEntity } from "@/lib/events";
 
 /** Only organization owners/admins may change site settings. */
 async function requireManager(formData: FormData) {
@@ -43,6 +44,7 @@ export async function updateSiteGeneral(_prev: ActionState, formData: FormData):
       .update(siteTable)
       .set({ ...data, description: data.description || null, updatedAt: new Date() })
       .where(eq(siteTable.id, siteId));
+    await emitEntity(siteId, "site", siteId);
     refresh(site.slug);
     return { ok: true, at: Date.now() };
   } catch (e) {

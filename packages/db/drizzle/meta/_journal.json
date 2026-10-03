@@ -43,6 +43,13 @@
       "when": 1791013219601,
       "tag": "0005_category_tree",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791068990179,
+      "tag": "0006_platform_event",
+      "breakpoints": true
     }
   ]
 }
