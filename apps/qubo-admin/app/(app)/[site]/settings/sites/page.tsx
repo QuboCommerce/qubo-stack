@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Plus } from "lucide-react";
 import { siteTypePresets } from "@qubo/blocks/presets";
 import { SettingsGroup, Surface } from "@/components/settings/settings-group";
 import { SettingsPage } from "@/components/settings/settings-page";
 import { SiteAvatar } from "@/components/shell/qubo-mark";
-import { Button } from "@/components/ui/button";
 import { getAccess, requireSite } from "@/lib/admin";
+import { getUserOrgs } from "@/lib/shell";
+import { CreateSiteButton } from "@/components/settings/create-site-button";
 import { manageableOrgs } from "@/lib/site-ownership";
 import { MoveDraftDialog, PublishSiteDialog } from "@/components/settings/site-ownership";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
   const { site: slug } = await params;
   const { site, sites } = await requireSite(slug);
   const own = sites.filter((s) => s.organizationId === site.organizationId);
-  const [licence, orgs] = await Promise.all([getAccess(), manageableOrgs()]);
+  const [licence, orgs, allOrgs] = await Promise.all([getAccess(), manageableOrgs(), getUserOrgs()]);
   const canManage = orgs.some((o) => o.id === site.organizationId);
   const usage = (q: { used: number; limit: number | null }, noun: string) => {
     const plural = (n: number) => `${noun}${n === 1 ? "" : "s"}`;
@@ -24,7 +24,7 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
   };
   const quotaLine = `${own.length} in this organisation · ${usage(licence.sites, "site")} and ${usage(licence.orgs, "organisation")} on this instance.`;
   const createTitle = licence.sites.canCreate
-    ? "The site wizard arrives with site presets"
+    ? undefined
     : licence.entitlements.plan === "free"
       ? "Free runs one site. Link a Portal account under Settings → Qubo Portal for more."
       : `Your ${licence.entitlements.plan} plan covers ${licence.sites.limit} sites across all organisations. Delete a site to free one up, or upgrade.`;
@@ -35,9 +35,7 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
       title="Sites"
       description="Each site has its own domain, theme, content and settings. Customers, team and media can be shared."
       actions={
-        <Button size="sm" variant="outline" disabled title={createTitle}>
-          <Plus /> Create site
-        </Button>
+        <CreateSiteButton orgs={allOrgs} defaultOrgId={site.organizationId} disabled={!licence.sites.canCreate || !orgs.length} title={createTitle} />
       }
     >
       <SettingsGroup title="Your sites" description={`${quotaLine} Drafts can move between organisations; a published site stays in its organisation.`}>

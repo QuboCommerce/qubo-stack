@@ -385,6 +385,27 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    server URLs are fetched from our server: set `AI_PRIVATE_URLS=deny` on shared
    hosting. Not built yet: pgvector RAG (prod image lacks it; Anthropic has no
    embeddings), auto-replies, the Puck editor assistant.
+24. **Sites and organisations are created in the admin; a site is born complete.**
+   The site switcher is a mega menu (`components/shell/site-switcher.tsx`): one
+   section per organisation the user belongs to, empty ones included, with
+   OpenGraph-style cards whose thumbnail is painted from the site's active theme
+   (`lib/shell.ts` resolves background, primary and text through stylekit), an
+   unread badge that deep-links into that site's inbox, a "View site" chip, and a
+   lock veil for sites outside the plan. Layout: stacked list under 4 sites, two
+   columns at 4, three at 6; search appears above 5. The footer shows plan usage
+   and the two create buttons; when a quota is full the button becomes a lock
+   that links to Settings → Qubo Portal. Provisioning lives in `@qubo/studio`
+   (`provision.ts`): `createOrganization` makes the caller OWNER;
+   `createSite` runs one transaction that inserts the site with the preset's
+   capabilities, `site_settings`, one primary locale, every template of the preset
+   as a published document with revision 1, header and footer section groups, an
+   active built-in theme picked by site type (store and custom: Smossie,
+   services and editorial: Lumé, business: HM Froid) and the `contact` form.
+   Slugs are derived from the name and de-duplicated with `-2`, `-3`. Server
+   actions in `app/provision-actions.ts` re-check `access()` quotas and that the
+   user manages the target organisation; the site count is the real ceiling
+   across all organisations, not per organisation. Not built yet: delete site,
+   logo upload during creation, cross-site inbox.
 
 ## Roadmap
 

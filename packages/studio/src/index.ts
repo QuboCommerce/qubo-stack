@@ -8,3 +8,4 @@ export * from "./views";
 export * from "./structure";
 export * from "./revalidate";
 export { createPreviewToken, verifyPreviewToken, createSitePreviewToken, verifySitePreviewToken, generatePreviewPin, SITE_PREVIEW_TTL_SECONDS } from "./preview";
+export * from "./provision";

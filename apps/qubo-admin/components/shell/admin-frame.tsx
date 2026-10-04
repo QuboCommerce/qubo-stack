@@ -10,7 +10,7 @@ import { CommandMenu } from "./command-menu";
 import { QuboMark } from "./qubo-mark";
 import { SidebarNav } from "./sidebar-nav";
 import { SiteSwitcher } from "./site-switcher";
-import type { ShellCounts, ShellSite, ShellUser } from "./types";
+import type { ShellAccess, ShellCounts, ShellOrg, ShellSite, ShellUser } from "./types";
 import { UserMenu } from "./user-menu";
 import { PresenceStack } from "@/components/presence";
 
@@ -20,9 +20,11 @@ import { PresenceStack } from "@/components/presence";
  *  - md–lg  : 64px icon rail with tooltips
  *  - lg+    : full 240px sidebar; 3xl widens it; page content adapts via container queries
  */
-export function AdminFrame({ site, sites, user, counts, children }: {
+export function AdminFrame({ site, sites, orgs, access, user, counts, children }: {
   site: ShellSite;
   sites: ShellSite[];
+  orgs: ShellOrg[];
+  access: ShellAccess;
   user: ShellUser;
   counts: ShellCounts;
   children: React.ReactNode;
@@ -48,7 +50,7 @@ export function AdminFrame({ site, sites, user, counts, children }: {
           </Link>
           <span className="hidden h-5 w-px bg-topbar-muted md:block lg:hidden" />
           <div className="min-w-0 shrink">
-            <SiteSwitcher site={site} sites={sites} />
+            <SiteSwitcher site={site} sites={sites} orgs={orgs} access={access} />
           </div>
 
           <div className="mx-auto hidden w-full max-w-md flex-1 justify-center px-2 md:flex xl:max-w-xl 3xl:max-w-2xl">
