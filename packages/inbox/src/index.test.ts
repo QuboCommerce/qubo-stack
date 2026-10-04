@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { chatSubject, cleanFormData, publicStaffName, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
+import { baseSubject, chatSubject, htmlToText, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, publicStaffName, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
 
 describe("cleanFormData", () => {
   test("drops internal, empty and non-string fields; trims", () => {
@@ -51,5 +51,46 @@ describe("chat helpers", () => {
   test("publicStaffName shows first names only", () => {
     expect(publicStaffName("Mostapha Hilal")).toBe("Mostapha");
     expect(publicStaffName(null)).toBeNull();
+  });
+});
+
+describe("inbound e-mail", () => {
+  const id = "0b6a1c3e-8f1d-4a52-9d3e-2b7c9f0a1e44";
+  test("routes reply addresses before site addresses", () => {
+    expect(inboundRoute([`hm-froid@in.example.com`, `"Shop" <reply+${id}@In.Example.com>`], "in.example.com")).toEqual({ conversationId: id });
+    expect(inboundRoute(["someone@else.com", "HM-Froid+sales@in.example.com"], "in.example.com")).toEqual({ siteSlug: "hm-froid" });
+    expect(inboundRoute(["hm-froid@other.com"], "in.example.com")).toBeNull();
+    expect(inboundRoute(["hm-froid@in.example.com"], "")).toBeNull();
+    expect(replyAddress(id, "In.Example.com")).toBe(`reply+${id}@in.example.com`);
+  });
+  test("parses addresses", () => {
+    expect(parseAddress('"Jan Peeters" <Jan@Example.be>')).toEqual({ name: "Jan Peeters", email: "jan@example.be" });
+    expect(parseAddress("jan@example.be")).toEqual({ name: null, email: "jan@example.be" });
+    expect(parseAddress("not an address")).toBeNull();
+  });
+  test("collects referenced ids, In-Reply-To first", () => {
+    expect(referencedIds({ "In-Reply-To": "<b@x>", references: "<a@x> <b@x>" })).toEqual(["<b@x>", "<a@x>"]);
+    expect(referencedIds({})).toEqual([]);
+  });
+  test("spots auto replies", () => {
+    expect(isAutoReply({ "auto-submitted": "auto-replied" }, "jan@example.be")).toBe(true);
+    expect(isAutoReply({ "auto-submitted": "no" }, "jan@example.be")).toBe(false);
+    expect(isAutoReply({ precedence: "bulk" }, "jan@example.be")).toBe(true);
+    expect(isAutoReply({}, "MAILER-DAEMON@example.be")).toBe(true);
+    expect(isAutoReply({}, "jan@example.be")).toBe(false);
+  });
+  test("strips quoted history in several languages", () => {
+    expect(stripQuoted("Thanks!\n\nOn Mon, 3 Mar 2026 at 10:00, Shop <a@b.c> wrote:\n> old")).toBe("Thanks!");
+    expect(stripQuoted("Merci\n\nLe lun. 3 mars 2026 à 10:00, Shop <a@b.c> a écrit :\n> vieux")).toBe("Merci");
+    expect(stripQuoted("Dank u\n\nOp ma 3 mrt 2026 om 10:00 schreef Shop <a@b.c>:\n> oud")).toBe("Dank u");
+    expect(stripQuoted("Top\n\nOn Mon, 3 Mar 2026 at 10:00, Shop\n<a@b.c> wrote:\n> old")).toBe("Top");
+    expect(stripQuoted("Yes\n\nFrom: Shop <a@b.c>\nSent: today")).toBe("Yes");
+    expect(stripQuoted("> only a quote")).toBe("> only a quote");
+    expect(stripQuoted("Line one\n> inline quote\nmy answer")).toBe("Line one\n> inline quote\nmy answer");
+  });
+  test("html to text and base subjects", () => {
+    expect(htmlToText("<style>p{}</style><p>Hi&nbsp;there</p><p>A &amp; B<br>C</p>")).toBe("Hi there\nA & B\nC");
+    expect(baseSubject("Re: RE: Fwd: Offerte koelcel")).toBe("offerte koelcel");
+    expect(baseSubject("Antw: Offerte")).toBe("offerte");
   });
 });

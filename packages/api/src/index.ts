@@ -5,6 +5,7 @@ import { db } from "@qubo/db/client";
 import { auth } from "./lib/auth";
 import { catalog } from "./routes/catalog";
 import { commerce, webhooks } from "./routes/commerce";
+import { inbound } from "./routes/inbound";
 import { account } from "./routes/account";
 import { seo } from "./routes/seo";
 import { forms } from "./routes/forms";
@@ -39,6 +40,7 @@ export const app = new Elysia()
   // matches on, and Elysia must not parse the body before Better Auth reads it.
   .all("/api/auth/*", ({ request }) => auth.handler(request), { parse: "none" })
   .use(webhooks)
+  .use(inbound)
   // Versioned public API; the storefront client pins it (API_VERSION in @qubo/storefront).
   .group("/v1", (v1) => v1.use(sites).use(catalog).use(commerce).use(account).use(studioRoutes).use(studioPublic).use(seo).use(forms).use(chat));
 
