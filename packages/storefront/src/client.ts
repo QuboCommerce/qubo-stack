@@ -163,6 +163,14 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
         body: JSON.stringify(body),
       }),
 
+    /** Public form post (`/api/forms/:key`). `visitor`: signed client-IP headers (`@qubo/shared/client-ip`) for rate limiting. */
+    submitForm: (key: string, body: { data: Record<string, string>; pagePath?: string; locale?: string }, visitor?: Record<string, string>) =>
+      request<{ ok: true }>(`/forms/${encodeURIComponent(key)}`, {
+        method: "POST",
+        headers: { "content-type": "application/json", ...visitor },
+        body: JSON.stringify(body),
+      }),
+
     /** Site preview gate: exchanges the admin's PIN for a preview token (403 `invalid_pin`). */
     unlockPreview: (pin: string) =>
       request<{ token: string; maxAge: number }>("/render/preview/unlock", {

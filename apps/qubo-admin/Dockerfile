@@ -1,22 +1,14 @@
 FROM node:22-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
+RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
 
-FROM base AS deps
-WORKDIR /app
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY apps/qubo-admin/package.json ./apps/qubo-admin/
-COPY packages/db/package.json ./packages/db/
-COPY packages/shared/package.json ./packages/shared/
-RUN pnpm install --frozen-lockfile
-
+# Whole workspace, like the storefront: picking package.json files by hand
+# breaks the install whenever a workspace dependency is added.
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/qubo-admin/node_modules ./apps/qubo-admin/node_modules
-COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY . .
-RUN pnpm --filter qubo-admin build
+RUN pnpm install --frozen-lockfile --filter qubo-admin...
+# The DB client needs a URL at import; nothing connects during the build.
+RUN DATABASE_URL=postgresql://build:build@127.0.0.1:1/build pnpm --filter qubo-admin build
 
 FROM base AS runner
 WORKDIR /app

@@ -15,6 +15,7 @@
     "@qubo/blocks": "workspace:*",
     "@qubo/db": "workspace:*",
     "@qubo/geo": "workspace:*",
+    "@qubo/inbox": "workspace:*",
     "@qubo/realtime": "workspace:*",
     "@qubo/shared": "workspace:*",
     "@qubo/studio": "workspace:*",

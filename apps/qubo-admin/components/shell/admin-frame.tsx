@@ -80,7 +80,7 @@ export function AdminFrame({ site, sites, user, counts, children }: {
             )}
             <button type="button" className="relative grid size-9 place-items-center rounded-lg hover:bg-topbar-muted" aria-label="Notifications">
               <Bell className="size-[18px]" />
-              {counts.leads > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-brand-hot ring-2 ring-topbar" />}
+              {counts.inbox > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-brand-hot ring-2 ring-topbar" />}
             </button>
             <PresenceStack className="hidden xs:flex" />
             <UserMenu user={user} />

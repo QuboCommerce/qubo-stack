@@ -6,6 +6,7 @@ import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/store
 import { requestPath, type Storefront } from "./site";
 import { adminOrigin } from "./hosts";
 import { StaffBar } from "@/components/staff-bar";
+import { FormEnhancer } from "@/components/form-enhancer";
 
 /** What the current route is about; dynamic blocks default to it. */
 export type ViewContext = {
@@ -132,6 +133,7 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
   return (
     <>
       <QuboRender registry={registry} data={data} metadata={metadata} />
+      <FormEnhancer />
       <StaffBar siteId={sf.site.id} siteSlug={sf.site.slug} adminOrigin={adminOrigin(new URL(sf.origin).host)} documentId={documentId} />
     </>
   );

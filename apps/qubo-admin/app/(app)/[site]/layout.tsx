@@ -3,6 +3,7 @@ import type { ShellSite } from "@/components/shell/types";
 import { requireSite } from "@/lib/admin";
 import { getShellCounts } from "@/lib/queries";
 import { LiveEvents } from "@/components/live-events";
+import { InboxLive } from "@/components/inbox/live";
 
 export default async function SiteLayout({ children, params }: { children: React.ReactNode; params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
@@ -22,6 +23,7 @@ export default async function SiteLayout({ children, params }: { children: React
 
   return (
     <LiveEvents siteId={siteId} userId={user.id} sessionId={user.sessionId}>
+      <InboxLive siteId={siteId} />
     <AdminFrame
       site={toShell(site)}
       sites={sites.map(toShell)}

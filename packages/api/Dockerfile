@@ -1,20 +1,13 @@
 FROM oven/bun:1-alpine AS base
 WORKDIR /app
 
-FROM base AS deps
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
-COPY packages/api/package.json ./packages/api/
-COPY packages/db/package.json ./packages/db/
-COPY packages/shared/package.json ./packages/shared/
-RUN corepack enable && pnpm install --frozen-lockfile --filter @qubo/api...
-
+# Whole workspace: the API imports workspace packages as TypeScript source, so
+# copying a hand-picked subset silently breaks whenever a dependency is added.
 FROM base AS runner
 ENV NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages ./packages
-COPY packages/api ./packages/api
-COPY packages/db ./packages/db
-COPY packages/shared ./packages/shared
+RUN apk add --no-cache nodejs npm && npm i -g pnpm@10.24.0
+COPY . .
+RUN pnpm install --frozen-lockfile --prod --filter @qubo/api...
 
 EXPOSE 3333
 ENV PORT=3333

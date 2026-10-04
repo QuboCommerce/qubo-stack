@@ -48,6 +48,8 @@ export const PlatformEvent = z.discriminatedUnion("type", [
   def("session.revoked", z.object({ sessionId: z.string(), reason: z.enum(["takeover", "revoked"]), by: z.object({ city: z.string().nullable(), deviceLabel: z.string().nullable() }) })),
   def("conversation.created", z.object({ conversationId: z.string() })),
   def("conversation.message", z.object({ conversationId: z.string(), messageId: z.string() })),
+  // Status, priority, assignee or read state changed.
+  def("conversation.updated", z.object({ conversationId: z.string() })),
   def("site.domain.changed", z.object({ hostname: z.string() })),
   def("license.changed", z.object({ plan: z.string() })),
   def("release.available", z.object({ version: z.string() })),
