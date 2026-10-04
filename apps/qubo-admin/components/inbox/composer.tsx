@@ -1,9 +1,10 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
-import { Lock, Paperclip, Send } from "lucide-react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { Lock, Paperclip, Send, Sparkles } from "lucide-react";
 import { LIMITS } from "@qubo/inbox";
 import { toast } from "sonner";
+import { draftReplyAction } from "@/app/ai-actions";
 import { replyAction } from "@/app/inbox-actions";
 import { useReplyFiles } from "@/components/inbox/files";
 import { Button } from "@/components/ui/button";
@@ -15,6 +16,7 @@ export function Composer({
   contactEmail,
   emailReady,
   chat,
+  aiDrafts,
 }: {
   site: string;
   conversationId: string;
@@ -22,12 +24,34 @@ export function Composer({
   emailReady: boolean;
   /** Chat threads: replies reach the visitor live; `online` = they have the chat open right now. */
   chat?: { online: boolean };
+  /** AI is set up with drafts on for this organisation. */
+  aiDrafts?: boolean;
 }) {
   const [state, action, pending] = useActionState(replyAction, null);
   const canReply = Boolean(contactEmail) || Boolean(chat);
   const [internal, setInternal] = useState(!canReply);
   const form = useRef<HTMLFormElement>(null);
   const files = useReplyFiles(site, conversationId, LIMITS.replyFiles);
+  const body = useRef<HTMLTextAreaElement>(null);
+  const [drafting, startDraft] = useTransition();
+
+  const draft = () => {
+    const el = body.current;
+    if (el?.value.trim() && !confirm("Replace what you've written with an AI draft?")) return;
+    const fd = new FormData();
+    fd.set("site", site);
+    fd.set("id", conversationId);
+    startDraft(async () => {
+      const r = await draftReplyAction(null, fd);
+      if (r.error) return void toast.error(r.error);
+      if (!el || !r.text) return;
+      setInternal(false);
+      el.value = r.text;
+      el.focus();
+      el.setSelectionRange(0, 0);
+      el.scrollTop = 0;
+    });
+  };
 
   useEffect(() => {
     if (!state?.at) return;
@@ -69,7 +93,9 @@ export function Composer({
       <input type="hidden" name="id" value={conversationId} />
       {internal && <input type="hidden" name="internal" value="on" />}
       <textarea
+        ref={body}
         name="body"
+        aria-busy={drafting}
         required={!files.drafts.length}
         rows={4}
         placeholder={internal ? "Add a note for your team…" : "Write a reply…"}
@@ -99,6 +125,11 @@ export function Composer({
         <Button type="button" variant="ghost" size="icon-sm" onClick={files.open} disabled={files.drafts.length >= LIMITS.replyFiles} aria-label="Attach files" title="Attach files (or paste / drop them)">
           <Paperclip />
         </Button>
+        {aiDrafts && canReply && (
+          <Button type="button" variant="ghost" size="sm" onClick={draft} disabled={drafting} title="Draft a reply from the conversation, the customer's orders and your house rules. Nothing is sent until you press Send.">
+            <Sparkles className={cn(drafting && "animate-pulse")} /> {drafting ? "Drafting…" : "Draft with AI"}
+          </Button>
+        )}
         <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{hint}</p>
         <Button type="submit" size="sm" disabled={pending || files.uploading > 0}>
           <Send /> {pending ? "Sending…" : internal ? "Add note" : "Send"}

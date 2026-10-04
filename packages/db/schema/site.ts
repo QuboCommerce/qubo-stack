@@ -138,6 +138,8 @@ export const siteSettings = pgTable("site_settings", {
   timezone: text("timezone").notNull().default("Europe/Brussels"),
   metaTitle: text("meta_title"),
   metaDescription: text("meta_description"),
+  /** House rules the inbox AI follows when drafting replies: tone, hours, policies. */
+  aiInstructions: text("ai_instructions"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

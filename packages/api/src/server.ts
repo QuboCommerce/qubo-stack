@@ -1,4 +1,5 @@
 import { purgeInboxFiles, wakeSnoozed } from "@qubo/inbox/server";
+import { triageDue } from "@qubo/inbox/ai";
 import { storageConfigured } from "@qubo/storage/server";
 import { startHeartbeatLoop } from "@qubo/portal-client";
 import { app } from "./index";
@@ -21,3 +22,14 @@ setInterval(() => void wakeSnoozed().catch((e) => console.error("[inbox] wake fa
 const purge = () => void (storageConfigured() ? purgeInboxFiles() : Promise.resolve(0)).catch((e) => console.error("[inbox] file purge failed", e));
 setTimeout(purge, 30_000).unref();
 setInterval(purge, 3_600_000).unref();
+
+// AI triage for organisations that turned it on with their own key. Single-flight: a slow
+// provider must not stack sweeps on top of each other.
+let triaging = false;
+setInterval(() => {
+  if (triaging) return;
+  triaging = true;
+  void triageDue()
+    .catch((e) => console.error("[inbox-ai] sweep failed", e))
+    .finally(() => (triaging = false));
+}, 5_000).unref();

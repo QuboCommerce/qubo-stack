@@ -12,6 +12,7 @@
   "dependencies": {
     "@hookform/resolvers": "^3.10",
     "@puckeditor/core": "^0.23.0",
+    "@qubo/ai": "workspace:*",
     "@qubo/blocks": "workspace:*",
     "@qubo/db": "workspace:*",
     "@qubo/geo": "workspace:*",

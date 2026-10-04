@@ -367,6 +367,24 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    galleries write `product:<id>` rows. Deleting warns with the usage, drops the
    file from product galleries, and leaves pages with a missing image. Not built
    yet: image resizing/transcoding, blurhash, folders, copying between orgs.
+23. **Inbox AI: bring your own key, per organisation, never auto-sends.**
+   `@qubo/ai` holds the provider catalogue (OpenAI, Anthropic, xAI, Mistral,
+   OpenRouter, any OpenAI-compatible server such as Ollama), prompts and a plain
+   `fetch` client for both wire formats; no SDKs. `ai_settings` (one row per org)
+   stores the key AES-256-GCM sealed with a key derived from `QUBO_PREVIEW_SECRET`
+   (dev falls back to `BETTER_AUTH_SECRET`); rotating that secret means re-entering
+   keys. Gate: plan feature `ai` (Starter and up) and the org not locked. Every call
+   writes an `ai_usage` row (tokens, no content) for the monthly token budget.
+   Triage: the API sweeps every 5 s for open threads whose newest customer message
+   is 8 s quiet and not yet read (`conversation.ai.messageId`), max 10 per sweep,
+   with per-thread backoff on failures. It writes `conversation.ai`, replaces one
+   `ai:<category>` tag, adds `spam` (never resolves), and only ever raises priority.
+   Drafts: "Draft with AI" fills the composer from the last 20 public messages,
+   the customer's last 5 orders, up to 5 products ranked by matching terms (ILIKE,
+   triage-named products weigh double) and the site's `ai_instructions`. Custom
+   server URLs are fetched from our server: set `AI_PRIVATE_URLS=deny` on shared
+   hosting. Not built yet: pgvector RAG (prod image lacks it; Anthropic has no
+   embeddings), auto-replies, the Puck editor assistant.
 
 ## Roadmap
 
