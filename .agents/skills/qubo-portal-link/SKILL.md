@@ -16,11 +16,11 @@ Entitlements only gate **creation**; storefronts and existing sites never degrad
 - `@qubo/portal-client` (`packages/portal-client`) — instance side. One row in `portal_link`
   (migration 0010): portal URL, instance id, Ed25519 keypair (JWK), cached licence JWS + claims,
   last heartbeat/error. API: `link`, `unlink`, `heartbeat`, `entitlements`, `entitlementsFor`,
-  `siteQuota`, `startHeartbeatLoop`.
+  `access()` (pooled org/site usage + `lockedOrgIds`/`lockedSiteIds` by seniority), `startHeartbeatLoop`.
 - API (`packages/api/src/server.ts`) calls `startHeartbeatLoop()` after listen: every 6 h, no-op
   while unlinked, failures are recorded in `portal_link.last_error` and never thrown.
 - Admin: Settings → Organization → **Qubo Portal** (`settings/portal/page.tsx`, `app/portal-actions.ts`,
-  `components/settings/portal-link-form.tsx`). Sites page shows `siteQuota` and disables "Create site".
+  `components/settings/portal-link-form.tsx`). Sites page shows pooled usage and disables "Create site". Sites outside the plan: `requireSite` (admin) redirects to `/locked`, `assertSiteEditable` (API) answers 402 `site_locked`; storefronts are never locked.
 
 ## Flow
 

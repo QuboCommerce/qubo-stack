@@ -5,12 +5,12 @@ import { getUserSites } from "@/lib/admin";
 import { siteForAdminHost } from "@/lib/admin-host";
 import { Globe } from "lucide-react";
 
-/** `qubo.<domain>` opens that domain's site; other hosts open the first site. */
+/** `qubo.<domain>` opens that domain's site; other hosts open the first site the plan covers. */
 export default async function Root() {
   const [sites, h] = await Promise.all([getUserSites(), headers()]);
   const host = (h.get("x-forwarded-host") ?? h.get("host") ?? "").split(",")[0]!.trim();
   const hostSite = host ? await siteForAdminHost(host) : null;
-  const target = sites.find((s) => s.id === hostSite?.id) ?? sites[0];
+  const target = sites.find((s) => s.id === hostSite?.id) ?? sites.find((s) => !s.locked) ?? sites[0];
   if (target) redirect(`/${target.slug}`);
   return (
     <main className="grid min-h-dvh place-items-center">

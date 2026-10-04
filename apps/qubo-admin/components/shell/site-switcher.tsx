@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, ChevronsUpDown, Plus, Store } from "lucide-react";
+import { Check, ChevronsUpDown, Lock, Plus, Store } from "lucide-react";
+import { Fragment } from "react";
 import { siteTypeIcon } from "@/lib/site-type-icons";
 import { cn } from "@qubo/shared/utils";
 import {
@@ -21,6 +22,17 @@ import type { ShellSite } from "./types";
 function switchHref(pathname: string, from: string, to: string) {
   const rest = pathname.slice(from.length + 1);
   return `/${to}${rest}`;
+}
+
+/** Keeps server order (oldest organisation first, sites by name). */
+function groupByOrg(sites: ShellSite[]) {
+  const groups = new Map<string, { org: ShellSite["organization"]; sites: ShellSite[] }>();
+  for (const s of sites) {
+    const g = groups.get(s.organization.id) ?? { org: s.organization, sites: [] };
+    g.sites.push(s);
+    groups.set(s.organization.id, g);
+  }
+  return [...groups.values()];
 }
 
 export function SiteSwitcher({ site, sites }: { site: ShellSite; sites: ShellSite[] }) {
@@ -44,26 +56,37 @@ export function SiteSwitcher({ site, sites }: { site: ShellSite; sites: ShellSit
         <ChevronsUpDown className="size-3.5 shrink-0 text-topbar-foreground/50" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-72">
-        <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">Sites</DropdownMenuLabel>
-        {sites.map((s) => {
-          const Icon = siteTypeIcon[s.type] ?? Store;
-          return (
-            <DropdownMenuItem key={s.slug} asChild className="gap-3 py-2">
-              <Link href={switchHref(pathname, site.slug, s.slug)}>
-                <SiteAvatar name={s.name} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate font-medium">{s.name}</span>
-                  <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                    <Icon className="size-3" />
-                    {siteTypeLabel[s.type] ?? s.type}
-                    {s.domain && <> · {s.domain}</>}
-                  </span>
-                </span>
-                {s.slug === site.slug && <Check className="size-4" />}
-              </Link>
-            </DropdownMenuItem>
-          );
-        })}
+        {groupByOrg(sites).map(({ org, sites: orgSites }, i) => (
+          <Fragment key={org.id}>
+            {i > 0 && <DropdownMenuSeparator />}
+            <DropdownMenuLabel className="text-xs font-medium text-muted-foreground">{org.name}</DropdownMenuLabel>
+            {orgSites.map((s) => {
+              const Icon = siteTypeIcon[s.type] ?? Store;
+              return (
+                <DropdownMenuItem key={s.slug} asChild className={cn("gap-3 py-2", s.locked && "text-muted-foreground")}>
+                  <Link href={s.locked ? `/locked?site=${encodeURIComponent(s.slug)}` : switchHref(pathname, site.slug, s.slug)}>
+                    <SiteAvatar name={s.name} className={cn(s.locked && "opacity-60")} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-medium">{s.name}</span>
+                      <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                        {s.locked ? (
+                          <>Not covered by your plan</>
+                        ) : (
+                          <>
+                            <Icon className="size-3" />
+                            {siteTypeLabel[s.type] ?? s.type}
+                            {s.domain && <> · {s.domain}</>}
+                          </>
+                        )}
+                      </span>
+                    </span>
+                    {s.locked ? <Lock className="size-3.5" /> : s.slug === site.slug && <Check className="size-4" />}
+                  </Link>
+                </DropdownMenuItem>
+              );
+            })}
+          </Fragment>
+        ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="gap-3 py-2">
           <Link href={`/${site.slug}/settings/sites`}>

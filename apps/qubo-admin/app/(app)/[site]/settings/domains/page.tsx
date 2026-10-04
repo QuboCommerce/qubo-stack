@@ -1,5 +1,6 @@
 import { Eye, Globe, RefreshCw, Server } from "lucide-react";
-import { getPreviewPin, regeneratePreviewPin } from "@/app/preview-actions";
+import { regeneratePreviewPin } from "@/app/preview-actions";
+import { getPreviewPin } from "@/lib/preview-pin";
 import { SettingsGroup, Surface } from "@/components/settings/settings-group";
 import { SettingsPage } from "@/components/settings/settings-page";
 import { StatusDot } from "@/components/page";

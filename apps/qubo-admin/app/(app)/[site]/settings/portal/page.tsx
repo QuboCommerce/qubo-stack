@@ -55,7 +55,8 @@ export default async function PortalSettings({ params }: { params: Promise<{ sit
               </span>
             </div>
             <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
-              <div><dt className="text-muted-foreground">Sites per organization</dt><dd className="font-medium">{fmtLimit(ent.limits.sitesPerOrg)}</dd></div>
+              <div><dt className="text-muted-foreground">Organisations</dt><dd className="font-medium">{fmtLimit(ent.limits.orgs)}</dd></div>
+              <div><dt className="text-muted-foreground">Sites (all organisations)</dt><dd className="font-medium">{fmtLimit(ent.limits.sites)}</dd></div>
               <div><dt className="text-muted-foreground">Staff seats</dt><dd className="font-medium">{fmtLimit(ent.limits.seats)}</dd></div>
               <div><dt className="text-muted-foreground">Domains per site</dt><dd className="font-medium">{fmtLimit(ent.limits.customDomainsPerSite)}</dd></div>
               <div><dt className="text-muted-foreground">Apps per site</dt><dd className="font-medium">{fmtLimit(ent.limits.cubiclesPerSite)}</dd></div>

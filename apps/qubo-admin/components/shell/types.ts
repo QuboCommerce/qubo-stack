@@ -6,6 +6,9 @@ export type ShellSite = {
   domain: string | null;
   /** Public storefront URL from siteUrl(); null = nowhere to view yet. */
   url: string | null;
+  organization: { id: string; name: string };
+  /** Outside the instance's plan; opening it shows /locked. */
+  locked: boolean;
 };
 
 export type ShellUser = { name: string; email: string; role: string; image: string | null };

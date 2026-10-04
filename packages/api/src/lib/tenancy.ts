@@ -6,6 +6,7 @@ import {
   user,
 } from "@qubo/db/schema";
 import { and, eq } from "drizzle-orm";
+import { access } from "@qubo/portal-client";
 
 export type SiteType = (typeof site.$inferSelect)["type"];
 
@@ -118,6 +119,20 @@ export async function assertSiteAccess(
     .limit(1);
 
   return Boolean(membership);
+}
+
+/**
+ * Membership plus licence: sites outside the plan (see `access()` in
+ * @qubo/portal-client) stay live on the storefront but can't be edited.
+ * Use this for every back-office read or write; `assertSiteAccess` alone only
+ * answers "is this person staff here".
+ */
+export async function assertSiteEditable(
+  actor: ActorContext | null,
+  siteContext: SiteContext,
+): Promise<"ok" | "forbidden" | "locked"> {
+  if (!(await assertSiteAccess(actor, siteContext))) return "forbidden";
+  return (await access()).lockedSiteIds.has(siteContext.id) ? "locked" : "ok";
 }
 
 /** Every site the actor can switch between, for the admin site picker. */

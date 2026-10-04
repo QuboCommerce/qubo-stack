@@ -4,12 +4,13 @@
  * update notices and fleet visibility. Nothing here ever locks the instance;
  * a missing, stale or unreachable portal degrades to Free at worst.
  */
-import { count, eq } from "drizzle-orm";
+import { asc, count, eq } from "drizzle-orm";
 import { createRemoteJWKSet, jwtVerify, importJWK, exportJWK, type JWK } from "jose";
 import { db } from "@qubo/db/client";
 import { organization, portalLink, site } from "@qubo/db/schema";
 import {
   FREE_LIMITS,
+  HEARTBEAT_INTERVAL_SECONDS,
   HeartbeatResponse,
   LicenseClaims,
   PROTOCOL_VERSION,
@@ -36,7 +37,7 @@ export type Entitlements = {
 };
 
 export const DEFAULT_PORTAL_URL = "https://portal.qubo.by-ali.dev";
-export const HEARTBEAT_INTERVAL_MS = 6 * 3600 * 1000;
+export const HEARTBEAT_INTERVAL_MS = HEARTBEAT_INTERVAL_SECONDS * 1000;
 
 const appVersion = () => process.env.QUBO_VERSION ?? "0.0.0";
 const channel = () => (process.env.QUBO_CHANNEL === "beta" ? "beta" : "stable") as HeartbeatRequest["channel"];
@@ -149,17 +150,60 @@ export async function entitlements(): Promise<Entitlements> {
   return entitlementsFor(await getLink());
 }
 
-export type SiteQuota = { used: number; limit: number | null; canCreate: boolean; entitlements: Entitlements };
+export type Quota = { used: number; limit: number | null; canCreate: boolean };
 
-/** The one gate the product enforces: how many sites an organisation may run on this instance. */
-export async function siteQuota(organizationId: string): Promise<SiteQuota> {
-  const [ent, [row]] = await Promise.all([
+/**
+ * Who is inside the licence on this instance. Limits are pooled per instance and gate
+ * *creation* and *admin access* only; storefronts of locked sites stay online.
+ *
+ * Seniority decides when there are more orgs/sites than the plan covers (e.g. after a
+ * downgrade): the oldest orgs are licensed, then the oldest sites inside licensed orgs.
+ * Everything else is locked in the admin until the plan grows or something is removed.
+ */
+export type Access = {
+  entitlements: Entitlements;
+  orgs: Quota;
+  sites: Quota;
+  lockedOrgIds: Set<string>;
+  lockedSiteIds: Set<string>;
+};
+
+export function accessFor(
+  ent: Entitlements,
+  orgs: { id: string; createdAt: Date }[],
+  sites: { id: string; organizationId: string; createdAt: Date }[],
+): Access {
+  const byAge = <T extends { createdAt: Date; id: string }>(a: T, b: T) => a.createdAt.getTime() - b.createdAt.getTime() || a.id.localeCompare(b.id);
+  const { orgs: orgLimit, sites: siteLimit } = ent.limits;
+
+  const sortedOrgs = [...orgs].sort(byAge);
+  const licensedOrgs = new Set(sortedOrgs.slice(0, orgLimit ?? sortedOrgs.length).map((o) => o.id));
+  const lockedOrgIds = new Set(sortedOrgs.filter((o) => !licensedOrgs.has(o.id)).map((o) => o.id));
+
+  const sortedSites = [...sites].sort(byAge);
+  const lockedSiteIds = new Set<string>();
+  let licensedSites = 0;
+  for (const s of sortedSites) {
+    if (lockedOrgIds.has(s.organizationId) || (siteLimit !== null && licensedSites >= siteLimit)) lockedSiteIds.add(s.id);
+    else licensedSites++;
+  }
+
+  return {
+    entitlements: ent,
+    orgs: { used: orgs.length, limit: orgLimit, canCreate: orgLimit === null || orgs.length < orgLimit },
+    sites: { used: sites.length, limit: siteLimit, canCreate: siteLimit === null || sites.length < siteLimit },
+    lockedOrgIds,
+    lockedSiteIds,
+  };
+}
+
+export async function access(): Promise<Access> {
+  const [ent, orgs, sites] = await Promise.all([
     entitlements(),
-    db.select({ n: count() }).from(site).where(eq(site.organizationId, organizationId)),
+    db.select({ id: organization.id, createdAt: organization.createdAt }).from(organization).orderBy(asc(organization.createdAt)),
+    db.select({ id: site.id, organizationId: site.organizationId, createdAt: site.createdAt }).from(site).orderBy(asc(site.createdAt)),
   ]);
-  const used = row?.n ?? 0;
-  const limit = ent.limits.sitesPerOrg;
-  return { used, limit, canCreate: limit === null || used < limit, entitlements: ent };
+  return accessFor(ent, orgs, sites);
 }
 
 /** Background loop for the API process: one heartbeat soon after boot, then every HEARTBEAT_INTERVAL_MS. */
