@@ -325,6 +325,9 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 
 ## Conventions
 
+Agent guidance lives in `AGENTS.md` (always-on) and `.agents/skills/*/SKILL.md` (loaded on
+demand by name). Keep this file for architecture and decisions; put how-to knowledge in a skill.
+
 - Imports: `@/*` is the app root; shared code via `@qubo/db`,
   `@qubo/db/schema`, `@qubo/db/client`, `@qubo/shared`.
 - shadcn/ui is installed **per app**, not shared.
