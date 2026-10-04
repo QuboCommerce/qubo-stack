@@ -7,6 +7,7 @@ import { catalog } from "./routes/catalog";
 import { commerce, webhooks } from "./routes/commerce";
 import { account } from "./routes/account";
 import { seo } from "./routes/seo";
+import { forms } from "./routes/forms";
 import { sites } from "./routes/sites";
 import { studioPublic, studioRoutes } from "./routes/studio";
 
@@ -38,6 +39,6 @@ export const app = new Elysia()
   .all("/api/auth/*", ({ request }) => auth.handler(request), { parse: "none" })
   .use(webhooks)
   // Versioned public API; the storefront client pins it (API_VERSION in @qubo/storefront).
-  .group("/v1", (v1) => v1.use(sites).use(catalog).use(commerce).use(account).use(studioRoutes).use(studioPublic).use(seo));
+  .group("/v1", (v1) => v1.use(sites).use(catalog).use(commerce).use(account).use(studioRoutes).use(studioPublic).use(seo).use(forms));
 
 export type App = typeof app;

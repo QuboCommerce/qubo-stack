@@ -12,6 +12,11 @@ import { embedSrc } from "../elements";
  */
 export const formAction = (key: string) => `/api/forms/${encodeURIComponent(key || "contact")}`;
 
+/** Bot trap (`HONEYPOT` in @qubo/inbox): off-screen, skipped by keyboard and autofill. */
+const Honeypot = () => (
+  <input name="_company_website" tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, opacity: 0 }} />
+);
+
 export const Newsletter = defineSection({
   name: "Newsletter",
   label: "Newsletter",
@@ -24,13 +29,15 @@ export const Newsletter = defineSection({
     placeholder: f.text({ label: "Placeholder", default: "Your email", inline: false }),
     buttonLabel: f.text({ label: "Button label", default: "Subscribe" }),
     consent: f.text({ label: "Consent note", multiline: true, default: "You can unsubscribe at any time." }),
+    successMessage: f.text({ label: "Success message", default: "Thanks, you're subscribed.", inline: false }),
     formKey: f.text({ label: "Form key", default: "newsletter", translatable: false, group: "advanced", audience: "builder" }),
     layout: f.select(["inline", "stacked"], { label: "Layout", default: "inline", group: "layout" }),
   },
-  render: ({ header: h, placeholder, buttonLabel, consent, formKey, layout }, ctx) => (
+  render: ({ header: h, placeholder, buttonLabel, consent, successMessage, formKey, layout }, ctx) => (
     <div className="qb-newsletter" data-align={h.align}>
       <SectionHeader value={h} ctx={ctx} />
-      <form className="qb-form-inline" data-layout={layout} method="post" action={formAction(formKey)}>
+      <form className="qb-form-inline" data-layout={layout} method="post" action={formAction(formKey)} data-success={successMessage}>
+        <Honeypot />
         <label className="qb-sr-only" htmlFor={`${ctx.id}-email`}>
           {placeholder}
         </label>
@@ -121,6 +128,7 @@ export const ContactForm = defineSection({
           encType={fields.some((x) => x.type === "file") ? "multipart/form-data" : undefined}
           data-success={successMessage}
         >
+          <Honeypot />
           {fields.map((fd, i) => {
             const id = `${ctx.id}-${fd.name || i}`;
             const common = { id, name: fd.name, required: fd.required, className: "qb-input" };

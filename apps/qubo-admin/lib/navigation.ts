@@ -22,7 +22,7 @@ export type NavItem = NavLeaf & {
   /** Shown as the parent's sub-menu while the section is active (Shopify style). */
   children?: NavLeaf[];
   /** Live counter key, e.g. unfulfilled orders. */
-  badge?: "orders" | "leads";
+  badge?: "orders" | "inbox";
 };
 export type NavGroup = { label?: string; items: NavItem[] };
 
@@ -70,7 +70,7 @@ const groups: NavGroup[] = [
         requires: ["accounts"],
         children: [{ label: "Segments", href: "/customers/segments" }],
       },
-      { label: "Inbox", href: "/inbox", icon: Inbox, requires: ["leads"], badge: "leads" },
+      { label: "Inbox", href: "/inbox", icon: Inbox, requires: ["leads"], badge: "inbox" },
       {
         label: "Content",
         href: "/content",

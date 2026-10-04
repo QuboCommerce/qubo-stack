@@ -21,3 +21,4 @@ const sql = (g.__quboSql ??= postgres(connectionString, {
 export const db = drizzle(sql, { schema });
 
 export type Database = typeof db;
+export { sql };

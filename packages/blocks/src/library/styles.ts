@@ -294,6 +294,9 @@ textarea.qb-input { resize: vertical; }
 @media (min-width: 768px) { .qb-field[data-width="half"] { grid-column: span 1; } }
 .qb-field label { font-size: var(--qb-step-n1); font-weight: 600; }
 .qb-form > .qb-button { grid-column: span 2; justify-self: start; }
+.qb-form-error { grid-column: 1 / -1; flex-basis: 100%; margin: 0; color: #b42318; }
+.qb-form[data-state="sending"], .qb-form-inline[data-state="sending"] { opacity: .6; pointer-events: none; }
+.qb-form-success { margin: 0; padding: var(--qb-gap-sm); border-radius: var(--qb-radius-md); background: color-mix(in oklab, var(--qb-text) 6%, transparent); }
 
 /* ---- site & data ------------------------------------------------------- */
 .qb-map { display: grid; gap: var(--qb-gap-lg); align-items: start; }

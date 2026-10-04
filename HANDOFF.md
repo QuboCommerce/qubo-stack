@@ -305,6 +305,23 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    `useThemeEditor`. No CRDT and no block-level merge in the draft
    `ConflictDialog`, because the lease makes concurrent canvas edits impossible.
 
+21. **Inbox: one conversation model for every channel.** `conversation` + `message`
+   (`packages/db/schema/support.ts`, migration 0013 dropped `discussion`) back the
+   admin inbox (`/[site]/inbox`, three panes, views open/mine/pending/resolved/all).
+   Logic lives in `@qubo/inbox`: pure helpers in `src/index.ts` (limits, honeypot
+   `_company_website`, EN/NL/FR field heuristics, rate limiter) and DB/email in
+   `src/server.ts` (`submitForm`, `reply`, `updateConversation`). Forms post to the
+   storefront `POST /api/forms/:key` (JSON, urlencoded or multipart, no-JS 303
+   back to the referer), which forwards to `POST /v1/forms/:key` on the API with a
+   signed visitor IP (`@qubo/shared/client-ip`). Unknown keys auto-create a form
+   (max 25 per site), honeypot hits are stored as spam but answered ok, and
+   e-mail-only forms (newsletter) store a submission without a conversation.
+   Replies are stored first and then e-mailed through Resend (`RESEND_API_KEY`,
+   `EMAIL_FROM`), and a failure lands in `message.delivery_error`. Notes are internal.
+   Events `conversation.created|message|updated` drive `InboxLive` (refresh) and the
+   sidebar badge (unread, not resolved). Not built yet: chat block, inbound
+   e-mail, portal tickets, snooze/SLA, form attachments, notify-email settings UI.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

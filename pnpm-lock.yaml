@@ -35,6 +35,9 @@ importers:
       '@qubo/geo':
         specifier: workspace:*
         version: link:../../packages/geo
+      '@qubo/inbox':
+        specifier: workspace:*
+        version: link:../../packages/inbox
       '@qubo/portal-client':
         specifier: workspace:*
         version: link:../../packages/portal-client
@@ -244,6 +247,9 @@ importers:
       '@qubo/db':
         specifier: workspace:*
         version: link:../db
+      '@qubo/inbox':
+        specifier: workspace:*
+        version: link:../inbox
       '@qubo/portal-client':
         specifier: workspace:*
         version: link:../portal-client
@@ -325,6 +331,25 @@ importers:
       mmdb-lib:
         specifier: ^3.0.3
         version: 3.0.3
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.1
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  packages/inbox:
+    dependencies:
+      '@qubo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@qubo/realtime':
+        specifier: workspace:*
+        version: link:../realtime
+      drizzle-orm:
+        specifier: ^0.44
+        version: 0.44.7(bun-types@1.4.2)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9)
     devDependencies:
       '@types/node':
         specifier: ^22

@@ -92,6 +92,13 @@
       "when": 1791095132124,
       "tag": "0012_site_published",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791095610759,
+      "tag": "0013_inbox",
+      "breakpoints": true
     }
   ]
 }

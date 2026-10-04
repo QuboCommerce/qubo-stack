@@ -54,6 +54,7 @@ and `checkout.session.async_payment_succeeded`.
 | `CHECKOUT_AUTOMATIC_TAX` | `0` disables Stripe Tax |
 | `CHECKOUT_SHIPPING_CENTS` / `CHECKOUT_SHIPPING_LABEL` | Optional flat shipping rate |
 | `RESEND_API_KEY` / `ORDER_EMAIL_FROM` | Order confirmation email |
+| `EMAIL_FROM` | Sender for inbox replies and form notifications (falls back to `ORDER_EMAIL_FROM`) |
 
 ## Customer accounts
 

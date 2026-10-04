@@ -36,6 +36,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-qubo}:${POSTGRES_PASSWORD:-qubo_secret}@qubo-postgres:5432/${POSTGRES_DB:-qubo}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      # Signs preview tokens and visitor IPs between API, admin and storefront.
+      - QUBO_PREVIEW_SECRET=${QUBO_PREVIEW_SECRET:?set QUBO_PREVIEW_SECRET}
       - QUBO_TRUSTED_ORIGINS=${QUBO_TRUSTED_ORIGINS:-https://qubo.hmfroid.be,https://hmfroid.be}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
@@ -43,6 +45,7 @@ services:
       - CHECKOUT_SHIPPING_LABEL=${CHECKOUT_SHIPPING_LABEL:-Livraison professionnelle}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - ORDER_EMAIL_FROM=${ORDER_EMAIL_FROM:-HM Froid <commandes@hmfroid.be>}
+      - EMAIL_FROM=${EMAIL_FROM:-}
       - PORTAL_URL=${PORTAL_URL:-}
       - QUBO_CHANNEL=${QUBO_CHANNEL:-stable}
       - PORT=3333
@@ -63,11 +66,16 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-qubo}:${POSTGRES_PASSWORD:-qubo_secret}@qubo-postgres:5432/${POSTGRES_DB:-qubo}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      # Signs preview tokens and visitor IPs between API, admin and storefront.
+      - QUBO_PREVIEW_SECRET=${QUBO_PREVIEW_SECRET:?set QUBO_PREVIEW_SECRET}
       # Base URL of the primary admin host; other qubo.<verified domain> hosts are trusted dynamically.
       - BETTER_AUTH_URL=${ADMIN_URL:-https://qubo.hmfroid.be}
       - NEXT_PUBLIC_PANEL_URL=${ADMIN_URL:-https://qubo.hmfroid.be}
       - QUBO_API_URL=http://qubo-elysia:3333
       - ADMIN_SUBDOMAIN=${ADMIN_SUBDOMAIN:-qubo}
+      # Inbox replies are e-mailed from the admin.
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-}
     depends_on:
       qubo-postgres:
         condition: service_healthy
@@ -92,6 +100,8 @@ services:
       - PLATFORM_BASE_DOMAIN=${PLATFORM_BASE_DOMAIN:-}
       - STOREFRONT_DEFAULT_SITE=${STOREFRONT_DEFAULT_SITE:-}
       - QUBO_REVALIDATE_SECRET=${QUBO_REVALIDATE_SECRET}
+      # Signs preview tokens and visitor IPs between API, admin and storefront.
+      - QUBO_PREVIEW_SECRET=${QUBO_PREVIEW_SECRET:?set QUBO_PREVIEW_SECRET}
       - LEGACY_ASSET_ROOT=/data/legacy-products
     volumes:
       - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro

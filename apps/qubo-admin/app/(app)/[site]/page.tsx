@@ -58,7 +58,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
     caps.has("commerce") && { label: "Open orders", value: number(counts.orders), hint: `${number(data.orderCount)} all time`, icon: ShoppingBag, href: `${base}/orders` },
     caps.has("catalog") && { label: "Products", value: number(data.productCount), hint: `${number(catalog.active)} active`, icon: Package, href: `${base}/products` },
     caps.has("accounts") && { label: "Customers", value: number(data.customerCount), hint: "imported & registered", icon: Users, href: `${base}/customers` },
-    caps.has("leads") && { label: "Inbox", value: number(counts.leads), hint: "unread messages", icon: Inbox, href: `${base}/inbox` },
+    caps.has("leads") && { label: "Inbox", value: number(counts.inbox), hint: "unread conversations", icon: Inbox, href: `${base}/inbox` },
   ].filter(Boolean) as { label: string; value: string; hint: string; icon: typeof Package; href: string }[];
 
   const setup = [

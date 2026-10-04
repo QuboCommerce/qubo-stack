@@ -1,48 +1,73 @@
-import {
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-  boolean,
-  pgEnum,
-} from "drizzle-orm/pg-core";
-import { site } from "./site";
-import { order } from "./orders";
+import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
+import { order } from "./orders";
+import { site } from "./site";
+import { formSubmission } from "./studio";
 
-export const discussionStatusEnum = pgEnum("discussion_status", [
-  "OPEN",
-  "PENDING",
-  "CLOSED",
-]);
+/**
+ * Inbox. One conversation per thread, whatever the channel it arrived on;
+ * every message (customer, staff, AI, system) is a row so the trail stays
+ * auditable. Anonymous contacts are identified by name/e-mail only.
+ */
+export const conversationChannelEnum = pgEnum("conversation_channel", ["chat", "email", "form", "portal", "system"]);
+export const conversationStatusEnum = pgEnum("conversation_status", ["open", "pending", "resolved", "snoozed"]);
+export const conversationPriorityEnum = pgEnum("conversation_priority", ["low", "normal", "high", "urgent"]);
+export const messageAuthorEnum = pgEnum("message_author", ["customer", "staff", "ai", "system"]);
 
-export const discussion = pgTable("discussion", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  siteId: uuid("site_id")
-    .notNull()
-    .references(() => site.id, { onDelete: "cascade" }),
-  orderId: uuid("order_id").references(() => order.id, {
-    onDelete: "set null",
-  }),
-  customerId: text("customer_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  subject: text("subject").notNull(),
-  status: discussionStatusEnum("status").notNull().default("OPEN"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export type MessageAttachment = { name: string; url: string; size?: number; type?: string };
 
-export const message = pgTable("message", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  discussionId: uuid("discussion_id")
-    .notNull()
-    .references(() => discussion.id, { onDelete: "cascade" }),
-  senderId: text("sender_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  content: text("content").notNull(),
-  isFromAdmin: boolean("is_from_admin").notNull().default(false),
-  readAt: timestamp("read_at"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-});
+export const conversation = pgTable(
+  "conversation",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => site.id, { onDelete: "cascade" }),
+    channel: conversationChannelEnum("channel").notNull(),
+    subject: text("subject").notNull(),
+    status: conversationStatusEnum("status").notNull().default("open"),
+    priority: conversationPriorityEnum("priority").notNull().default("normal"),
+    assigneeId: text("assignee_id").references(() => user.id, { onDelete: "set null" }),
+    customerId: text("customer_id").references(() => user.id, { onDelete: "set null" }),
+    contactName: text("contact_name"),
+    contactEmail: text("contact_email"),
+    orderId: uuid("order_id").references(() => order.id, { onDelete: "set null" }),
+    formSubmissionId: uuid("form_submission_id").references(() => formSubmission.id, { onDelete: "set null" }),
+    tags: text("tags").array().notNull().default([]),
+    /** True while the latest customer message hasn't been opened by staff. */
+    unread: boolean("unread").notNull().default(true),
+    snoozedUntil: timestamp("snoozed_until"),
+    slaDueAt: timestamp("sla_due_at"),
+    lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("conversation_site_status_last_idx").on(t.siteId, t.status, t.lastMessageAt),
+    index("conversation_contact_email_idx").on(t.siteId, t.contactEmail),
+  ],
+);
+
+export const message = pgTable(
+  "message",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    authorType: messageAuthorEnum("author_type").notNull(),
+    authorId: text("author_id").references(() => user.id, { onDelete: "set null" }),
+    authorName: text("author_name"),
+    body: text("body").notNull(),
+    bodyHtml: text("body_html"),
+    attachments: jsonb("attachments").$type<MessageAttachment[]>().notNull().default([]),
+    /** Staff-only note: never sent or shown to the customer. */
+    internal: boolean("internal").notNull().default(false),
+    /** RFC 5322 Message-ID of the e-mail this row was sent as / received from (threading). */
+    emailMessageId: text("email_message_id"),
+    /** Set when an outbound e-mail failed; the reply is stored regardless. */
+    deliveryError: text("delivery_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("message_conversation_created_idx").on(t.conversationId, t.createdAt), index("message_email_id_idx").on(t.emailMessageId)],
+);

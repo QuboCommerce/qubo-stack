@@ -17,7 +17,8 @@ const toEvent = (r: Row) =>
 
 /**
  * Durable insert + NOTIFY in one statement. The NOTIFY payload is only the id
- * (Postgres caps payloads at 8 kB); listeners load the row.
+ * (Postgres caps payloads at 8 kB); listeners load the row. The payload is
+ * bound as text + cast so any client works (drizzle's overrides JSON serialisers).
  */
 export async function publish(sql: Sql, event: PlatformEvent): Promise<string> {
   const e = PlatformEvent.parse(event);
@@ -26,7 +27,7 @@ export async function publish(sql: Sql, event: PlatformEvent): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     with e as (
       insert into platform_event (type, site_id, org_id, user_id, payload)
-      values (${e.type}, ${e.siteId ?? null}, ${e.orgId ?? null}, ${e.userId ?? null}, ${sql.json(e.payload as postgres.JSONValue)})
+      values (${e.type}, ${e.siteId ?? null}, ${e.orgId ?? null}, ${e.userId ?? null}, ${JSON.stringify(e.payload)}::jsonb)
       returning id
     )
     select id, pg_notify(${CHANNEL}, id::text) from e`;
