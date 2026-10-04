@@ -75,7 +75,7 @@ const edgePaths: Record<Exclude<EdgeShape, "none">, string> = {
 function Edge({ side, shape }: { side: "top" | "bottom"; shape: EdgeShape }) {
   if (shape === "none") return null;
   return (
-    <svg className="pk-edge" data-edge-side={side} viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+    <svg className="qb-edge" data-edge-side={side} viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
       <path d={edgePaths[shape]} fill="currentColor" />
     </svg>
   );
@@ -110,15 +110,15 @@ export function SectionChrome({
   const isVideo = bg && /\.(mp4|webm|mov)(\?|$)/i.test(bg.src);
   const hasEdges = v.edges?.top !== "none" || v.edges?.bottom !== "none";
   const style = {
-    "--pk-section-pt": `var(--pk-gap-${v.spacingTop})`,
-    "--pk-section-pb": `var(--pk-gap-${v.spacingBottom})`,
-    ...(hasEdges ? { "--pk-edge-height": `var(--pk-gap-${v.edges?.height ?? "lg"})` } : {}),
+    "--qb-section-pt": `var(--qb-gap-${v.spacingTop})`,
+    "--qb-section-pb": `var(--qb-gap-${v.spacingBottom})`,
+    ...(hasEdges ? { "--qb-edge-height": `var(--qb-gap-${v.edges?.height ?? "lg"})` } : {}),
   } as CSSProperties;
 
   return (
     <section
       id={v.anchorId || undefined}
-      className="pk-section"
+      className="qb-section"
       data-block={type}
       data-scheme={v.scheme || undefined}
       data-width={v.width}
@@ -130,7 +130,7 @@ export function SectionChrome({
       style={style}
     >
       {bg ? (
-        <div className="pk-section-bg" aria-hidden="true">
+        <div className="qb-section-bg" aria-hidden="true">
           {isVideo ? (
             <video src={bg.src} autoPlay muted loop playsInline style={{ objectFit: v.background.fit }} />
           ) : (
@@ -139,7 +139,7 @@ export function SectionChrome({
           )}
           {v.background.overlay > 0 ? (
             <div
-              style={{ position: "absolute", inset: 0, background: "var(--pk-background)", opacity: v.background.overlay / 100 }}
+              style={{ position: "absolute", inset: 0, background: "var(--qb-background)", opacity: v.background.overlay / 100 }}
             />
           ) : null}
         </div>
@@ -147,7 +147,7 @@ export function SectionChrome({
       {art ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          className="pk-section-art"
+          className="qb-section-art"
           src={art.src}
           alt=""
           aria-hidden="true"
@@ -155,7 +155,7 @@ export function SectionChrome({
         />
       ) : null}
       <Edge side="top" shape={v.edges?.top ?? "none"} />
-      <div className="pk-container">{children}</div>
+      <div className="qb-container">{children}</div>
       <Edge side="bottom" shape={v.edges?.bottom ?? "none"} />
     </section>
   );

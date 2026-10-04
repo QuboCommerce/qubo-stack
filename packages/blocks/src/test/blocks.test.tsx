@@ -128,7 +128,7 @@ describe("rendering", () => {
         <QuboRender registry={registry} data={data} metadata={{ theme, site: { id: "s", type: "store", capabilities: ["commerce", "blog"] } }} />,
       );
       expect(html).toContain(`data-theme="${theme.id}"`);
-      expect(html).toContain("pk-section");
+      expect(html).toContain("qb-section");
     }
   });
 
@@ -141,8 +141,8 @@ describe("rendering", () => {
     expect(html).toContain('data-scheme="polar-night"');
     expect(html).toContain('data-edge-side="bottom"');
     expect(html).toContain('href="/contact"');
-    expect(html).toContain("--pk-color-"); // theme CSS inlined
-    expect(html).toContain(".pk-grid"); // block CSS inlined
+    expect(html).toContain("--qb-color-"); // theme CSS inlined
+    expect(html).toContain(".qb-grid"); // block CSS inlined
   });
 
   it("renders sparse props from Puck without crashing", () => {
@@ -175,7 +175,7 @@ describe("fixtures", () => {
     );
     expect(html).toContain("Chambre froide positive");
     expect(html).toContain('href="/products/vitrine-150"');
-    expect(html).toContain('<span class="pk-accent-text">froid professionnel</span>');
+    expect(html).toContain('<span class="qb-accent-text">froid professionnel</span>');
     expect(html).toContain('href="tel:+3220000000"');
   });
 

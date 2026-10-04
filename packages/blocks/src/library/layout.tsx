@@ -31,15 +31,15 @@ export const Stack = defineBlock({
   render: ({ items: Items, direction, gap: g, align, wrap, maxWidth }) => {
     const base = direction.base as "column" | "row";
     const style = {
-      "--pk-dir": base,
-      "--pk-dir-md": direction.md ?? base,
-      "--pk-dir-lg": direction.lg ?? direction.md ?? base,
+      "--qb-dir": base,
+      "--qb-dir-md": direction.md ?? base,
+      "--qb-dir-lg": direction.lg ?? direction.md ?? base,
       gap: gap(g),
       flexWrap: wrap ? "wrap" : undefined,
       ...anchorFlex(align, base),
       ...(maxWidth !== "none" ? { maxWidth: maxWidths[maxWidth], marginInline: "auto", width: "100%" } : {}),
     } as CSSProperties;
-    return <Items className={cx("pk-stack")} style={style} />;
+    return <Items className={cx("qb-stack")} style={style} />;
   },
 });
 
@@ -61,13 +61,13 @@ export const Grid = defineBlock({
   },
   render: ({ items: Items, columns, gap: g, alignItems }) => {
     const style = {
-      "--pk-cols": columns.base,
-      "--pk-cols-md": columns.md ?? columns.base,
-      "--pk-cols-lg": columns.lg ?? columns.md ?? columns.base,
+      "--qb-cols": columns.base,
+      "--qb-cols-md": columns.md ?? columns.base,
+      "--qb-cols-lg": columns.lg ?? columns.md ?? columns.base,
       gap: gap(g),
       alignItems,
     } as CSSProperties;
-    return <Items className="pk-grid" style={style} />;
+    return <Items className="qb-grid" style={style} />;
   },
 });
 
@@ -98,12 +98,12 @@ export const Columns = defineBlock({
     const [a, b] = ratios[ratio];
     return (
       <div
-        className="pk-columns"
+        className="qb-columns"
         data-reverse-mobile={reverseOnMobile || undefined}
-        style={{ "--pk-col-a": `${a}fr`, "--pk-col-b": `${b}fr`, gap: gap(g), alignItems } as CSSProperties}
+        style={{ "--qb-col-a": `${a}fr`, "--qb-col-b": `${b}fr`, gap: gap(g), alignItems } as CSSProperties}
       >
-        <Left className="pk-column" />
-        <Right className="pk-column" />
+        <Left className="qb-column" />
+        <Right className="qb-column" />
       </div>
     );
   },
@@ -132,21 +132,21 @@ export const Container = defineBlock({
   },
   render: ({ content: Content, scheme, padding, radius, border, shadow, gap: g, maxWidth }) => (
     <div
-      className="pk-box"
+      className="qb-box"
       data-scheme={scheme || undefined}
       data-border={border || undefined}
       style={
         {
-          "--pk-box-p": gap(padding.base),
-          "--pk-box-p-md": gap(padding.md ?? padding.base),
-          "--pk-box-p-lg": gap(padding.lg ?? padding.md ?? padding.base),
-          borderRadius: `var(--pk-radius-${radius})`,
-          boxShadow: shadow === "none" ? undefined : `var(--pk-shadow-${shadow}, none)`,
+          "--qb-box-p": gap(padding.base),
+          "--qb-box-p-md": gap(padding.md ?? padding.base),
+          "--qb-box-p-lg": gap(padding.lg ?? padding.md ?? padding.base),
+          borderRadius: `var(--qb-radius-${radius})`,
+          boxShadow: shadow === "none" ? undefined : `var(--qb-shadow-${shadow}, none)`,
           ...(maxWidth !== "none" ? { maxWidth: maxWidths[maxWidth], marginInline: "auto" } : {}),
         } as CSSProperties
       }
     >
-      <Content className="pk-stack" style={{ gap: gap(g) } as CSSProperties} />
+      <Content className="qb-stack" style={{ gap: gap(g) } as CSSProperties} />
     </div>
   ),
 });
@@ -164,12 +164,12 @@ export const Spacer = defineBlock({
   render: ({ size }) => (
     <div
       aria-hidden="true"
-      className="pk-spacer"
+      className="qb-spacer"
       style={
         {
-          "--pk-spacer": gap(size.base),
-          "--pk-spacer-md": gap(size.md ?? size.base),
-          "--pk-spacer-lg": gap(size.lg ?? size.md ?? size.base),
+          "--qb-spacer": gap(size.base),
+          "--qb-spacer-md": gap(size.md ?? size.base),
+          "--qb-spacer-lg": gap(size.lg ?? size.md ?? size.base),
         } as CSSProperties
       }
     />
@@ -188,7 +188,7 @@ export const Divider = defineBlock({
     spacing: f.step("space", { label: "Spacing", default: "md" }),
   },
   render: ({ style, spacing }) => (
-    <hr className="pk-divider" data-style={style} style={{ marginBlock: gap(spacing) }} />
+    <hr className="qb-divider" data-style={style} style={{ marginBlock: gap(spacing) }} />
   ),
 });
 

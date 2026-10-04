@@ -3,10 +3,10 @@ import type { Anchor } from "../core";
 
 export const cx = (...parts: (string | false | null | undefined)[]) => parts.filter(Boolean).join(" ");
 
-export const gap = (step: string) => `var(--pk-gap-${step})`;
+export const gap = (step: string) => `var(--qb-gap-${step})`;
 export const typeSize = (step: string | number) => {
   const n = Number(step);
-  return `var(--pk-step-${n < 0 ? `n${-n}` : n})`;
+  return `var(--qb-step-${n < 0 ? `n${-n}` : n})`;
 };
 
 /** Maps a 9-point anchor to flex alignment for a given direction. */
@@ -41,7 +41,7 @@ export const radiusOptions = ["none", "sm", "md", "lg", "xl", "full"] as const;
 export function Empty({ label, ctx, minHeight = 96 }: { label: string; ctx: { isEditing: boolean }; minHeight?: number }) {
   if (!ctx.isEditing) return null;
   return (
-    <div className="pk-empty" style={{ minHeight }}>
+    <div className="qb-empty" style={{ minHeight }}>
       {label}
     </div>
   );
@@ -50,7 +50,7 @@ export function Empty({ label, ctx, minHeight = 96 }: { label: string; ctx: { is
 export function Richtext({ value, className, style }: { value: ReactNode; className?: string; style?: CSSProperties }) {
   if (value === "" || value == null) return null;
   return (
-    <div className={cx("pk-prose", className)} style={style}>
+    <div className={cx("qb-prose", className)} style={style}>
       {value}
     </div>
   );

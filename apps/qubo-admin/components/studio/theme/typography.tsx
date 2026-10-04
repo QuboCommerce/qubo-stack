@@ -110,7 +110,7 @@ export function TypographyPage({ theme, update, mode }: { theme: Theme; update: 
                   <ChevronDown className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", isOpen && "rotate-180")} />
                 </button>
                 <ThemeScope theme={theme} mode={mode} className="mx-2 mb-2 overflow-hidden rounded-md px-2.5 py-2">
-                  <p className={`pk-font-${role} truncate`} style={{ fontSize: role === "display" ? 30 : role === "heading" ? 21 : 14, color: role === "heading" || role === "display" ? "var(--pk-heading)" : undefined }}>
+                  <p className={`qb-font-${role} truncate`} style={{ fontSize: role === "display" ? 30 : role === "heading" ? 21 : 14, color: role === "heading" || role === "display" ? "var(--qb-heading)" : undefined }}>
                     {roleInfo[role].sample}
                   </p>
                 </ThemeScope>
@@ -164,13 +164,13 @@ export function TypographyPage({ theme, update, mode }: { theme: Theme; update: 
           </Field>
         </div>
         <ThemeScope theme={theme} mode={mode} className="overflow-hidden rounded-lg ring-1 ring-border">
-          <ol className="divide-y" style={{ borderColor: "var(--pk-border)" }}>
+          <ol className="divide-y" style={{ borderColor: "var(--qb-border)" }}>
             {steps.map((step) => {
               const hi = px(s.baseMax, s.ratioMax, step);
               return (
-                <li key={step} className="flex items-baseline gap-2 px-2.5 py-1.5" style={{ borderColor: "var(--pk-border)" }}>
+                <li key={step} className="flex items-baseline gap-2 px-2.5 py-1.5" style={{ borderColor: "var(--qb-border)" }}>
                   <span className="w-6 shrink-0 font-mono text-[10px] opacity-60">{step}</span>
-                  <span className={cn("min-w-0 flex-1 truncate", step >= 3 ? "pk-font-heading" : "pk-font-body")} style={{ fontSize: Math.min(hi, 40), lineHeight: 1.1 }}>
+                  <span className={cn("min-w-0 flex-1 truncate", step >= 3 ? "qb-font-heading" : "qb-font-body")} style={{ fontSize: Math.min(hi, 40), lineHeight: 1.1 }}>
                     Aa
                   </span>
                   <span className="shrink-0 font-mono text-[10px] tabular-nums opacity-70">
