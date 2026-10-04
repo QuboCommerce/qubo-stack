@@ -306,12 +306,43 @@ export const studioRoutes = new Elysia({ prefix: "/studio" })
  * Anonymous storefront reads: published documents (with locale overlay), the
  * live theme, and draft previews via signed token.
  */
+/**
+ * Site preview (`preview.<domain>`): the storefront forwards the visitor's
+ * unlocked token as `x-qubo-preview`; when it checks out, render routes serve
+ * drafts. Anything else (missing, forged, PIN regenerated) is plain published.
+ */
+async function previewGranted(siteId: string, headers: Record<string, string | undefined>): Promise<boolean> {
+  const token = headers["x-qubo-preview"];
+  if (!token) return false;
+  const settings = await db.query.siteSettings.findFirst({ where: eq(siteSettings.siteId, siteId), columns: { previewPin: true } });
+  return studio.verifySitePreviewToken(token, { id: siteId, pin: settings?.previewPin ?? null });
+}
+
 export const studioPublic = new Elysia({ prefix: "/render" })
   .use(tenancy)
+  .post(
+    "/preview/unlock",
+    async ({ site, body, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
+      const settings = await db.query.siteSettings.findFirst({ where: eq(siteSettings.siteId, site.id), columns: { previewPin: true } });
+      if (!settings?.previewPin || settings.previewPin !== body.pin.trim()) return status(403, { error: "invalid_pin" });
+      return { token: studio.createSitePreviewToken({ siteId: site.id, pin: settings.previewPin }), maxAge: studio.SITE_PREVIEW_TTL_SECONDS };
+    },
+    { body: t.Object({ pin: t.String({ maxLength: 16 }) }) },
+  )
+  .get("/preview/check", async ({ site, headers, status }) => {
+    if (!site) return status(400, { error: "site_not_resolved" });
+    return { granted: await previewGranted(site.id, headers) };
+  })
   .get(
     "/documents/:id",
-    async ({ site, params, query, status }) => {
+    async ({ site, params, query, status, headers }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
+      if (await previewGranted(site.id, headers)) {
+        const data = await studio.renderableDocument(site.id, params.id, query.locale, { draft: true });
+        if (!data) return status(404, { error: "not_found" });
+        return { data, draft: true };
+      }
       if (query.preview) {
         const grant = studio.verifyPreviewToken(query.preview);
         if (!grant || grant.siteId !== site.id || grant.documentId !== params.id) {
@@ -328,11 +359,11 @@ export const studioPublic = new Elysia({ prefix: "/render" })
   )
   .get(
     "/templates/:kind",
-    async ({ site, params, query, status }) => {
+    async ({ site, params, query, status, headers }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
       const id = await studio.templateDocumentId(site.id, params.kind as studio.ResourceKind, query.handle);
       if (!id) return status(404, { error: "not_found" });
-      const data = await studio.renderableDocument(site.id, id, query.locale);
+      const data = await studio.renderableDocument(site.id, id, query.locale, { draft: await previewGranted(site.id, headers) });
       if (!data) return status(404, { error: "not_found" });
       return { documentId: id, data };
     },
@@ -340,11 +371,12 @@ export const studioPublic = new Elysia({ prefix: "/render" })
   )
   .get(
     "/layout",
-    async ({ site, query, status }) => {
+    async ({ site, query, status, headers }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
+      const draft = await previewGranted(site.id, headers);
       const load = async (kind: studio.SectionGroupKind) => {
         const id = await studio.sectionGroupDocumentId(site.id, kind);
-        return id ? studio.renderableDocument(site.id, id, query.locale) : null;
+        return id ? studio.renderableDocument(site.id, id, query.locale, { draft }) : null;
       };
       const [header, footer, theme, settings] = await Promise.all([
         load("header"),
@@ -364,11 +396,12 @@ export const studioPublic = new Elysia({ prefix: "/render" })
   )
   .get(
     "/pages/*",
-    async ({ site, params, query, status }) => {
+    async ({ site, params, query, status, headers }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
-      const found = await studio.publishedPage(site.id, decodeURIComponent(params["*"] ?? "").replace(/^\/+|\/+$/g, ""));
+      const draft = await previewGranted(site.id, headers);
+      const found = await studio.publishedPage(site.id, decodeURIComponent(params["*"] ?? "").replace(/^\/+|\/+$/g, ""), { includeDrafts: draft });
       if (!found?.documentId) return status(404, { error: "not_found" });
-      const data = await studio.renderableDocument(site.id, found.documentId, query.locale);
+      const data = await studio.renderableDocument(site.id, found.documentId, query.locale, { draft });
       if (!data) return status(404, { error: "not_found" });
       return { documentId: found.documentId, title: found.title, metaTitle: found.metaTitle, metaDescription: found.metaDescription, data };
     },

@@ -30,7 +30,20 @@ API, `db.portal.qubo.by-ali.dev` Studio behind auth. Instances know only `PORTAL
 TLS-ALPN cannot issue wildcards, so each site host used in dev needs an explicit router in
 `~/infra/edge/dynamic/dev.yml`.
 
-## Resolution order in the storefront (`apps/qubo-storefront/lib/site.ts`)
+## Preview hosts (`apps/qubo-storefront/proxy.ts`, `lib/preview.ts`)
+
+`preview.<domain>` (custom domains) and `<slug>.preview.<PLATFORM_BASE_DOMAIN>` serve the
+*saved, unpublished* site. The proxy gates them before any site code runs: no valid `qb_preview`
+cookie → only `/preview-gate` (a PIN form, no site data). The PIN lives in `site_settings.preview_pin`
+(Settings → Domains in the admin; "New PIN" revokes every open session). Unlock flow:
+form → `POST /api/preview/unlock` → API `POST /v1/render/preview/unlock` → HMAC token
+(`QUBO_PREVIEW_SECRET`, else `BETTER_AUTH_SECRET`, shared by API and storefront) → cookie.
+Render routes read drafts when `x-qubo-preview` verifies against the current PIN; the storefront
+also calls `/render/preview/check` per request and redirects to the gate when it fails.
+Preview responses are `no-store` and `noindex`. Every preview host needs DNS + an edge router
+like any site host.
+
+## Resolution order in the storefront (`apps/qubo-storefront/lib/hosts.ts` `siteTargets`)
 
 1. `QUBO_DEV_SITE_HOSTS` map (laptop mode).
 2. `<slug>.<PLATFORM_BASE_DOMAIN>`.

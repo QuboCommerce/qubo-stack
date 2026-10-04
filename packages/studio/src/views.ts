@@ -1,5 +1,5 @@
 import { page, sectionGroup, site, template } from "@qubo/db/schema";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, ne } from "drizzle-orm";
 import type { Capability } from "@qubo/blocks";
 import { document } from "@qubo/db/schema";
 import { sameContent } from "./content";
@@ -164,12 +164,18 @@ export async function sectionGroupDocumentId(siteId: string, kind: SectionGroupK
   return row?.documentId ?? null;
 }
 
-/** Used by storefronts: a published standalone page by slug (`""` = homepage). */
-export async function publishedPage(siteId: string, slug: string) {
+/** Used by storefronts: a published standalone page by slug (`""` = homepage). Site preview also sees drafts. */
+export async function publishedPage(siteId: string, slug: string, opts: { includeDrafts?: boolean } = {}) {
   const [row] = await db
     .select({ documentId: page.documentId, title: page.title, metaTitle: page.metaTitle, metaDescription: page.metaDescription })
     .from(page)
-    .where(and(eq(page.siteId, siteId), slug ? eq(page.slug, slug) : eq(page.isHomepage, true), eq(page.state, "PUBLISHED")))
+    .where(
+      and(
+        eq(page.siteId, siteId),
+        slug ? eq(page.slug, slug) : eq(page.isHomepage, true),
+        opts.includeDrafts ? ne(page.state, "ARCHIVED") : eq(page.state, "PUBLISHED"),
+      ),
+    )
     .limit(1);
   return row?.documentId ? row : null;
 }

@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { createStorefrontClient, QuboApiError, type LayoutResponse, type StorefrontClient } from "@qubo/storefront";
 import { defineTheme, type Theme } from "@qubo/stylekit";
-import { devSiteHosts, platformSubdomainSlug } from "./hosts";
+import { devSiteHosts, siteTargets } from "./hosts";
+import { GATE_PATH, PREVIEW_HEADER } from "./preview";
 
 export type Storefront = {
   host: string;
@@ -14,6 +15,8 @@ export type Storefront = {
   theme: Theme | undefined;
   /** Dev / preview hosts are never indexed. */
   noindex: boolean;
+  /** Site preview (`preview.<domain>`, unlocked with the PIN): drafts, uncached. */
+  preview: boolean;
   /** `https://<primary verified domain>` (or this host when none / in dev); canonical URLs and sitemaps use it. */
   origin: string;
   /** Set when this host is a non-primary alias of the site; the layout 301s there. */
@@ -35,8 +38,15 @@ const cachedFetch = (tags: string[]) => (input: RequestInfo | URL, init?: Reques
     ? fetch(input, { ...init, cache: "no-store" })
     : fetch(input, { ...init, next: { revalidate: CACHE_SECONDS, tags } });
 
-const clientFor = (target: { siteSlug: string } | { host: string }, host: string, tags: string[]) =>
-  createStorefrontClient({ ...target, host, fetch: cachedFetch(tags) });
+const uncachedFetch = (input: RequestInfo | URL, init?: RequestInit) => fetch(input, { ...init, cache: "no-store" });
+
+const clientFor = (target: { siteSlug: string } | { host: string }, host: string, tags: string[], previewToken?: string) =>
+  createStorefrontClient({
+    ...target,
+    host,
+    fetch: previewToken ? uncachedFetch : cachedFetch(tags),
+    headers: previewToken ? { [PREVIEW_HEADER]: previewToken } : undefined,
+  });
 
 /** Route param → host (the proxy URL-encodes it into `/sites/<host>`). */
 export const hostFromParam = (param: string) => decodeURIComponent(param).toLowerCase();
@@ -51,28 +61,21 @@ function parseTheme(input: unknown, host: string): Theme | undefined {
   }
 }
 
-/**
- * Resolves the site for a host. Order: dev host map → `<slug>.<PLATFORM_BASE_DOMAIN>`
- * → `site_domain` (via the API) → `STOREFRONT_DEFAULT_SITE` (single-site installs).
- * Null = no site here. Memoised per request.
- */
+/** Resolves the site for a host (order: see `siteTargets`). Null = no site here. Memoised per request. */
 export const getStorefront = cache(async (host: string): Promise<Storefront | null> => {
+  // Set by proxy.ts only on preview hosts, after the cookie passed the edge check.
+  const previewToken = (await headers()).get(PREVIEW_HEADER) ?? undefined;
   const devSlug = devSiteHosts().get(host);
-  const platformSlug = devSlug ? null : platformSubdomainSlug(host);
-  const fallbackSlug = process.env.STOREFRONT_DEFAULT_SITE?.trim();
-  const attempts: ({ siteSlug: string } | { host: string })[] = devSlug
-    ? [{ siteSlug: devSlug }]
-    : platformSlug
-      ? [{ siteSlug: platformSlug }]
-      : [{ host }, ...(fallbackSlug ? [{ siteSlug: fallbackSlug }] : [])];
-
-  for (const target of attempts) {
-    const probe = clientFor(target, host, "siteSlug" in target ? [siteTag(target.siteSlug), LAYOUTS_TAG] : [LAYOUTS_TAG]);
+  for (const target of siteTargets(host)) {
+    const probe = clientFor(target, host, "siteSlug" in target ? [siteTag(target.siteSlug), LAYOUTS_TAG] : [LAYOUTS_TAG], previewToken);
     try {
       const [layout, domains] = await Promise.all([probe.getLayout(), probe.getDomains()]);
       // Everything after resolution is keyed by slug, so one tag drops the whole site.
-      const client = clientFor({ siteSlug: layout.site.slug }, host, [siteTag(layout.site.slug)]);
-      const noindex = Boolean(devSlug) || process.env.QUBO_DEV === "1";
+      const client = clientFor({ siteSlug: layout.site.slug }, host, [siteTag(layout.site.slug)], previewToken);
+      const preview = Boolean(previewToken);
+      // The proxy only checked the signature; the API binds the token to the current PIN. Back to the gate if that changed.
+      if (preview && !(await client.checkPreview())) redirect(`${GATE_PATH}?expired=1`);
+      const noindex = preview || Boolean(devSlug) || process.env.QUBO_DEV === "1";
       const primary = noindex ? null : domains.primary;
       const isAlias = Boolean(primary && host !== primary && (domains.verified.includes(host) || host === `www.${primary}`));
       return {
@@ -83,6 +86,7 @@ export const getStorefront = cache(async (host: string): Promise<Storefront | nu
         footer: layout.footer,
         theme: parseTheme(layout.theme, host),
         noindex,
+        preview,
         origin: `https://${primary ?? host}`,
         redirectHost: isAlias ? primary : null,
         maintenance: layout.maintenance?.active ? layout.maintenance : null,

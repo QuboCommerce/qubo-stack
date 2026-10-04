@@ -128,14 +128,15 @@ export async function translationProgress(scope: Scope, documentId: string) {
 /**
  * Storefront read: published tree with the locale overlay applied. Stale
  * translations still render (better than falling back mid-sentence).
+ * `draft` (site preview) reads the saved draft instead, falling back to published.
  */
-export async function renderableDocument(siteId: string, documentId: string, locale?: string): Promise<DocumentData | null> {
+export async function renderableDocument(siteId: string, documentId: string, locale?: string, opts: { draft?: boolean } = {}): Promise<DocumentData | null> {
   const [row] = await db
-    .select({ published: document.publishedData })
+    .select({ published: document.publishedData, draft: document.draftData })
     .from(document)
     .where(and(eq(document.id, documentId), eq(document.siteId, siteId)))
     .limit(1);
-  const data = (row?.published as DocumentData | null) ?? null;
+  const data = ((opts.draft ? (row?.draft ?? row?.published) : row?.published) as DocumentData | null) ?? null;
   if (!data || !locale) return data;
   const rows = await db
     .select({ path: translation.path, value: translation.value })
