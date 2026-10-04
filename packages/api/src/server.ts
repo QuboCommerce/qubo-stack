@@ -1,4 +1,5 @@
-import { wakeSnoozed } from "@qubo/inbox/server";
+import { purgeInboxFiles, wakeSnoozed } from "@qubo/inbox/server";
+import { storageConfigured } from "@qubo/storage/server";
 import { startHeartbeatLoop } from "@qubo/portal-client";
 import { app } from "./index";
 
@@ -15,3 +16,8 @@ startHeartbeatLoop();
 
 // Snoozed inbox threads wake up on time even when nobody has the admin open.
 setInterval(() => void wakeSnoozed().catch((e) => console.error("[inbox] wake failed", e)), 60_000).unref();
+
+// Expired chat files and abandoned reply drafts leave storage; the thread keeps their names.
+const purge = () => void (storageConfigured() ? purgeInboxFiles() : Promise.resolve(0)).catch((e) => console.error("[inbox] file purge failed", e));
+setTimeout(purge, 30_000).unref();
+setInterval(purge, 3_600_000).unref();

@@ -265,6 +265,9 @@ importers:
       '@qubo/shared':
         specifier: workspace:*
         version: link:../shared
+      '@qubo/storage':
+        specifier: workspace:*
+        version: link:../storage
       '@qubo/studio':
         specifier: workspace:*
         version: link:../studio
@@ -356,6 +359,9 @@ importers:
       '@qubo/realtime':
         specifier: workspace:*
         version: link:../realtime
+      '@qubo/storage':
+        specifier: workspace:*
+        version: link:../storage
       drizzle-orm:
         specifier: ^0.44
         version: 0.44.7(bun-types@1.4.2)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9)

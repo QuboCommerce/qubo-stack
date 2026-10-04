@@ -1,6 +1,7 @@
 import { Elysia, t } from "elysia";
 import { createRateLimiter, LIMITS } from "@qubo/inbox";
-import { chatMessage, chatSeen, chatSend, chatThread, findChat, type ChatVisitor } from "@qubo/inbox/server";
+import { chatFile, chatMessage, chatSeen, chatSend, chatThread, findChat, serveInboxFile, type ChatVisitor, type IncomingFile } from "@qubo/inbox/server";
+import { CHAT_ATTACHMENTS, UPLOAD_PROFILES } from "@qubo/storage";
 import { getHub } from "@qubo/realtime/server";
 import { verifiedClientIp } from "@qubo/shared/client-ip";
 import { tenancy } from "../plugins/tenancy";
@@ -26,6 +27,32 @@ function visitorOf(headers: Record<string, string | undefined>, session: Session
   };
 }
 
+/** Text fields plus files of a multipart send; JSON sends carry no files. */
+async function readSend(request: Request): Promise<{ fields: Record<string, string>; files: IncomingFile[] } | { error: string }> {
+  const type = request.headers.get("content-type") ?? "";
+  if (!type.startsWith("multipart/form-data")) {
+    const json = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+    if (!json || typeof json !== "object") return { error: "invalid_body" };
+    const fields = Object.fromEntries(Object.entries(json).filter((e): e is [string, string] => typeof e[1] === "string"));
+    return { fields, files: [] };
+  }
+  const length = Number(request.headers.get("content-length") ?? 0);
+  if (length > MAX_SEND_BYTES) return { error: "too_large" };
+  const form = await request.formData().catch(() => null);
+  if (!form) return { error: "invalid_body" };
+  const fields: Record<string, string> = {};
+  const files: IncomingFile[] = [];
+  for (const [k, v] of form.entries()) {
+    if (typeof v === "string") fields[k] = v;
+    else if (k === "files") {
+      const file = v as unknown as File;
+      if (file.size) files.push({ filename: file.name, bytes: new Uint8Array(await file.arrayBuffer()) });
+    }
+  }
+  return { fields, files };
+}
+const MAX_SEND_BYTES = CHAT_ATTACHMENTS.perMessage * Math.max(...Object.values(UPLOAD_PROFILES.chat.maxBytes)) + 64_000;
+
 const enc = new TextEncoder();
 const frame = (event: string, data: unknown) => enc.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 
@@ -41,24 +68,45 @@ export const chat = new Elysia({ prefix: "/chat" })
     if (!site.capabilities.includes("leads")) return status(404, { error: "not_found" });
     return chatThread(site.id, visitorOf(headers, session));
   })
+  /** JSON `{ body, name?, email?, pagePath? }`, or the same as multipart with up to 3 `files`. */
   .post(
     "/messages",
-    async ({ site, session, headers, body, status }) => {
+    async ({ site, session, headers, request, status }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
       if (!site.capabilities.includes("leads")) return status(404, { error: "not_found" });
       if (!perVisitor(`${site.id}:${clientIp(headers)}`) || !perSite(site.id)) return status(429, { error: "rate_limited" });
-      const result = await chatSend(site.id, visitorOf(headers, session), body);
-      if (!result.ok) return status(result.error === "no_identity" ? 401 : 422, { error: result.error });
+      const input = await readSend(request);
+      if ("error" in input) return status(input.error === "too_large" ? 413 : 400, { error: input.error });
+      const f = input.fields;
+      const body = f.body ?? "";
+      if (body.length > LIMITS.chatMessageLength + 100 || (f.name?.length ?? 0) > 200 || (f.email?.length ?? 0) > 320) return status(422, { error: "too_long" });
+      const result = await chatSend(site.id, visitorOf(headers, session), {
+        body,
+        name: f.name,
+        email: f.email,
+        pagePath: f.pagePath?.slice(0, 512),
+        files: input.files,
+      });
+      if (!result.ok) {
+        const code = result.error === "no_identity" ? 401 : result.error === "storage_unavailable" ? 503 : 422;
+        return status(code, result.error === "bad_file" ? { error: result.error, message: result.message } : { error: result.error });
+      }
       return result;
     },
-    {
-      body: t.Object({
-        body: t.String({ maxLength: LIMITS.chatMessageLength + 100 }),
-        name: t.Optional(t.String({ maxLength: 200 })),
-        email: t.Optional(t.String({ maxLength: 320 })),
-        pagePath: t.Optional(t.String({ maxLength: 512 })),
-      }),
+    { parse: "none" },
+  )
+  /** A file from the visitor's own chat (never from internal notes). */
+  .get(
+    "/files/:id",
+    async ({ site, session, headers, params, query, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
+      if (!site.capabilities.includes("leads")) return status(404, { error: "not_found" });
+      const conv = await findChat(site.id, visitorOf(headers, session));
+      const row = conv ? await chatFile(conv.id, params.id) : null;
+      if (!row) return status(404, { error: "not_found" });
+      return serveInboxFile(row, { download: query.download === "1" });
     },
+    { params: t.Object({ id: t.String({ format: "uuid" }) }), query: t.Object({ download: t.Optional(t.String()) }) },
   )
   /** SSE of new public messages in the visitor's chat. Keeps `visitor_seen_at` fresh while open. */
   .get("/stream", async ({ site, session, headers, request, status }) => {

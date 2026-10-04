@@ -332,9 +332,24 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    `snoozed_until`; `wakeSnoozed()` runs every minute in the API (and lazily on
    the inbox list) and reopens them unread. SLA is display-only (`SLA` in
    `@qubo/inbox`: amber 4 h, red 24 h of a customer waiting). Settings → Inbox
-   shows e-mail in/out status and edits each form's name and notify list. Not
-   built yet: attachment import (form and e-mail), cross-site inbox (planned for
-   the site switcher), portal tickets, typing indicators.
+   shows e-mail in/out status and edits each form's name and notify list.
+   Attachments: bytes in storage at `inbox/<site>/<conversation>/<file>.<ext>`,
+   one `inbox_file` row each; `message.attachments` keeps a display copy
+   (`{id, name, size, type}`) so a purged file still shows as "expired". Never
+   public: the admin serves `/api/inbox-files/<id>?site=` to site members, the
+   API serves `/v1/chat/files/:id` only to the conversation's own visitor and
+   never for internal notes. Visitors send up to 3 images/PDFs (10 MB) in the
+   same multipart request as the text, so nothing is uploaded before a
+   conversation exists; those expire after 30 days unless staff "Keep" them.
+   Staff uploads are drafts (`/api/inbox-files`, a route handler since actions
+   cap bodies at 1 MB) claimed by the reply they're sent with; abandoned drafts
+   go after a day. `purgeInboxFiles()` runs hourly in the API. E-mailed replies
+   carry their files as Resend attachments (25 MB budget). Received e-mail:
+   files are downloaded from Resend's attachment list and checked like uploads;
+   small inline images (signatures) are skipped and anything unsupported is
+   listed as "Not imported". "Save to media library" copies a file into the
+   org's library. Not built yet: form file fields, cross-site inbox (planned
+   for the site switcher), portal tickets, typing indicators.
 22. **Media library: one per organisation, served by our own apps.** `asset` rows
    belong to the org; `site_id` is the uploading site, null = shared by every site
    of the org. Not per account: an org is the billing and legal unit and published

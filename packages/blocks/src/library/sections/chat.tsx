@@ -28,6 +28,7 @@ export const ChatLauncher = defineBlock({
       ],
       { label: "Contact details", default: "optional" },
     ),
+    allowFiles: f.toggle({ label: "Visitors can send files (images, PDF; kept 30 days)", default: true }),
     labels: f.group(
       {
         placeholder: text("Message field", "Type your message…"),
@@ -37,6 +38,9 @@ export const ChatLauncher = defineBlock({
         contactHint: text("Contact hint", "Leave your e-mail and we'll also reply there if you've left.", true),
         error: text("Send error", "Your message wasn't sent. Please try again."),
         close: text("Close button (screen readers)", "Close chat"),
+        attach: text("Attach button (screen readers)", "Attach files"),
+        remove: text("Remove file (screen readers)", "Remove"),
+        expired: text("Expired file", "No longer available"),
       },
       { label: "Labels", collapsed: true },
     ),
@@ -50,6 +54,7 @@ export const ChatLauncher = defineBlock({
         preview={editing}
         position={p.position}
         askContact={p.askContact}
+        allowFiles={p.allowFiles}
         labels={{ ...p.labels, title: p.title, greeting: p.greeting, launcher: p.launcher }}
       />
     );

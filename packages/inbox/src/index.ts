@@ -28,6 +28,14 @@ export const LIMITS = {
   chatPerSiteWindow: 300,
   /** Messages a visitor sees when the chat opens. */
   chatHistory: 200,
+  /** Files on one staff reply (visitors: CHAT_ATTACHMENTS.perMessage). */
+  replyFiles: 5,
+  /** Files imported from one received e-mail; the rest are listed as not imported. */
+  emailFiles: 10,
+  /** Total size of the files on one outgoing e-mail (Resend allows 40 MB after encoding). */
+  emailFilesBytes: 25e6,
+  /** Staff uploads that never made it into a reply are removed after this. */
+  draftFileMs: 86_400_000,
 } as const;
 
 /** Snooze choices in the thread header: label → duration. */

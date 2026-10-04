@@ -15,7 +15,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 180;
  * included), with the session cookie, the chat token and the signed visitor IP.
  * `mintToken`: give a first-time visitor a token (only when they send a message).
  */
-export async function forwardChat(req: NextRequest, path: "" | "/messages" | "/stream", opts: { mintToken?: boolean } = {}): Promise<Response> {
+export async function forwardChat(req: NextRequest, path: "" | "/messages" | "/stream" | `/files/${string}`, opts: { mintToken?: boolean } = {}): Promise<Response> {
   const host = requestHost(req.headers);
   const previewOf = previewSiteHost(host);
   const siteHost = previewOf ?? host;
@@ -24,7 +24,8 @@ export async function forwardChat(req: NextRequest, path: "" | "/messages" | "/s
   const preview = previewOf ? req.cookies.get(PREVIEW_COOKIE)?.value : undefined;
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("x-real-ip") || "";
   const base = (process.env.QUBO_API_URL ?? "http://localhost:3333").replace(/\/$/, "");
-  const body = req.method === "POST" ? await req.text() : undefined;
+  // Raw bytes: multipart sends (chat files) must reach the API unchanged.
+  const body = req.method === "POST" ? await req.arrayBuffer() : undefined;
 
   for (const target of siteTargets(siteHost)) {
     const headers = new Headers({ ...signClientIp(ip), "x-forwarded-proto": "https" });
@@ -37,14 +38,14 @@ export async function forwardChat(req: NextRequest, path: "" | "/messages" | "/s
     if (token) headers.set(CHAT_TOKEN_HEADER, token);
     if (preview) headers.set(PREVIEW_HEADER, preview);
 
-    const upstream = await fetch(`${base}/${API_VERSION}/chat${path}`, { method: req.method, headers, body, cache: "no-store", signal: req.signal }).catch(
+    const upstream = await fetch(`${base}/${API_VERSION}/chat${path}${req.nextUrl.search}`, { method: req.method, headers, body, cache: "no-store", signal: req.signal }).catch(
       () => null,
     );
     if (!upstream) return Response.json({ error: "unavailable" }, { status: 502 });
     if (upstream.status === 400) continue; // site_not_resolved: next target
 
     const out = new Headers({ "cache-control": "no-store, no-transform" });
-    for (const name of ["content-type", "x-accel-buffering"]) {
+    for (const name of ["content-type", "x-accel-buffering", "content-length", "content-disposition", "content-security-policy", "x-content-type-options"]) {
       const v = upstream.headers.get(name);
       if (v) out.set(name, v);
     }

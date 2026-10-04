@@ -1,4 +1,5 @@
 import { receiveEmail, type InboundEmail } from "@qubo/inbox/server";
+import { UPLOAD_PROFILES } from "@qubo/storage";
 import { Elysia } from "elysia";
 import { verifySvix } from "../lib/svix";
 
@@ -14,12 +15,16 @@ type Received = {
   message_id?: string | null;
   headers?: Record<string, string | string[]> | null;
   authentication?: { dmarc?: string } | null;
-  attachments?: { filename?: string; size?: number }[] | null;
+  attachments?: { id: string; filename?: string; size?: number; content_disposition?: string }[] | null;
 };
+
+type ReceivedFile = { id: string; download_url?: string };
+
+const resendHeaders = () => ({ authorization: `Bearer ${process.env.RESEND_API_KEY?.trim()}` });
 
 async function fetchReceived(id: string): Promise<Received> {
   const res = await fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(id)}?html_format=cid`, {
-    headers: { authorization: `Bearer ${process.env.RESEND_API_KEY?.trim()}` },
+    headers: resendHeaders(),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return (await res.json()) as Received;
@@ -37,8 +42,35 @@ const toInbound = (r: Received): InboundEmail => ({
   html: r.html ?? null,
   headers: r.headers ?? {},
   dmarc: r.authentication?.dmarc ?? null,
-  attachments: (r.attachments ?? []).map((a) => ({ filename: a.filename || "file", size: a.size })),
+  attachments: (r.attachments ?? []).map((a) => ({
+    filename: a.filename || "file",
+    size: a.size,
+    inline: a.content_disposition === "inline",
+    load: () => downloadAttachment(r.id, a.id),
+  })),
 });
+
+let listed: { emailId: string; files: Promise<ReceivedFile[]> } | null = null;
+
+/** Signed download URL from Resend's attachment list (one list call per e-mail), then the bytes. */
+async function downloadAttachment(emailId: string, attachmentId: string): Promise<Uint8Array | null> {
+  if (listed?.emailId !== emailId) {
+    const files = fetch(`https://api.resend.com/emails/receiving/${encodeURIComponent(emailId)}/attachments`, { headers: resendHeaders() }).then(async (res) =>
+      res.ok ? (((await res.json()) as { data?: ReceivedFile[] }).data ?? []) : [],
+    );
+    listed = { emailId, files };
+  }
+  const url = (await listed.files).find((f) => f.id === attachmentId)?.download_url;
+  if (!url) return null;
+  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+  if (!res.ok) return null;
+  const length = Number(res.headers.get("content-length") ?? 0);
+  if (length > MAX_DOWNLOAD_BYTES) return null;
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  return bytes.byteLength > MAX_DOWNLOAD_BYTES ? null : bytes;
+}
+/** Largest file any inbox profile accepts; bigger ones aren't downloaded at all. */
+const MAX_DOWNLOAD_BYTES = Math.max(...Object.values(UPLOAD_PROFILES.inbox.maxBytes));
 
 /** Resend `email.received` → inbox. Unversioned like the Stripe webhook: the URL lives in Resend's dashboard. */
 export const inbound = new Elysia().post(
