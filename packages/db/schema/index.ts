@@ -62,3 +62,6 @@ export * from "./realtime";
 // Session devices (geo, takeover)
 export * from "./sessions";
 export * from "./leases";
+
+// Portal link (instance ↔ Qubo Portal)
+export * from "./portal";

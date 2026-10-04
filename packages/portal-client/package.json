@@ -1,0 +1,25 @@
+{
+  "name": "@qubo/portal-client",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Instance side of the Portal protocol: link, heartbeat, licence cache and the entitlements the admin enforces. Shared by the API (scheduler) and qubo-admin (settings).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@qubo/db": "workspace:*",
+    "@qubo/protocol": "workspace:*",
+    "drizzle-orm": "^0.44",
+    "jose": "^6"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.2"
+  }
+}

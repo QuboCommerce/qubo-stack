@@ -35,6 +35,9 @@ importers:
       '@qubo/geo':
         specifier: workspace:*
         version: link:../../packages/geo
+      '@qubo/portal-client':
+        specifier: workspace:*
+        version: link:../../packages/portal-client
       '@qubo/realtime':
         specifier: workspace:*
         version: link:../../packages/realtime
@@ -241,6 +244,9 @@ importers:
       '@qubo/db':
         specifier: workspace:*
         version: link:../db
+      '@qubo/portal-client':
+        specifier: workspace:*
+        version: link:../portal-client
       '@qubo/shared':
         specifier: workspace:*
         version: link:../shared
@@ -326,6 +332,31 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/portal-client:
+    dependencies:
+      '@qubo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@qubo/protocol':
+        specifier: workspace:*
+        version: link:../protocol
+      drizzle-orm:
+        specifier: ^0.44
+        version: 0.44.7(bun-types@1.4.2)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9)
+      jose:
+        specifier: ^6
+        version: 6.2.8
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.1
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: ^5.0.2
+        version: 5.0.2(@types/node@22.20.1)(happy-dom@20.14.5)(vite@8.3.1(@types/node@22.20.1)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/protocol:
     dependencies:
@@ -1243,9 +1274,6 @@ packages:
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
-
-  '@jridgewell/sourcemap-codec@1.5.5':
-    resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
   '@jridgewell/sourcemap-codec@1.6.0':
     resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
@@ -4370,7 +4398,7 @@ snapshots:
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/remapping@2.3.5':
@@ -4380,14 +4408,12 @@ snapshots:
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
-  '@jridgewell/sourcemap-codec@1.5.5': {}
-
   '@jridgewell/sourcemap-codec@1.6.0': {}
 
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   '@manypkg/find-root@3.1.0':
     dependencies:
@@ -6175,7 +6201,7 @@ snapshots:
 
   magic-string@0.30.21:
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   magic-string@1.4.2:
     dependencies:

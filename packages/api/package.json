@@ -20,7 +20,8 @@
     "@qubo/studio": "workspace:*",
     "better-auth": "^1.2",
     "drizzle-orm": "^0.44",
-    "elysia": "^1.2"
+    "elysia": "^1.2",
+    "@qubo/portal-client": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

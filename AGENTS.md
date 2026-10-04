@@ -34,5 +34,6 @@ Load by name when the task matches the description.
 | `qubo-hosts-and-urls` | anything touching domains, admin hosts, dev hosts or links |
 | `qubo-realtime-collab` | presence, live events, Studio leases, form merges |
 | `qubo-storefront-rendering` | Puck documents, templates, blocks, theme, SEO on the storefront |
+| `qubo-portal-link` | Portal link, licence/entitlements, site quota, `@qubo/portal-client` |
 
 Customer VPS setup (users, SSH, firewall, Coolify): `docs/VPS.md`.
