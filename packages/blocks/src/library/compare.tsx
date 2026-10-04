@@ -14,10 +14,10 @@ export function CompareSlider({
 }) {
   const [pos, setPos] = useState(50);
   return (
-    <div className="pk-compare" style={{ ...style, "--pk-pos": `${pos}%` } as CSSProperties}>
+    <div className="qb-compare" style={{ ...style, "--qb-pos": `${pos}%` } as CSSProperties}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={after.src} alt={after.alt} />
-      <div className="pk-compare-before">
+      <div className="qb-compare-before">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={before.src} alt={before.alt} />
       </div>
@@ -28,7 +28,7 @@ export function CompareSlider({
         value={pos}
         onChange={(e) => setPos(Number(e.target.value))}
         aria-label="Compare before and after"
-        className="pk-compare-range"
+        className="qb-compare-range"
       />
     </div>
   );

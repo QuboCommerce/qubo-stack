@@ -17,7 +17,7 @@ function NavLink({ label, link, ctx, className }: { label: string; link: LinkVal
 function Brand({ logo, name, ctx }: { logo: Parameters<typeof resolveMedia>[0]; name: string; ctx: BlockContext }) {
   const media = resolveMedia(logo, ctx.metadata);
   return (
-    <a className="pk-site-brand" href={ctx.isEditing ? undefined : "/"} aria-label={name}>
+    <a className="qb-site-brand" href={ctx.isEditing ? undefined : "/"} aria-label={name}>
       {media ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={media.src} alt={media.alt || name} />
@@ -66,11 +66,11 @@ export const SiteHeader = defineSection({
   render: ({ logo, name, links, showSearch, searchPlaceholder, showAccount, showCart, ctaLabel, ctaLink }, ctx) => {
     const siteName = textOf(name) || ctx.metadata.site?.name || "";
     const nav = (
-      <ul className="pk-site-nav-list">
+      <ul className="qb-site-nav-list">
         {links.map((item, i) =>
           item.children.length ? (
-            <li key={i} className="pk-site-nav-item">
-              <details className="pk-site-dropdown">
+            <li key={i} className="qb-site-nav-item">
+              <details className="qb-site-dropdown">
                 <summary>
                   {item.label} <IconGlyph name="chevron-down" size="0.9em" />
                 </summary>
@@ -87,7 +87,7 @@ export const SiteHeader = defineSection({
               </details>
             </li>
           ) : (
-            <li key={i} className="pk-site-nav-item">
+            <li key={i} className="qb-site-nav-item">
               <NavLink label={item.label} link={item.link} ctx={ctx} />
             </li>
           ),
@@ -97,41 +97,41 @@ export const SiteHeader = defineSection({
     const commerce = has(ctx, "commerce");
     const cta =
       ctaLabel && ctaLink?.value ? (
-        <a className="pk-button pk-site-cta" data-emphasis="primary" data-size="sm" href={ctx.isEditing ? undefined : resolveLink(ctaLink, ctx.metadata)} {...linkTarget(ctaLink)}>
+        <a className="qb-button qb-site-cta" data-emphasis="primary" data-size="sm" href={ctx.isEditing ? undefined : resolveLink(ctaLink, ctx.metadata)} {...linkTarget(ctaLink)}>
           <span>{ctaLabel}</span>
         </a>
       ) : null;
     return (
-      <header className="pk-site-header">
+      <header className="qb-site-header">
         <Brand logo={logo} name={siteName} ctx={ctx} />
-        <nav className="pk-site-nav" aria-label="Main">
+        <nav className="qb-site-nav" aria-label="Main">
           {nav}
         </nav>
-        <div className="pk-site-actions">
+        <div className="qb-site-actions">
           {showSearch ? (
             <>
-              <form className="pk-site-search" action="/search" role="search">
+              <form className="qb-site-search" action="/search" role="search">
                 <IconGlyph name="search" size="1em" />
                 <input type="search" name="q" placeholder={textOf(searchPlaceholder)} aria-label={textOf(searchPlaceholder) || "Search"} />
               </form>
-              <a className="pk-site-icon pk-site-search-icon" href={ctx.isEditing ? undefined : "/search"} aria-label={textOf(searchPlaceholder) || "Search"}>
+              <a className="qb-site-icon qb-site-search-icon" href={ctx.isEditing ? undefined : "/search"} aria-label={textOf(searchPlaceholder) || "Search"}>
                 <IconGlyph name="search" size="1.25em" />
               </a>
             </>
           ) : null}
           {showAccount && has(ctx, "accounts") ? (
-            <a className="pk-site-icon" href={ctx.isEditing ? undefined : "/account"} aria-label="Account">
+            <a className="qb-site-icon" href={ctx.isEditing ? undefined : "/account"} aria-label="Account">
               <IconGlyph name="user" size="1.25em" />
             </a>
           ) : null}
           {showCart && commerce ? (
-            <a className="pk-site-icon" href={ctx.isEditing ? undefined : "/cart"} aria-label="Cart">
+            <a className="qb-site-icon" href={ctx.isEditing ? undefined : "/cart"} aria-label="Cart">
               <IconGlyph name="shopping-bag" size="1.25em" />
               {ctx.metadata.site?.id && !ctx.isEditing ? <CartCount siteId={ctx.metadata.site.id} /> : null}
             </a>
           ) : null}
           {cta}
-          <details className="pk-site-menu">
+          <details className="qb-site-menu">
             <summary aria-label="Menu">
               <IconGlyph name="menu" size="1.4em" />
             </summary>
@@ -178,15 +178,15 @@ export const SiteFooter = defineSection({
     const siteName = textOf(name) || ctx.metadata.site?.name || "";
     const contact = email || phone || address;
     return (
-      <footer className="pk-site-footer">
-        <div className="pk-site-footer-grid">
-          <div className="pk-site-footer-brand">
+      <footer className="qb-site-footer">
+        <div className="qb-site-footer-grid">
+          <div className="qb-site-footer-brand">
             <Brand logo={logo} name={siteName} ctx={ctx} />
-            {blurb ? <p className="pk-small pk-muted">{blurb}</p> : null}
+            {blurb ? <p className="qb-small qb-muted">{blurb}</p> : null}
           </div>
           {columns.map((col, i) => (
             <div key={i}>
-              <h2 className="pk-site-footer-title">{col.title}</h2>
+              <h2 className="qb-site-footer-title">{col.title}</h2>
               <ul>
                 {col.links.map((l, j) => (
                   <li key={j}>
@@ -217,7 +217,7 @@ export const SiteFooter = defineSection({
           ) : null}
         </div>
         {legal ? (
-          <p className="pk-site-legal pk-small pk-muted">
+          <p className="qb-site-legal qb-small qb-muted">
             {textOf(legal).replace("{year}", String(new Date().getFullYear())).replace("{site}", siteName)}
           </p>
         ) : null}

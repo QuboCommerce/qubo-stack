@@ -101,10 +101,10 @@ export function AccountView({ labels, locale, preview }: { labels: AccountLabels
     setBusy(false);
   }
 
-  if (state.kind === "loading") return <div className="pk-account" aria-busy="true" />;
+  if (state.kind === "loading") return <div className="qb-account" aria-busy="true" />;
   if (state.kind === "unavailable") {
     return (
-      <p className="pk-account-error" role="alert">
+      <p className="qb-account-error" role="alert">
         {labels.error}
       </p>
     );
@@ -112,8 +112,8 @@ export function AccountView({ labels, locale, preview }: { labels: AccountLabels
 
   if (state.kind === "guest") {
     return (
-      <div className="pk-account" data-mode={mode}>
-        <div className="pk-account-tabs" role="tablist">
+      <div className="qb-account" data-mode={mode}>
+        <div className="qb-account-tabs" role="tablist">
           {(["signIn", "signUp"] as const).map((m) => (
             <button
               key={m}
@@ -129,22 +129,22 @@ export function AccountView({ labels, locale, preview }: { labels: AccountLabels
             </button>
           ))}
         </div>
-        <form className="pk-account-form" onSubmit={submit}>
+        <form className="qb-account-form" onSubmit={submit}>
           {mode === "signUp" ? (
-            <div className="pk-field">
-              <label htmlFor="pk-account-name">{labels.name}</label>
-              <input id="pk-account-name" className="pk-input" name="name" autoComplete="name" required maxLength={100} />
+            <div className="qb-field">
+              <label htmlFor="qb-account-name">{labels.name}</label>
+              <input id="qb-account-name" className="qb-input" name="name" autoComplete="name" required maxLength={100} />
             </div>
           ) : null}
-          <div className="pk-field">
-            <label htmlFor="pk-account-email">{labels.email}</label>
-            <input id="pk-account-email" className="pk-input" name="email" type="email" autoComplete="email" required maxLength={200} />
+          <div className="qb-field">
+            <label htmlFor="qb-account-email">{labels.email}</label>
+            <input id="qb-account-email" className="qb-input" name="email" type="email" autoComplete="email" required maxLength={200} />
           </div>
-          <div className="pk-field">
-            <label htmlFor="pk-account-password">{labels.password}</label>
+          <div className="qb-field">
+            <label htmlFor="qb-account-password">{labels.password}</label>
             <input
-              id="pk-account-password"
-              className="pk-input"
+              id="qb-account-password"
+              className="qb-input"
               name="password"
               type="password"
               autoComplete={mode === "signIn" ? "current-password" : "new-password"}
@@ -154,11 +154,11 @@ export function AccountView({ labels, locale, preview }: { labels: AccountLabels
             />
           </div>
           {error ? (
-            <p className="pk-account-error" role="alert">
+            <p className="qb-account-error" role="alert">
               {error}
             </p>
           ) : null}
-          <button type="submit" className="pk-button" data-emphasis="primary" disabled={busy}>
+          <button type="submit" className="qb-button" data-emphasis="primary" disabled={busy}>
             {mode === "signIn" ? labels.signIn : labels.signUp}
           </button>
         </form>
@@ -177,48 +177,48 @@ export function AccountView({ labels, locale, preview }: { labels: AccountLabels
   };
 
   return (
-    <div className="pk-account" data-mode="user">
-      <div className="pk-account-head">
+    <div className="qb-account" data-mode="user">
+      <div className="qb-account-head">
         <div>
-          <p className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-2)" }}>
+          <p className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-2)" }}>
             {labels.greeting.replace("{name}", user.name || user.email)}
           </p>
-          <p className="pk-muted pk-small">{user.email}</p>
+          <p className="qb-muted qb-small">{user.email}</p>
         </div>
-        <div className="pk-account-actions">
+        <div className="qb-account-actions">
           {panelUrl && (
-            <a className="pk-button" data-emphasis="primary" href={panelUrl}>
+            <a className="qb-button" data-emphasis="primary" href={panelUrl}>
               {labels.openPanel}
             </a>
           )}
-          <button type="button" className="pk-button" data-emphasis="secondary" onClick={signOut} disabled={busy}>
+          <button type="button" className="qb-button" data-emphasis="secondary" onClick={signOut} disabled={busy}>
             {labels.signOut}
           </button>
         </div>
       </div>
-      <h2 className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-1)" }}>
+      <h2 className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-1)" }}>
         {labels.ordersTitle}
       </h2>
       {orders.length ? (
-        <ul className="pk-account-orders">
+        <ul className="qb-account-orders">
           {orders.map((o) => (
-            <li key={o.number} className="pk-account-order">
-              <div className="pk-account-order-head">
+            <li key={o.number} className="qb-account-order">
+              <div className="qb-account-order-head">
                 <strong>{o.number}</strong>
-                <span className="pk-muted pk-small">{date.format(new Date(o.createdAt))}</span>
-                <span className="pk-account-status" data-status={o.status.toLowerCase()}>
+                <span className="qb-muted qb-small">{date.format(new Date(o.createdAt))}</span>
+                <span className="qb-account-status" data-status={o.status.toLowerCase()}>
                   {labels.statuses[o.status] ?? o.status}
                 </span>
-                <strong className="pk-account-order-total">{money(o.total, o.currency)}</strong>
+                <strong className="qb-account-order-total">{money(o.total, o.currency)}</strong>
               </div>
-              <p className="pk-muted pk-small">
+              <p className="qb-muted qb-small">
                 {o.items.map((i) => `${i.quantity} × ${i.variant && i.variant !== "Default" && i.variant !== i.name ? `${i.name} (${i.variant})` : i.name}`).join(" · ")}
               </p>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="pk-muted">{labels.noOrders}</p>
+        <p className="qb-muted">{labels.noOrders}</p>
       )}
     </div>
   );

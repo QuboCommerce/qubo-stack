@@ -9,7 +9,7 @@ import {
 import type { ButtonStyle, ColorMix, Mode, Role, Scheme, Theme } from "./schema";
 import { fontRoles, roles } from "./schema";
 
-export const CSS_PREFIX = "pk";
+export const CSS_PREFIX = "qb";
 
 const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 export const roleVar = (role: Role) => `--${CSS_PREFIX}-${kebab(role)}`;

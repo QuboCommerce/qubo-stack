@@ -70,7 +70,7 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
               <li key={b.id} className={cn("overflow-hidden rounded-lg ring-1 ring-border transition-colors", isOpen && "bg-muted/60")}>
                 <ThemeScope theme={theme} mode={mode} button={b.id} className="flex flex-wrap items-center gap-2 px-3 py-3.5">
                   {(["primary", "secondary", "outline"] as const).map((e) => (
-                    <span key={e} className="pk-button" data-emphasis={e} data-button-style={b.id} data-size="sm" style={{ pointerEvents: "none", fontSize: 12 }}>
+                    <span key={e} className="qb-button" data-emphasis={e} data-button-style={b.id} data-size="sm" style={{ pointerEvents: "none", fontSize: 12 }}>
                       {emphasisLabel[e]}
                     </span>
                   ))}
@@ -201,7 +201,7 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
                   <ThemeScope theme={theme} mode={mode} className="rounded-md p-1.5">
                     <span
                       className="block size-7 rounded-md"
-                      style={{ background: "var(--pk-surface)", boxShadow: `var(--pk-shadow-${s.id})` }}
+                      style={{ background: "var(--qb-surface)", boxShadow: `var(--qb-shadow-${s.id})` }}
                     />
                   </ThemeScope>
                   <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{s.name}</span>

@@ -75,6 +75,6 @@ describe("inline editing", () => {
     const html = renderToString(
       createElement(() => heading.component({ ...heading.defaults, text, highlight: "froid", puck: { isEditing: true } }) as ReactNode),
     );
-    expect(html).toContain('<span class="pk-accent-text">froid</span>');
+    expect(html).toContain('<span class="qb-accent-text">froid</span>');
   });
 });

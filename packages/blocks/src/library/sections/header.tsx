@@ -51,16 +51,16 @@ export function SectionHeader({
   const Tag = level;
   const href = resolveLink(value.cta.link, ctx.metadata);
   return (
-    <header className={cx("pk-section-header", className)} data-align={value.align} style={style}>
-      {value.eyebrow ? <p className="pk-eyebrow pk-font-accent">{value.eyebrow}</p> : null}
+    <header className={cx("qb-section-header", className)} data-align={value.align} style={style}>
+      {value.eyebrow ? <p className="qb-eyebrow qb-font-accent">{value.eyebrow}</p> : null}
       {value.title ? (
-        <Tag className="pk-heading pk-font-heading" style={{ fontSize: `var(--pk-step-${value.titleSize})` }}>
+        <Tag className="qb-heading qb-font-heading" style={{ fontSize: `var(--qb-step-${value.titleSize})` }}>
           {value.title}
         </Tag>
       ) : null}
-      {value.intro ? <p className="pk-muted pk-intro">{value.intro}</p> : null}
+      {value.intro ? <p className="qb-muted qb-intro">{value.intro}</p> : null}
       {value.cta.label && href ? (
-        <a className="pk-button" data-emphasis="outline" href={ctx.isEditing ? undefined : href} {...linkTarget(value.cta.link)}>
+        <a className="qb-button" data-emphasis="outline" href={ctx.isEditing ? undefined : href} {...linkTarget(value.cta.link)}>
           {value.cta.label}
         </a>
       ) : null}
@@ -77,8 +77,8 @@ export const columnsField = (base = 1, md = 2, lg = 3) =>
 
 export const colsStyle = (cols: { base: number; md?: number; lg?: number }, g = "md"): CSSProperties =>
   ({
-    "--pk-cols": cols.base,
-    "--pk-cols-md": cols.md ?? cols.base,
-    "--pk-cols-lg": cols.lg ?? cols.md ?? cols.base,
+    "--qb-cols": cols.base,
+    "--qb-cols-md": cols.md ?? cols.base,
+    "--qb-cols-lg": cols.lg ?? cols.md ?? cols.base,
     gap: gap(g),
   }) as CSSProperties;

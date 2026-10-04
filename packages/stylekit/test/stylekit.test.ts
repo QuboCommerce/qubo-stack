@@ -139,11 +139,11 @@ describe("compile", () => {
   it("emits scoped tokens, schemes and buttons", () => {
     const { css, hash } = compileTheme(defineTheme(minimal));
     expect(css).toContain('[data-theme="mini"] {');
-    expect(css).toContain("--pk-color-brand: oklch(");
+    expect(css).toContain("--qb-color-brand: oklch(");
     expect(css).toContain('[data-theme="mini"] [data-scheme="base"]');
-    expect(css).toContain("--pk-primary: var(--pk-color-brand);");
-    expect(css).toContain("--pk-link: var(--pk-primary);");
-    expect(css).toContain("--pk-text-muted: oklch(from var(--pk-text) l c h / 0.72);");
+    expect(css).toContain("--qb-primary: var(--qb-color-brand);");
+    expect(css).toContain("--qb-link: var(--qb-primary);");
+    expect(css).toContain("--qb-text-muted: oklch(from var(--qb-text) l c h / 0.72);");
     expect(css).toContain('[data-button-style="default"]');
     expect(css).toContain("color-scheme: light;");
     expect(css).not.toContain('data-mode="dark"');

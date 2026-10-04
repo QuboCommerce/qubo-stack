@@ -41,26 +41,26 @@ export const FeatureGrid = defineSection({
   render: ({ header: h, items, columns, look, iconStyle, itemAlign }, ctx) => (
     <>
       <SectionHeader value={h} ctx={ctx} />
-      <div className="pk-grid" style={colsStyle(columns, "lg")}>
+      <div className="qb-grid" style={colsStyle(columns, "lg")}>
         {items.map((it, i) => {
           const img = resolveMedia(it.image, ctx.metadata);
           const href = resolveLink(it.link, ctx.metadata);
           return (
-            <article key={i} className="pk-feature" data-look={look} style={{ textAlign: itemAlign, alignItems: itemAlign }}>
+            <article key={i} className="qb-feature" data-look={look} style={{ textAlign: itemAlign, alignItems: itemAlign }}>
               {img ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img className="pk-feature-media" src={img.src} alt={img.alt} loading="lazy" />
+                <img className="qb-feature-media" src={img.src} alt={img.alt} loading="lazy" />
               ) : it.icon ? (
-                <span className="pk-icon" data-size="md" data-tone="primary" data-framed={iconStyle === "framed" || undefined}>
+                <span className="qb-icon" data-size="md" data-tone="primary" data-framed={iconStyle === "framed" || undefined}>
                   <IconGlyph name={it.icon} size="1em" />
                 </span>
               ) : null}
-              <h3 className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-1)" }}>
+              <h3 className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-1)" }}>
                 {it.title}
               </h3>
-              {it.text ? <p className="pk-muted">{it.text}</p> : null}
+              {it.text ? <p className="qb-muted">{it.text}</p> : null}
               {href ? (
-                <a className="pk-button" data-emphasis="link" href={ctx.isEditing ? undefined : href} {...linkTarget(it.link)}>
+                <a className="qb-button" data-emphasis="link" href={ctx.isEditing ? undefined : href} {...linkTarget(it.link)}>
                   Learn more <IconGlyph name="arrow-right" size="1em" />
                 </a>
               ) : null}
@@ -102,11 +102,11 @@ export const StatsBand = defineSection({
   render: ({ header: h, items, columns, dividers }, ctx) => (
     <>
       <SectionHeader value={h} ctx={ctx} />
-      <div className="pk-grid pk-stats" data-dividers={dividers || undefined} style={colsStyle(columns, "md")}>
+      <div className="qb-grid qb-stats" data-dividers={dividers || undefined} style={colsStyle(columns, "md")}>
         {items.map((it, i) => (
-          <div key={i} className="pk-stat" style={{ textAlign: "center" }}>
-            <div className="pk-stat-value pk-font-display">{it.value}</div>
-            <div className="pk-muted">{it.label}</div>
+          <div key={i} className="qb-stat" style={{ textAlign: "center" }}>
+            <div className="qb-stat-value qb-font-display">{it.value}</div>
+            <div className="qb-muted">{it.label}</div>
           </div>
         ))}
       </div>
@@ -116,7 +116,7 @@ export const StatsBand = defineSection({
 
 const Stars = ({ rating }: { rating: number }) =>
   rating > 0 ? (
-    <div className="pk-rating" aria-label={`${rating} out of 5`}>
+    <div className="qb-rating" aria-label={`${rating} out of 5`}>
       {Array.from({ length: 5 }, (_, i) => (
         <IconGlyph key={i} name="star" size="1em" fill={i < rating ? "currentColor" : "none"} />
       ))}
@@ -149,21 +149,21 @@ export const Testimonials = defineSection({
   render: ({ header: h, items, layout, columns, look }, ctx) => (
     <>
       <SectionHeader value={h} ctx={ctx} />
-      <div className={layout === "grid" ? "pk-grid" : "pk-rail"} style={colsStyle(columns, "md")}>
+      <div className={layout === "grid" ? "qb-grid" : "qb-rail"} style={colsStyle(columns, "md")}>
         {items.map((it, i) => {
           const img = resolveMedia(it.avatar, ctx.metadata);
           return (
-            <figure key={i} className="pk-quote pk-testimonial" data-look={look}>
+            <figure key={i} className="qb-quote qb-testimonial" data-look={look}>
               <Stars rating={it.rating} />
-              <blockquote className="pk-quote-text">{it.quote}</blockquote>
-              <figcaption className="pk-quote-author">
+              <blockquote className="qb-quote-text">{it.quote}</blockquote>
+              <figcaption className="qb-quote-author">
                 {img ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img className="pk-avatar" src={img.src} alt={img.alt || it.author} loading="lazy" />
+                  <img className="qb-avatar" src={img.src} alt={img.alt || it.author} loading="lazy" />
                 ) : null}
                 <span>
                   <strong>{it.author}</strong>
-                  {it.role ? <span className="pk-muted" style={{ display: "block" }}>{it.role}</span> : null}
+                  {it.role ? <span className="qb-muted" style={{ display: "block" }}>{it.role}</span> : null}
                 </span>
               </figcaption>
             </figure>
@@ -213,16 +213,16 @@ export const Faq = defineSection({
         }).replace(/</g, "\\u003c")
       : null;
     return (
-      <div className="pk-faq" data-layout={layout}>
+      <div className="qb-faq" data-layout={layout}>
         <SectionHeader value={{ ...h, align: layout === "side" ? "start" : h.align }} ctx={ctx} />
-        <div className="pk-faq-items">
+        <div className="qb-faq-items">
           {items.map((it, i) => (
-            <details key={i} className="pk-faq-item" open={openFirst && i === 0 ? true : undefined} name={ctx.id || "faq"}>
+            <details key={i} className="qb-faq-item" open={openFirst && i === 0 ? true : undefined} name={ctx.id || "faq"}>
               <summary>
                 <span>{it.question}</span>
-                <IconGlyph name="plus" size="1.1em" className="pk-faq-icon" />
+                <IconGlyph name="plus" size="1.1em" className="qb-faq-icon" />
               </summary>
-              <p className="pk-muted" style={{ whiteSpace: "pre-line" }}>
+              <p className="qb-muted" style={{ whiteSpace: "pre-line" }}>
                 {it.answer}
               </p>
             </details>
@@ -259,9 +259,9 @@ export const Marquee = defineSection({
   },
   render: ({ items, separator, size, speed, reverse }) => {
     const run = (hidden: boolean) => (
-      <div className="pk-marquee-run" aria-hidden={hidden || undefined}>
+      <div className="qb-marquee-run" aria-hidden={hidden || undefined}>
         {items.map((it, i) => (
-          <span key={i} className="pk-marquee-item">
+          <span key={i} className="qb-marquee-item">
             <span>{it.text}</span>
             {separator ? <IconGlyph name={separator} size="0.8em" /> : null}
           </span>
@@ -270,10 +270,10 @@ export const Marquee = defineSection({
     );
     return (
       <div
-        className="pk-marquee pk-font-display"
+        className="qb-marquee qb-font-display"
         data-speed={speed}
         data-reverse={reverse || undefined}
-        style={{ fontSize: `var(--pk-step-${size})` }}
+        style={{ fontSize: `var(--qb-step-${size})` }}
       >
         {run(false)}
         {run(true)}
@@ -312,10 +312,10 @@ export const LogoCloud = defineSection({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={img.src} alt={hidden ? "" : img.alt || l.name} loading="lazy" />
         ) : (
-          <span className="pk-font-display">{l.name}</span>
+          <span className="qb-font-display">{l.name}</span>
         );
         return (
-          <li key={i} className="pk-logo-item">
+          <li key={i} className="qb-logo-item">
             {href && !ctx.isEditing ? (
               <a href={href} {...linkTarget(l.link)} tabIndex={hidden ? -1 : undefined}>
                 {inner}
@@ -330,16 +330,16 @@ export const LogoCloud = defineSection({
       <>
         <SectionHeader value={h} ctx={ctx} />
         {layout === "marquee" ? (
-          <div className="pk-marquee" data-speed="slow">
-            <ul className="pk-marquee-run pk-logos" data-mono={monochrome || undefined} data-size={logoHeight}>
+          <div className="qb-marquee" data-speed="slow">
+            <ul className="qb-marquee-run qb-logos" data-mono={monochrome || undefined} data-size={logoHeight}>
               {items(false)}
             </ul>
-            <ul className="pk-marquee-run pk-logos" aria-hidden="true" data-mono={monochrome || undefined} data-size={logoHeight}>
+            <ul className="qb-marquee-run qb-logos" aria-hidden="true" data-mono={monochrome || undefined} data-size={logoHeight}>
               {items(true)}
             </ul>
           </div>
         ) : (
-          <ul className="pk-logos" data-mono={monochrome || undefined} data-size={logoHeight}>
+          <ul className="qb-logos" data-mono={monochrome || undefined} data-size={logoHeight}>
             {items(false)}
           </ul>
         )}
@@ -374,8 +374,8 @@ export const Gallery = defineSection({
     const resolved = images.map((it) => ({ ...it, media: resolveMedia(it.image, ctx.metadata) }));
     const style = {
       ...colsStyle(columns, "xs"),
-      "--pk-media-aspect": aspect === "auto" || layout === "masonry" ? "auto" : aspect,
-      "--pk-media-radius": `var(--pk-radius-${radius})`,
+      "--qb-media-aspect": aspect === "auto" || layout === "masonry" ? "auto" : aspect,
+      "--qb-media-radius": `var(--qb-radius-${radius})`,
     } as CSSProperties;
 
     if (layout === "before-after") {
@@ -392,7 +392,7 @@ export const Gallery = defineSection({
     return (
       <>
         <SectionHeader value={h} ctx={ctx} />
-        <ul className={cx(layout === "carousel" ? "pk-rail" : "pk-grid", "pk-gallery")} data-layout={layout} style={style}>
+        <ul className={cx(layout === "carousel" ? "qb-rail" : "qb-grid", "qb-gallery")} data-layout={layout} style={style}>
           {resolved.map((it, i) => {
             const pid = `${ctx.id || "g"}-lb-${i}`;
             return (
@@ -400,7 +400,7 @@ export const Gallery = defineSection({
                 <figure>
                   {it.media ? (
                     lightbox && !ctx.isEditing ? (
-                      <button type="button" popoverTarget={pid} className="pk-gallery-open" aria-label={it.media.alt || `Open image ${i + 1}`}>
+                      <button type="button" popoverTarget={pid} className="qb-gallery-open" aria-label={it.media.alt || `Open image ${i + 1}`}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={it.media.src} alt={it.media.alt} loading="lazy" style={{ objectPosition: it.media.objectPosition }} />
                       </button>
@@ -411,13 +411,13 @@ export const Gallery = defineSection({
                   ) : (
                     <Empty label="Image" ctx={ctx} minHeight={120} />
                   )}
-                  {it.caption ? <figcaption className="pk-muted">{it.caption}</figcaption> : null}
+                  {it.caption ? <figcaption className="qb-muted">{it.caption}</figcaption> : null}
                 </figure>
                 {it.media && lightbox && !ctx.isEditing ? (
-                  <div id={pid} popover="auto" className="pk-lightbox">
+                  <div id={pid} popover="auto" className="qb-lightbox">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={it.media.src} alt={it.media.alt} loading="lazy" />
-                    <button type="button" popoverTarget={pid} popoverTargetAction="hide" className="pk-lightbox-close" aria-label="Close">
+                    <button type="button" popoverTarget={pid} popoverTargetAction="hide" className="qb-lightbox-close" aria-label="Close">
                       <IconGlyph name="x" size="1.25em" />
                     </button>
                   </div>
@@ -458,17 +458,17 @@ export const Process = defineSection({
   render: ({ header: h, steps, layout }, ctx) => (
     <>
       <SectionHeader value={h} ctx={ctx} />
-      <ol className="pk-steps" data-layout={layout} style={{ "--pk-cols-lg": steps.length } as CSSProperties}>
+      <ol className="qb-steps" data-layout={layout} style={{ "--qb-cols-lg": steps.length } as CSSProperties}>
         {steps.map((s, i) => (
-          <li key={i} className="pk-step">
-            <span className="pk-step-marker pk-font-display" aria-hidden="true">
+          <li key={i} className="qb-step">
+            <span className="qb-step-marker qb-font-display" aria-hidden="true">
               {s.icon ? <IconGlyph name={s.icon} size="1em" /> : i + 1}
             </span>
             <div>
-              <h3 className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-1)" }}>
+              <h3 className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-1)" }}>
                 {s.title}
               </h3>
-              <p className="pk-muted">{s.text}</p>
+              <p className="qb-muted">{s.text}</p>
             </div>
           </li>
         ))}
@@ -510,35 +510,35 @@ export const PricingTable = defineSection({
   render: ({ header: h, plans, columns }, ctx) => (
     <>
       <SectionHeader value={h} ctx={ctx} />
-      <div className="pk-grid" style={{ ...colsStyle(columns, "md"), alignItems: "stretch" }}>
+      <div className="qb-grid" style={{ ...colsStyle(columns, "md"), alignItems: "stretch" }}>
         {plans.map((p, i) => {
           const href = resolveLink(p.link, ctx.metadata);
           return (
-            <article key={i} className="pk-plan" data-highlighted={p.highlighted || undefined}>
-              {p.badge ? <span className="pk-badge pk-font-accent" data-tone="accent">{p.badge}</span> : null}
-              <h3 className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-1)" }}>
+            <article key={i} className="qb-plan" data-highlighted={p.highlighted || undefined}>
+              {p.badge ? <span className="qb-badge qb-font-accent" data-tone="accent">{p.badge}</span> : null}
+              <h3 className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-1)" }}>
                 {p.name}
               </h3>
-              <p className="pk-price" data-size="lg">
-                <strong className="pk-font-display">{p.price}</strong>
-                {p.period ? <span className="pk-muted"> {p.period}</span> : null}
+              <p className="qb-price" data-size="lg">
+                <strong className="qb-font-display">{p.price}</strong>
+                {p.period ? <span className="qb-muted"> {p.period}</span> : null}
               </p>
-              {p.description ? <p className="pk-muted">{p.description}</p> : null}
-              <ul className="pk-list" data-marker="check">
+              {p.description ? <p className="qb-muted">{p.description}</p> : null}
+              <ul className="qb-list" data-marker="check">
                 {p.features
                   .split("\n")
                   .map((line) => line.trim())
                   .filter(Boolean)
                   .map((line, j) => (
                     <li key={j}>
-                      <IconGlyph className="pk-list-icon" name="check" size="1.1em" />
+                      <IconGlyph className="qb-list-icon" name="check" size="1.1em" />
                       <span>{line}</span>
                     </li>
                   ))}
               </ul>
               {p.buttonLabel ? (
                 <a
-                  className="pk-button"
+                  className="qb-button"
                   data-emphasis={p.highlighted ? "primary" : "outline"}
                   href={ctx.isEditing ? undefined : href}
                   style={{ marginTop: "auto" }}
@@ -580,19 +580,19 @@ export const Team = defineSection({
   render: ({ header: h, members, columns, photoAspect }, ctx) => (
     <>
       <SectionHeader value={h} ctx={ctx} />
-      <div className="pk-grid" style={{ ...colsStyle(columns, "lg"), "--pk-media-aspect": photoAspect } as CSSProperties}>
+      <div className="qb-grid" style={{ ...colsStyle(columns, "lg"), "--qb-media-aspect": photoAspect } as CSSProperties}>
         {members.map((m, i) => {
           const img = resolveMedia(m.photo, ctx.metadata);
           const href = resolveLink(m.link, ctx.metadata);
           return (
-            <article key={i} className="pk-member">
+            <article key={i} className="qb-member">
               {img ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={img.src} alt={img.alt || m.name} loading="lazy" style={{ objectPosition: img.objectPosition }} />
               ) : (
                 <Empty label="Photo" ctx={ctx} minHeight={160} />
               )}
-              <h3 className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-1)" }}>
+              <h3 className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-1)" }}>
                 {href && !ctx.isEditing ? (
                   <a href={href} {...linkTarget(m.link)}>
                     {m.name}
@@ -601,7 +601,7 @@ export const Team = defineSection({
                   m.name
                 )}
               </h3>
-              <p className="pk-muted">{m.role}</p>
+              <p className="qb-muted">{m.role}</p>
               {m.bio ? <p>{m.bio}</p> : null}
             </article>
           );

@@ -28,18 +28,18 @@ export const Newsletter = defineSection({
     layout: f.select(["inline", "stacked"], { label: "Layout", default: "inline", group: "layout" }),
   },
   render: ({ header: h, placeholder, buttonLabel, consent, formKey, layout }, ctx) => (
-    <div className="pk-newsletter" data-align={h.align}>
+    <div className="qb-newsletter" data-align={h.align}>
       <SectionHeader value={h} ctx={ctx} />
-      <form className="pk-form-inline" data-layout={layout} method="post" action={formAction(formKey)}>
-        <label className="pk-sr-only" htmlFor={`${ctx.id}-email`}>
+      <form className="qb-form-inline" data-layout={layout} method="post" action={formAction(formKey)}>
+        <label className="qb-sr-only" htmlFor={`${ctx.id}-email`}>
           {placeholder}
         </label>
-        <input className="pk-input" id={`${ctx.id}-email`} name="email" type="email" required placeholder={placeholder} autoComplete="email" />
-        <button className="pk-button" data-emphasis="primary" type={ctx.isEditing ? "button" : "submit"}>
+        <input className="qb-input" id={`${ctx.id}-email`} name="email" type="email" required placeholder={placeholder} autoComplete="email" />
+        <button className="qb-button" data-emphasis="primary" type={ctx.isEditing ? "button" : "submit"}>
           {buttonLabel}
         </button>
       </form>
-      {consent ? <p className="pk-muted pk-small">{consent}</p> : null}
+      {consent ? <p className="qb-muted qb-small">{consent}</p> : null}
     </div>
   ),
 });
@@ -100,11 +100,11 @@ export const ContactForm = defineSection({
     ].filter(Boolean) as { icon: string; text: string; href?: string }[];
     const aside = details.show && lines.length > 0;
     return (
-      <div className="pk-contact" data-aside={aside || undefined}>
-        <div className="pk-stack" style={{ "--pk-dir": "column", gap: gap("md") } as CSSProperties}>
+      <div className="qb-contact" data-aside={aside || undefined}>
+        <div className="qb-stack" style={{ "--qb-dir": "column", gap: gap("md") } as CSSProperties}>
           <SectionHeader value={h} ctx={ctx} />
           {aside ? (
-            <ul className="pk-contact-details">
+            <ul className="qb-contact-details">
               {lines.map((l, i) => (
                 <li key={i}>
                   <IconGlyph name={l.icon} size="1.1em" />
@@ -115,7 +115,7 @@ export const ContactForm = defineSection({
           ) : null}
         </div>
         <form
-          className="pk-form"
+          className="qb-form"
           method="post"
           action={formAction(formKey)}
           encType={fields.some((x) => x.type === "file") ? "multipart/form-data" : undefined}
@@ -123,9 +123,9 @@ export const ContactForm = defineSection({
         >
           {fields.map((fd, i) => {
             const id = `${ctx.id}-${fd.name || i}`;
-            const common = { id, name: fd.name, required: fd.required, className: "pk-input" };
+            const common = { id, name: fd.name, required: fd.required, className: "qb-input" };
             return (
-              <div key={i} className="pk-field" data-width={fd.width}>
+              <div key={i} className="qb-field" data-width={fd.width}>
                 <label htmlFor={id}>
                   {fd.label}
                   {fd.required ? <span aria-hidden="true"> *</span> : null}
@@ -151,7 +151,7 @@ export const ContactForm = defineSection({
               </div>
             );
           })}
-          <button className="pk-button" data-emphasis="primary" type={ctx.isEditing ? "button" : "submit"}>
+          <button className="qb-button" data-emphasis="primary" type={ctx.isEditing ? "button" : "submit"}>
             {submitLabel}
           </button>
         </form>
@@ -179,14 +179,14 @@ export const MapSection = defineSection({
     const q = encodeURIComponent(address.replace(/\n/g, ", "));
     const src = (embedUrl && embedSrc(embedUrl)) || `https://maps.google.com/maps?q=${q}&output=embed`;
     return (
-      <div className="pk-map" data-details={showDetails || undefined}>
+      <div className="qb-map" data-details={showDetails || undefined}>
         {showDetails ? (
-          <div className="pk-stack" style={{ "--pk-dir": "column", gap: gap("sm") } as CSSProperties}>
+          <div className="qb-stack" style={{ "--qb-dir": "column", gap: gap("sm") } as CSSProperties}>
             <SectionHeader value={h} ctx={ctx} />
             <p style={{ whiteSpace: "pre-line" }}>{address}</p>
             {directionsLabel ? (
               <a
-                className="pk-button"
+                className="qb-button"
                 data-emphasis="outline"
                 href={ctx.isEditing ? undefined : `https://www.google.com/maps/dir/?api=1&destination=${q}`}
                 target="_blank"
@@ -197,7 +197,7 @@ export const MapSection = defineSection({
             ) : null}
           </div>
         ) : null}
-        <iframe className="pk-map-frame" data-size={height} src={src} title={address} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+        <iframe className="qb-map-frame" data-size={height} src={src} title={address} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
       </div>
     );
   },
@@ -223,7 +223,7 @@ export const AnnouncementBar = defineSection({
     size: f.select(["-1", "0"], { label: "Text size", default: "-1", group: "style" }),
   },
   render: ({ messages, icon, size }, ctx) => (
-    <div className="pk-announcement" style={{ fontSize: `var(--pk-step-${size === "-1" ? "n1" : "0"})` }}>
+    <div className="qb-announcement" style={{ fontSize: `var(--qb-step-${size === "-1" ? "n1" : "0"})` }}>
       {messages.map((m, i) => {
         const href = resolveLink(m.link, ctx.metadata);
         const body = (
@@ -233,7 +233,7 @@ export const AnnouncementBar = defineSection({
           </>
         );
         return (
-          <p key={i} className="pk-announcement-item">
+          <p key={i} className="qb-announcement-item">
             {href && !ctx.isEditing ? (
               <a href={href} {...linkTarget(m.link)}>
                 {body}
@@ -300,23 +300,23 @@ export const ProductGrid = defineSection({
     return (
       <>
         <SectionHeader value={h} ctx={ctx} />
-        {!items.length && emptyText ? <p className="pk-muted pk-products-empty">{emptyText}</p> : null}
-        <ul className="pk-grid pk-products" style={{ ...colsStyle(columns, "md"), "--pk-media-aspect": imageAspect } as CSSProperties}>
+        {!items.length && emptyText ? <p className="qb-muted qb-products-empty">{emptyText}</p> : null}
+        <ul className="qb-grid qb-products" style={{ ...colsStyle(columns, "md"), "--qb-media-aspect": imageAspect } as CSSProperties}>
           {items.map((p, i) => (
-            <li key={i} className="pk-product-card">
+            <li key={i} className="qb-product-card">
               <a href={ctx.isEditing ? undefined : p.href}>
                 {p.image ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={p.image.src} alt={p.image.alt} loading="lazy" />
                 ) : (
-                  <span className="pk-media-placeholder" aria-hidden="true" />
+                  <span className="qb-media-placeholder" aria-hidden="true" />
                 )}
-                {p.badge ? <span className="pk-badge" data-tone="accent">{p.badge}</span> : null}
-                <span className="pk-product-title">{p.title}</span>
+                {p.badge ? <span className="qb-badge" data-tone="accent">{p.badge}</span> : null}
+                <span className="qb-product-title">{p.title}</span>
                 {showPrice && p.price ? (
-                  <span className="pk-price" data-size="sm">
+                  <span className="qb-price" data-size="sm">
                     <strong>{p.price}</strong>
-                    {p.compareAt ? <s className="pk-muted">{p.compareAt}</s> : null}
+                    {p.compareAt ? <s className="qb-muted">{p.compareAt}</s> : null}
                   </span>
                 ) : null}
               </a>
@@ -356,23 +356,23 @@ export const PostList = defineSection({
     return (
       <>
         <SectionHeader value={h} ctx={ctx} />
-        <div className="pk-grid" style={{ ...colsStyle(columns, "lg"), "--pk-media-aspect": "16/9" } as CSSProperties}>
+        <div className="qb-grid" style={{ ...colsStyle(columns, "lg"), "--qb-media-aspect": "16/9" } as CSSProperties}>
           {posts.slice(0, limit).map((p, i) => (
-            <article key={i} className={cx("pk-card")} data-look="plain" data-linked>
+            <article key={i} className={cx("qb-card")} data-look="plain" data-linked>
               {p.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img className="pk-card-media" src={p.image.src} alt={p.image.alt} loading="lazy" />
+                <img className="qb-card-media" src={p.image.src} alt={p.image.alt} loading="lazy" />
               ) : (
-                <span className="pk-media-placeholder" aria-hidden="true" />
+                <span className="qb-media-placeholder" aria-hidden="true" />
               )}
-              <div className="pk-card-body" style={{ padding: `${gap("sm")} 0` }}>
-                {showDate && p.date ? <p className="pk-muted pk-small">{p.date}</p> : null}
-                <h3 className="pk-heading pk-font-heading" style={{ fontSize: "var(--pk-step-1)" }}>
+              <div className="qb-card-body" style={{ padding: `${gap("sm")} 0` }}>
+                {showDate && p.date ? <p className="qb-muted qb-small">{p.date}</p> : null}
+                <h3 className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-1)" }}>
                   {p.title}
                 </h3>
-                {showExcerpt && p.excerpt ? <p className="pk-muted">{p.excerpt}</p> : null}
+                {showExcerpt && p.excerpt ? <p className="qb-muted">{p.excerpt}</p> : null}
               </div>
-              {!ctx.isEditing ? <a className="pk-card-link" href={p.href} aria-label={p.title} /> : null}
+              {!ctx.isEditing ? <a className="qb-card-link" href={p.href} aria-label={p.title} /> : null}
             </article>
           ))}
         </div>

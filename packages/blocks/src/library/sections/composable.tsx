@@ -51,12 +51,12 @@ export const Section = defineSection({
   ],
   render: ({ content: Content, align, gap: g, minHeight }) => (
     <Content
-      className="pk-stack"
+      className="qb-stack"
       style={
         {
-          "--pk-dir": "column",
+          "--qb-dir": "column",
           gap: gap(g),
-          minHeight: minHeight === "auto" ? undefined : `calc(${minHeight} - var(--pk-section-pt) - var(--pk-section-pb))`,
+          minHeight: minHeight === "auto" ? undefined : `calc(${minHeight} - var(--qb-section-pt) - var(--qb-section-pb))`,
           textAlign: anchorParts(align)[1] === "center" ? "center" : undefined,
           ...anchorFlex(align, "column"),
         } as CSSProperties
@@ -120,10 +120,10 @@ export const Hero = defineSection({
     const isVideo = m && /\.(mp4|webm|mov)(\?|$)/i.test(m.src);
     const mediaEl = m ? (
       isVideo ? (
-        <video className="pk-hero-media" src={m.src} autoPlay muted loop playsInline />
+        <video className="qb-hero-media" src={m.src} autoPlay muted loop playsInline />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
-        <img className="pk-hero-media" src={m.src} alt={m.alt} fetchPriority="high" style={{ objectPosition: m.objectPosition }} />
+        <img className="qb-hero-media" src={m.src} alt={m.alt} fetchPriority="high" style={{ objectPosition: m.objectPosition }} />
       )
     ) : layout === "typographic" ? null : (
       <Empty label="Add an image or video" ctx={ctx} minHeight={240} />
@@ -131,10 +131,10 @@ export const Hero = defineSection({
     const [, h] = anchorParts(contentAnchor);
     const content = (
       <Content
-        className="pk-stack pk-hero-content"
+        className="qb-stack qb-hero-content"
         style={
           {
-            "--pk-dir": "column",
+            "--qb-dir": "column",
             gap: gap("sm"),
             textAlign: layout === "typographic" || (layout === "overlay" && h === "center") ? "center" : undefined,
             ...anchorFlex(layout === "overlay" || layout === "typographic" ? contentAnchor : "left", "column"),
@@ -144,22 +144,22 @@ export const Hero = defineSection({
     );
     return (
       <div
-        className="pk-hero"
+        className="qb-hero"
         data-layout={layout}
         data-media-position={mediaPosition}
         style={
           {
-            minHeight: minHeight === "auto" ? undefined : `calc(${minHeight} - var(--pk-section-pt) - var(--pk-section-pb))`,
-            "--pk-media-aspect": mediaAspect === "auto" ? "auto" : mediaAspect,
-            "--pk-media-radius": `var(--pk-radius-${mediaRadius})`,
-            "--pk-overlay": overlay / 100,
+            minHeight: minHeight === "auto" ? undefined : `calc(${minHeight} - var(--qb-section-pt) - var(--qb-section-pb))`,
+            "--qb-media-aspect": mediaAspect === "auto" ? "auto" : mediaAspect,
+            "--qb-media-radius": `var(--qb-radius-${mediaRadius})`,
+            "--qb-overlay": overlay / 100,
             ...(layout === "overlay" ? anchorFlex(contentAnchor, "column") : {}),
           } as CSSProperties
         }
       >
         {layout === "overlay" ? (
           <>
-            <div className="pk-hero-backdrop" aria-hidden="true">
+            <div className="qb-hero-backdrop" aria-hidden="true">
               {mediaEl}
             </div>
             {content}
@@ -167,7 +167,7 @@ export const Hero = defineSection({
         ) : (
           <>
             {content}
-            {mediaEl ? <div className="pk-hero-figure">{mediaEl}</div> : null}
+            {mediaEl ? <div className="qb-hero-figure">{mediaEl}</div> : null}
           </>
         )}
       </div>
@@ -206,20 +206,20 @@ export const SplitMedia = defineSection({
     const [a, b] = ratio.split(":").map(Number) as [number, number];
     return (
       <div
-        className="pk-split"
+        className="qb-split"
         data-media-position={mediaPosition}
         data-bleed={bleed || undefined}
         style={
           {
-            "--pk-col-a": `${a}fr`,
-            "--pk-col-b": `${b}fr`,
+            "--qb-col-a": `${a}fr`,
+            "--qb-col-b": `${b}fr`,
             alignItems: verticalAlign,
-            "--pk-media-aspect": mediaAspect === "auto" ? "auto" : mediaAspect,
-            "--pk-media-radius": `var(--pk-radius-${mediaRadius})`,
+            "--qb-media-aspect": mediaAspect === "auto" ? "auto" : mediaAspect,
+            "--qb-media-radius": `var(--qb-radius-${mediaRadius})`,
           } as CSSProperties
         }
       >
-        <div className="pk-split-media">
+        <div className="qb-split-media">
           {m ? (
             isVideo ? (
               <video src={m.src} autoPlay muted loop playsInline />
@@ -231,7 +231,7 @@ export const SplitMedia = defineSection({
             <Empty label="Add an image or video" ctx={ctx} minHeight={240} />
           )}
         </div>
-        <Content className="pk-stack" style={{ "--pk-dir": "column", gap: gap("sm") } as CSSProperties} />
+        <Content className="qb-stack" style={{ "--qb-dir": "column", gap: gap("sm") } as CSSProperties} />
       </div>
     );
   },
@@ -256,8 +256,8 @@ export const RichText = defineSection({
   },
   render: ({ content: Content, align }) => (
     <Content
-      className="pk-stack pk-rich-text"
-      style={{ "--pk-dir": "column", gap: gap("sm"), textAlign: align, alignItems: align === "center" ? "center" : "stretch", ...(align === "start" ? { marginInline: 0 } : {}) } as CSSProperties}
+      className="qb-stack qb-rich-text"
+      style={{ "--qb-dir": "column", gap: gap("sm"), textAlign: align, alignItems: align === "center" ? "center" : "stretch", ...(align === "start" ? { marginInline: 0 } : {}) } as CSSProperties}
     />
   ),
 });
@@ -288,8 +288,8 @@ export const CtaBand = defineSection({
     panel: f.scheme({ label: "Panel scheme", description: "Paint the band as an inset panel; empty = no panel." }),
   },
   render: ({ content: Content, layout, panel }) => (
-    <div className="pk-cta" data-layout={layout} data-panel={panel ? true : undefined} data-scheme={panel || undefined}>
-      <Content className="pk-cta-content" />
+    <div className="qb-cta" data-layout={layout} data-panel={panel ? true : undefined} data-scheme={panel || undefined}>
+      <Content className="qb-cta-content" />
     </div>
   ),
 });
@@ -313,7 +313,7 @@ export const CardGrid = defineSection({
   render: ({ header: h, cards: Cards, columns, gap: g }, ctx) => (
     <>
       <SectionHeader value={h} ctx={ctx} />
-      <Cards className="pk-grid" style={colsStyle(columns, g)} />
+      <Cards className="qb-grid" style={colsStyle(columns, g)} />
     </>
   ),
 });
@@ -344,29 +344,29 @@ export const Slideshow = defineSection({
   },
   render: ({ slides, height, contentAnchor, overlay }, ctx) => (
     <div
-      className="pk-slideshow"
-      style={{ "--pk-slide-h": height, "--pk-overlay": overlay / 100 } as CSSProperties}
+      className="qb-slideshow"
+      style={{ "--qb-slide-h": height, "--qb-overlay": overlay / 100 } as CSSProperties}
       role="region"
       aria-roledescription="carousel"
     >
       {slides.map((s, i) => {
         const m = resolveMedia(s.media, ctx.metadata);
         return (
-          <div className="pk-slide" key={i} aria-label={`${i + 1} / ${slides.length}`} style={anchorFlex(contentAnchor, "column")}>
+          <div className="qb-slide" key={i} aria-label={`${i + 1} / ${slides.length}`} style={anchorFlex(contentAnchor, "column")}>
             {m ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={m.src} alt={m.alt} loading={i === 0 ? "eager" : "lazy"} style={{ objectPosition: m.objectPosition }} />
             ) : null}
-            <div className={cx("pk-slide-content", "pk-stack")} style={{ "--pk-dir": "column", gap: gap("xs") } as CSSProperties}>
-              {s.eyebrow ? <p className="pk-eyebrow pk-font-accent">{s.eyebrow}</p> : null}
+            <div className={cx("qb-slide-content", "qb-stack")} style={{ "--qb-dir": "column", gap: gap("xs") } as CSSProperties}>
+              {s.eyebrow ? <p className="qb-eyebrow qb-font-accent">{s.eyebrow}</p> : null}
               {s.title ? (
-                <h2 className="pk-heading pk-font-display" style={{ fontSize: "var(--pk-step-5)" }}>
+                <h2 className="qb-heading qb-font-display" style={{ fontSize: "var(--qb-step-5)" }}>
                   {s.title}
                 </h2>
               ) : null}
               {s.text ? <p>{s.text}</p> : null}
               {s.buttonLabel && resolveLink(s.link, ctx.metadata) ? (
-                <a className="pk-button" href={ctx.isEditing ? undefined : resolveLink(s.link, ctx.metadata)} {...linkTarget(s.link)}>
+                <a className="qb-button" href={ctx.isEditing ? undefined : resolveLink(s.link, ctx.metadata)} {...linkTarget(s.link)}>
                   {s.buttonLabel}
                 </a>
               ) : null}

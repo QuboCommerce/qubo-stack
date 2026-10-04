@@ -332,6 +332,9 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
   `/health`, `/api/auth/*` and `/webhooks/*` stay unversioned.
 - Never hardcode hostnames: `siteUrl()` / `adminUrl()` from `@qubo/shared`,
   env `PLATFORM_BASE_DOMAIN`, `ADMIN_SUBDOMAIN`, `PORTAL_URL` (unset = pure self-host).
+- Naming: the product is **Qubo**. Packages are `@qubo/*`, apps `qubo-*`, env vars
+  `QUBO_*`, CSS classes and custom properties `qb-` / `--qb-` (`CSS_PREFIX` in
+  `@qubo/stylekit`). No other prefix or legacy project name may appear in code.
 - Every user-facing change gets a changeset (`pnpm changeset`).
 - Tailwind v4 CSS-first config (no `tailwind.config.js`); tokens in
   `app/globals.css`.
