@@ -1,21 +1,29 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { siteTypePresets } from "@qubo/blocks/presets";
-import { siteQuota } from "@qubo/portal-client";
 import { SettingsGroup, Surface } from "@/components/settings/settings-group";
 import { SettingsPage } from "@/components/settings/settings-page";
 import { SiteAvatar } from "@/components/shell/qubo-mark";
 import { Button } from "@/components/ui/button";
-import { requireSite } from "@/lib/admin";
+import { getAccess, requireSite } from "@/lib/admin";
 import { localeLabel } from "@/lib/format";
 
 export default async function SiteSettings({ params }: { params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
   const { site, sites } = await requireSite(slug);
   const own = sites.filter((s) => s.organizationId === site.organizationId);
-  const quota = await siteQuota(site.organizationId);
-  const quotaLine = quota.limit === null ? `${quota.used} sites in this organization.` : `${quota.used} of ${quota.limit} ${quota.limit === 1 ? "site" : "sites"} in this organization.`;
-  const createTitle = quota.canCreate ? "The site wizard arrives with site presets" : quota.entitlements.plan === "free" ? "Free runs one site per instance. Link a Portal account on Growth under Settings → Qubo Portal for more." : `Your ${quota.entitlements.plan} plan allows ${quota.limit} sites.`;
+  const licence = await getAccess();
+  const usage = (q: { used: number; limit: number | null }, noun: string) => {
+    const plural = (n: number) => `${noun}${n === 1 ? "" : "s"}`;
+    if (q.limit === null) return `${q.used} ${plural(q.used)}`;
+    return q.used <= q.limit ? `${q.used} of ${q.limit} ${plural(q.limit)}` : `${q.used} ${plural(q.used)} (plan covers ${q.limit})`;
+  };
+  const quotaLine = `${own.length} in this organisation · ${usage(licence.sites, "site")} and ${usage(licence.orgs, "organisation")} on this instance.`;
+  const createTitle = licence.sites.canCreate
+    ? "The site wizard arrives with site presets"
+    : licence.entitlements.plan === "free"
+      ? "Free runs one site. Link a Portal account under Settings → Qubo Portal for more."
+      : `Your ${licence.entitlements.plan} plan covers ${licence.sites.limit} sites across all organisations. Delete a site to free one up, or upgrade.`;
 
   return (
     <SettingsPage

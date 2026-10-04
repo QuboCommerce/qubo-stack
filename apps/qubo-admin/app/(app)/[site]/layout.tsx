@@ -15,6 +15,8 @@ export default async function SiteLayout({ children, params }: { children: React
     capabilities: [...(s.capabilities ?? [])],
     domain: s.domain,
     url: s.url,
+    organization: { id: s.organizationId, name: s.organizationName },
+    locked: s.locked,
   });
 
   return (

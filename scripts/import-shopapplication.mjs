@@ -226,6 +226,8 @@ async function importDatabase(products, customers) {
   }
 
   const sql = postgres(databaseUrl, { max: 1 });
+  // Id namespace predates the one-org-per-legal-entity split; keep it so re-imports hit the same row.
+  // TailG lives in its own org (TLG Belgium): scripts/data/split-mostapha-orgs.sql.
   const organizationId = stableUuid("organization", "wooster");
   // Namespace stays "store": changing it would mint new ids on re-import.
   const siteId = stableUuid("store", "hm-froid");
@@ -239,9 +241,11 @@ async function importDatabase(products, customers) {
       await tx`insert into "user" (id, name, email, email_verified, role)
         values (${ownerId}, ${process.env.HMF_OWNER_NAME ?? "Mostapha"}, ${ownerEmail}, true, 'ADMIN')
         on conflict (id) do update set name = excluded.name, email = excluded.email, role = 'ADMIN'`;
-      await tx`insert into organization (id, name, slug)
-        values (${organizationId}, 'Wooster', 'wooster')
-        on conflict (slug) do update set name = excluded.name`;
+      await tx`insert into organization (id, name, slug, legal_name, legal_form, company_number, vat_number, address_line1, postal_code, city, country)
+        values (${organizationId}, 'H&M Catering Equipement', 'hm-catering', 'H.M. CATERING EQUIPEMENT', 'SA', '0859.752.174', 'BE0859752174',
+                'Avenue Raymond Vander Bruggen 18-20', '1070', 'Anderlecht', 'BE')
+        on conflict (id) do update set name = excluded.name, slug = excluded.slug, legal_name = excluded.legal_name, legal_form = excluded.legal_form,
+          company_number = excluded.company_number, vat_number = excluded.vat_number`;
       await tx`insert into organization_member (id, organization_id, user_id, role)
         values (${stableUuid("organization-member", `${organizationId}:${ownerId}`)}, ${organizationId}, ${ownerId}, 'OWNER')
         on conflict (organization_id, user_id) do update set role = 'OWNER'`;

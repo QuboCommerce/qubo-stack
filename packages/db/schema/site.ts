@@ -16,10 +16,27 @@ export const organizationRoleEnum = pgEnum("organization_role", [
   "VIEWER",
 ]);
 
+/**
+ * One organisation = one legal entity (its own VAT number, invoices, customers and GDPR
+ * controller). Sites are brands/storefronts of that entity. Never put two companies in one org.
+ */
 export const organization = pgTable("organization", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /** Display name in the admin, e.g. "TLG Belgium". */
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  /** As registered, e.g. "TLG-BELGIUM" (KBO/BCE in Belgium). Used on invoices and legal pages. */
+  legalName: text("legal_name"),
+  legalForm: text("legal_form"),
+  /** National company number, e.g. Belgian enterprise number 0655.678.923. */
+  companyNumber: text("company_number"),
+  vatNumber: text("vat_number"),
+  addressLine1: text("address_line1"),
+  addressLine2: text("address_line2"),
+  postalCode: text("postal_code"),
+  city: text("city"),
+  /** ISO 3166-1 alpha-2. */
+  country: text("country"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

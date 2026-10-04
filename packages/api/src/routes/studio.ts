@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import * as studio from "@qubo/studio";
 import { tenancy } from "../plugins/tenancy";
-import { assertSiteAccess } from "../lib/tenancy";
+import { assertSiteEditable } from "../lib/tenancy";
 import { db } from "@qubo/db/client";
 import { siteSettings } from "@qubo/db/schema";
 import { eq } from "drizzle-orm";
@@ -30,7 +30,9 @@ export const studioRoutes = new Elysia({ prefix: "/studio" })
   .use(tenancy)
   .resolve(async ({ site, actor, status }) => {
     if (!site) return status(400, { error: "site_not_resolved" });
-    if (!actor || !(await assertSiteAccess(actor, site))) return status(403, { error: "forbidden" });
+    const gate = await assertSiteEditable(actor, site);
+    if (gate === "locked") return status(402, { error: "site_locked" });
+    if (gate !== "ok" || !actor) return status(403, { error: "forbidden" });
     return { scope: { siteId: site.id, userId: actor.id } satisfies studio.Scope, siteSlug: site.slug };
   })
 
