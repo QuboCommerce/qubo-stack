@@ -75,6 +75,8 @@ export function RadioCard({
   name,
   value,
   defaultChecked,
+  checked,
+  onChange,
   title,
   description,
   icon,
@@ -83,6 +85,8 @@ export function RadioCard({
   name: string;
   value: string;
   defaultChecked?: boolean;
+  checked?: boolean;
+  onChange?: () => void;
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -90,7 +94,7 @@ export function RadioCard({
 }) {
   return (
     <label className="group relative flex cursor-pointer flex-col gap-2 rounded-xl border bg-card p-3.5 transition hover:border-foreground/30 has-[:checked]:border-foreground has-[:checked]:shadow-[0_0_0_1px_var(--color-foreground)] has-[:disabled]:cursor-default">
-      <input type="radio" name={name} value={value} defaultChecked={defaultChecked} className="peer sr-only" />
+      <input type="radio" name={name} value={value} defaultChecked={defaultChecked} checked={checked} onChange={onChange} className="peer sr-only" />
       <span className="flex items-center gap-2.5">
         <span className="grid size-8 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors group-has-[:checked]:bg-foreground group-has-[:checked]:text-background">
           {icon}
