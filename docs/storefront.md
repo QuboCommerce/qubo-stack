@@ -86,6 +86,18 @@ the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the
 - **Open Qubo:** `/api/account` adds `panelUrl` (panel sign-in, e-mail prefilled) for staff of the
   site; the Account block shows it as a button. One-time handoff tokens replace this in Phase 2.
 
+## Forms and chat
+
+- **Forms:** every form block posts to `/api/forms/:key` (JSON, urlencoded or multipart; no-JS posts
+  get a 303 back with `?form_status=sent|error`). It forwards to `POST /v1/forms/:key` with a signed
+  visitor IP for rate limiting. Submissions open inbox conversations.
+- **Chat** (`ChatLauncher` block, "Live chat"; requires `leads`): `/api/chat` (thread),
+  `/api/chat/messages` (send) and `/api/chat/stream` (SSE of staff replies) proxy to `/v1/chat*`.
+  Anonymous visitors are identified by the httpOnly `qb_chat` cookie (minted on the first message,
+  path `/api/chat`, 180 days; only its sha256 is stored), signed-in customers by their session; an
+  anonymous chat is claimed by the customer who signs in on that browser. Visitors only ever see
+  public messages. Put the block in the footer layout to show it on every page.
+
 ## Maintenance
 
 When `site_settings.maintenance_mode` is on (and `maintenance_end` not passed), every page renders the

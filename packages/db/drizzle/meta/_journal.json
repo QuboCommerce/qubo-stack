@@ -99,6 +99,13 @@
       "when": 1791095610759,
       "tag": "0013_inbox",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791096950463,
+      "tag": "0014_inbox_chat",
+      "breakpoints": true
     }
   ]
 }

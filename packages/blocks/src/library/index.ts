@@ -7,6 +7,7 @@ import { dataSections, formSections, siteSections } from "./sections/more";
 import { siteChromeSections } from "./sections/site";
 import { commerceSections } from "./sections/commerce";
 import { accountSections } from "./sections/account";
+import { chatBlocks } from "./sections/chat";
 
 export * from "./elements";
 export * from "./layout";
@@ -16,6 +17,7 @@ export * from "./sections/more";
 export * from "./sections/site";
 export * from "./sections/commerce";
 export * from "./sections/account";
+export * from "./sections/chat";
 export { useCart, CartCount, ClearCart, type CartLine } from "./cart";
 export { header, headerFields, SectionHeader, type HeaderValue } from "./sections/header";
 export { iconNames, iconSet, IconGlyph } from "./icons";
@@ -31,6 +33,7 @@ export const library = [
   ...dataSections,
   ...commerceSections,
   ...accountSections,
+  ...chatBlocks,
   ...layoutBlocks,
   ...elementBlocks,
 ];

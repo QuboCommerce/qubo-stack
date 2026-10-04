@@ -1,8 +1,9 @@
 import { db, sql } from "@qubo/db/client";
 import { conversation, form, formSubmission, message, site, type MessageAttachment } from "@qubo/db/schema";
 import { publish } from "@qubo/realtime/server";
-import { and, count, desc, eq, isNotNull } from "drizzle-orm";
-import { cleanFormData, formNameFromKey, formThread, isSignupOnly, LIMITS, replySubject, textToHtml, type Channel } from "./index";
+import { createHash } from "node:crypto";
+import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
+import { CHAT_AWAY_MS, chatSubject, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -182,7 +183,9 @@ export async function reply(input: {
 
   let delivered: boolean | null = null;
   let error: string | null = null;
-  if (!input.internal && conv.contactEmail) {
+  // Chat replies reach a visitor who is still in the chat live; e-mail is the fallback once they've left.
+  const visitorPresent = conv.channel === "chat" && conv.visitorSeenAt !== null && Date.now() - conv.visitorSeenAt.getTime() < CHAT_AWAY_MS;
+  if (!input.internal && conv.contactEmail && !visitorPresent) {
     const s = await db.query.site.findFirst({ where: eq(site.id, conv.siteId), columns: { name: true } });
     const previous = await db
       .select({ id: message.emailMessageId })
@@ -223,3 +226,140 @@ export async function updateConversation(
   if (row) await emit({ type: "conversation.updated", siteId, payload: { conversationId: id } });
   return Boolean(row);
 }
+
+// -------------------------------------------------------------------- chat ---
+
+/** Who is chatting: a signed-in customer and/or the anonymous cookie token. */
+export type ChatVisitor = { token: string | null; user: { id: string; name: string | null; email: string } | null };
+
+export type ChatMessage = { id: string; author: "customer" | "staff" | "ai" | "system"; name: string | null; body: string; createdAt: string };
+
+export type ChatThread = { conversationId: string | null; status: Status | null; contact: { name: string | null; email: string | null }; messages: ChatMessage[] };
+
+export const hashVisitorToken = (token: string) => createHash("sha256").update(`qubo-chat:${token}`).digest("hex");
+
+const toChatMessage = (m: { id: string; authorType: ChatMessage["author"]; authorName: string | null; body: string; createdAt: Date }): ChatMessage => ({
+  id: m.id,
+  author: m.authorType,
+  name: m.authorType === "customer" ? null : publicStaffName(m.authorName),
+  body: m.body,
+  createdAt: m.createdAt.toISOString(),
+});
+
+/**
+ * The visitor's chat on this site. Signed-in customers get their latest chat;
+ * an anonymous chat they started before signing in is claimed on the way.
+ */
+export async function findChat(siteId: string, v: ChatVisitor) {
+  const chat = and(eq(conversation.siteId, siteId), eq(conversation.channel, "chat"));
+  const byToken = v.token
+    ? await db.query.conversation.findFirst({ where: and(chat, eq(conversation.visitorTokenHash, hashVisitorToken(v.token))) })
+    : undefined;
+  if (!v.user) return byToken ?? null;
+  if (byToken && !byToken.customerId) {
+    const [claimed] = await db
+      .update(conversation)
+      .set({ customerId: v.user.id, contactName: byToken.contactName ?? v.user.name, contactEmail: byToken.contactEmail ?? v.user.email, updatedAt: new Date() })
+      .where(and(eq(conversation.id, byToken.id), isNull(conversation.customerId)))
+      .returning();
+    if (claimed) return claimed;
+  }
+  if (byToken?.customerId === v.user.id) return byToken;
+  return (await db.query.conversation.findFirst({ where: and(chat, eq(conversation.customerId, v.user.id)), orderBy: desc(conversation.lastMessageAt) })) ?? null;
+}
+
+/** Public messages of the visitor's chat (never internal notes). Marks the visitor as present. */
+export async function chatThread(siteId: string, v: ChatVisitor): Promise<ChatThread> {
+  const conv = await findChat(siteId, v);
+  const contact = { name: conv?.contactName ?? v.user?.name ?? null, email: conv?.contactEmail ?? v.user?.email ?? null };
+  if (!conv) return { conversationId: null, status: null, contact, messages: [] };
+  await chatSeen(conv.id);
+  const rows = await db
+    .select({ id: message.id, authorType: message.authorType, authorName: message.authorName, body: message.body, createdAt: message.createdAt })
+    .from(message)
+    .where(and(eq(message.conversationId, conv.id), eq(message.internal, false)))
+    .orderBy(desc(message.createdAt))
+    .limit(LIMITS.chatHistory);
+  return { conversationId: conv.id, status: conv.status, contact, messages: rows.reverse().map(toChatMessage) };
+}
+
+export type ChatSendResult =
+  | { ok: true; conversationId: string; created: boolean; message: ChatMessage }
+  | { ok: false; error: "empty" | "too_long" | "invalid_email" | "no_identity" };
+
+/** Visitor message: opens the chat on first send, reopens a resolved one later. */
+export async function chatSend(
+  siteId: string,
+  v: ChatVisitor,
+  input: { body: string; name?: string; email?: string; pagePath?: string },
+): Promise<ChatSendResult> {
+  const body = input.body.trim();
+  if (!body) return { ok: false, error: "empty" };
+  if (body.length > LIMITS.chatMessageLength) return { ok: false, error: "too_long" };
+  const email = input.email?.trim().toLowerCase() || null;
+  if (email && !isEmail(email)) return { ok: false, error: "invalid_email" };
+  const name = input.name?.trim().slice(0, 120) || null;
+  if (!v.user && !v.token) return { ok: false, error: "no_identity" };
+
+  const existing = await findChat(siteId, v);
+  const now = new Date();
+  if (!existing) {
+    const contactName = v.user?.name ?? name;
+    const contactEmail = v.user?.email ?? email;
+    const { conversation: conv, messageId } = await db.transaction(async (tx) => {
+      const opened = await openConversation(
+        { siteId, channel: "chat", subject: chatSubject(body), body, contactName, contactEmail, customerId: v.user?.id ?? null },
+        tx,
+      );
+      await tx
+        .update(conversation)
+        .set({ visitorTokenHash: v.token ? hashVisitorToken(v.token) : null, visitorSeenAt: now, tags: input.pagePath ? [`page:${input.pagePath.slice(0, 120)}`] : [] })
+        .where(eq(conversation.id, opened.conversation.id));
+      if (input.pagePath) {
+        // Same transaction = same now(); 1 ms earlier keeps the note above the first message.
+        const createdAt = new Date(opened.conversation.createdAt.getTime() - 1);
+        await tx
+          .insert(message)
+          .values({ conversationId: opened.conversation.id, authorType: "system", body: `Started on ${input.pagePath.slice(0, 300)}`, internal: true, createdAt });
+      }
+      return opened;
+    });
+    await emit({ type: "conversation.created", siteId, payload: { conversationId: conv.id } });
+    return { ok: true, conversationId: conv.id, created: true, message: { id: messageId, author: "customer", name: null, body, createdAt: conv.createdAt.toISOString() } };
+  }
+
+  const [msg] = await db
+    .insert(message)
+    .values({ conversationId: existing.id, authorType: "customer", authorId: v.user?.id ?? null, authorName: existing.contactName ?? name ?? existing.contactEmail, body })
+    .returning();
+  await db
+    .update(conversation)
+    .set({
+      lastMessageAt: now,
+      updatedAt: now,
+      visitorSeenAt: now,
+      unread: true,
+      status: "open",
+      snoozedUntil: null,
+      contactName: existing.contactName ?? name,
+      contactEmail: existing.contactEmail ?? email,
+    })
+    .where(eq(conversation.id, existing.id));
+  await emit({ type: "conversation.message", siteId, payload: { conversationId: existing.id, messageId: msg!.id } });
+  return { ok: true, conversationId: existing.id, created: false, message: toChatMessage(msg!) };
+}
+
+/** The visitor still has the chat open (stream connected / heartbeat). */
+export async function chatSeen(conversationId: string) {
+  await db.update(conversation).set({ visitorSeenAt: new Date() }).where(eq(conversation.id, conversationId));
+}
+
+/** One message as the visitor may see it; null for internal notes or other conversations. */
+export async function chatMessage(conversationId: string, messageId: string): Promise<ChatMessage | null> {
+  const m = await db.query.message.findFirst({
+    where: and(eq(message.id, messageId), eq(message.conversationId, conversationId), eq(message.internal, false)),
+  });
+  return m ? toChatMessage(m) : null;
+}
+
+

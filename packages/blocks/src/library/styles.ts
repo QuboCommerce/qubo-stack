@@ -298,6 +298,46 @@ textarea.qb-input { resize: vertical; }
 .qb-form[data-state="sending"], .qb-form-inline[data-state="sending"] { opacity: .6; pointer-events: none; }
 .qb-form-success { margin: 0; padding: var(--qb-gap-sm); border-radius: var(--qb-radius-md); background: color-mix(in oklab, var(--qb-text) 6%, transparent); }
 
+/* ---- live chat --------------------------------------------------------- */
+.qb-chat { position: fixed; z-index: 60; bottom: 1.25rem; inset-inline-end: 1.25rem; display: flex; flex-direction: column; align-items: flex-end; gap: 0.75rem; font-size: var(--qb-step-n1); }
+.qb-chat[data-position="left"] { inset-inline: 1.25rem auto; align-items: flex-start; }
+.qb-chat[data-preview] { position: relative; inset: auto; padding: var(--qb-gap-sm); align-items: flex-end; }
+.qb-chat-launcher {
+  position: relative; display: inline-flex; align-items: center; gap: 0.5em; border: 0; cursor: pointer; font: inherit; font-weight: 600;
+  padding: 0.85em; border-radius: var(--qb-radius-full); background: var(--qb-primary); color: var(--qb-on-primary);
+  box-shadow: 0 10px 30px -10px color-mix(in oklab, var(--qb-primary) 60%, transparent);
+  transition: transform var(--qb-duration-fast) var(--qb-ease);
+}
+.qb-chat-launcher:hover { transform: translateY(-1px); }
+.qb-chat-launcher:focus-visible { outline: 2px solid var(--qb-focus-ring); outline-offset: 3px; }
+.qb-chat-launcher-label { display: none; padding-inline-end: 0.25em; }
+@media (min-width: 1024px) { .qb-chat-launcher[aria-expanded="false"] { padding-inline: 1em 1.2em; } .qb-chat-launcher[aria-expanded="false"] .qb-chat-launcher-label { display: inline; } }
+.qb-chat-badge {
+  position: absolute; top: -0.3em; inset-inline-end: -0.3em; min-width: 1.4em; height: 1.4em; padding-inline: 0.35em; border-radius: var(--qb-radius-full);
+  display: grid; place-items: center; font-size: 0.75em; background: var(--qb-accent); color: var(--qb-on-accent); border: 2px solid var(--qb-background);
+}
+.qb-chat-panel {
+  display: flex; flex-direction: column; width: min(24rem, calc(100vw - 2.5rem)); height: min(34rem, calc(100dvh - 7rem));
+  background: var(--qb-background); color: var(--qb-text); border: var(--qb-border-width, 1px) solid var(--qb-border);
+  border-radius: var(--qb-radius-lg); overflow: hidden; box-shadow: 0 24px 60px -20px rgb(0 0 0 / 0.35);
+}
+.qb-chat-head { display: flex; align-items: center; justify-content: space-between; padding: 0.85em 1em; background: var(--qb-primary); color: var(--qb-on-primary); }
+.qb-chat-close { border: 0; background: transparent; color: inherit; font-size: 1.5em; line-height: 1; cursor: pointer; padding: 0 0.2em; }
+.qb-chat-list { flex: 1; overflow-y: auto; margin: 0; padding: 1em; list-style: none; display: flex; flex-direction: column; gap: 0.6em; background: color-mix(in oklab, var(--qb-text) 3%, var(--qb-background)); }
+.qb-chat-msg { max-width: 85%; align-self: flex-start; }
+.qb-chat-msg p { margin: 0; padding: 0.6em 0.85em; border-radius: var(--qb-radius-md); white-space: pre-wrap; overflow-wrap: anywhere; background: var(--qb-surface); color: var(--qb-on-surface); }
+.qb-chat-msg[data-author="customer"] { align-self: flex-end; }
+.qb-chat-msg[data-author="customer"] p { background: var(--qb-primary); color: var(--qb-on-primary); }
+.qb-chat-msg[data-pending] { opacity: 0.6; }
+.qb-chat-name { display: block; margin: 0 0 0.2em 0.2em; font-size: 0.85em; color: var(--qb-text-muted); }
+.qb-chat-form { display: flex; flex-direction: column; gap: 0.5em; padding: 0.75em; border-top: var(--qb-border-width, 1px) solid var(--qb-border); }
+.qb-chat-contact { display: grid; gap: 0.4em; }
+.qb-chat-contact p { margin: 0; color: var(--qb-text-muted); }
+.qb-chat-contact .qb-input, .qb-chat-compose .qb-input { min-height: 0; padding: 0.55em 0.75em; }
+.qb-chat-compose { display: flex; gap: 0.5em; align-items: flex-end; }
+.qb-chat-compose textarea { resize: none; }
+.qb-chat .qb-form-error { margin: 0; }
+
 /* ---- site & data ------------------------------------------------------- */
 .qb-map { display: grid; gap: var(--qb-gap-lg); align-items: start; }
 @media (min-width: 1024px) { .qb-map[data-details] { grid-template-columns: 1fr 2fr; } }

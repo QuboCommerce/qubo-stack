@@ -253,6 +253,9 @@ importers:
       '@qubo/portal-client':
         specifier: workspace:*
         version: link:../portal-client
+      '@qubo/realtime':
+        specifier: workspace:*
+        version: link:../realtime
       '@qubo/shared':
         specifier: workspace:*
         version: link:../shared
