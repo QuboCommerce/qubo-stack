@@ -10,6 +10,16 @@ import { requireSite } from "@/lib/admin";
 import { relativeTime, shortDate } from "@/lib/format";
 
 const planLabel: Record<string, string> = { free: "Free", starter: "Starter", growth: "Growth", agency: "Agency" };
+const portalErrors: Record<string, string> = {
+  unknown_instance: "The Portal no longer recognises this instance (it was revoked or removed there). Unlink, then link again with a new token",
+  bad_signature: "The Portal rejected this instance's signature. Unlink and link again",
+  clock_skew: "This server's clock is more than 5 minutes off. Fix NTP and refresh",
+  protocol_unsupported: "This Qubo version is too old for the Portal. Update Qubo",
+};
+const describeError = (raw: string) => {
+  const code = raw.match(/^portal \d+ (\S+)/)?.[1];
+  return (code && portalErrors[code]) ?? (/fetch|timeout|ECONN|ENOTFOUND/i.test(raw) ? "Could not reach the Portal" : raw);
+};
 const fmtLimit = (n: number | null) => (n === null ? "Unlimited" : String(n));
 
 export default async function PortalSettings({ params }: { params: Promise<{ site: string }> }) {
@@ -69,7 +79,7 @@ export default async function PortalSettings({ params }: { params: Promise<{ sit
               {link.lastError && (
                 <p className="flex items-start gap-2 text-sm text-muted-foreground">
                   <AlertCircle className="mt-0.5 size-4 shrink-0 text-amber-600" strokeWidth={1.8} />
-                  Last attempt failed: {link.lastError}. The instance keeps running on the cached licence.
+                  {describeError(link.lastError)}. The instance keeps running on its cached licence.
                 </p>
               )}
               <div className="flex flex-wrap gap-2">
