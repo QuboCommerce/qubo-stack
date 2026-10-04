@@ -44,6 +44,7 @@ export async function listConversations(siteId: string, view: InboxView, userId:
       assigneeId: conversation.assigneeId,
       lastMessageAt: conversation.lastMessageAt,
       snoozedUntil: conversation.snoozedUntil,
+      tags: conversation.tags,
     })
     .from(conversation)
     .where(and(eq(conversation.siteId, siteId), viewFilter(view, userId), search))

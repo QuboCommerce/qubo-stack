@@ -65,3 +65,4 @@ export * from "./leases";
 
 // Portal link (instance ↔ Qubo Portal)
 export * from "./portal";
+export * from "./ai";

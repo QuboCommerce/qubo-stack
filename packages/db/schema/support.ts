@@ -17,6 +17,20 @@ export const messageAuthorEnum = pgEnum("message_author", ["customer", "staff", 
 /** Display copy of a file on a message. `id` points at `inbox_file`; `url` is only set for links that live elsewhere. */
 export type MessageAttachment = { id?: string; name: string; url?: string; size?: number; type?: string };
 
+/** What the inbox AI made of a conversation, as of `messageId` (the last customer message it read). */
+export type ConversationAi = {
+  summary: string;
+  category: string;
+  sentiment: "positive" | "neutral" | "negative";
+  urgency: "low" | "normal" | "high" | "urgent";
+  language: string | null;
+  spam: boolean;
+  extracted: { orderNumber?: string | null; phone?: string | null; products?: string[] };
+  model: string;
+  messageId: string;
+  at: string;
+};
+
 export const conversation = pgTable(
   "conversation",
   {
@@ -39,6 +53,7 @@ export const conversation = pgTable(
     visitorTokenHash: text("visitor_token_hash"),
     /** Chat: last time the visitor had the chat open; staff replies are e-mailed only when they're away. */
     visitorSeenAt: timestamp("visitor_seen_at"),
+    ai: jsonb("ai").$type<ConversationAi>(),
     /** True while the latest customer message hasn't been opened by staff. */
     unread: boolean("unread").notNull().default(true),
     snoozedUntil: timestamp("snoozed_until"),

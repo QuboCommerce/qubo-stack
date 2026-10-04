@@ -26,6 +26,9 @@ importers:
       '@puckeditor/core':
         specifier: ^0.23.0
         version: 0.23.0(@floating-ui/dom@1.8.0)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(use-sync-external-store@1.6.0(react@19.2.8))
+      '@qubo/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@qubo/blocks':
         specifier: workspace:*
         version: link:../../packages/blocks
@@ -245,6 +248,25 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  packages/ai:
+    dependencies:
+      '@qubo/db':
+        specifier: workspace:*
+        version: link:../db
+      '@qubo/portal-client':
+        specifier: workspace:*
+        version: link:../portal-client
+      drizzle-orm:
+        specifier: ^0.44
+        version: 0.44.7(bun-types@1.4.2)(gel@2.2.0)(kysely@0.29.4)(postgres@3.4.9)
+    devDependencies:
+      '@types/node':
+        specifier: ^22
+        version: 22.20.1
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
   packages/api:
     dependencies:
       '@elysiajs/cors':
@@ -353,6 +375,9 @@ importers:
 
   packages/inbox:
     dependencies:
+      '@qubo/ai':
+        specifier: workspace:*
+        version: link:../ai
       '@qubo/db':
         specifier: workspace:*
         version: link:../db

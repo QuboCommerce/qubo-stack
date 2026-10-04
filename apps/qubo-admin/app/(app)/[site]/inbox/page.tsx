@@ -3,6 +3,8 @@ import { CHAT_AWAY_MS, siteInboundAddress, slaState } from "@qubo/inbox";
 import { ArrowLeft, Bot, FileText, Globe, Inbox, Mail, MessageCircle, Search, ShieldAlert, Ticket } from "lucide-react";
 import { emailConfigured, inboundDomain } from "@qubo/inbox/server";
 import { cn } from "@qubo/shared/utils";
+import { aiEntitled, getAiSettings } from "@qubo/ai/server";
+import { AiCard } from "@/components/inbox/ai-card";
 import { Composer } from "@/components/inbox/composer";
 import { MessageFiles } from "@/components/inbox/files";
 import { ThreadControls } from "@/components/inbox/controls";
@@ -26,11 +28,12 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
   const { site, siteId, user } = await requireSite(slug);
   const view = parseView(sp.view);
   const conversationId = sp.c && /^[0-9a-f-]{36}$/i.test(sp.c) ? sp.c : undefined;
-  const [rows, counts, detail, members] = await Promise.all([
+  const [rows, counts, detail, members, ai] = await Promise.all([
     listConversations(siteId, view, user.id, sp.q),
     viewCounts(siteId, user.id),
     conversationId ? getConversation(siteId, conversationId) : null,
     assignableMembers(site.organizationId),
+    inboxAi(site.organizationId),
   ]);
   const base = `/${slug}/inbox`;
   const inbound = inboundDomain();
@@ -79,7 +82,7 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
 
         <section className={cn("min-h-0 flex-col", sp.c ? "flex" : "hidden md:flex")}>
           {detail ? (
-            <Thread detail={detail} site={slug} backHref={href({ c: undefined })} members={members} />
+            <Thread detail={detail} site={slug} backHref={href({ c: undefined })} members={members} ai={ai} />
           ) : (
             <div className="grid flex-1 place-items-center p-6">
               {sp.c ? (
@@ -99,7 +102,7 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
           )}
         </section>
 
-        <aside className="hidden min-h-0 overflow-y-auto border-l xl:block">{detail && <Context detail={detail} site={slug} />}</aside>
+        <aside className="hidden min-h-0 overflow-y-auto border-l xl:block">{detail && <Context detail={detail} site={slug} ai={ai} />}</aside>
       </div>
     </Page>
   );
@@ -108,6 +111,7 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
 function ListItem({ row, active, href }: { row: ConversationRow; active: boolean; href: string }) {
   const Icon = channelIcon[row.channel];
   const sla = slaState(row.status, row.lastFrom, row.lastMessageAt);
+  const category = row.tags.find((t) => t.startsWith("ai:"))?.slice(3);
   return (
     <li>
       <Link href={href} scroll={false} className={cn("block px-3 py-2.5 hover:bg-accent/50", active && "bg-accent")}>
@@ -121,6 +125,8 @@ function ListItem({ row, active, href }: { row: ConversationRow; active: boolean
         <p className="mt-0.5 flex items-center gap-1.5 truncate text-[13px]">
           <Icon className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="truncate">{row.subject}</span>
+          {row.tags.includes("spam") && <span className="shrink-0 rounded bg-destructive/10 px-1 text-[11px] font-medium text-destructive">spam</span>}
+          {category && <span className="shrink-0 rounded bg-violet-500/10 px-1 text-[11px] font-medium text-violet-700 dark:text-violet-300">{category}</span>}
           {priorityTone[row.priority] && <span className={cn("shrink-0 rounded px-1 text-[11px] font-medium", priorityTone[row.priority])}>{row.priority}</span>}
           {sla && sla.level !== "ok" && (
             <span className={cn("shrink-0 rounded px-1 text-[11px] font-medium", slaTone[sla.level])} title="Customer is waiting for an answer">
@@ -138,7 +144,7 @@ function ListItem({ row, active, href }: { row: ConversationRow; active: boolean
   );
 }
 
-function Thread({ detail, site, backHref, members }: { detail: ConversationDetail; site: string; backHref: string; members: { id: string; name: string }[] }) {
+function Thread({ detail, site, backHref, members, ai }: { detail: ConversationDetail; site: string; backHref: string; members: { id: string; name: string }[]; ai: InboxAi }) {
   return (
     <>
       <MarkRead site={site} conversationId={detail.id} unread={detail.unread} />
@@ -202,9 +208,19 @@ function Thread({ detail, site, backHref, members }: { detail: ConversationDetai
         contactEmail={detail.contactEmail}
         emailReady={emailConfigured()}
         chat={detail.channel === "chat" ? { online: chatOnline(detail.visitorSeenAt) } : undefined}
+        aiDrafts={ai?.drafts}
       />
     </>
   );
+}
+
+type InboxAi = { triage: boolean; drafts: boolean } | null;
+
+/** Null unless the plan has AI and the organisation saved a provider. */
+async function inboxAi(orgId: string): Promise<InboxAi> {
+  if (!(await aiEntitled(orgId))) return null;
+  const s = await getAiSettings(orgId);
+  return s && { triage: s.triage, drafts: s.drafts };
 }
 
 // Server-rendered snapshot; InboxLive refreshes the page on every new message.
@@ -212,9 +228,10 @@ const chatOnline = (seen: Date | null) => seen !== null && Date.now() - seen.get
 
 const sectionTitle = "mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground";
 
-function Context({ detail, site }: { detail: ConversationDetail; site: string }) {
+function Context({ detail, site, ai }: { detail: ConversationDetail; site: string; ai: InboxAi }) {
   return (
     <div className="space-y-5 p-4 text-sm">
+      {ai && <AiCard site={site} conversationId={detail.id} ai={detail.ai} triage={ai.triage} />}
       <section>
         <h3 className={sectionTitle}>Contact</h3>
         <p className="font-medium">{detail.contactName ?? "Anonymous"}</p>

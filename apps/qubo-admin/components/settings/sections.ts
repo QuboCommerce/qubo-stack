@@ -15,6 +15,7 @@ import {
   Receipt,
   Scale,
   ShieldCheck,
+  Sparkles,
   Truck,
   Users,
   type LucideIcon,
@@ -47,6 +48,7 @@ export const settingsGroups: { label: string; items: SettingsSection[] }[] = [
     label: "Organization",
     items: [
       { slug: "users", label: "Users & permissions", description: "Who can access this organization and what they can do.", icon: Users, ready: true },
+      { slug: "ai", label: "AI", description: "Your own AI provider and key for inbox triage and reply drafts.", icon: Sparkles, ready: true },
       { slug: "sites", label: "Sites", description: "Every site this organization runs from one admin.", icon: AppWindow, ready: true },
       { slug: "portal", label: "Qubo Portal", description: "Optional link to a Portal account: plan, licence and update notices.", icon: Plug, ready: true },
     ],
