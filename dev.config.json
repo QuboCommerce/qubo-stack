@@ -55,7 +55,8 @@
       "health": "/login",
       "host": "dev.by-ali.dev",
       "env": {
-        "BETTER_AUTH_URL": "{url:admin}"
+        "BETTER_AUTH_URL": "{url:admin}",
+        "PORTAL_URL": "https://portal.qubo.dev.by-ali.dev"
       }
     },
     "web": {
