@@ -60,8 +60,10 @@ export function resolveMedia(media: MediaValue | null | undefined, meta: RenderM
   const src = asset?.url ?? media.url;
   if (!src) return null;
   const out: ResolvedMedia = { src, alt: media.alt || asset?.alt || "" };
-  if (asset?.width) out.width = asset.width;
-  if (asset?.height) out.height = asset.height;
+  const width = asset?.width ?? media.width;
+  const height = asset?.height ?? media.height;
+  if (width) out.width = width;
+  if (height) out.height = height;
   if (media.focal) out.objectPosition = `${Math.round(media.focal.x * 100)}% ${Math.round(media.focal.y * 100)}%`;
   return out;
 }

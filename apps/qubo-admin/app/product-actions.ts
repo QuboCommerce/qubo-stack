@@ -1,12 +1,13 @@
 "use server";
 
 import { db } from "@qubo/db/client";
-import { category, product, productCategory } from "@qubo/db/schema";
+import { category, product, productCategory, productImage } from "@qubo/db/schema";
+import { syncProductUsage } from "@qubo/storage/media";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { requireSiteFromForm } from "@/lib/admin";
+import { requireSite, requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
 import { emitEntity } from "@/lib/events";
 import { productSpec, productValues } from "@/lib/form-specs";
@@ -161,5 +162,31 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
     return { error: e instanceof Error ? e.message : "Something went wrong." };
   }
   if (createdId) redirect(`/${slugForRedirect}/products/${createdId}`);
+  return { ok: true, at: Date.now() };
+}
+
+const imagesSchema = z.object({
+  productId: z.uuid(),
+  images: z.array(z.object({ url: z.string().min(1).max(2000), alt: z.string().max(300) })).max(50),
+});
+
+/** Replaces the product's gallery (order = position; the first is the main image). */
+export async function setProductImagesAction(input: { site: string; productId: string; images: { url: string; alt: string }[] }): Promise<ActionState> {
+  const { site, siteId } = await requireSite(input.site);
+  const parsed = imagesSchema.safeParse(input);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid images." };
+  const { productId, images } = parsed.data;
+  const ok = await db.transaction(async (tx) => {
+    const [row] = await tx.select({ id: product.id }).from(product).where(and(eq(product.id, productId), eq(product.siteId, siteId)));
+    if (!row) return false;
+    await tx.delete(productImage).where(eq(productImage.productId, productId));
+    if (images.length) await tx.insert(productImage).values(images.map((img, position) => ({ productId, url: img.url, alt: img.alt || null, position })));
+    return true;
+  });
+  if (!ok) return { error: "Product not found." };
+  await syncProductUsage(productId, images.map((i) => i.url));
+  await emitEntity(siteId, "product", productId, "updated");
+  revalidatePath(`/${site.slug}/products/${productId}`);
+  revalidatePath(`/${site.slug}/products`);
   return { ok: true, at: Date.now() };
 }

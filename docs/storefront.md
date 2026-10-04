@@ -108,6 +108,12 @@ the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the
   duplicates (Message-ID) are dropped; 30 mails per sender per site per hour. Attachments are
   listed by name, not imported yet.
 
+## Media
+
+`/api/media/<org>/<asset>.<ext>` serves media-library files straight from storage (`@qubo/storage`
+`serveMedia`), so block and product image URLs are relative and work on every host of a site. Files
+are immutable (a new upload gets a new id) and cached for a year.
+
 ## Maintenance
 
 When `site_settings.maintenance_mode` is on (and `maintenance_end` not passed), every page renders the
@@ -123,4 +129,5 @@ site's `maintenance` template, or a built-in notice with `maintenance_message`, 
 | `QUBO_ADMIN_HOSTS` | Dev admin host override (default `qubo.<host>`) |
 | `ADMIN_SUBDOMAIN` | Admin host prefix (default `qubo`) |
 | `QUBO_REVALIDATE_SECRET` | Verifies publish hooks |
+| `STORAGE_DIR` / `STORAGE_ENDPOINT`… | Media files: local folder, or an S3-compatible bucket (see `.env.example`) |
 | `LEGACY_ASSET_ROOT` | Folder behind `/api/legacy-assets/*` |

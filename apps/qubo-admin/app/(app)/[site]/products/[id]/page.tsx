@@ -7,6 +7,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { saveProduct } from "@/app/product-actions";
 import { CategoryTree } from "@/components/categories/category-tree";
 import { Page } from "@/components/page";
+import { ProductMedia } from "@/components/products/product-media";
 import { Field, Select, SwitchRow, TextArea, TextInput } from "@/components/settings/controls";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { Surface } from "@/components/settings/settings-group";
@@ -80,18 +81,16 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
               </Field>
             </Card>
 
-            <Card title="Media" description={images.length ? `${images.length} image${images.length > 1 ? "s" : ""}` : "Uploads arrive with the media library."}>
-              {images.length ? (
-                <ul className="grid grid-cols-3 gap-2 @min-[40rem]:grid-cols-5 @min-[80rem]:grid-cols-7">
-                  {images.map((img, i) => (
-                    <li key={img.id} className={i === 0 ? "col-span-2 row-span-2" : undefined}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={assetUrl(img.url) ?? ""} alt={img.alt ?? ""} className="aspect-square size-full rounded-lg border bg-white object-contain p-1" />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
+            <Card title="Media" description={isNew ? "Save the product first, then add images." : "The first image is the main one. Changes save right away."}>
+              {isNew ? (
                 <div className="grid h-28 place-items-center rounded-lg border border-dashed text-muted-foreground"><ImageOff className="size-5" /></div>
+              ) : (
+                <ProductMedia
+                  site={site.slug}
+                  siteId={siteId}
+                  productId={id}
+                  initial={images.map((img) => ({ url: img.url, alt: img.alt ?? "", src: assetUrl(img.url) ?? img.url }))}
+                />
               )}
             </Card>
 

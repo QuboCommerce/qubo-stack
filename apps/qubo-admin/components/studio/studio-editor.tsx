@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { cn } from "@qubo/shared/utils";
 import type { SectionEntry } from "@/lib/section-catalog";
 import { AddSectionDialog } from "./add-section-dialog";
+import { mediaFieldAdapter } from "./media-field";
 import { discardDraftAction, loadDraftAction, publishAction } from "@/app/studio-actions";
 import { loadThemeAction, publishThemeAction } from "@/app/theme-actions";
 import { Button } from "@/components/ui/button";
@@ -141,8 +142,9 @@ export function StudioEditor(props: StudioEditorProps) {
       createEditorConfig(registry, {
         capabilities: site.capabilities,
         fieldContext: { theme: fieldTheme ?? undefined, audience },
+        adapters: { media: mediaFieldAdapter({ slug: site.slug, id: site.id }) },
       }) as Config,
-    [site.capabilities, fieldTheme, audience],
+    [site.capabilities, site.slug, site.id, fieldTheme, audience],
   );
 
   const metadata = useMemo(

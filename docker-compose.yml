@@ -51,6 +51,15 @@ services:
       - PORTAL_URL=${PORTAL_URL:-}
       - QUBO_CHANNEL=${QUBO_CHANNEL:-stable}
       - PORT=3333
+      # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
+      - STORAGE_DIR=/data/media
+      - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
+      - STORAGE_BUCKET=${STORAGE_BUCKET:-}
+      - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY:-}
+      - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
+      - STORAGE_REGION=${STORAGE_REGION:-auto}
+    volumes:
+      - media:/data/media
     depends_on:
       qubo-postgres:
         condition: service_healthy
@@ -79,6 +88,15 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-}
       - EMAIL_INBOUND_DOMAIN=${EMAIL_INBOUND_DOMAIN:-}
+      # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
+      - STORAGE_DIR=/data/media
+      - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
+      - STORAGE_BUCKET=${STORAGE_BUCKET:-}
+      - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY:-}
+      - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
+      - STORAGE_REGION=${STORAGE_REGION:-auto}
+    volumes:
+      - media:/data/media
     depends_on:
       qubo-postgres:
         condition: service_healthy
@@ -106,8 +124,16 @@ services:
       # Signs preview tokens and visitor IPs between API, admin and storefront.
       - QUBO_PREVIEW_SECRET=${QUBO_PREVIEW_SECRET:?set QUBO_PREVIEW_SECRET}
       - LEGACY_ASSET_ROOT=/data/legacy-products
+      # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
+      - STORAGE_DIR=/data/media
+      - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
+      - STORAGE_BUCKET=${STORAGE_BUCKET:-}
+      - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY:-}
+      - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
+      - STORAGE_REGION=${STORAGE_REGION:-auto}
     volumes:
       - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro
+      - media:/data/media
     depends_on:
       qubo-elysia:
         condition: service_started
@@ -138,5 +164,6 @@ networks:
 
 volumes:
   pgdata:
+  media:
   caddy_data:
   caddy_config:
