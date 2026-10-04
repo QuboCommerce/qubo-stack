@@ -1,3 +1,4 @@
+import { startHeartbeatLoop } from "@qubo/portal-client";
 import { app } from "./index";
 
 const port = Number(process.env.PORT ?? 3333);
@@ -7,3 +8,6 @@ const hostname = process.env.HOST ?? "0.0.0.0";
 app.listen({ port, hostname }, () => {
   console.log(`[qubo-api] listening on ${hostname}:${port}`);
 });
+
+// Portal heartbeat (no-op while unlinked). The API process is the one long-lived server-side runtime.
+startHeartbeatLoop();

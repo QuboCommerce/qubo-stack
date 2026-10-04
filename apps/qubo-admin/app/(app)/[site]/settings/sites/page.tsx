@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { siteTypePresets } from "@qubo/blocks/presets";
+import { siteQuota } from "@qubo/portal-client";
 import { SettingsGroup, Surface } from "@/components/settings/settings-group";
 import { SettingsPage } from "@/components/settings/settings-page";
 import { SiteAvatar } from "@/components/shell/qubo-mark";
@@ -12,6 +13,9 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
   const { site: slug } = await params;
   const { site, sites } = await requireSite(slug);
   const own = sites.filter((s) => s.organizationId === site.organizationId);
+  const quota = await siteQuota(site.organizationId);
+  const quotaLine = quota.limit === null ? `${quota.used} sites in this organization.` : `${quota.used} of ${quota.limit} ${quota.limit === 1 ? "site" : "sites"} in this organization.`;
+  const createTitle = quota.canCreate ? "The site wizard arrives with site presets" : quota.entitlements.plan === "free" ? "Free runs one site per instance. Link a Portal account on Growth under Settings → Qubo Portal for more." : `Your ${quota.entitlements.plan} plan allows ${quota.limit} sites.`;
 
   return (
     <SettingsPage
@@ -19,12 +23,12 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
       title="Sites"
       description="Each site has its own domain, theme, content and settings. Customers, team and media can be shared."
       actions={
-        <Button size="sm" variant="outline" disabled title="The site wizard arrives with site presets">
+        <Button size="sm" variant="outline" disabled title={createTitle}>
           <Plus /> Create site
         </Button>
       }
     >
-      <SettingsGroup title="Your sites" description={`${own.length} ${own.length === 1 ? "site" : "sites"} in this organization.`}>
+      <SettingsGroup title="Your sites" description={quotaLine}>
         <Surface flush className="divide-y">
           {own.map((s) => (
             <Link key={s.id} href={`/${s.slug}/settings/general`} className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/40 sm:px-5">

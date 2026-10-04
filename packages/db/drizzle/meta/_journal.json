@@ -71,6 +71,13 @@
       "when": 1791078348329,
       "tag": "0009_site_preview_pin",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791083665734,
+      "tag": "0010_portal_link",
+      "breakpoints": true
     }
   ]
 }
