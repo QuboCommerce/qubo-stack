@@ -55,6 +55,7 @@ and `checkout.session.async_payment_succeeded`.
 | `CHECKOUT_SHIPPING_CENTS` / `CHECKOUT_SHIPPING_LABEL` | Optional flat shipping rate |
 | `RESEND_API_KEY` / `ORDER_EMAIL_FROM` | Order confirmation email |
 | `EMAIL_FROM` | Sender for inbox replies and form notifications (falls back to `ORDER_EMAIL_FROM`) |
+| `EMAIL_INBOUND_DOMAIN` / `RESEND_WEBHOOK_SECRET` | Inbound e-mail into the inbox (see Forms, chat and e-mail) |
 
 ## Customer accounts
 
@@ -86,7 +87,7 @@ the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the
 - **Open Qubo:** `/api/account` adds `panelUrl` (panel sign-in, e-mail prefilled) for staff of the
   site; the Account block shows it as a button. One-time handoff tokens replace this in Phase 2.
 
-## Forms and chat
+## Forms, chat and e-mail
 
 - **Forms:** every form block posts to `/api/forms/:key` (JSON, urlencoded or multipart; no-JS posts
   get a 303 back with `?form_status=sent|error`). It forwards to `POST /v1/forms/:key` with a signed
@@ -97,6 +98,15 @@ the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the
   path `/api/chat`, 180 days; only its sha256 is stored), signed-in customers by their session; an
   anonymous chat is claimed by the customer who signs in on that browser. Visitors only ever see
   public messages. Put the block in the footer layout to show it on every page.
+- **E-mail in:** Resend receives mail on `EMAIL_INBOUND_DOMAIN` and calls
+  `POST https://api.<base>/webhooks/resend` (event `email.received`, signed with
+  `RESEND_WEBHOOK_SECRET`). Mail to `<site-slug>@<domain>` opens an `email` conversation, so a
+  shop's own mailbox can forward there. Staff replies carry `Reply-To: reply+<conversationId>@<domain>`
+  and a `<messageId@sender-domain>` Message-ID, so answers thread back by address, by
+  In-Reply-To/References, or as a last resort by sender plus subject (open threads, 30 days).
+  Quoted history is stripped from replies. Auto-replies, DMARC failures, our own sender and
+  duplicates (Message-ID) are dropped; 30 mails per sender per site per hour. Attachments are
+  listed by name, not imported yet.
 
 ## Maintenance
 

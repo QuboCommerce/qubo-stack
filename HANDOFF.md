@@ -324,9 +324,13 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    `conversation.visitor_token_hash`, or the customer session) and `/v1/chat*` on
    the API, whose `/stream` SSE filters the realtime hub to that one conversation.
    The stream keeps `visitor_seen_at` fresh; staff chat replies are e-mailed only
-   when the visitor has been away for `CHAT_AWAY_MS` (90 s). Not built yet: inbound
-   e-mail, portal tickets, snooze/SLA, form attachments, notify-email settings UI,
-   typing indicators.
+   when the visitor has been away for `CHAT_AWAY_MS` (90 s). E-mail in: Resend
+   `email.received` webhook at `/webhooks/resend` (Svix-verified, body fetched from
+   Resend). Routing: `reply+<conversationId>@EMAIL_INBOUND_DOMAIN`, then
+   In-Reply-To/References against `message.email_message_id`, then sender + base
+   subject, else `<site-slug>@` opens an `email` conversation. Not built yet:
+   attachment import, portal tickets, snooze/SLA, form attachments, notify-email
+   settings UI, typing indicators.
 
 ## Roadmap
 

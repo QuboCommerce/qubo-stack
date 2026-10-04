@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { CHAT_AWAY_MS } from "@qubo/inbox";
+import { CHAT_AWAY_MS, siteInboundAddress } from "@qubo/inbox";
 import { ArrowLeft, Bot, FileText, Globe, Inbox, Mail, MessageCircle, Search, ShieldAlert, Ticket } from "lucide-react";
-import { emailConfigured } from "@qubo/inbox/server";
+import { emailConfigured, inboundDomain } from "@qubo/inbox/server";
 import { cn } from "@qubo/shared/utils";
 import { Composer } from "@/components/inbox/composer";
 import { ThreadControls } from "@/components/inbox/controls";
@@ -30,6 +30,8 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
     assignableMembers(site.organizationId),
   ]);
   const base = `/${slug}/inbox`;
+  const inbound = inboundDomain();
+  const inboundAddress = inbound ? siteInboundAddress(site.slug, inbound) : null;
   const href = (next: Partial<Search>) => {
     const merged = { view, q: sp.q, c: conversationId, ...next };
     const q = new URLSearchParams();
@@ -65,6 +67,11 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
               <ListItem key={r.id} row={r} active={r.id === conversationId} href={href({ c: r.id })} />
             ))}
           </ul>
+          {inboundAddress && (
+            <p className="border-t px-3 py-2 text-xs text-muted-foreground" title="Mail sent or forwarded here lands in this inbox">
+              E-mail in: <span className="select-all font-mono text-foreground">{inboundAddress}</span>
+            </p>
+          )}
         </aside>
 
         <section className={cn("min-h-0 flex-col", sp.c ? "flex" : "hidden md:flex")}>
@@ -81,7 +88,7 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
                   description={
                     rows.length
                       ? "Select a conversation on the left to read and reply."
-                      : "Contact-form submissions show up here. Add a Contact form block to a page to start receiving messages."
+                      : `Form submissions and chats show up here. Add a Contact form or Live chat block to a page${inboundAddress ? `, or forward your mailbox to ${inboundAddress}` : ""}.`
                   }
                 />
               )}

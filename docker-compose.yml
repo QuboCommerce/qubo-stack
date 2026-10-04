@@ -46,6 +46,8 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - ORDER_EMAIL_FROM=${ORDER_EMAIL_FROM:-HM Froid <commandes@hmfroid.be>}
       - EMAIL_FROM=${EMAIL_FROM:-}
+      - EMAIL_INBOUND_DOMAIN=${EMAIL_INBOUND_DOMAIN:-}
+      - RESEND_WEBHOOK_SECRET=${RESEND_WEBHOOK_SECRET:-}
       - PORTAL_URL=${PORTAL_URL:-}
       - QUBO_CHANNEL=${QUBO_CHANNEL:-stable}
       - PORT=3333
@@ -76,6 +78,7 @@ services:
       # Inbox replies are e-mailed from the admin.
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-}
+      - EMAIL_INBOUND_DOMAIN=${EMAIL_INBOUND_DOMAIN:-}
     depends_on:
       qubo-postgres:
         condition: service_healthy

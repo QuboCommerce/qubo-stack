@@ -2,8 +2,8 @@ import { db, sql } from "@qubo/db/client";
 import { conversation, form, formSubmission, message, site, type MessageAttachment } from "@qubo/db/schema";
 import { publish } from "@qubo/realtime/server";
 import { createHash } from "node:crypto";
-import { and, count, desc, eq, isNotNull, isNull } from "drizzle-orm";
-import { CHAT_AWAY_MS, chatSubject, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
+import { and, count, desc, eq, gt, inArray, isNotNull, isNull, ne } from "drizzle-orm";
+import { baseSubject, CHAT_AWAY_MS, chatSubject, createRateLimiter, htmlToText, INBOUND_PER_HOUR, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -136,6 +136,9 @@ async function sendMail(mail: Mail): Promise<{ sent: true } | null> {
 
 export const emailConfigured = () => Boolean(process.env.RESEND_API_KEY?.trim() && fromAddress());
 
+/** Domain Resend receives mail on for this instance (`<id>.resend.app` or a verified domain); empty = no inbound. */
+export const inboundDomain = () => process.env.EMAIL_INBOUND_DOMAIN?.trim().toLowerCase() || "";
+
 async function notifyForm(siteId: string, to: string[], thread: { subject: string; body: string; contactName: string | null; contactEmail: string | null }) {
   const s = await db.query.site.findFirst({ where: eq(site.id, siteId), columns: { name: true } });
   const who = [thread.contactName, thread.contactEmail].filter(Boolean).join(" · ") || "Anonymous";
@@ -197,7 +200,16 @@ export async function reply(input: {
     const headers: Record<string, string> = { "Message-ID": emailId };
     if (previous[0]?.id) Object.assign(headers, { "In-Reply-To": previous[0].id, References: previous[0].id });
     try {
-      const sent = await sendMail({ to: [conv.contactEmail], subject: replySubject(conv.subject), text: body, html: textToHtml(body), fromName: s?.name, headers });
+      const inbound = inboundDomain();
+      const sent = await sendMail({
+        to: [conv.contactEmail],
+        subject: replySubject(conv.subject),
+        text: body,
+        html: textToHtml(body),
+        fromName: s?.name,
+        headers,
+        replyTo: inbound ? replyAddress(conv.id, inbound) : undefined,
+      });
       delivered = sent ? true : null;
       error = sent ? null : "E-mail isn't configured on this instance (RESEND_API_KEY / EMAIL_FROM).";
       if (sent) await db.update(message).set({ emailMessageId: emailId }).where(eq(message.id, messageId));
@@ -363,3 +375,121 @@ export async function chatMessage(conversationId: string, messageId: string): Pr
 }
 
 
+
+// ---------------------------------------------------------- inbound e-mail ---
+
+export type InboundEmail = {
+  id: string;
+  messageId: string | null;
+  from: string;
+  to: string[];
+  cc: string[];
+  receivedFor: string[];
+  subject: string;
+  text: string | null;
+  html: string | null;
+  headers: Record<string, string | string[] | undefined>;
+  dmarc: string | null;
+  attachments: { filename: string; size?: number }[];
+};
+
+export type ReceiveResult =
+  | { ok: true; conversationId: string; created: boolean }
+  | { ok: false; reason: "duplicate" | "auto_reply" | "dmarc_fail" | "no_route" | "bad_sender" | "rate_limited" | "loop" };
+
+const inboundLimiter = createRateLimiter(INBOUND_PER_HOUR, 3_600_000);
+/** A sender's mail that lost its headers joins their open thread with the same subject from this period. */
+const SUBJECT_MATCH_MS = 30 * 86_400_000;
+
+/**
+ * An e-mail Resend received for this instance. Threads by reply address, then
+ * by Message-ID references, then by sender + subject; otherwise it opens an
+ * `email` conversation on the site its address names.
+ */
+export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
+  const sender = parseAddress(mail.from);
+  if (!sender) return { ok: false, reason: "bad_sender" };
+  const own = parseAddress(fromAddress())?.email;
+  if (own && sender.email === own) return { ok: false, reason: "loop" };
+  if (mail.dmarc === "fail") return { ok: false, reason: "dmarc_fail" };
+  if (isAutoReply(mail.headers, mail.from)) return { ok: false, reason: "auto_reply" };
+  // Resend's id is stable across webhook retries; the Message-ID also catches the same mail sent to two of our addresses.
+  const dedupeIds = [`resend:${mail.id}`, mail.messageId].filter((v): v is string => Boolean(v));
+  const seen = await db.query.message.findFirst({ where: inArray(message.emailMessageId, dedupeIds), columns: { id: true } });
+  if (seen) return { ok: false, reason: "duplicate" };
+
+  const route = inboundRoute([...mail.to, ...mail.cc, ...mail.receivedFor], inboundDomain());
+  let conv: typeof conversation.$inferSelect | undefined;
+  if (route && "conversationId" in route) {
+    conv = await db.query.conversation.findFirst({ where: eq(conversation.id, route.conversationId) });
+  }
+  if (!conv) {
+    const refs = referencedIds(mail.headers);
+    if (refs.length) {
+      const [hit] = await db
+        .select({ conversationId: message.conversationId })
+        .from(message)
+        .where(inArray(message.emailMessageId, refs))
+        .orderBy(desc(message.createdAt))
+        .limit(1);
+      if (hit) conv = await db.query.conversation.findFirst({ where: eq(conversation.id, hit.conversationId) });
+    }
+  }
+  let siteId = conv?.siteId;
+  if (!siteId && route && "siteSlug" in route) {
+    siteId = (await db.query.site.findFirst({ where: eq(site.slug, route.siteSlug), columns: { id: true } }))?.id;
+  }
+  if (!siteId) return { ok: false, reason: "no_route" };
+  if (!inboundLimiter(`${siteId}:${sender.email}`)) return { ok: false, reason: "rate_limited" };
+
+  if (!conv) {
+    const recent = await db.query.conversation.findMany({
+      where: and(eq(conversation.siteId, siteId), eq(conversation.contactEmail, sender.email), ne(conversation.status, "resolved"), gt(conversation.lastMessageAt, new Date(Date.now() - SUBJECT_MATCH_MS))),
+      orderBy: desc(conversation.lastMessageAt),
+      limit: 20,
+    });
+    const subject = baseSubject(mail.subject);
+    conv = subject ? recent.find((c) => baseSubject(c.subject) === subject) : undefined;
+  }
+
+  const raw = mail.text?.trim() || (mail.html ? htmlToText(mail.html) : "");
+  let body = (conv ? stripQuoted(raw) : raw).slice(0, LIMITS.replyLength) || "(empty e-mail)";
+  if (mail.attachments.length) {
+    // Files stay in Resend for now; staff see what was sent and can ask for it another way.
+    body += `\n\n[${mail.attachments.length} attachment${mail.attachments.length > 1 ? "s" : ""} not imported: ${mail.attachments.map((a) => a.filename).join(", ")}]`;
+  }
+  const emailMessageId = mail.messageId ?? `resend:${mail.id}`;
+
+  if (!conv) {
+    const opened = await openConversation({
+      siteId,
+      channel: "email",
+      subject: mail.subject.trim() || "(no subject)",
+      body,
+      contactName: sender.name,
+      contactEmail: sender.email,
+    });
+    await db.update(message).set({ emailMessageId }).where(eq(message.id, opened.messageId));
+    await emit({ type: "conversation.created", siteId, payload: { conversationId: opened.conversation.id } });
+    return { ok: true, conversationId: opened.conversation.id, created: true };
+  }
+
+  const [msg] = await db
+    .insert(message)
+    .values({ conversationId: conv.id, authorType: "customer", authorId: null, authorName: sender.name ?? sender.email, body, emailMessageId })
+    .returning({ id: message.id });
+  await db
+    .update(conversation)
+    .set({
+      status: "open",
+      unread: true,
+      snoozedUntil: null,
+      lastMessageAt: new Date(),
+      updatedAt: new Date(),
+      contactEmail: conv.contactEmail ?? sender.email,
+      contactName: conv.contactName ?? sender.name,
+    })
+    .where(eq(conversation.id, conv.id));
+  await emit({ type: "conversation.message", siteId: conv.siteId, payload: { conversationId: conv.id, messageId: msg!.id } });
+  return { ok: true, conversationId: conv.id, created: false };
+}
