@@ -286,6 +286,24 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    columns: the base snapshot catches strictly more and needs no migration.
    New form = add a `*Values`/`*Spec` pair, pass `base`/`watch`/`noun`, call
    `reconcile` before validating. Wired: product, category, site general.
+20. **Studio: one editor, live followers.** A Studio document has a lease
+   (`studio_lease`, `lib/lease.ts`, `POST /api/studio/lease`): the first tab to
+   open it edits, and the others follow read-only (Puck `permissions` all false).
+   The holder renews every 10 s (TTL 30 s) and releases on pagehide. A freed lease is taken
+   by whoever is still there. "Request edit" toasts the holder (Give control /
+   Keep). The lease is granted at once if the holder is the same user (other tab), idle
+   for 60 s, or gone. The holder streams its canvas as JSON Patch
+   (`fast-json-patch`, 200 ms batches) through `POST /api/studio/live`, which accepts only
+   the lease holder. Followers apply `document.patched`
+   (ephemeral) by `epoch`/`seq` and refetch the in-memory snapshot
+   (`lib/live-docs.ts`, per process) on a gap. Handover flushes the holder's
+   autosave first. The new holder rebases autosave on the saved draft and keeps
+   the live canvas. Spectate: clicking a peer avatar follows their page,
+   focused field and Studio block (`components/spectate.tsx`, survives
+   the app ↔ Studio switch via sessionStorage; Esc / navigating stops it).
+   Not done: theme edits are not leased; they keep the version CAS of
+   `useThemeEditor`. No CRDT and no block-level merge in the draft
+   `ConflictDialog`, because the lease makes concurrent canvas edits impossible.
 
 ## Roadmap
 

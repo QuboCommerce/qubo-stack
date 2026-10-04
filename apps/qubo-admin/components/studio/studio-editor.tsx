@@ -3,7 +3,7 @@
 import "@puckeditor/core/puck.css";
 import "./studio.css";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Puck, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
@@ -15,6 +15,7 @@ import {
   AlertTriangle,
   Blocks,
   Check,
+  Eye,
   CloudOff,
   History,
   Laptop,
@@ -64,6 +65,8 @@ import { HistorySheet } from "./history-sheet";
 import { useReportPresence } from "@qubo/realtime/client";
 import { BlockPresenceOverlay, DocumentPresence } from "@/components/presence";
 import { useDocumentSync, type DocumentSync } from "./use-document-sync";
+import { useLiveCanvas, useStudioLease, type StudioLease } from "./use-studio-lease";
+import { peerColor } from "@/components/presence";
 import { ViewPicker } from "./view-picker";
 import { ThemePanel } from "./theme/theme-panel";
 import { useThemeEditor, type ThemeEditor, type ThemeRecord } from "./theme/use-theme-editor";
@@ -84,6 +87,8 @@ export type StudioEditorProps = {
 };
 
 const usePuck = createUsePuck();
+const readOnlyPermissions = { drag: false, duplicate: false, delete: false, edit: false, insert: false };
+const editPermissions = { drag: true, duplicate: true, delete: true, edit: true, insert: true };
 const ROOT_ZONE = "root:default-zone";
 
 // ------------------------------------------------------------ breakpoints ---
@@ -151,6 +156,23 @@ export function StudioEditor(props: StudioEditorProps) {
     [theme, mode, props.locale, site],
   );
 
+  // One editing tab per document; everyone else follows live (read-only).
+  const lease = useStudioLease({ siteId: site.id, documentId: doc.id, onLost: () => void sync.flush() });
+  const following = lease.role === "follower";
+  const followingRef = useRef(following);
+  followingRef.current = following;
+  const pushRef = useRef<(data: unknown) => void>(() => {});
+  const { markActive } = lease;
+  const onChange = useCallback(
+    (data: unknown) => {
+      if (followingRef.current) return;
+      sync.onChange(data);
+      pushRef.current(data);
+      markActive();
+    },
+    [sync, markActive],
+  );
+
   const replace = useCallback(
     (next: { data: unknown; version: number; hasUnpublishedChanges: boolean }) => {
       sync.reset(next.data, next.version, next.hasUnpublishedChanges);
@@ -166,11 +188,12 @@ export function StudioEditor(props: StudioEditorProps) {
         key={editor.key}
         config={config}
         data={editor.data as Partial<Data>}
-        onChange={sync.onChange}
+        onChange={onChange}
         metadata={metadata}
         iframe={{ enabled: true }}
+        permissions={following ? readOnlyPermissions : editPermissions}
       >
-        <StudioLayout {...props} theme={theme} themeEditor={themeEditor} sync={sync} mode={mode} setMode={setMode} replace={replace} />
+        <StudioLayout {...props} theme={theme} themeEditor={themeEditor} sync={sync} mode={mode} setMode={setMode} replace={replace} lease={lease} pushRef={pushRef} />
       </Puck>
     </TooltipProvider>
   );
@@ -191,12 +214,16 @@ function StudioLayout({
   mode,
   setMode,
   replace,
+  lease,
+  pushRef,
 }: StudioEditorProps & {
   themeEditor: ThemeEditor;
   sync: DocumentSync;
   mode: "light" | "dark";
   setMode: (m: "light" | "dark") => void;
   replace: (next: { data: unknown; version: number; hasUnpublishedChanges: boolean }) => void;
+  lease: StudioLease;
+  pushRef: React.RefObject<(data: unknown) => void>;
 }) {
   const router = useRouter();
   const wide = useMedia("(min-width: 1024px)");
@@ -217,6 +244,68 @@ function StudioLayout({
   useReportPresence({ documentId: doc.id, blockId: selected ? String(selected.props.id) : undefined });
   const componentLabel = usePuck((s) => (s.selectedItem ? s.config.components[s.selectedItem.type]?.label ?? s.selectedItem.type : null));
 
+  // ------------------------------------------------ lease + live canvas ---
+  const following = lease.role === "follower";
+  const received = useRef(false);
+  const live = useLiveCanvas({
+    siteId: site.id,
+    documentId: doc.id,
+    role: lease.role,
+    clientId: lease.clientId,
+    onRemote: (data) => {
+      received.current = true;
+      getPuck().dispatch({ type: "setData", data: data as Data });
+    },
+  });
+  pushRef.current = live.push;
+
+  const prevRole = useRef(lease.role);
+  useEffect(() => {
+    const was = prevRole.current;
+    prevRole.current = lease.role;
+    if (lease.role !== "editor" || was === "editor") return;
+    if (was !== "follower") return live.start(getPuck().appState.data);
+    // Took over from someone: rebase autosave on the latest saved draft. The
+    // live canvas we followed may be ahead of it (their last edits); keep it.
+    void (async () => {
+      const res = await loadDraftAction(site.slug, doc.id);
+      if (!res.ok) return void toast.error(res.error);
+      if (!received.current) {
+        replace(res);
+        live.start(res.data);
+        return;
+      }
+      const current = getPuck().appState.data;
+      sync.reset(res.data, res.version, res.hasUnpublishedChanges);
+      sync.onChange(current);
+      live.start(current);
+    })();
+  }, [lease.role, live, getPuck, site.slug, doc.id, replace, sync]);
+
+  // Requests for control (holder side).
+  const shownRequests = useRef(new Set<string>());
+  useEffect(() => {
+    const ids = new Set(lease.requests.map((r) => `lease-${r.clientId}`));
+    for (const id of shownRequests.current) if (!ids.has(id)) toast.dismiss(id);
+    shownRequests.current = ids;
+    for (const r of lease.requests) {
+      toast(`${r.name} wants to edit ${view.label}`, {
+        id: `lease-${r.clientId}`,
+        duration: 60_000,
+        action: {
+          label: "Give control",
+          onClick: async () => {
+            await sync.flush();
+            await lease.grant(r);
+            toast.success(`${r.name} is editing now`, { duration: 2000 });
+          },
+        },
+        cancel: { label: "Keep", onClick: () => lease.dismiss(r) },
+        onDismiss: () => lease.dismiss(r),
+      });
+    }
+  }, [lease, sync, view.label]);
+
   const dual = theme?.modeStrategy === "dual";
   const exitHref = `/${site.slug}/online-store`;
 
@@ -225,10 +314,10 @@ function StudioLayout({
   const themeActive = !!themeEditor.draft && (tabletUp ? leftTab === "theme" && (wide || leftOpen) : sheet === "theme");
   const undo = themeActive
     ? { can: themeEditor.canUndo, run: themeEditor.undo, label: "Undo theme change" }
-    : { can: history.hasPast, run: () => history.back(), label: "Undo" };
+    : { can: history.hasPast && !following, run: () => history.back(), label: "Undo" };
   const redo = themeActive
     ? { can: themeEditor.canRedo, run: themeEditor.redo, label: "Redo theme change" }
-    : { can: history.hasFuture, run: () => history.forward(), label: "Redo" };
+    : { can: history.hasFuture && !following, run: () => history.forward(), label: "Redo" };
   const themeDirty = !!themeEditor.draft && themeSync.hasUnpublishedChanges;
   const docDirty = sync.hasUnpublishedChanges;
 
@@ -412,13 +501,19 @@ function StudioLayout({
             <Puck.Outline />
           ) : (
             <>
-              <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Drag a block into any section, or onto the page.</p>
-              <Puck.Components />
+              {following ? (
+                <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Blocks can be added once you are editing.</p>
+              ) : (
+                <>
+                  <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Drag a block into any section, or onto the page.</p>
+                  <Puck.Components />
+                </>
+              )}
             </>
           )}
         </div>
       )}
-      {leftTab === "sections" && (
+      {leftTab === "sections" && !following && (
         <div className="shrink-0 border-t p-2">
           <button
             type="button"
@@ -546,14 +641,14 @@ function StudioLayout({
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onSelect={() => setHistoryOpen(true)}>
+              <DropdownMenuItem disabled={following} onSelect={() => setHistoryOpen(true)}>
                 <History /> Version history
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void sync.flush()}>
+              <DropdownMenuItem disabled={following} onSelect={() => void sync.flush()}>
                 <Check /> Save now <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" disabled={!sync.hasUnpublishedChanges} onSelect={() => setConfirmDiscard(true)}>
+              <DropdownMenuItem variant="destructive" disabled={!sync.hasUnpublishedChanges || following} onSelect={() => setConfirmDiscard(true)}>
                 <Trash2 /> Discard unpublished changes
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -565,7 +660,7 @@ function StudioLayout({
                 <Button
                   size="sm"
                   className="h-8 gap-1.5 px-3"
-                  disabled={!canPublish || publishing || (!docDirty && !themeDirty) || sync.status === "conflict" || themeSync.status === "conflict"}
+                  disabled={!canPublish || following || publishing || (!docDirty && !themeDirty) || sync.status === "conflict" || themeSync.status === "conflict"}
                   onClick={publish}
                 >
                   {publishing ? <Loader2 className="animate-spin" /> : <Rocket className="sm:hidden" />}
@@ -587,6 +682,8 @@ function StudioLayout({
           </Tooltip>
         </div>
       </header>
+
+      {lease.role === "follower" && <FollowBar lease={lease} what={view.label} />}
 
       {/* -------------------------------------------------------- body --- */}
       <div className="relative flex min-h-0 flex-1">
@@ -712,6 +809,37 @@ function StudioLayout({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------- follow bar ---
+
+function FollowBar({ lease, what }: { lease: StudioLease; what: string }) {
+  const h = lease.holder;
+  const [busy, setBusy] = useState(false);
+  const ask = async () => {
+    setBusy(true);
+    try {
+      const res = await lease.request();
+      if (!res.granted && res.holder) toast(`Asked ${res.holder.name} for control`, { duration: 2500 });
+    } catch {
+      toast.error("Couldn't reach the server. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const sameUser = h && lease.holder?.userId === lease.self;
+  const label = !h ? `Nobody is editing ${what}.` : sameUser ? `You are editing ${what} in another tab.` : `${h.name} is editing ${what}. You see their changes live.`;
+  const action = !h ? "Start editing" : sameUser ? "Edit here" : lease.requested ? "Requested…" : "Request edit";
+  return (
+    <div role="status" className="flex shrink-0 items-center gap-2 border-b bg-muted/60 px-3 py-1.5 text-[13px] sm:px-4">
+      <span className="size-2 shrink-0 rounded-full" style={{ background: h ? peerColor(h.userId) : "var(--muted-foreground)" }} />
+      <Eye className="size-3.5 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <Button size="sm" variant="outline" className="h-7" disabled={busy || (lease.requested && !!h && !sameUser)} onClick={ask}>
+        {busy && <Loader2 className="animate-spin" />} {action}
+      </Button>
     </div>
   );
 }

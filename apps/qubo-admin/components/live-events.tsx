@@ -3,6 +3,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useRef, useState } from "react";
 import { EventsProvider, PresenceProvider, useEvent } from "@qubo/realtime/client";
 import { FieldPresenceOverlay } from "@/components/presence";
+import { SpectateProvider } from "@/components/spectate";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const ViewerContext = createContext<{ userId: string } | null>(null);
@@ -20,8 +21,10 @@ export function LiveEvents({ siteId, userId, sessionId, children }: { siteId: st
     <ViewerContext.Provider value={{ userId }}>
     <EventsProvider url="/api/events" onReset={() => router.refresh()}>
       <PresenceProvider url="/api/presence" siteId={siteId} userId={userId} route={pathname}>
-        {children}
-        <FieldPresenceOverlay />
+        <SpectateProvider>
+          {children}
+          <FieldPresenceOverlay />
+        </SpectateProvider>
         <SessionEnded sessionId={sessionId} />
       </PresenceProvider>
     </EventsProvider>
