@@ -29,14 +29,19 @@ export const PresenceEntry = z.object({
 });
 export type PresenceEntry = z.infer<typeof PresenceEntry>;
 
+export const LeaseHolder = z.object({ clientId: z.string(), userId: z.string(), name: z.string() });
+export type LeaseHolder = z.infer<typeof LeaseHolder>;
+
 const def = <T extends string, P extends z.ZodType>(type: T, payload: P) => Scope.extend({ type: z.literal(type), payload });
 
 export const PlatformEvent = z.discriminatedUnion("type", [
   def("entity.updated", z.object({ table: z.string(), id: z.string(), action: z.enum(["created", "updated", "deleted"]), by: Actor })),
   def("document.published", z.object({ documentId: z.string(), version: z.number().int(), by: Actor })),
-  def("document.patched", z.object({ documentId: z.string(), version: z.number().int(), by: Actor })),
-  def("document.lease.acquired", z.object({ documentId: z.string(), by: Actor })),
-  def("document.lease.released", z.object({ documentId: z.string(), by: Actor })),
+  // Live Studio edits from the lease holder; ephemeral. `epoch` changes per holder, `seq` per batch.
+  def("document.patched", z.object({ documentId: z.string(), epoch: z.string(), seq: z.number().int(), ops: z.array(z.unknown()), by: Actor })),
+  def("studio.lease.changed", z.object({ resource: z.string(), holder: LeaseHolder.nullable(), by: Actor })),
+  // Ephemeral: a follower asks the holder for control.
+  def("studio.lease.requested", z.object({ resource: z.string(), from: LeaseHolder })),
   def("theme.published", z.object({ themeId: z.string(), by: Actor })),
   // Full snapshot of a site's presence; ephemeral (no id, not replayed).
   def("presence.changed", z.object({ entries: z.array(PresenceEntry) })),
@@ -53,7 +58,7 @@ export const EVENT_TYPES = PlatformEvent.options.map((o) => o.shape.type.value) 
 export type EventOf<T extends EventType> = Extract<PlatformEvent, { type: T }>;
 
 /** Types broadcast live only: never stored, no id, not replayed on resume or poll. */
-export const EPHEMERAL_TYPES: ReadonlySet<EventType> = new Set<EventType>(["presence.changed"]);
+export const EPHEMERAL_TYPES: ReadonlySet<EventType> = new Set<EventType>(["presence.changed", "document.patched", "studio.lease.requested"]);
 
 /** An event as delivered: catalogue shape plus its durable id (`""` when ephemeral) and server timestamp. */
 export type DeliveredEvent = PlatformEvent & { id: string; createdAt: string };

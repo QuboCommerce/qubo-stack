@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { usePeers, type Peer } from "@qubo/realtime/client";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@qubo/shared/utils";
+import { useSpectate } from "@/components/spectate";
 
 /** Stable per-user colour, so the same person has the same ring everywhere. */
 export function peerColor(userId: string) {
@@ -31,11 +32,19 @@ function where(p: Peer) {
 }
 
 function PeerAvatar({ peer, size = "sm", className }: { peer: Peer; size?: "sm" | "default"; className?: string }) {
+  const { target, watch } = useSpectate();
+  const watching = target === peer.userId;
+  const toggle = () => watch(watching ? null : peer.userId);
   return (
     <Avatar
       size={size}
-      title={`${peer.name} · ${where(peer)}${peer.focused ? "" : " (away)"}`}
-      className={cn("ring-2", !peer.focused && "opacity-50", className)}
+      role="button"
+      tabIndex={0}
+      aria-pressed={watching}
+      onClick={toggle}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle())}
+      title={`${peer.name} · ${where(peer)}${peer.focused ? "" : " (away)"} — ${watching ? "stop watching" : "click to watch"}`}
+      className={cn("cursor-pointer ring-2 outline-none focus-visible:ring-4", !peer.focused && "opacity-50", watching && "ring-4", className)}
       style={{ ["--tw-ring-color" as string]: peerColor(peer.userId) }}
     >
       {peer.image && <AvatarImage src={peer.image} alt="" />}
@@ -98,7 +107,7 @@ function useBoxes(peers: Peer[], find: (p: Peer) => Element | null) {
   return boxes;
 }
 
-const fieldEl = (name: string) => {
+export const fieldEl = (name: string) => {
   const el = document.querySelector(`form [data-presence-field="${CSS.escape(name)}"], form [name="${CSS.escape(name)}"]`);
   return el instanceof HTMLInputElement && el.type === "hidden" ? null : el;
 };

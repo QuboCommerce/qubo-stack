@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10",
+    "@puckeditor/core": "^0.23.0",
     "@qubo/blocks": "workspace:*",
     "@qubo/db": "workspace:*",
+    "@qubo/geo": "workspace:*",
+    "@qubo/realtime": "workspace:*",
     "@qubo/shared": "workspace:*",
     "@qubo/studio": "workspace:*",
     "@qubo/stylekit": "workspace:*",
-    "@puckeditor/core": "^0.23.0",
     "@radix-ui/react-alert-dialog": "^1.1",
     "@radix-ui/react-avatar": "^1.1",
     "@radix-ui/react-checkbox": "^1.1",
@@ -42,6 +44,7 @@
     "cmdk": "^1.1.1",
     "cn": "^0.4.0",
     "date-fns": "^4.1",
+    "fast-json-patch": "^3.1.1",
     "framer-motion": "latest",
     "lucide-react": "^0.460",
     "motion": "^12",
@@ -55,9 +58,7 @@
     "tailwind-merge": "^2.5",
     "vaul": "^1.1",
     "zod": "^4.4",
-    "zustand": "^5",
-    "@qubo/realtime": "workspace:*",
-    "@qubo/geo": "workspace:*"
+    "zustand": "^5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1",

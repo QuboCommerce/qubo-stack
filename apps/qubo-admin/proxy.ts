@@ -6,7 +6,7 @@ import { getSessionCookie } from "better-auth/cookies";
 const ADMIN_COOKIE_PREFIX = "qubo-admin";
 
 // /api/me, /api/events and /api/presence check the session themselves and answer 401 (no HTML redirect for fetch/EventSource).
-const publicRoutes = ["/sign-in", "/sign-up", "/api/auth", "/api/legacy-assets", "/api/me", "/api/events", "/api/presence", "/robots.txt", "/manifest.webmanifest"];
+const publicRoutes = ["/sign-in", "/sign-up", "/api/auth", "/api/legacy-assets", "/api/me", "/api/events", "/api/presence", "/api/studio/", "/robots.txt", "/manifest.webmanifest"];
 
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some((route) => pathname.startsWith(route));
