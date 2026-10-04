@@ -163,6 +163,17 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
         body: JSON.stringify(body),
       }),
 
+    /** Site preview gate: exchanges the admin's PIN for a preview token (403 `invalid_pin`). */
+    unlockPreview: (pin: string) =>
+      request<{ token: string; maxAge: number }>("/render/preview/unlock", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ pin }),
+      }),
+
+    /** Whether the `x-qubo-preview` header this client sends is still accepted (PIN unchanged). */
+    checkPreview: () => request<{ granted: boolean }>("/render/preview/check").then((r) => r.granted),
+
     /** Published standalone page by slug; null when missing or unpublished. */
     getPage: (slug: string, locale?: string) =>
       orNull(

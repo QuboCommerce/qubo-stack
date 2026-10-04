@@ -64,6 +64,13 @@
       "when": 1791070923283,
       "tag": "0008_studio_lease",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791078348329,
+      "tag": "0009_site_preview_pin",
+      "breakpoints": true
     }
   ]
 }

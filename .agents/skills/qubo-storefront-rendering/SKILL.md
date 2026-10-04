@@ -45,3 +45,10 @@ storefront validates the published theme JSON on every layout fetch.
 Dev hosts render `noindex`. Publishing calls `notifyRevalidate` (`packages/studio/src/revalidate.ts`)
 which POSTs to `QUBO_REVALIDATE_URL` signed with `x-qubo-signature` (HMAC of
 `QUBO_REVALIDATE_SECRET`). Sitemap and robots are per host.
+
+## Draft vs published
+
+`studio.renderableDocument(siteId, id, locale, { draft })` and `publishedPage(..., { includeDrafts })`
+are the only switches. `draft` is true solely when the API's `previewGranted()` accepted the
+`x-qubo-preview` header (see qubo-hosts-and-urls → Preview hosts). Never add another path that
+serves `draft_data` anonymously.

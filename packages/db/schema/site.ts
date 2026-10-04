@@ -109,6 +109,8 @@ export const siteSettings = pgTable("site_settings", {
   maintenanceMode: boolean("maintenance_mode").notNull().default(false),
   maintenanceMessage: text("maintenance_message"),
   maintenanceEnd: timestamp("maintenance_end"),
+  /** Unlocks `preview.<domain>` (draft storefront). Regenerating it logs every previewer out. */
+  previewPin: text("preview_pin"),
   timezone: text("timezone").notNull().default("Europe/Brussels"),
   metaTitle: text("meta_title"),
   metaDescription: text("meta_description"),
