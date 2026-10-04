@@ -2,7 +2,7 @@ import { db, sql } from "@qubo/db/client";
 import { conversation, form, formSubmission, message, site, type MessageAttachment } from "@qubo/db/schema";
 import { publish } from "@qubo/realtime/server";
 import { createHash } from "node:crypto";
-import { and, count, desc, eq, gt, inArray, isNotNull, isNull, ne } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, isNotNull, isNull, lte, ne } from "drizzle-orm";
 import { baseSubject, CHAT_AWAY_MS, chatSubject, createRateLimiter, htmlToText, INBOUND_PER_HOUR, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -230,13 +230,29 @@ export async function updateConversation(
   id: string,
   patch: Partial<Pick<typeof conversation.$inferInsert, "status" | "priority" | "assigneeId" | "unread" | "snoozedUntil" | "tags">>,
 ) {
+  // Leaving "snoozed" by hand forgets the wake-up time.
+  const wake = patch.status && patch.status !== "snoozed" ? { snoozedUntil: null } : {};
   const [row] = await db
     .update(conversation)
-    .set({ ...patch, updatedAt: new Date() })
+    .set({ ...patch, ...wake, updatedAt: new Date() })
     .where(and(eq(conversation.id, id), eq(conversation.siteId, siteId)))
     .returning({ id: conversation.id });
   if (row) await emit({ type: "conversation.updated", siteId, payload: { conversationId: id } });
   return Boolean(row);
+}
+
+/**
+ * Snoozed conversations whose time has come go back to open and unread. Runs
+ * every minute in the API and lazily from the admin, so nothing depends on cron.
+ */
+export async function wakeSnoozed(siteId?: string) {
+  const rows = await db
+    .update(conversation)
+    .set({ status: "open", unread: true, snoozedUntil: null, updatedAt: new Date() })
+    .where(and(eq(conversation.status, "snoozed"), lte(conversation.snoozedUntil, new Date()), siteId ? eq(conversation.siteId, siteId) : undefined))
+    .returning({ id: conversation.id, siteId: conversation.siteId });
+  for (const r of rows) await emit({ type: "conversation.updated", siteId: r.siteId, payload: { conversationId: r.id } });
+  return rows.length;
 }
 
 // -------------------------------------------------------------------- chat ---

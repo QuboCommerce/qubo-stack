@@ -154,7 +154,7 @@ export async function getShellCounts(siteId: string) {
     db
       .select({ value: count() })
       .from(conversation)
-      .where(and(eq(conversation.siteId, siteId), eq(conversation.unread, true), ne(conversation.status, "resolved"))),
+      .where(and(eq(conversation.siteId, siteId), eq(conversation.unread, true), inArray(conversation.status, ["open", "pending"]))),
   ]);
   return { orders: orders?.value ?? 0, inbox: inbox?.value ?? 0 };
 }

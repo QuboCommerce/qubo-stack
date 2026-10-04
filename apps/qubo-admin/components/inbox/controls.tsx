@@ -1,5 +1,6 @@
 "use client";
 
+import { SNOOZE_OPTIONS } from "@qubo/inbox";
 import { updateConversationAction } from "@/app/inbox-actions";
 
 const select = "h-8 rounded-lg border bg-background px-2 text-[13px]";
@@ -25,6 +26,7 @@ export function ThreadControls({
   status,
   priority,
   assigneeId,
+  snoozedUntil,
   members,
 }: {
   site: string;
@@ -32,6 +34,8 @@ export function ThreadControls({
   status: string;
   priority: string;
   assigneeId: string | null;
+  /** Pre-formatted wake-up time, shown while snoozed. */
+  snoozedUntil?: string | null;
   members: { id: string; name: string }[];
 }) {
   return (
@@ -42,6 +46,16 @@ export function ThreadControls({
         ))}
         {status === "snoozed" && <option value="snoozed">Snoozed</option>}
       </Field>
+      {status !== "resolved" && (
+        <Field site={site} id={id} name="snooze" value="" label="Snooze">
+          <option value="" disabled>
+            {status === "snoozed" && snoozedUntil ? `Wakes ${snoozedUntil}` : "Snooze"}
+          </option>
+          {Object.entries(SNOOZE_OPTIONS).map(([k, [label]]) => (
+            <option key={k} value={k}>{label}</option>
+          ))}
+        </Field>
+      )}
       <Field site={site} id={id} name="priority" value={priority} label="Priority">
         {["low", "normal", "high", "urgent"].map((p) => (
           <option key={p} value={p}>{cap(p)}</option>

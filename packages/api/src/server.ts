@@ -1,3 +1,4 @@
+import { wakeSnoozed } from "@qubo/inbox/server";
 import { startHeartbeatLoop } from "@qubo/portal-client";
 import { app } from "./index";
 
@@ -11,3 +12,6 @@ app.listen({ port, hostname }, () => {
 
 // Portal heartbeat (no-op while unlinked). The API process is the one long-lived server-side runtime.
 startHeartbeatLoop();
+
+// Snoozed inbox threads wake up on time even when nobody has the admin open.
+setInterval(() => void wakeSnoozed().catch((e) => console.error("[inbox] wake failed", e)), 60_000).unref();

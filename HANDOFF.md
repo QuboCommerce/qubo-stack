@@ -328,9 +328,13 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    `email.received` webhook at `/webhooks/resend` (Svix-verified, body fetched from
    Resend). Routing: `reply+<conversationId>@EMAIL_INBOUND_DOMAIN`, then
    In-Reply-To/References against `message.email_message_id`, then sender + base
-   subject, else `<site-slug>@` opens an `email` conversation. Not built yet:
-   attachment import, portal tickets, snooze/SLA, form attachments, notify-email
-   settings UI, typing indicators.
+   subject, else `<site-slug>@` opens an `email` conversation. Snooze sets
+   `snoozed_until`; `wakeSnoozed()` runs every minute in the API (and lazily on
+   the inbox list) and reopens them unread. SLA is display-only (`SLA` in
+   `@qubo/inbox`: amber 4 h, red 24 h of a customer waiting). Settings → Inbox
+   shows e-mail in/out status and edits each form's name and notify list. Not
+   built yet: attachment import (form and e-mail), cross-site inbox (planned for
+   the site switcher), portal tickets, typing indicators.
 
 ## Roadmap
 

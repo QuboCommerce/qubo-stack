@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { baseSubject, chatSubject, htmlToText, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, publicStaffName, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
+import { baseSubject, slaState, chatSubject, htmlToText, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, publicStaffName, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
 
 describe("cleanFormData", () => {
   test("drops internal, empty and non-string fields; trims", () => {
@@ -92,5 +92,17 @@ describe("inbound e-mail", () => {
     expect(htmlToText("<style>p{}</style><p>Hi&nbsp;there</p><p>A &amp; B<br>C</p>")).toBe("Hi there\nA & B\nC");
     expect(baseSubject("Re: RE: Fwd: Offerte koelcel")).toBe("offerte koelcel");
     expect(baseSubject("Antw: Offerte")).toBe("offerte");
+  });
+});
+
+describe("sla", () => {
+  const now = Date.parse("2026-03-03T12:00:00Z");
+  const ago = (h: number) => new Date(now - h * 3_600_000);
+  test("only counts open threads where the customer spoke last", () => {
+    expect(slaState("open", "staff", ago(30), now)).toBeNull();
+    expect(slaState("pending", "customer", ago(30), now)).toBeNull();
+    expect(slaState("open", "customer", ago(1), now)?.level).toBe("ok");
+    expect(slaState("open", "customer", ago(5), now)?.level).toBe("warn");
+    expect(slaState("open", "customer", ago(25), now)?.level).toBe("breach");
   });
 });

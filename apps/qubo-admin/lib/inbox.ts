@@ -1,9 +1,10 @@
 import "server-only";
 import { db } from "@qubo/db/client";
 import { conversation, form, formSubmission, message, order, organizationMember, siteCustomer, user } from "@qubo/db/schema";
+import { wakeSnoozed } from "@qubo/inbox/server";
 import { and, asc, count, desc, eq, ilike, inArray, ne, or, type SQL } from "drizzle-orm";
 
-export const INBOX_VIEWS = ["open", "mine", "pending", "resolved", "all"] as const;
+export const INBOX_VIEWS = ["open", "mine", "pending", "snoozed", "resolved", "all"] as const;
 export type InboxView = (typeof INBOX_VIEWS)[number];
 
 export const parseView = (v: string | undefined): InboxView => (INBOX_VIEWS as readonly string[]).includes(v ?? "") ? (v as InboxView) : "open";
@@ -11,9 +12,11 @@ export const parseView = (v: string | undefined): InboxView => (INBOX_VIEWS as r
 function viewFilter(view: InboxView, userId: string): SQL | undefined {
   switch (view) {
     case "open":
-      return or(eq(conversation.status, "open"), eq(conversation.status, "snoozed"));
+      return eq(conversation.status, "open");
     case "mine":
-      return and(eq(conversation.assigneeId, userId), ne(conversation.status, "resolved"));
+      return and(eq(conversation.assigneeId, userId), inArray(conversation.status, ["open", "pending"]));
+    case "snoozed":
+      return eq(conversation.status, "snoozed");
     case "pending":
       return eq(conversation.status, "pending");
     case "resolved":
@@ -24,6 +27,7 @@ function viewFilter(view: InboxView, userId: string): SQL | undefined {
 }
 
 export async function listConversations(siteId: string, view: InboxView, userId: string, q?: string) {
+  await wakeSnoozed(siteId);
   const search = q?.trim()
     ? or(ilike(conversation.subject, `%${q.trim()}%`), ilike(conversation.contactEmail, `%${q.trim()}%`), ilike(conversation.contactName, `%${q.trim()}%`))
     : undefined;
@@ -39,6 +43,7 @@ export async function listConversations(siteId: string, view: InboxView, userId:
       contactEmail: conversation.contactEmail,
       assigneeId: conversation.assigneeId,
       lastMessageAt: conversation.lastMessageAt,
+      snoozedUntil: conversation.snoozedUntil,
     })
     .from(conversation)
     .where(and(eq(conversation.siteId, siteId), viewFilter(view, userId), search))

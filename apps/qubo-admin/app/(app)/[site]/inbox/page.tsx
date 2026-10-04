@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CHAT_AWAY_MS, siteInboundAddress } from "@qubo/inbox";
+import { CHAT_AWAY_MS, siteInboundAddress, slaState } from "@qubo/inbox";
 import { ArrowLeft, Bot, FileText, Globe, Inbox, Mail, MessageCircle, Search, ShieldAlert, Ticket } from "lucide-react";
 import { emailConfigured, inboundDomain } from "@qubo/inbox/server";
 import { cn } from "@qubo/shared/utils";
@@ -12,7 +12,9 @@ import { requireSite } from "@/lib/admin";
 import { money, relativeTime, shortDate } from "@/lib/format";
 import { assignableMembers, getConversation, INBOX_VIEWS, listConversations, parseView, viewCounts, type ConversationDetail, type ConversationRow, type InboxView } from "@/lib/inbox";
 
-const viewLabel: Record<InboxView, string> = { open: "Open", mine: "Mine", pending: "Pending", resolved: "Resolved", all: "All" };
+const viewLabel: Record<InboxView, string> = { open: "Open", mine: "Mine", pending: "Pending", snoozed: "Snoozed", resolved: "Resolved", all: "All" };
+const slaTone = { ok: "text-muted-foreground", warn: "bg-amber-500/10 text-amber-700 dark:text-amber-400", breach: "bg-destructive/10 text-destructive" } as const;
+const waitLabel = (ms: number) => (ms < 3_600_000 ? `${Math.max(1, Math.round(ms / 60_000))}m` : ms < 48 * 3_600_000 ? `${Math.round(ms / 3_600_000)}h` : `${Math.round(ms / 86_400_000)}d`);
 const channelIcon = { form: FileText, email: Mail, chat: MessageCircle, portal: Ticket, system: Bot } as const;
 const priorityTone: Record<string, string> = { urgent: "bg-destructive/10 text-destructive", high: "bg-amber-500/10 text-amber-700 dark:text-amber-400" };
 
@@ -104,6 +106,7 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
 
 function ListItem({ row, active, href }: { row: ConversationRow; active: boolean; href: string }) {
   const Icon = channelIcon[row.channel];
+  const sla = slaState(row.status, row.lastFrom, row.lastMessageAt);
   return (
     <li>
       <Link href={href} scroll={false} className={cn("block px-3 py-2.5 hover:bg-accent/50", active && "bg-accent")}>
@@ -118,6 +121,12 @@ function ListItem({ row, active, href }: { row: ConversationRow; active: boolean
           <Icon className="size-3.5 shrink-0 text-muted-foreground" />
           <span className="truncate">{row.subject}</span>
           {priorityTone[row.priority] && <span className={cn("shrink-0 rounded px-1 text-[11px] font-medium", priorityTone[row.priority])}>{row.priority}</span>}
+          {sla && sla.level !== "ok" && (
+            <span className={cn("shrink-0 rounded px-1 text-[11px] font-medium", slaTone[sla.level])} title="Customer is waiting for an answer">
+              waiting {waitLabel(sla.waitingMs)}
+            </span>
+          )}
+          {row.status === "snoozed" && row.snoozedUntil && <span className="shrink-0 text-[11px] text-muted-foreground">wakes {relativeTime(row.snoozedUntil)}</span>}
         </p>
         <p className="mt-0.5 truncate text-xs text-muted-foreground">
           {row.lastFrom === "staff" && "You: "}
@@ -143,7 +152,7 @@ function Thread({ detail, site, backHref, members }: { detail: ConversationDetai
             {detail.contactEmail && <> · {detail.contactEmail}</>} · via {detail.channel} · {shortDate(detail.createdAt)}
           </p>
         </div>
-        <ThreadControls site={site} id={detail.id} status={detail.status} priority={detail.priority} assigneeId={detail.assigneeId} members={members} />
+        <ThreadControls site={site} id={detail.id} status={detail.status} priority={detail.priority} assigneeId={detail.assigneeId} snoozedUntil={detail.snoozedUntil ? relativeTime(detail.snoozedUntil) : null} members={members} />
       </header>
       <ol className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-muted/20 p-4">
         {detail.messages.map((m) => {

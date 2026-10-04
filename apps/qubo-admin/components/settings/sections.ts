@@ -4,6 +4,7 @@ import {
   Building2,
   CreditCard,
   Globe,
+  Inbox,
   HardDrive,
   Languages,
   Lock,
@@ -39,6 +40,7 @@ export const settingsGroups: { label: string; items: SettingsSection[] }[] = [
       { slug: "domains", label: "Domains", description: "Web addresses that point to this site.", icon: Globe, ready: true },
       { slug: "languages", label: "Languages", description: "Primary language and published translations.", icon: Languages, ready: true },
       { slug: "notifications", label: "Notifications", description: "Emails sent to customers and staff.", icon: Bell },
+      { slug: "inbox", label: "Inbox", description: "Forms, e-mail in and out, and who is notified of new messages.", icon: Inbox, requires: "leads", ready: true },
     ],
   },
   {

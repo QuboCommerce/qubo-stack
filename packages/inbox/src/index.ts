@@ -30,6 +30,20 @@ export const LIMITS = {
   chatHistory: 200,
 } as const;
 
+/** Snooze choices in the thread header: label → duration. */
+export const SNOOZE_OPTIONS = { "1h": ["1 hour", 3_600_000], "4h": ["4 hours", 4 * 3_600_000], "1d": ["Tomorrow", 86_400_000], "3d": ["3 days", 3 * 86_400_000], "7d": ["Next week", 7 * 86_400_000] } as const;
+export type SnoozeOption = keyof typeof SNOOZE_OPTIONS;
+
+/** How long a customer may wait for an answer before the list warns, then flags it. */
+export const SLA = { warnMs: 4 * 3_600_000, breachMs: 24 * 3_600_000 } as const;
+
+/** `null` when nobody is waiting on us (staff spoke last, or the thread isn't open). */
+export function slaState(status: Status, lastFrom: string, lastMessageAt: Date, now = Date.now()): { waitingMs: number; level: "ok" | "warn" | "breach" } | null {
+  if (status !== "open" || lastFrom !== "customer") return null;
+  const waitingMs = Math.max(0, now - lastMessageAt.getTime());
+  return { waitingMs, level: waitingMs >= SLA.breachMs ? "breach" : waitingMs >= SLA.warnMs ? "warn" : "ok" };
+}
+
 /** A visitor counts as "in the chat" this long after their last sign of life; after that replies are e-mailed. */
 export const CHAT_AWAY_MS = 90_000;
 
