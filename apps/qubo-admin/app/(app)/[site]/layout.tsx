@@ -17,6 +17,7 @@ export default async function SiteLayout({ children, params }: { children: React
     url: s.url,
     organization: { id: s.organizationId, name: s.organizationName },
     locked: s.locked,
+    published: s.publishedAt !== null,
   });
 
   return (

@@ -42,6 +42,7 @@ export const getUserSites = cache(async () => {
       logo: site.logo,
       organizationId: site.organizationId,
       organizationName: organization.name,
+      publishedAt: site.publishedAt,
       memberRole: organizationMember.role,
     })
     .from(organizationMember)

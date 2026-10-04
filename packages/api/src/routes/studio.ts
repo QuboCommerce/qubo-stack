@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import * as studio from "@qubo/studio";
 import { tenancy } from "../plugins/tenancy";
 import { assertSiteEditable } from "../lib/tenancy";
+import { previewGranted } from "../lib/preview";
 import { db } from "@qubo/db/client";
 import { siteSettings } from "@qubo/db/schema";
 import { eq } from "drizzle-orm";
@@ -308,18 +309,6 @@ export const studioRoutes = new Elysia({ prefix: "/studio" })
  * Anonymous storefront reads: published documents (with locale overlay), the
  * live theme, and draft previews via signed token.
  */
-/**
- * Site preview (`preview.<domain>`): the storefront forwards the visitor's
- * unlocked token as `x-qubo-preview`; when it checks out, render routes serve
- * drafts. Anything else (missing, forged, PIN regenerated) is plain published.
- */
-async function previewGranted(siteId: string, headers: Record<string, string | undefined>): Promise<boolean> {
-  const token = headers["x-qubo-preview"];
-  if (!token) return false;
-  const settings = await db.query.siteSettings.findFirst({ where: eq(siteSettings.siteId, siteId), columns: { previewPin: true } });
-  return studio.verifySitePreviewToken(token, { id: siteId, pin: settings?.previewPin ?? null });
-}
-
 export const studioPublic = new Elysia({ prefix: "/render" })
   .use(tenancy)
   .post(

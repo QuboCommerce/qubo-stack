@@ -75,7 +75,7 @@ export function SiteSwitcher({ site, sites }: { site: ShellSite; sites: ShellSit
                           <>
                             <Icon className="size-3" />
                             {siteTypeLabel[s.type] ?? s.type}
-                            {s.domain && <> · {s.domain}</>}
+                            {s.published ? s.domain && <> · {s.domain}</> : <> · Draft</>}
                           </>
                         )}
                       </span>
