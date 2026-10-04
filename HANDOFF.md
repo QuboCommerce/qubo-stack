@@ -319,8 +319,14 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    Replies are stored first and then e-mailed through Resend (`RESEND_API_KEY`,
    `EMAIL_FROM`), and a failure lands in `message.delivery_error`. Notes are internal.
    Events `conversation.created|message|updated` drive `InboxLive` (refresh) and the
-   sidebar badge (unread, not resolved). Not built yet: chat block, inbound
-   e-mail, portal tickets, snooze/SLA, form attachments, notify-email settings UI.
+   sidebar badge (unread, not resolved). Chat: the `ChatLauncher` block talks to
+   `/api/chat*` on the storefront (httpOnly `qb_chat` token, hashed in
+   `conversation.visitor_token_hash`, or the customer session) and `/v1/chat*` on
+   the API, whose `/stream` SSE filters the realtime hub to that one conversation.
+   The stream keeps `visitor_seen_at` fresh; staff chat replies are e-mailed only
+   when the visitor has been away for `CHAT_AWAY_MS` (90 s). Not built yet: inbound
+   e-mail, portal tickets, snooze/SLA, form attachments, notify-email settings UI,
+   typing indicators.
 
 ## Roadmap
 

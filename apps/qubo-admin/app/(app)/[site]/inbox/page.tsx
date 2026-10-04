@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CHAT_AWAY_MS } from "@qubo/inbox";
 import { ArrowLeft, Bot, FileText, Globe, Inbox, Mail, MessageCircle, Search, ShieldAlert, Ticket } from "lucide-react";
 import { emailConfigured } from "@qubo/inbox/server";
 import { cn } from "@qubo/shared/utils";
@@ -139,6 +140,13 @@ function Thread({ detail, site, backHref, members }: { detail: ConversationDetai
       </header>
       <ol className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-muted/20 p-4">
         {detail.messages.map((m) => {
+          if (m.authorType === "system") {
+            return (
+              <li key={m.id} className="text-center text-xs text-muted-foreground">
+                {m.body} · {relativeTime(m.createdAt)}
+              </li>
+            );
+          }
           const mine = m.authorType === "staff";
           return (
             <li key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
@@ -158,17 +166,31 @@ function Thread({ detail, site, backHref, members }: { detail: ConversationDetai
                   <time dateTime={m.createdAt.toISOString()}>{relativeTime(m.createdAt)}</time>
                 </p>
                 <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                {m.deliveryError && <p className="mt-1.5 text-xs text-destructive">Not e-mailed: {m.deliveryError}</p>}
+                {m.deliveryError && (
+                  <p className="mt-1.5 text-xs text-destructive">
+                    {detail.channel === "chat" ? "Shown in chat, but not e-mailed" : "Not e-mailed"}: {m.deliveryError}
+                  </p>
+                )}
                 {mine && !m.internal && m.emailMessageId && <p className="mt-1.5 text-xs text-muted-foreground">E-mailed to {detail.contactEmail}</p>}
+                {mine && !m.internal && !m.emailMessageId && !m.deliveryError && detail.channel === "chat" && <p className="mt-1.5 text-xs text-muted-foreground">Sent in chat</p>}
               </div>
             </li>
           );
         })}
       </ol>
-      <Composer site={site} conversationId={detail.id} contactEmail={detail.contactEmail} emailReady={emailConfigured()} />
+      <Composer
+        site={site}
+        conversationId={detail.id}
+        contactEmail={detail.contactEmail}
+        emailReady={emailConfigured()}
+        chat={detail.channel === "chat" ? { online: chatOnline(detail.visitorSeenAt) } : undefined}
+      />
     </>
   );
 }
+
+// Server-rendered snapshot; InboxLive refreshes the page on every new message.
+const chatOnline = (seen: Date | null) => seen !== null && Date.now() - seen.getTime() < CHAT_AWAY_MS;
 
 const sectionTitle = "mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground";
 

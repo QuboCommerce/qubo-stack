@@ -1,4 +1,4 @@
-import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { order } from "./orders";
 import { site } from "./site";
@@ -34,6 +34,10 @@ export const conversation = pgTable(
     orderId: uuid("order_id").references(() => order.id, { onDelete: "set null" }),
     formSubmissionId: uuid("form_submission_id").references(() => formSubmission.id, { onDelete: "set null" }),
     tags: text("tags").array().notNull().default([]),
+    /** Chat: sha256 of the anonymous visitor's cookie token (the token itself never hits the DB). */
+    visitorTokenHash: text("visitor_token_hash"),
+    /** Chat: last time the visitor had the chat open; staff replies are e-mailed only when they're away. */
+    visitorSeenAt: timestamp("visitor_seen_at"),
     /** True while the latest customer message hasn't been opened by staff. */
     unread: boolean("unread").notNull().default(true),
     snoozedUntil: timestamp("snoozed_until"),
@@ -45,6 +49,8 @@ export const conversation = pgTable(
   (t) => [
     index("conversation_site_status_last_idx").on(t.siteId, t.status, t.lastMessageAt),
     index("conversation_contact_email_idx").on(t.siteId, t.contactEmail),
+    uniqueIndex("conversation_visitor_token_idx").on(t.siteId, t.visitorTokenHash),
+    index("conversation_customer_idx").on(t.siteId, t.customerId),
   ],
 );
 

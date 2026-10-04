@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { cleanFormData, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
+import { chatSubject, cleanFormData, publicStaffName, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
 
 describe("cleanFormData", () => {
   test("drops internal, empty and non-string fields; trims", () => {
@@ -40,4 +40,16 @@ test("e-mail helpers", () => {
   expect(textToHtml("a<b\nc\n\nd")).toBe("<p>a&lt;b<br>c</p><p>d</p>");
   expect(replySubject("Re: x")).toBe("Re: x");
   expect(replySubject("x")).toBe("Re: x");
+});
+
+describe("chat helpers", () => {
+  test("chatSubject takes the first line and caps it", () => {
+    expect(chatSubject("  Hallo daar\nTweede regel")).toBe("Hallo daar");
+    expect(chatSubject("x".repeat(100))).toHaveLength(80);
+    expect(chatSubject("   ")).toBe("Chat");
+  });
+  test("publicStaffName shows first names only", () => {
+    expect(publicStaffName("Mostapha Hilal")).toBe("Mostapha");
+    expect(publicStaffName(null)).toBeNull();
+  });
 });

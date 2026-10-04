@@ -7,9 +7,23 @@ import { replyAction } from "@/app/inbox-actions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@qubo/shared/utils";
 
-export function Composer({ site, conversationId, contactEmail, emailReady }: { site: string; conversationId: string; contactEmail: string | null; emailReady: boolean }) {
+export function Composer({
+  site,
+  conversationId,
+  contactEmail,
+  emailReady,
+  chat,
+}: {
+  site: string;
+  conversationId: string;
+  contactEmail: string | null;
+  emailReady: boolean;
+  /** Chat threads: replies reach the visitor live; `online` = they have the chat open right now. */
+  chat?: { online: boolean };
+}) {
   const [state, action, pending] = useActionState(replyAction, null);
-  const [internal, setInternal] = useState(!contactEmail);
+  const canReply = Boolean(contactEmail) || Boolean(chat);
+  const [internal, setInternal] = useState(!canReply);
   const form = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
@@ -18,10 +32,17 @@ export function Composer({ site, conversationId, contactEmail, emailReady }: { s
     if (state.ok) form.current?.reset();
   }, [state?.at]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const canEmail = Boolean(contactEmail);
   const hint = internal
     ? "Internal note: only your team sees this."
-    : emailReady
+    : chat
+      ? chat.online
+        ? "Visitor is in the chat now: they'll see this instantly."
+        : contactEmail
+          ? emailReady
+            ? `Visitor left the chat: shown when they return and e-mailed to ${contactEmail}.`
+            : `Visitor left the chat: shown when they return (e-mail isn't configured on this instance).`
+          : "Visitor left the chat: shown when they return. They left no e-mail address."
+      : emailReady
       ? `Sent by e-mail to ${contactEmail}.`
       : `Saved to the thread. E-mail isn't configured on this instance, so ${contactEmail} won't receive it.`;
 
@@ -43,7 +64,7 @@ export function Composer({ site, conversationId, contactEmail, emailReady }: { s
       {state?.error && !state.ok && <p className="mt-1 text-sm text-destructive">{state.error}</p>}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <div className="flex rounded-lg border p-0.5 text-[13px]">
-          <button type="button" disabled={!canEmail} onClick={() => setInternal(false)} className={cn("rounded-md px-2.5 py-1 disabled:opacity-40", !internal && "bg-accent font-medium")}>
+          <button type="button" disabled={!canReply} onClick={() => setInternal(false)} className={cn("rounded-md px-2.5 py-1 disabled:opacity-40", !internal && "bg-accent font-medium")}>
             Reply
           </button>
           <button type="button" onClick={() => setInternal(true)} className={cn("flex items-center gap-1 rounded-md px-2.5 py-1", internal && "bg-accent font-medium")}>

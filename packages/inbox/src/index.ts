@@ -20,7 +20,27 @@ export const LIMITS = {
   /** All visitors of one site together, per window. */
   submissionsPerSiteWindow: 60,
   windowMs: 60_000,
+  /** One chat message from a visitor. */
+  chatMessageLength: 4000,
+  /** Chat messages per visitor per window (also caps new chats per IP). */
+  chatPerWindow: 20,
+  /** All chat traffic of one site per window. */
+  chatPerSiteWindow: 300,
+  /** Messages a visitor sees when the chat opens. */
+  chatHistory: 200,
 } as const;
+
+/** A visitor counts as "in the chat" this long after their last sign of life; after that replies are e-mailed. */
+export const CHAT_AWAY_MS = 90_000;
+
+/** Subject of a new chat: its first line, trimmed. */
+export function chatSubject(body: string): string {
+  const line = body.trim().split(/\r?\n/, 1)[0]!.replace(/\s+/g, " ");
+  return line.length > 80 ? `${line.slice(0, 79)}…` : line || "Chat";
+}
+
+/** Staff appear to visitors by first name only. */
+export const publicStaffName = (name: string | null) => name?.trim().split(/\s+/)[0] || null;
 
 /** Hidden field the form blocks render; humans leave it empty. */
 export const HONEYPOT = "_company_website";

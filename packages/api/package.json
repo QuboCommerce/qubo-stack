@@ -22,7 +22,8 @@
     "better-auth": "^1.2",
     "drizzle-orm": "^0.44",
     "elysia": "^1.2",
-    "@qubo/portal-client": "workspace:*"
+    "@qubo/portal-client": "workspace:*",
+    "@qubo/realtime": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",
