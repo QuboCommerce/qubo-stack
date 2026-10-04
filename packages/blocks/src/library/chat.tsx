@@ -13,10 +13,48 @@ export type ChatLabels = {
   contactHint: string;
   error: string;
   close: string;
+  /** Older saved blocks predate these; the widget falls back to English. */
+  attach?: string;
+  remove?: string;
+  expired?: string;
 };
 
 type Author = "customer" | "staff" | "ai" | "system";
-type Msg = { id: string; author: Author; name: string | null; body: string; createdAt: string; pending?: boolean };
+type Att = { id: string; name: string; size: number | null; type: string | null };
+type Msg = { id: string; author: Author; name: string | null; body: string; attachments?: Att[]; createdAt: string; pending?: boolean };
+
+/** Mirrors the chat upload profile in @qubo/storage; the API re-checks everything. */
+const FILES = { max: 3, maxBytes: 10e6, accept: ".jpg,.jpeg,.png,.gif,.webp,.pdf,image/jpeg,image/png,image/gif,image/webp,application/pdf" };
+const isImage = (a: Att) => Boolean(a.type?.startsWith("image/"));
+const fmtSize = (n: number | null) => (n == null ? "" : n < 1024 ** 2 ? `${Math.max(1, Math.round(n / 1024))} KB` : `${(n / 1024 ** 2).toFixed(1)} MB`);
+
+function Attachment({ a, expired }: { a: Att; expired: string }) {
+  const [gone, setGone] = useState(false);
+  const url = `/api/chat/files/${a.id}`;
+  if (a.id.startsWith("tmp-") || gone)
+    return (
+      <span className="qb-chat-file" data-gone={gone || undefined}>
+        {a.name}
+        {gone && <small>{expired}</small>}
+      </span>
+    );
+  if (isImage(a))
+    return (
+      <a className="qb-chat-image" href={url} target="_blank" rel="noopener">
+        <img src={url} alt={a.name} loading="lazy" onError={() => setGone(true)} />
+      </a>
+    );
+  return (
+    <a className="qb-chat-file" href={url} target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+        <path d="M14 3v6h6" />
+      </svg>
+      {a.name}
+      {a.size != null && <small>{fmtSize(a.size)}</small>}
+    </a>
+  );
+}
 type Thread = { conversationId: string | null; contact: { name: string | null; email: string | null }; messages: Msg[] };
 
 const flagKey = (siteId: string) => `qubo-chat:${siteId}`;
@@ -51,19 +89,23 @@ export function ChatWidget({
   labels,
   position,
   askContact,
+  allowFiles = true,
   preview,
 }: {
   siteId: string;
   labels: ChatLabels;
   position: "right" | "left";
   askContact: "optional" | "required" | "off";
+  allowFiles?: boolean;
   /** Editor: render open with sample messages and never touch the network. */
   preview?: boolean;
 }) {
   const [open, setOpen] = useState(Boolean(preview));
   const [thread, setThread] = useState<Thread | null>(preview ? { conversationId: "preview", contact: { name: null, email: null }, messages: sample } : null);
   const [unread, setUnread] = useState(0);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const picker = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const openRef = useRef(open);
   // Mirrors `thread` for the stream handler, which must not side-effect inside a state updater.
@@ -100,7 +142,7 @@ export function ChatWidget({
       const m = JSON.parse((ev as MessageEvent<string>).data) as Msg;
       const t = threadRef.current;
       if (!t || t.messages.some((x) => x.id === m.id)) return;
-      const temp = m.author === "customer" ? t.messages.findIndex((x) => x.pending && x.body === m.body) : -1;
+      const temp = m.author === "customer" ? t.messages.findIndex((x) => x.pending && x.body === m.body && (x.attachments?.length ?? 0) === m.attachments?.length) : -1;
       const messages = temp >= 0 ? t.messages.map((x, i) => (i === temp ? m : x)) : [...t.messages, m];
       threadRef.current = { ...t, messages };
       setThread(threadRef.current);
@@ -155,27 +197,45 @@ export function ChatWidget({
     const form = e.currentTarget;
     const data = new FormData(form);
     const body = String(data.get("body") ?? "").trim();
-    if (!body) return;
+    const sending = files;
+    if (!body && !sending.length) return;
     setBusy(true);
-    setError(false);
-    const temp: Msg = { id: `tmp-${Date.now()}`, author: "customer", name: null, body, createdAt: new Date().toISOString(), pending: true };
+    setError(null);
+    const temp: Msg = {
+      id: `tmp-${Date.now()}`,
+      author: "customer",
+      name: null,
+      body,
+      attachments: sending.map((f, i) => ({ id: `tmp-${i}`, name: f.name, size: f.size, type: f.type })),
+      createdAt: new Date().toISOString(),
+      pending: true,
+    };
     setThread((t) => ({ ...(t ?? { conversationId: null, contact: { name: null, email: null } }), messages: [...(t?.messages ?? []), temp] }));
     (form.elements.namedItem("body") as HTMLTextAreaElement).value = "";
-    const res = await fetch("/api/chat/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        body,
-        name: data.get("name") || undefined,
-        email: data.get("email") || undefined,
-        pagePath: `${window.location.pathname}${window.location.search}`.slice(0, 500),
-      }),
-    }).catch(() => null);
+    setFiles([]);
+    const fields = {
+      body,
+      name: String(data.get("name") ?? "") || undefined,
+      email: String(data.get("email") ?? "") || undefined,
+      pagePath: `${window.location.pathname}${window.location.search}`.slice(0, 500),
+    };
+    let request: RequestInit;
+    if (sending.length) {
+      const multipart = new FormData();
+      for (const [k, v] of Object.entries(fields)) if (v) multipart.set(k, v);
+      for (const f of sending) multipart.append("files", f);
+      request = { method: "POST", body: multipart };
+    } else {
+      request = { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(fields) };
+    }
+    const res = await fetch("/api/chat/messages", request).catch(() => null);
     setBusy(false);
     if (!res?.ok) {
-      setError(true);
+      const problem = res && res.status === 422 ? ((await res.json().catch(() => null)) as { message?: string } | null)?.message : undefined;
+      setError(problem ?? labels.error);
       setThread((t) => t && { ...t, messages: t.messages.filter((m) => m.id !== temp.id) });
       (form.elements.namedItem("body") as HTMLTextAreaElement).value = body;
+      setFiles(sending);
       return;
     }
     const result = (await res.json()) as { conversationId: string; created: boolean; message: Msg };
@@ -209,7 +269,14 @@ export function ChatWidget({
             {thread?.messages.map((m) => (
               <li key={m.id} className="qb-chat-msg" data-author={m.author === "customer" ? "customer" : "staff"} data-pending={m.pending || undefined}>
                 {m.author !== "customer" && m.name && <span className="qb-chat-name">{m.name}</span>}
-                <p>{m.body}</p>
+                {m.body && <p>{m.body}</p>}
+                {m.attachments?.length ? (
+                  <div className="qb-chat-files">
+                    {m.attachments.map((a) => (
+                      <Attachment key={a.id} a={a} expired={labels.expired ?? "No longer available"} />
+                    ))}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ol>
@@ -223,8 +290,20 @@ export function ChatWidget({
             )}
             {error && (
               <p className="qb-form-error" role="alert">
-                {labels.error}
+                {error}
               </p>
+            )}
+            {files.length > 0 && (
+              <ul className="qb-chat-picked">
+                {files.map((f, i) => (
+                  <li key={`${f.name}-${i}`}>
+                    <span>{f.name}</span>
+                    <button type="button" aria-label={`${labels.remove ?? "Remove"} ${f.name}`} onClick={() => setFiles((all) => all.filter((_, j) => j !== i))}>
+                      ×
+                    </button>
+                  </li>
+                ))}
+              </ul>
             )}
             <div className="qb-chat-compose">
               <textarea
@@ -232,7 +311,7 @@ export function ChatWidget({
                 className="qb-input"
                 name="body"
                 rows={2}
-                required
+                required={!files.length}
                 maxLength={4000}
                 placeholder={labels.placeholder}
                 onKeyDown={(e) => {
@@ -242,6 +321,37 @@ export function ChatWidget({
                   }
                 }}
               />
+              {allowFiles && (
+                <>
+                  <input
+                    ref={picker}
+                    type="file"
+                    hidden
+                    multiple
+                    accept={FILES.accept}
+                    onChange={(e) => {
+                      const picked = [...files, ...Array.from(e.currentTarget.files ?? [])];
+                      e.currentTarget.value = "";
+                      const tooBig = picked.find((f) => f.size > FILES.maxBytes);
+                      if (tooBig) return setError(`${tooBig.name}: max ${FILES.maxBytes / 1e6} MB.`);
+                      setError(picked.length > FILES.max ? `Up to ${FILES.max} files per message.` : null);
+                      setFiles(picked.slice(0, FILES.max));
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="qb-chat-attach"
+                    aria-label={labels.attach ?? "Attach files"}
+                    title={labels.attach ?? "Attach files"}
+                    disabled={busy || files.length >= FILES.max}
+                    onClick={() => !preview && picker.current?.click()}
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5" />
+                    </svg>
+                  </button>
+                </>
+              )}
               <button type="submit" className="qb-button" data-emphasis="primary" data-size="sm" disabled={busy}>
                 {labels.send}
               </button>

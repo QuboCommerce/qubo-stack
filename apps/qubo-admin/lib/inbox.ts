@@ -1,6 +1,6 @@
 import "server-only";
 import { db } from "@qubo/db/client";
-import { conversation, form, formSubmission, message, order, organizationMember, siteCustomer, user } from "@qubo/db/schema";
+import { conversation, form, formSubmission, inboxFile, message, order, organizationMember, siteCustomer, user } from "@qubo/db/schema";
 import { wakeSnoozed } from "@qubo/inbox/server";
 import { and, asc, count, desc, eq, ilike, inArray, ne, or, type SQL } from "drizzle-orm";
 
@@ -78,8 +78,9 @@ export async function viewCounts(siteId: string, userId: string) {
 export async function getConversation(siteId: string, id: string) {
   const conv = await db.query.conversation.findFirst({ where: and(eq(conversation.id, id), eq(conversation.siteId, siteId)) });
   if (!conv) return null;
-  const [messages, submission, linkedOrder, customer, history] = await Promise.all([
+  const [messages, fileRows, submission, linkedOrder, customer, history] = await Promise.all([
     db.select().from(message).where(eq(message.conversationId, id)).orderBy(asc(message.createdAt)),
+    db.select({ id: inboxFile.id, source: inboxFile.source, expiresAt: inboxFile.expiresAt }).from(inboxFile).where(eq(inboxFile.conversationId, id)),
     conv.formSubmissionId
       ? db
           .select({ data: formSubmission.data, pagePath: formSubmission.pagePath, locale: formSubmission.locale, formName: form.name })
@@ -103,7 +104,9 @@ export async function getConversation(siteId: string, id: string) {
           .limit(5)
       : [],
   ]);
-  return { ...conv, messages, submission, order: linkedOrder ?? null, customer: customer ?? null, history };
+  // Attachments without a row here have expired; the message keeps their names.
+  const files = Object.fromEntries(fileRows.map((f) => [f.id, { source: f.source, expiresAt: f.expiresAt?.toISOString() ?? null }]));
+  return { ...conv, messages, files, submission, order: linkedOrder ?? null, customer: customer ?? null, history };
 }
 export type ConversationDetail = NonNullable<Awaited<ReturnType<typeof getConversation>>>;
 

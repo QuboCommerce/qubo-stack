@@ -1,4 +1,4 @@
-import { boolean, index, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, integer, jsonb, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { order } from "./orders";
 import { site } from "./site";
@@ -14,7 +14,8 @@ export const conversationStatusEnum = pgEnum("conversation_status", ["open", "pe
 export const conversationPriorityEnum = pgEnum("conversation_priority", ["low", "normal", "high", "urgent"]);
 export const messageAuthorEnum = pgEnum("message_author", ["customer", "staff", "ai", "system"]);
 
-export type MessageAttachment = { name: string; url: string; size?: number; type?: string };
+/** Display copy of a file on a message. `id` points at `inbox_file`; `url` is only set for links that live elsewhere. */
+export type MessageAttachment = { id?: string; name: string; url?: string; size?: number; type?: string };
 
 export const conversation = pgTable(
   "conversation",
@@ -76,4 +77,36 @@ export const message = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [index("message_conversation_created_idx").on(t.conversationId, t.createdAt), index("message_email_id_idx").on(t.emailMessageId)],
+);
+
+export const inboxFileSourceEnum = pgEnum("inbox_file_source", ["chat", "email", "form", "staff"]);
+
+/**
+ * A private file sent in a conversation. Bytes live in storage under
+ * `inbox/<site>/<conversation>/<id>.<ext>`; only staff of the site and the
+ * conversation's own visitor can read them. Chat uploads expire unless staff keep them.
+ */
+export const inboxFile = pgTable(
+  "inbox_file",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id")
+      .notNull()
+      .references(() => site.id, { onDelete: "cascade" }),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => conversation.id, { onDelete: "cascade" }),
+    /** Null while uploaded but not yet sent. */
+    messageId: uuid("message_id").references(() => message.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    filename: text("filename").notNull(),
+    mime: text("mime").notNull(),
+    size: integer("size").notNull(),
+    source: inboxFileSourceEnum("source").notNull(),
+    uploadedBy: text("uploaded_by").references(() => user.id, { onDelete: "set null" }),
+    /** Null = kept. */
+    expiresAt: timestamp("expires_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("inbox_file_conversation_idx").on(t.conversationId), index("inbox_file_message_idx").on(t.messageId), index("inbox_file_expires_idx").on(t.expiresAt)],
 );

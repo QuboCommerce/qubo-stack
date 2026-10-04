@@ -1,9 +1,15 @@
 import { db, sql } from "@qubo/db/client";
-import { conversation, form, formSubmission, message, site, type MessageAttachment } from "@qubo/db/schema";
+import { conversation, form, formSubmission, inboxFile, message, site, type MessageAttachment } from "@qubo/db/schema";
 import { publish } from "@qubo/realtime/server";
+import { storageConfigured } from "@qubo/storage/server";
 import { createHash } from "node:crypto";
 import { and, count, desc, eq, gt, inArray, isNotNull, isNull, lte, ne } from "drizzle-orm";
 import { baseSubject, CHAT_AWAY_MS, chatSubject, createRateLimiter, htmlToText, INBOUND_PER_HOUR, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
+
+import { checkUploads, claimDraftFiles, linkFiles, readBytes, storeFiles, type IncomingFile } from "./files";
+import { CHAT_ATTACHMENTS, cleanFilename } from "@qubo/storage";
+
+export * from "./files";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -117,7 +123,16 @@ const fromAddress = () => process.env.EMAIL_FROM?.trim() || process.env.ORDER_EM
 /** `Name <addr@domain>` → `domain`, used for our own Message-IDs. */
 const fromDomain = (from: string) => from.match(/@([^>\s]+)/)?.[1] ?? "qubo.local";
 
-type Mail = { to: string[]; subject: string; text: string; html: string; fromName?: string; replyTo?: string; headers?: Record<string, string> };
+type Mail = {
+  to: string[];
+  subject: string;
+  text: string;
+  html: string;
+  fromName?: string;
+  replyTo?: string;
+  headers?: Record<string, string>;
+  attachments?: { filename: string; content: string }[];
+};
 
 /** Resend; returns null when e-mail isn't configured on this instance. */
 async function sendMail(mail: Mail): Promise<{ sent: true } | null> {
@@ -128,7 +143,7 @@ async function sendMail(mail: Mail): Promise<{ sent: true } | null> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: sender, to: mail.to, subject: mail.subject, text: mail.text, html: mail.html, reply_to: mail.replyTo, headers: mail.headers }),
+    body: JSON.stringify({ from: sender, to: mail.to, subject: mail.subject, text: mail.text, html: mail.html, reply_to: mail.replyTo, headers: mail.headers, attachments: mail.attachments }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return { sent: true };
@@ -168,6 +183,8 @@ export async function reply(input: {
   author: { id: string; name: string };
   body: string;
   internal: boolean;
+  /** Draft uploads (`uploadDraftFiles`) by this author to send with the reply. */
+  fileIds?: string[];
 }): Promise<ReplyResult> {
   const body = input.body.trim().slice(0, LIMITS.replyLength);
   const conv = await db.query.conversation.findFirst({ where: and(eq(conversation.id, input.conversationId), eq(conversation.siteId, input.siteId)) });
@@ -179,6 +196,8 @@ export async function reply(input: {
     .values({ conversationId: conv.id, authorType: "staff", authorId: input.author.id, authorName: input.author.name, body, internal: input.internal })
     .returning({ id: message.id });
   const messageId = msg!.id;
+  const attachments = await claimDraftFiles(conv.id, input.author.id, messageId, input.fileIds ?? []);
+  await linkFiles(messageId, attachments);
   await db
     .update(conversation)
     .set({ lastMessageAt: new Date(), updatedAt: new Date(), unread: false, assigneeId: conv.assigneeId ?? input.author.id })
@@ -201,6 +220,7 @@ export async function reply(input: {
     if (previous[0]?.id) Object.assign(headers, { "In-Reply-To": previous[0].id, References: previous[0].id });
     try {
       const inbound = inboundDomain();
+      const files = await mailAttachments(messageId);
       const sent = await sendMail({
         to: [conv.contactEmail],
         subject: replySubject(conv.subject),
@@ -209,6 +229,7 @@ export async function reply(input: {
         fromName: s?.name,
         headers,
         replyTo: inbound ? replyAddress(conv.id, inbound) : undefined,
+        attachments: files.length ? files : undefined,
       });
       delivered = sent ? true : null;
       error = sent ? null : "E-mail isn't configured on this instance (RESEND_API_KEY / EMAIL_FROM).";
@@ -222,6 +243,31 @@ export async function reply(input: {
 
   await emit({ type: "conversation.message", siteId: conv.siteId, payload: { conversationId: conv.id, messageId } });
   return { messageId, delivered, error };
+}
+
+/** The message's files as Resend attachments; past the size budget they're left out (staff can still share them otherwise). */
+async function mailAttachments(messageId: string) {
+  const rows = await db.select().from(inboxFile).where(eq(inboxFile.messageId, messageId));
+  const out: { filename: string; content: string }[] = [];
+  let total = 0;
+  for (const r of rows) {
+    if (total + r.size > LIMITS.emailFilesBytes) continue;
+    const bytes = await readBytes(r.key);
+    if (!bytes) continue;
+    total += r.size;
+    out.push({ filename: r.filename, content: Buffer.from(bytes).toString("base64") });
+  }
+  return out;
+}
+
+/** Files staff attach while writing a reply; they join the reply when it's sent, or expire after a day. */
+export async function uploadDraftFiles(siteId: string, conversationId: string, authorId: string, files: IncomingFile[]) {
+  const conv = await db.query.conversation.findFirst({ where: and(eq(conversation.id, conversationId), eq(conversation.siteId, siteId)), columns: { id: true } });
+  if (!conv) return { ok: false as const, error: "Conversation not found." };
+  const checked = checkUploads("inbox", files, LIMITS.replyFiles);
+  if (!checked.ok) return checked;
+  const attachments = await storeFiles(checked.files, { siteId, conversationId, messageId: null, source: "staff", uploadedBy: authorId });
+  return { ok: true as const, attachments };
 }
 
 /** Status, priority, assignee, read state; emits so other tabs refresh. */
@@ -260,17 +306,19 @@ export async function wakeSnoozed(siteId?: string) {
 /** Who is chatting: a signed-in customer and/or the anonymous cookie token. */
 export type ChatVisitor = { token: string | null; user: { id: string; name: string | null; email: string } | null };
 
-export type ChatMessage = { id: string; author: "customer" | "staff" | "ai" | "system"; name: string | null; body: string; createdAt: string };
+export type ChatAttachment = { id: string; name: string; size: number | null; type: string | null };
+export type ChatMessage = { id: string; author: "customer" | "staff" | "ai" | "system"; name: string | null; body: string; attachments: ChatAttachment[]; createdAt: string };
 
 export type ChatThread = { conversationId: string | null; status: Status | null; contact: { name: string | null; email: string | null }; messages: ChatMessage[] };
 
 export const hashVisitorToken = (token: string) => createHash("sha256").update(`qubo-chat:${token}`).digest("hex");
 
-const toChatMessage = (m: { id: string; authorType: ChatMessage["author"]; authorName: string | null; body: string; createdAt: Date }): ChatMessage => ({
+const toChatMessage = (m: { id: string; authorType: ChatMessage["author"]; authorName: string | null; body: string; attachments: MessageAttachment[]; createdAt: Date }): ChatMessage => ({
   id: m.id,
   author: m.authorType,
   name: m.authorType === "customer" ? null : publicStaffName(m.authorName),
   body: m.body,
+  attachments: m.attachments.flatMap((a) => (a.id ? [{ id: a.id, name: a.name, size: a.size ?? null, type: a.type ?? null }] : [])),
   createdAt: m.createdAt.toISOString(),
 });
 
@@ -303,7 +351,7 @@ export async function chatThread(siteId: string, v: ChatVisitor): Promise<ChatTh
   if (!conv) return { conversationId: null, status: null, contact, messages: [] };
   await chatSeen(conv.id);
   const rows = await db
-    .select({ id: message.id, authorType: message.authorType, authorName: message.authorName, body: message.body, createdAt: message.createdAt })
+    .select({ id: message.id, authorType: message.authorType, authorName: message.authorName, body: message.body, attachments: message.attachments, createdAt: message.createdAt })
     .from(message)
     .where(and(eq(message.conversationId, conv.id), eq(message.internal, false)))
     .orderBy(desc(message.createdAt))
@@ -313,16 +361,20 @@ export async function chatThread(siteId: string, v: ChatVisitor): Promise<ChatTh
 
 export type ChatSendResult =
   | { ok: true; conversationId: string; created: boolean; message: ChatMessage }
-  | { ok: false; error: "empty" | "too_long" | "invalid_email" | "no_identity" };
+  | { ok: false; error: "empty" | "too_long" | "invalid_email" | "no_identity" | "storage_unavailable" }
+  | { ok: false; error: "bad_file"; message: string };
 
 /** Visitor message: opens the chat on first send, reopens a resolved one later. */
 export async function chatSend(
   siteId: string,
   v: ChatVisitor,
-  input: { body: string; name?: string; email?: string; pagePath?: string },
+  input: { body: string; name?: string; email?: string; pagePath?: string; files?: IncomingFile[] },
 ): Promise<ChatSendResult> {
   const body = input.body.trim();
-  if (!body) return { ok: false, error: "empty" };
+  const checked = checkUploads("chat", input.files ?? [], CHAT_ATTACHMENTS.perMessage);
+  if (!checked.ok) return { ok: false, error: "bad_file", message: checked.error };
+  if (!body && !checked.files.length) return { ok: false, error: "empty" };
+  if (checked.files.length && !storageConfigured()) return { ok: false, error: "storage_unavailable" };
   if (body.length > LIMITS.chatMessageLength) return { ok: false, error: "too_long" };
   const email = input.email?.trim().toLowerCase() || null;
   if (email && !isEmail(email)) return { ok: false, error: "invalid_email" };
@@ -336,7 +388,7 @@ export async function chatSend(
     const contactEmail = v.user?.email ?? email;
     const { conversation: conv, messageId } = await db.transaction(async (tx) => {
       const opened = await openConversation(
-        { siteId, channel: "chat", subject: chatSubject(body), body, contactName, contactEmail, customerId: v.user?.id ?? null },
+        { siteId, channel: "chat", subject: chatSubject(body || checked.files[0]!.name), body, contactName, contactEmail, customerId: v.user?.id ?? null },
         tx,
       );
       await tx
@@ -352,14 +404,23 @@ export async function chatSend(
       }
       return opened;
     });
+    const attachments = await storeFiles(checked.files, { siteId, conversationId: conv.id, messageId, source: "chat", uploadedBy: v.user?.id });
+    await linkFiles(messageId, attachments);
     await emit({ type: "conversation.created", siteId, payload: { conversationId: conv.id } });
-    return { ok: true, conversationId: conv.id, created: true, message: { id: messageId, author: "customer", name: null, body, createdAt: conv.createdAt.toISOString() } };
+    return {
+      ok: true,
+      conversationId: conv.id,
+      created: true,
+      message: toChatMessage({ id: messageId, authorType: "customer", authorName: null, body, attachments, createdAt: conv.createdAt }),
+    };
   }
 
   const [msg] = await db
     .insert(message)
     .values({ conversationId: existing.id, authorType: "customer", authorId: v.user?.id ?? null, authorName: existing.contactName ?? name ?? existing.contactEmail, body })
     .returning();
+  const attachments = await storeFiles(checked.files, { siteId, conversationId: existing.id, messageId: msg!.id, source: "chat", uploadedBy: v.user?.id });
+  await linkFiles(msg!.id, attachments);
   await db
     .update(conversation)
     .set({
@@ -374,7 +435,18 @@ export async function chatSend(
     })
     .where(eq(conversation.id, existing.id));
   await emit({ type: "conversation.message", siteId, payload: { conversationId: existing.id, messageId: msg!.id } });
-  return { ok: true, conversationId: existing.id, created: false, message: toChatMessage(msg!) };
+  return { ok: true, conversationId: existing.id, created: false, message: toChatMessage({ ...msg!, attachments }) };
+}
+
+/** A file the visitor may open: in their conversation and on a public message. */
+export async function chatFile(conversationId: string, fileId: string) {
+  const [row] = await db
+    .select({ key: inboxFile.key, mime: inboxFile.mime, filename: inboxFile.filename })
+    .from(inboxFile)
+    .innerJoin(message, eq(message.id, inboxFile.messageId))
+    .where(and(eq(inboxFile.id, fileId), eq(inboxFile.conversationId, conversationId), eq(message.internal, false)))
+    .limit(1);
+  return row ?? null;
 }
 
 /** The visitor still has the chat open (stream connected / heartbeat). */
@@ -406,8 +478,31 @@ export type InboundEmail = {
   html: string | null;
   headers: Record<string, string | string[] | undefined>;
   dmarc: string | null;
-  attachments: { filename: string; size?: number }[];
+  /** `load` fetches the bytes (Resend download URL); missing when they can't be fetched. */
+  attachments: { filename: string; size?: number; inline?: boolean; load?: () => Promise<Uint8Array | null> }[];
 };
+
+/** Inline images this small are signature logos and tracking pixels, not something the customer sent. */
+const INLINE_NOISE_BYTES = 30_000;
+
+/** Downloads and checks a received e-mail's files; what can't be imported is listed by name. */
+async function importEmailFiles(list: InboundEmail["attachments"]) {
+  const wanted = list.filter((a) => !(a.inline && (a.size ?? 0) < INLINE_NOISE_BYTES));
+  const files: { filename: string; bytes: Uint8Array }[] = [];
+  const skipped: string[] = [];
+  for (const a of wanted) {
+    const name = cleanFilename(a.filename);
+    if (files.length >= LIMITS.emailFiles || !a.load || !storageConfigured()) {
+      skipped.push(name);
+      continue;
+    }
+    const bytes = await a.load().catch(() => null);
+    const ok = bytes && checkUploads("inbox", [{ filename: name, bytes }], 1).ok;
+    if (ok) files.push({ filename: name, bytes: bytes! });
+    else skipped.push(name);
+  }
+  return { files: checkUploads("inbox", files, LIMITS.emailFiles), skipped };
+}
 
 export type ReceiveResult =
   | { ok: true; conversationId: string; created: boolean }
@@ -470,9 +565,11 @@ export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
 
   const raw = mail.text?.trim() || (mail.html ? htmlToText(mail.html) : "");
   let body = (conv ? stripQuoted(raw) : raw).slice(0, LIMITS.replyLength) || "(empty e-mail)";
-  if (mail.attachments.length) {
-    // Files stay in Resend for now; staff see what was sent and can ask for it another way.
-    body += `\n\n[${mail.attachments.length} attachment${mail.attachments.length > 1 ? "s" : ""} not imported: ${mail.attachments.map((a) => a.filename).join(", ")}]`;
+  const imported = await importEmailFiles(mail.attachments);
+  const files = imported.files.ok ? imported.files.files : [];
+  if (imported.skipped.length) {
+    // Unsupported types, oversized or unreachable: staff see what was sent and can ask for it another way.
+    body += `\n\n[Not imported: ${imported.skipped.join(", ")}]`;
   }
   const emailMessageId = mail.messageId ?? `resend:${mail.id}`;
 
@@ -486,6 +583,7 @@ export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
       contactEmail: sender.email,
     });
     await db.update(message).set({ emailMessageId }).where(eq(message.id, opened.messageId));
+    await linkFiles(opened.messageId, await storeFiles(files, { siteId, conversationId: opened.conversation.id, messageId: opened.messageId, source: "email" }));
     await emit({ type: "conversation.created", siteId, payload: { conversationId: opened.conversation.id } });
     return { ok: true, conversationId: opened.conversation.id, created: true };
   }
@@ -494,6 +592,7 @@ export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
     .insert(message)
     .values({ conversationId: conv.id, authorType: "customer", authorId: null, authorName: sender.name ?? sender.email, body, emailMessageId })
     .returning({ id: message.id });
+  await linkFiles(msg!.id, await storeFiles(files, { siteId: conv.siteId, conversationId: conv.id, messageId: msg!.id, source: "email" }));
   await db
     .update(conversation)
     .set({

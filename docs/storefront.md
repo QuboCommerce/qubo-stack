@@ -97,7 +97,10 @@ the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the
   Anonymous visitors are identified by the httpOnly `qb_chat` cookie (minted on the first message,
   path `/api/chat`, 180 days; only its sha256 is stored), signed-in customers by their session; an
   anonymous chat is claimed by the customer who signs in on that browser. Visitors only ever see
-  public messages. Put the block in the footer layout to show it on every page.
+  public messages. Put the block in the footer layout to show it on every page. Visitors can attach
+  up to 3 images or PDFs (10 MB each) per message unless the block's "Visitors can send files" is
+  off; the send is then multipart, and `/api/chat/files/<id>` streams a file back only to the
+  visitor whose chat it's in. Visitor files are deleted after 30 days unless staff keep them.
 - **E-mail in:** Resend receives mail on `EMAIL_INBOUND_DOMAIN` and calls
   `POST https://api.<base>/webhooks/resend` (event `email.received`, signed with
   `RESEND_WEBHOOK_SECRET`). Mail to `<site-slug>@<domain>` opens an `email` conversation, so a
@@ -106,7 +109,8 @@ the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the
   In-Reply-To/References, or as a last resort by sender plus subject (open threads, 30 days).
   Quoted history is stripped from replies. Auto-replies, DMARC failures, our own sender and
   duplicates (Message-ID) are dropped; 30 mails per sender per site per hour. Attachments are
-  listed by name, not imported yet.
+  imported into private storage (up to 10 per mail, inbox file types only); the rest are listed by
+  name in the message. Needs file storage (`STORAGE_DIR` or `STORAGE_ENDPOINT`) on the API.
 
 ## Media
 

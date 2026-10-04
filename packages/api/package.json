@@ -18,6 +18,7 @@
     "@qubo/db": "workspace:*",
     "@qubo/inbox": "workspace:*",
     "@qubo/shared": "workspace:*",
+    "@qubo/storage": "workspace:*",
     "@qubo/studio": "workspace:*",
     "better-auth": "^1.2",
     "drizzle-orm": "^0.44",

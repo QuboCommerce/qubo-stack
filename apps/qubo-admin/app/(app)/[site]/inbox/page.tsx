@@ -4,6 +4,7 @@ import { ArrowLeft, Bot, FileText, Globe, Inbox, Mail, MessageCircle, Search, Sh
 import { emailConfigured, inboundDomain } from "@qubo/inbox/server";
 import { cn } from "@qubo/shared/utils";
 import { Composer } from "@/components/inbox/composer";
+import { MessageFiles } from "@/components/inbox/files";
 import { ThreadControls } from "@/components/inbox/controls";
 import { MarkRead } from "@/components/inbox/live";
 import { EmptyState, Page } from "@/components/page";
@@ -181,7 +182,8 @@ function Thread({ detail, site, backHref, members }: { detail: ConversationDetai
                   )}
                   <time dateTime={m.createdAt.toISOString()}>{relativeTime(m.createdAt)}</time>
                 </p>
-                <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                {m.body && <p className="whitespace-pre-wrap break-words">{m.body}</p>}
+                <MessageFiles site={site} attachments={m.attachments} files={detail.files} />
                 {m.deliveryError && (
                   <p className="mt-1.5 text-xs text-destructive">
                     {detail.channel === "chat" ? "Shown in chat, but not e-mailed" : "Not e-mailed"}: {m.deliveryError}

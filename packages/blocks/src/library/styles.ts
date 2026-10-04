@@ -337,6 +337,21 @@ textarea.qb-input { resize: vertical; }
 .qb-chat-compose { display: flex; gap: 0.5em; align-items: flex-end; }
 .qb-chat-compose textarea { resize: none; }
 .qb-chat .qb-form-error { margin: 0; }
+.qb-chat-msg[data-author="customer"] .qb-chat-files { justify-content: flex-end; }
+.qb-chat-files { display: flex; flex-wrap: wrap; gap: 0.35em; margin-top: 0.3em; }
+.qb-chat-image { display: block; border-radius: var(--qb-radius-md); overflow: hidden; border: var(--qb-border-width, 1px) solid var(--qb-border); }
+.qb-chat-image img { display: block; max-width: 14rem; max-height: 10rem; object-fit: cover; }
+.qb-chat-file { display: inline-flex; align-items: center; gap: 0.4em; max-width: 100%; padding: 0.45em 0.7em; border-radius: var(--qb-radius-md); background: var(--qb-surface); color: var(--qb-on-surface); text-decoration: none; overflow-wrap: anywhere; }
+.qb-chat-file small { color: var(--qb-text-muted); white-space: nowrap; }
+.qb-chat-file[data-gone] { opacity: 0.6; flex-direction: column; align-items: flex-start; gap: 0; }
+a.qb-chat-file:hover { text-decoration: underline; }
+.qb-chat-picked { display: flex; flex-wrap: wrap; gap: 0.35em; margin: 0; padding: 0; list-style: none; }
+.qb-chat-picked li { display: inline-flex; align-items: center; gap: 0.3em; max-width: 100%; padding: 0.2em 0.3em 0.2em 0.6em; border-radius: 999px; background: color-mix(in oklab, var(--qb-text) 8%, var(--qb-background)); }
+.qb-chat-picked span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 12rem; }
+.qb-chat-picked button { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 1.1em; line-height: 1; padding: 0 0.2em; }
+.qb-chat-attach { display: inline-grid; place-items: center; flex: none; width: 2.25rem; height: 2.25rem; border: 0; border-radius: var(--qb-radius-md); background: transparent; color: var(--qb-text-muted); cursor: pointer; }
+.qb-chat-attach:hover:not(:disabled) { color: var(--qb-text); background: color-mix(in oklab, var(--qb-text) 6%, transparent); }
+.qb-chat-attach:disabled { opacity: 0.4; cursor: default; }
 
 /* ---- site & data ------------------------------------------------------- */
 .qb-map { display: grid; gap: var(--qb-gap-lg); align-items: start; }

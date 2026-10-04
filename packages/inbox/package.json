@@ -9,6 +9,7 @@
   "dependencies": {
     "@qubo/db": "workspace:*",
     "@qubo/realtime": "workspace:*",
+    "@qubo/storage": "workspace:*",
     "drizzle-orm": "^0.44"
   },
   "devDependencies": { "@types/node": "^22", "typescript": "^5" }

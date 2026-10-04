@@ -10,6 +10,10 @@ const nextConfig: NextConfig = {
   },
   serverExternalPackages: ["postgres"],
   output: "standalone",
+  experimental: {
+    // proxy.ts sees every /api request; its 10 MB default would cut media and attachment uploads short.
+    proxyClientMaxBodySize: "210mb",
+  },
   // The panel is never indexed, on any host.
   async headers() {
     return [{ source: "/:path*", headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }] }];
