@@ -9,6 +9,8 @@ export type ShellSite = {
   organization: { id: string; name: string };
   /** Outside the instance's plan; opening it shows /locked. */
   locked: boolean;
+  /** False = draft: only staff and the preview host can see it. */
+  published: boolean;
 };
 
 export type ShellUser = { name: string; email: string; role: string; image: string | null };

@@ -102,6 +102,13 @@ export const site = pgTable("site", {
     .references(() => user.id, { onDelete: "cascade" }),
   currency: text("currency").notNull().default("EUR"),
   locale: text("locale").notNull().default("fr-BE"),
+  /**
+   * First publish; null = draft. Drafts are only reachable by staff and on the
+   * PIN-locked preview host, and can move between organisations. Once set it
+   * never clears: the site belongs to its organisation for good (orders,
+   * invoices, customers). Taking a site offline is maintenance mode.
+   */
+  publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

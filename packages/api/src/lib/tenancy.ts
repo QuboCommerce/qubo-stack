@@ -19,6 +19,8 @@ export type SiteContext = {
   locale: string;
   organizationId: string;
   capabilities: SiteCapability[];
+  /** null = draft; see `site.publishedAt`. */
+  publishedAt: Date | null;
 };
 
 export type SiteCapability = (typeof site.$inferSelect)["capabilities"][number];
@@ -52,6 +54,7 @@ export async function resolveSite(
     locale: site.locale,
     organizationId: site.organizationId,
     capabilities: site.capabilities,
+    publishedAt: site.publishedAt,
   };
 
   const slug = headers.get("x-qubo-site")?.trim();
