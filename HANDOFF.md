@@ -70,9 +70,9 @@ cannot reach it — PostgREST only serves the `postgres` database. Drizzle owns
 
 Production gets its own VPS with a dedicated self-hosted Supabase; the same
 database-per-project layout applies. `qubo-postgres` stays in compose until
-that cutover. Storage (A9) will use Supabase Storage buckets; the local stack
-has S3 protocol and image transformation disabled, so dev serves plain object
-URLs.
+that cutover. Files don't use Supabase Storage: `@qubo/storage` writes to local
+disk (`STORAGE_DIR`, the compose `media` volume) or any S3-compatible bucket
+(`STORAGE_ENDPOINT`), see decision 22.
 
 ## Running locally
 
@@ -153,8 +153,8 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    (`/[site]/…`), capability-driven sidebar, ⌘K palette, dashboard, paged
    products/customers, orders, themes and settings hub, and the Studio editor
    (`/[site]/studio/…`: Puck canvas, view picker, autosave, publish, history,
-   Add-section modal with live thumbnails, Theme panel). Still missing: product editor,
-   variant builder, media manager. Unbuilt
+   Add-section modal with live thumbnails, Theme panel), media library. Still missing:
+   variant builder. Unbuilt
    sections render a "roadmap" placeholder via `app/[site]/[...rest]`.
 5. **Legacy admin password was shared in chat** — rotate it.
 
@@ -335,6 +335,23 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    shows e-mail in/out status and edits each form's name and notify list. Not
    built yet: attachment import (form and e-mail), cross-site inbox (planned for
    the site switcher), portal tickets, typing indicators.
+22. **Media library: one per organisation, served by our own apps.** `asset` rows
+   belong to the org; `site_id` is the uploading site, null = shared by every site
+   of the org. Not per account: an org is the billing and legal unit and published
+   sites never move between orgs. `@qubo/storage` picks the driver (disk when only
+   `STORAGE_DIR` is set, S3 via aws4fetch when `STORAGE_ENDPOINT` is), sniffs file
+   content against the extension, and keys files `media/<org>/<asset>.<ext>`. The
+   key has no site, so sharing a file never changes its URL. Admin and storefront
+   both serve `GET /api/media/<org>/<asset>.<ext>` (immutable cache, nosniff,
+   sandbox CSP so SVG can't script). Uploads go through `POST /api/media-library`
+   (route handler: server actions cap bodies at 1 MB). QuickPick
+   (`components/media/quick-pick.tsx`) is the browser on `/[site]/media` and the
+   picker dialog for Studio media fields (`mediaFieldAdapter`) and product
+   galleries. `MediaValue` stores `assetId` + `url` (+ width/height), so rendering
+   needs no lookup. Usage: Studio indexes documents in `asset_usage`; product
+   galleries write `product:<id>` rows. Deleting warns with the usage, drops the
+   file from product galleries, and leaves pages with a missing image. Not built
+   yet: image resizing/transcoding, blurhash, folders, copying between orgs.
 
 ## Roadmap
 

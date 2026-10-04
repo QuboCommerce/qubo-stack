@@ -70,11 +70,14 @@ export type IconDef = Def<"icon", string>;
 export type AnchorIdDef = Def<"anchorId", string>;
 
 export type MediaValue = {
-  /** Media-library asset (Supabase storage). Preferred. */
+  /** Media-library asset. Preferred; `url` is kept alongside so rendering needs no lookup. */
   assetId?: string;
-  /** Plain URL — dev fixtures and external images. */
+  /** Library URL (`/api/media/...`), or a plain URL for fixtures and external images. */
   url?: string;
   alt: string;
+  /** Intrinsic size from the library, so the storefront reserves space (no layout shift). */
+  width?: number;
+  height?: number;
   /** Focal point, 0–1 on each axis, used for object-position. */
   focal?: { x: number; y: number };
 };
@@ -164,6 +167,8 @@ const mediaSchema = z
     assetId: z.string().optional(),
     url: z.string().optional(),
     alt: z.string().default(""),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
     focal: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).optional(),
   })
   .nullable();

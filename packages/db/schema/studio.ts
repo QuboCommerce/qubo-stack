@@ -207,8 +207,9 @@ export const themeRevision = pgTable(
 
 /**
  * Media lives at the organization level so a merchant with two sites shares
- * one library; `siteId` null = shared pool. Object key in Supabase Storage:
- * `{orgId}/{siteId|shared}/{assetId}.{ext}` in the `media` bucket.
+ * one library; `siteId` null = shared pool. Object key (see `@qubo/storage`):
+ * `media/{orgId}/{assetId}.{ext}`, served at `/api/media/{orgId}/{assetId}.{ext}`.
+ * The key has no site, so moving an asset between a site and the pool keeps its URL.
  */
 export const asset = pgTable(
   "asset",

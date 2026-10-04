@@ -16,8 +16,10 @@
     "@qubo/db": "workspace:*",
     "@qubo/geo": "workspace:*",
     "@qubo/inbox": "workspace:*",
+    "@qubo/portal-client": "workspace:*",
     "@qubo/realtime": "workspace:*",
     "@qubo/shared": "workspace:*",
+    "@qubo/storage": "workspace:*",
     "@qubo/studio": "workspace:*",
     "@qubo/stylekit": "workspace:*",
     "@radix-ui/react-alert-dialog": "^1.1",
@@ -59,8 +61,7 @@
     "tailwind-merge": "^2.5",
     "vaul": "^1.1",
     "zod": "^4.4",
-    "zustand": "^5",
-    "@qubo/portal-client": "workspace:*"
+    "zustand": "^5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1",

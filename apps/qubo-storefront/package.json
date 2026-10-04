@@ -11,6 +11,7 @@
   "dependencies": {
     "@qubo/blocks": "workspace:*",
     "@qubo/shared": "workspace:*",
+    "@qubo/storage": "workspace:*",
     "@qubo/storefront": "workspace:*",
     "@qubo/stylekit": "workspace:*",
     "next": "^16.3",
