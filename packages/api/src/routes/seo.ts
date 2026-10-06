@@ -33,14 +33,15 @@ export const seo = new Elysia({ prefix: "/render" })
         .where(eq(category.siteId, site.id))
         .orderBy(asc(category.position)),
       db
-        .select({ slug: page.slug, updatedAt: page.updatedAt, isHomepage: page.isHomepage })
+        .select({ slug: page.slug, title: page.title, updatedAt: page.updatedAt, isHomepage: page.isHomepage })
         .from(page)
-        .where(and(eq(page.siteId, site.id), eq(page.state, "PUBLISHED"))),
+        .where(and(eq(page.siteId, site.id), eq(page.state, "PUBLISHED")))
+        .orderBy(asc(page.title)),
     ]);
     return {
       products,
       categories,
-      pages: pages.filter((p) => !p.isHomepage).map(({ slug, updatedAt }) => ({ slug, updatedAt })),
+      pages: pages.filter((p) => !p.isHomepage).map(({ slug, title, updatedAt }) => ({ slug, title, updatedAt })),
     };
   })
   .get(

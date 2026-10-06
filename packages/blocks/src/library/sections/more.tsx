@@ -389,6 +389,78 @@ export const PostList = defineSection({
   },
 });
 
+export type SiteTreeItem = { title: string; href: string; children?: SiteTreeItem[] };
+export type SiteTreeGroup = { label: string; items: SiteTreeItem[] };
+
+const placeholderTree = (pages: string, collections: string): SiteTreeGroup[] => [
+  { label: pages, items: ["Home", "About us", "Contact"].map((t) => ({ title: t, href: "#" })) },
+  {
+    label: collections,
+    items: [
+      { title: "Collection A", href: "#", children: [{ title: "Sub-collection", href: "#" }, { title: "Sub-collection", href: "#" }] },
+      { title: "Collection B", href: "#" },
+    ],
+  },
+];
+
+function TreeList({ items, editing, depth = 0 }: { items: SiteTreeItem[]; editing: boolean; depth?: number }) {
+  return (
+    <ul className="qb-site-tree" data-depth={depth}>
+      {items.map((item, i) => (
+        <li key={i}>
+          <a href={editing ? undefined : item.href}>{item.title}</a>
+          {item.children?.length ? <TreeList items={item.children} editing={editing} depth={depth + 1} /> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Human-readable site map (Plan du site). The storefront fills it from the
+ * sitemap and category tree, so it never goes stale; the editor shows a
+ * placeholder tree.
+ */
+export const SiteTree = defineSection({
+  name: "SiteTree",
+  label: "Site map",
+  description: "Every page and collection of the site as a readable tree, built from the site itself.",
+  category: "site",
+  icon: "network",
+  chrome: { width: "narrow" },
+  keywords: ["sitemap", "plan du site", "index", "pages", "tree"],
+  fields: {
+    header: header({ title: "Site map", align: "start" }),
+    level: f.select(["h1", "h2"], { label: "Title level", default: "h2", group: "style" }),
+    showPages: f.toggle({ label: "Pages", default: true }),
+    pagesLabel: f.text({ label: "Pages heading", default: "Pages" }),
+    showCollections: f.toggle({ label: "Collections", default: true }),
+    collectionsLabel: f.text({ label: "Collections heading", default: "Collections" }),
+    columns: columnsField(1, 2, 2),
+  },
+  render: ({ header: h, level, showPages, pagesLabel, showCollections, collectionsLabel, columns }, ctx) => {
+    const data = ctx.metadata.data?.[ctx.id] as SiteTreeGroup[] | undefined;
+    const groups = (data ?? (ctx.isEditing || ctx.metadata.blueprint ? placeholderTree(pagesLabel, collectionsLabel) : [])).filter(
+      (g, i) => (i === 0 ? showPages : showCollections) && g.items.length,
+    );
+    return (
+      <>
+        <SectionHeader value={h} ctx={ctx} level={level as "h1" | "h2"} />
+        <div className="qb-grid" style={{ ...colsStyle(columns, "md"), gap: gap("lg") } as CSSProperties}>
+          {groups.map((g, i) => (
+            <section key={i} className="qb-site-tree-group">
+              <h3 className="qb-heading qb-font-heading" style={{ fontSize: "var(--qb-step-1)" }}>
+                {g.label}
+              </h3>
+              <TreeList items={g.items} editing={!!ctx.isEditing} />
+            </section>
+          ))}
+        </div>
+      </>
+    );
+  },
+});
+
 export const formSections = [Newsletter, ContactForm, MapSection];
 export const siteSections = [AnnouncementBar];
-export const dataSections = [ProductGrid, PostList];
+export const dataSections = [ProductGrid, PostList, SiteTree];

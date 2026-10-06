@@ -18,7 +18,7 @@ The site is then resolved in this order:
 
 | Route | Source |
 | --- | --- |
-| `/sitemap.xml` | `GET /v1/render/sitemap`: home, published pages, and with `catalog` the collections and products |
+| `/sitemap.xml` | `GET /v1/render/sitemap`: home, published pages (with titles), and with `catalog` the collections and products |
 | `/robots.txt` | Blocks everything on dev/preview hosts, otherwise points at the sitemap |
 | `<link rel=canonical>` | Primary verified domain + path, query dropped |
 | `<title>` | `<page> \| <site title>`; the site title is Settings > Business & SEO (else the site name). The home page carries its Studio title or the site title alone |
@@ -28,6 +28,7 @@ The site is then resolved in this order:
 - Non-primary verified domains (and `www.<primary>`) 308 to the primary domain, path kept.
 - A missing page checks the `redirect` table (legacy URLs) before rendering the `not_found` template.
 - Dev (`QUBO_DEV=1`) is always `noindex` and canonical to its own host.
+- The `SiteTree` block (`/plan-du-site` blueprint) is filled by `loadBlockData` from the same sitemap plus the category tree, so a human-readable site map never drifts from the XML one.
 - Structured data only repeats what the merchant typed in Settings > Business & SEO and the
   organisation record (legal name, numbers, address): a missing field is left out, never guessed.
 
