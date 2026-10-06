@@ -4,7 +4,7 @@
  * update notices and fleet visibility. Nothing here ever locks the instance;
  * a missing, stale or unreachable portal degrades to Free at worst.
  */
-import { asc, count, eq } from "drizzle-orm";
+import { asc, count, eq, isNull } from "drizzle-orm";
 import { createRemoteJWKSet, jwtVerify, importJWK, exportJWK, type JWK } from "jose";
 import { db } from "@qubo/db/client";
 import { organization, portalLink, site } from "@qubo/db/schema";
@@ -86,7 +86,7 @@ export async function unlink(): Promise<void> {
 }
 
 async function usage() {
-  const [[orgs], [sites]] = await Promise.all([db.select({ n: count() }).from(organization), db.select({ n: count() }).from(site)]);
+  const [[orgs], [sites]] = await Promise.all([db.select({ n: count() }).from(organization), db.select({ n: count() }).from(site).where(isNull(site.deletedAt))]);
   const orgRows = await db.select({ id: organization.id, name: organization.name }).from(organization);
   return { counts: { orgs: orgs?.n ?? 0, sites: sites?.n ?? 0, seats: 0, storageMB: 0 }, orgs: orgRows };
 }
@@ -201,7 +201,7 @@ export async function access(): Promise<Access> {
   const [ent, orgs, sites] = await Promise.all([
     entitlements(),
     db.select({ id: organization.id, createdAt: organization.createdAt }).from(organization).orderBy(asc(organization.createdAt)),
-    db.select({ id: site.id, organizationId: site.organizationId, createdAt: site.createdAt }).from(site).orderBy(asc(site.createdAt)),
+    db.select({ id: site.id, organizationId: site.organizationId, createdAt: site.createdAt }).from(site).where(isNull(site.deletedAt)).orderBy(asc(site.createdAt)),
   ]);
   return accessFor(ent, orgs, sites);
 }

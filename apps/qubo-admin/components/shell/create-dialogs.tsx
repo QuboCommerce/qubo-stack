@@ -108,7 +108,7 @@ export function CreateSiteDialog({ open, onOpenChange, orgs, defaultOrgId }: Dia
               </Select>
             </Field>
           </div>
-          <Field label="Organisation" hint={managed.length > 1 ? "Drafts can move between organisations; publishing fixes it." : undefined} htmlFor="site-org">
+          <Field label="Organisation" hint={managed.length > 1 ? "Drafts can be transferred between organisations; publishing fixes it." : undefined} htmlFor="site-org">
             <input type="hidden" name="organizationId" value={org} />
             <Select id="site-org" value={org} onChange={(e) => setOrg(e.target.value)} disabled={managed.length < 2}>
               {managed.map((o) => <option key={o.id} value={o.id}>{o.name}{o.companyNumber ? ` · ${o.companyNumber}` : ""}</option>)}

@@ -111,6 +111,13 @@ export const site = pgTable("site", {
    * invoices, customers). Taking a site offline is maintenance mode.
    */
   publishedAt: timestamp("published_at"),
+  /**
+   * In the recycle bin since. A trashed site resolves on no host, appears in no
+   * list and counts against no quota, but keeps its slug and domains so a restore
+   * is exact. Purged for good after TRASH_RETENTION_DAYS (studio `purgeTrashedSites`).
+   */
+  deletedAt: timestamp("deleted_at"),
+  deletedById: text("deleted_by_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

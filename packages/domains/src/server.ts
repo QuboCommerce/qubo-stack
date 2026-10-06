@@ -5,7 +5,7 @@
  */
 import { Resolver } from "node:dns/promises";
 import { isIP } from "node:net";
-import { and, asc, eq, isNotNull, lte } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, lte } from "drizzle-orm";
 import { db, sql as pg } from "@qubo/db/client";
 import { site, siteDomain } from "@qubo/db/schema";
 import { publish } from "@qubo/realtime/server";
@@ -155,7 +155,11 @@ type Router = { rule: string; entryPoints: string[]; service: string; tls?: { ce
 /** Every host this instance answers for, with the app behind it. */
 export async function servedHosts() {
   const admin = adminSubdomain();
-  const verified = await db.select({ hostname: siteDomain.hostname }).from(siteDomain).where(isNotNull(siteDomain.verifiedAt));
+  const verified = await db
+    .select({ hostname: siteDomain.hostname })
+    .from(siteDomain)
+    .innerJoin(site, eq(site.id, siteDomain.siteId))
+    .where(and(isNotNull(siteDomain.verifiedAt), isNull(site.deletedAt)));
   const hosts: { host: string; app: "admin" | "storefront"; redirectToApex?: boolean }[] = [];
   for (const { hostname } of verified) {
     hosts.push({ host: hostname, app: "storefront" }, { host: `${admin}.${hostname}`, app: "admin" }, { host: `${PREVIEW_LABEL}.${hostname}`, app: "storefront" });
@@ -163,7 +167,7 @@ export async function servedHosts() {
   }
   const base = process.env.PLATFORM_BASE_DOMAIN?.trim().toLowerCase();
   if (base && process.env.QUBO_EDGE_PLATFORM !== "0") {
-    const sites = await db.select({ slug: site.slug }).from(site);
+    const sites = await db.select({ slug: site.slug }).from(site).where(isNull(site.deletedAt));
     for (const { slug } of sites) hosts.push({ host: `${slug}.${base}`, app: "storefront" }, { host: `${slug}.${PREVIEW_LABEL}.${base}`, app: "storefront" });
   }
   // Install day: the admin is reachable on the server's IP via sslip.io until the first domain is verified.
