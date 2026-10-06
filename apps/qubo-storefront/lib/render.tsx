@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { pageSettings, registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
-import type { ProductCard, ProductDetailData } from "@qubo/blocks";
+import type { ProductCard, ProductDetailData, SiteTreeGroup, SiteTreeItem } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
 import { runtimeTheme } from "@qubo/blocks/runtime";
 import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
 import { requestPath, type Storefront } from "./site";
-import { plainText, siteTitle } from "./seo";
+import { homeLabel, plainText, siteTitle } from "./seo";
 import { adminOrigin } from "./hosts";
 import { StaffBar } from "@/components/staff-bar";
 import { FormEnhancer } from "@/components/form-enhancer";
@@ -66,12 +66,42 @@ function toCard(sf: Storefront, p: ProductListItem): ProductCard {
 }
 
 /** Prefetches data for dynamic blocks into `metadata.data[nodeId]`. */
+/** Pages and the collection tree for the SiteTree block, from live data. */
+async function siteTree(sf: Storefront, labels: { pages: string; collections: string }): Promise<SiteTreeGroup[]> {
+  const catalog = sf.site.capabilities.includes("catalog");
+  const [sitemap, categories] = await Promise.all([sf.client.getSitemap(), catalog ? sf.client.getCategories() : Promise.resolve([])]);
+  const pages: SiteTreeItem[] = [{ title: homeLabel(sf.site.locale), href: "/" }, ...sitemap.pages.map((p) => ({ title: p.title, href: `/${p.slug}` }))];
+  const children = (parentId: string | null): SiteTreeItem[] =>
+    categories
+      .filter((c) => (c.parentId ?? null) === parentId)
+      .map((c) => {
+        const kids = children(c.id);
+        return { title: c.name, href: `/collections/${c.slug}`, ...(kids.length ? { children: kids } : {}) };
+      });
+  return [
+    { label: labels.pages, items: pages },
+    { label: labels.collections, items: catalog ? children(null) : [] },
+  ];
+}
+
 async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewContext) {
   const jobs: Promise<[string, unknown]>[] = [];
   walkNodes(data, registry, ({ node }) => {
     if (node.type === "ProductDetail") {
       const id = (node.props as { id: string }).id;
       if (view.product) jobs.push(Promise.resolve([id, toDetail(view.product)]));
+      return;
+    }
+    if (node.type === "SiteTree") {
+      const props = node.props as { id: string; pagesLabel?: string; collectionsLabel?: string };
+      jobs.push(
+        siteTree(sf, { pages: props.pagesLabel || "Pages", collections: props.collectionsLabel || "Collections" })
+          .then((groups): [string, unknown] => [props.id, groups])
+          .catch((error) => {
+            console.warn(`[storefront] SiteTree ${props.id} failed`, error);
+            return [props.id, []];
+          }),
+      );
       return;
     }
     if (node.type !== "ProductGrid") return;

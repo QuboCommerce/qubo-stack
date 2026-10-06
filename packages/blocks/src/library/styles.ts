@@ -584,6 +584,14 @@ html:has(.qb-site-menu-panel:popover-open:is([data-menu="sheet"], [data-menu="fu
   background: var(--qb-primary); color: var(--qb-on-primary); font-size: 0.7rem; font-weight: 700; line-height: 1;
 }
 .qb-products-empty { margin: 0; }
+
+/* ---- site tree --------------------------------------------------------- */
+.qb-site-tree-group { display: flex; flex-direction: column; gap: 0.75em; }
+.qb-site-tree { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.35em; }
+.qb-site-tree[data-depth] + .qb-site-tree, .qb-site-tree .qb-site-tree { margin-top: 0.35em; padding-left: 1em; border-left: 1px solid color-mix(in oklab, var(--qb-text) 15%, transparent); }
+.qb-site-tree a { color: inherit; text-decoration: none; }
+.qb-site-tree a:hover { color: var(--qb-primary); text-decoration: underline; text-underline-offset: 0.2em; }
+.qb-site-tree[data-depth="0"] > li > a { font-weight: 600; }
 .qb-pdp { display: grid; gap: var(--qb-gap-xl); align-items: start; }
 @media (min-width: 900px) {
   .qb-pdp { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }

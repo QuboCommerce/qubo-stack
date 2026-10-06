@@ -144,7 +144,7 @@ Page map (fr-BE slugs; the URL carries the keyword, the H1 repeats it in plain F
 | `/garantie-et-sav` | commerce blueprint | |
 | `/qui-sommes-nous` | company blueprint | hm froid anderlecht |
 | `/contact` | company blueprint: map, hours, access, form | matériel horeca anderlecht |
-| `/mentions-legales` `/politique-de-confidentialite` `/conditions-generales-de-vente` | legal blueprints | |
+| `/mentions-legales` `/politique-de-confidentialite` `/conditions-generales` | legal blueprints (the terms blueprint titles itself "Conditions générales de vente" when the site sells) | |
 | `/plan-du-site` | utility blueprint, `SiteTree` block | |
 
 Structured data (storefront, once, for every site): `LocalBusiness` (or `Store`) with
@@ -195,7 +195,7 @@ undertone in the steel highlights and as the single accent.
 | Phase | Scope | Gate |
 | --- | --- | --- |
 | ds6a-sites (done 2026-10-06) | `site.deleted_at`, delete draft from Sites page (trash icon left of Transfer, confirm dialog), recycle bin section with days left, restore and purge, daily 60-day purge in the API, every site query excludes deleted, "Move" renamed "Transfer" (the trailing ellipsis read as truncation) | Playwright: delete, bin, restore, purge; storefront 404 for a deleted site's host |
-| ds6b-pages | page blueprints registry, Create page dialog on `/online-store/pages` (the nav link exists, the page does not), categories legal, commerce, company, utility, capability gating with link to modules, `SiteTree` block, `/plan-du-site` | bun test for blueprints; Playwright create from blueprint |
+| ds6b-pages (done 2026-10-06) | page blueprints registry, Create page dialog on `/online-store/pages` (the nav link exists, the page does not), categories legal, commerce, company, utility, capability gating with link to modules, `SiteTree` block, `/plan-du-site` | bun test for blueprints; Playwright create from blueprint |
 | ds6c-theme (done 2026-10-06) | Inox theme in stylekit (replaces Arctic as the `business` default and the HM theme), `texture` surface kind, `brushed` and `polished` gradients, `plate` button, Barlow fonts | schema tests; theme doctor passes; screenshot of the theme on the current pages |
 | ds6d-seo (done 2026-10-06) | `LocalBusiness`, `Product`, `BreadcrumbList`, `Organization` JSON-LD in `viewMetadata` / render; title pattern; sitemap includes collections and pages | curl the HTML, validate with the schema.org validator |
 | ds6e-build | header, footer, home, occasions, rachat, 4 trade pages, brands, contact, qui sommes-nous, livraison et paiement, garantie et SAV, 3 legal, plan du site; product and collection templates restyled; copy humanized; **waits for Ali's images** | taste review from `qubo-design-language`; Lighthouse SEO 100, a11y 95+; Ali review |

@@ -1,5 +1,6 @@
 import { baseCss, compileTheme, ThemeSchema, type CompileOptions } from "@qubo/stylekit";
 import { document, page, sectionGroup, site, template, translation } from "@qubo/db/schema";
+import type { DocumentData } from "@qubo/blocks";
 import { and, asc, eq, ne } from "drizzle-orm";
 import { db, type Scope } from "./db";
 import { createDocument, getDocument } from "./documents";
@@ -95,10 +96,13 @@ function normaliseSlug(raw: string) {
   return slug;
 }
 
-/** A content page; its sections start as a copy of the page template. */
+/**
+ * A content page. Its sections start from `data` (a page blueprint starter)
+ * or, without one, as a copy of the page template.
+ */
 export async function createPage(
   scope: Scope,
-  input: { title: string; slug?: string; templateHandle?: string | null; metaDescription?: string },
+  input: { title: string; slug?: string; templateHandle?: string | null; metaTitle?: string; metaDescription?: string; data?: DocumentData },
 ) {
   const title = input.title.trim();
   if (!title) throw new ValidationError([{ path: "title", message: "Give the page a title." }]);
@@ -109,7 +113,7 @@ export async function createPage(
     .from(template)
     .where(and(eq(template.siteId, scope.siteId), eq(template.resourceKind, "page"), eq(template.handle, input.templateHandle || "default")))
     .limit(1);
-  const starter = tpl ? (await getDocument(scope, tpl.documentId)).draft : undefined;
+  const starter = input.data ?? (tpl ? (await getDocument(scope, tpl.documentId)).draft : undefined);
 
   return db.transaction(async (tx) => {
     const taken = await tx
@@ -128,6 +132,7 @@ export async function createPage(
         state: "DRAFT",
         documentId: doc.id,
         templateHandle: input.templateHandle && input.templateHandle !== "default" ? input.templateHandle : null,
+        metaTitle: input.metaTitle?.trim() || null,
         metaDescription: input.metaDescription?.trim() || null,
       })
       .returning();

@@ -582,6 +582,27 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    still carries an FAQ block with placeholder answers (rebuilt in ds6e), and
    legacy products with tracked stock 0 announce `OutOfStock` (products fix).
 
+37. **Page blueprints and the Pages admin (ds6b).**
+   `packages/blocks/src/presets/page-blueprints.ts` is a registry of
+   suggested pages (legal-notice, privacy, terms, delivery-payment,
+   warranty-service, about, contact, sitemap, faq) with localized title,
+   slug and meta description (fr-BE, nl-BE, en), a `starter(ctx)` document
+   built with `instantiate()` and a `requires: Capability[]` list.
+   `suggestPages()` marks each as available, missing a module, or already
+   present (matched by slug only). Admin `/<site>/online-store/pages`
+   (`app/page-actions.ts`, `components/pages/*`) lists pages with state,
+   Studio link and delete, and shows the suggestions grouped by category;
+   locked ones link to Settings > General. `createPageAction` refuses
+   locked blueprints server-side and redirects to the Studio. Studio
+   `createPage` accepts `data` and `metaTitle`. New `SiteTree` block
+   (`more.tsx`, category `site`) is filled by `loadBlockData` from
+   `getSitemap()` (pages now carry `title`) plus the category tree when
+   `catalog` is on. Nothing is forced: no preset creates legal pages, the
+   panel only suggests. Known: no blog entries in the SiteTree yet, pages
+   are matched to blueprints by slug so a renamed slug shows the suggestion
+   again, created pages exist in the site locale only (translations in
+   ds6g), and the Settings link has no `#features` anchor to scroll to.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

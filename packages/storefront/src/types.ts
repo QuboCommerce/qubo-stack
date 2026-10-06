@@ -168,7 +168,8 @@ export type SitemapEntry = { slug: string; updatedAt: string };
 export type SitemapResponse = {
   products: SitemapEntry[];
   categories: SitemapEntry[];
-  pages: SitemapEntry[];
+  /** Published pages (home excluded), ordered by title. */
+  pages: (SitemapEntry & { title: string })[];
 };
 
 export type RedirectResponse = { to: string; status: number };
