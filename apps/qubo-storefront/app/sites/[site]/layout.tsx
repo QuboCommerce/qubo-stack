@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { permanentRedirect } from "next/navigation";
 import { instantiate, registry } from "@qubo/blocks";
-import { arrivalScript, overlayTransition } from "@qubo/blocks/runtime";
+import { arrivalScript, mayArriveCovered } from "@qubo/blocks/runtime";
 import { RenderView } from "@/lib/render";
 import { getStorefront, hostFromParam, requestPath, type Storefront } from "@/lib/site";
 
@@ -38,7 +38,7 @@ export default async function SiteLayout({ children, params }: { children: React
       {/* The theme root fills the viewport, so short pages keep the theme background. */}
       <body style={{ margin: 0, height: "100%" }}>
         {/* Before first paint: keeps the previous page's transition cover up while this one loads. */}
-        {overlayTransition(sf?.theme) ? <script dangerouslySetInnerHTML={{ __html: arrivalScript() }} /> : null}
+        {mayArriveCovered(sf?.theme) ? <script dangerouslySetInnerHTML={{ __html: arrivalScript() }} /> : null}
         {sf?.maintenance ? <Maintenance sf={sf} /> : children}
       </body>
     </html>

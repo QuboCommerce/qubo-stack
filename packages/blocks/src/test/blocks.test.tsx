@@ -23,6 +23,7 @@ import {
   type SlotNode,
 } from "../index";
 import { QuboRender } from "../render";
+import { ThemeRoot } from "../theme";
 import { createEditorConfig } from "../editor";
 import { hmFroidHomeFixture, sampleImages, sampleProducts, withSampleMedia } from "../fixtures";
 
@@ -379,5 +380,37 @@ describe("media modifiers", () => {
     const out = render("Card", { image, content: () => null, hover: "zoom" });
     expect(out).toContain('data-hover="zoom"');
     expect(out).toContain('class="qb-card-figure"');
+  });
+});
+
+describe("page settings", () => {
+  const [a, b] = hmFroidTheme.motion.transitions;
+  const snow = hmFroidTheme.effects.presets[0]!;
+  const theme = {
+    ...hmFroidTheme,
+    motion: { ...hmFroidTheme.motion, transition: "native" },
+    effects: { ...hmFroidTheme.effects, active: snow.id, schedule: { enabled: true, from: "12-01", to: "01-06" } },
+  };
+  const html = (page: { transition?: string; effect?: string }) => renderToString(<ThemeRoot theme={theme} page={page}>x</ThemeRoot>);
+
+  it("renders the theme effect with its schedule, a page pick without, or nothing", () => {
+    expect(html({})).toContain('data-effect-schedule="12-01..01-06"');
+    expect(html({ effect: "none" })).not.toContain("<div class=\"qb-effect\"");
+    const own = html({ effect: hmFroidTheme.effects.presets[1]!.id });
+    expect(own).toContain(`data-effect="${hmFroidTheme.effects.presets[1]!.id}"`);
+    expect(own).not.toContain("data-effect-schedule=\"");
+  });
+
+  it("opts a page out of the theme's native crossfade when it picks its own", () => {
+    expect(html({})).not.toContain("navigation: none");
+    expect(html({ transition: b!.id ?? a!.id })).toContain("navigation: none");
+    expect(html({ transition: "none" })).toContain("navigation: none");
+  });
+
+  it("exposes page fields on the root, except for header and footer groups", () => {
+    const fields = (cfg: ReturnType<typeof createEditorConfig>) => Object.keys((cfg.root as { fields: object }).fields);
+    expect(fields(createEditorConfig(registry))).toEqual(["title", "transition", "effect"]);
+    expect(fields(createEditorConfig(registry, { page: false }))).toEqual(["title"]);
+    expect(toJsonSchema(registry).properties.root.properties.props).toMatchObject({ properties: { transition: {}, effect: {} } });
   });
 });

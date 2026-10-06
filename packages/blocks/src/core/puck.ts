@@ -30,6 +30,12 @@ export function presetList(kind: PresetKind, theme: Theme | undefined): { id: st
   }
 }
 
+/** The leading choices of a preset picker, before the theme's presets. */
+export function presetEmptyOptions(empty: "none" | "inherit" | "theme"): { value: string; label: string }[] {
+  if (empty === "theme") return [{ value: "", label: "Theme default" }, { value: "none", label: "None" }];
+  return [{ value: "", label: empty === "inherit" ? "Inherit" : "None" }];
+}
+
 const presetOptions = (kind: PresetKind, theme: Theme | undefined) => presetList(kind, theme).map((p) => opt(p.id, p.name));
 
 function editorField(def: AnyFieldDef, ctx: FieldAdapterContext, adapters: FieldAdapters): Field {
@@ -75,7 +81,7 @@ function editorField(def: AnyFieldDef, ctx: FieldAdapterContext, adapters: Field
     case "easing":
       return { type: "select", label, options: [opt("", "Theme easing"), ...Object.entries(easingPresets).map(([name, value]) => opt(value, name))] };
     case "preset":
-      return { type: "select", label, options: [opt("", def.empty === "inherit" ? "Inherit" : "None"), ...presetOptions(def.preset, ctx.theme)] };
+      return { type: "select", label, options: [...presetEmptyOptions(def.empty).map((o) => opt(o.value, o.label)), ...presetOptions(def.preset, ctx.theme)] };
     case "icon":
     case "anchorId":
       return { type: "text", label };

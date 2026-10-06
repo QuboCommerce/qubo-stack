@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
+import { pageSettings, registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
 import type { ProductCard, ProductDetailData } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
 import { runtimeTheme } from "@qubo/blocks/runtime";
@@ -136,7 +136,7 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
     <>
       <QuboRender registry={registry} data={data} metadata={metadata} />
       <FormEnhancer />
-      <SiteRuntime theme={runtimeTheme(sf.theme)} />
+      <SiteRuntime theme={runtimeTheme(sf.theme, pageSettings(body.root?.props))} />
       <StaffBar siteId={sf.site.id} siteSlug={sf.site.slug} adminOrigin={adminOrigin(new URL(sf.origin).host)} documentId={documentId} />
     </>
   );

@@ -74,14 +74,19 @@ export async function getTheme(scope: Scope, id: string) {
   return view(await load(db, scope, id));
 }
 
-/** The theme storefronts render: the active theme's published copy. */
-export async function getLiveTheme(siteId: string): Promise<ThemeInput | null> {
+/**
+ * The theme storefronts render: the active theme's published copy. With
+ * `draft` (a granted preview only) the unpublished draft wins, so the preview
+ * host shows draft pages and the draft theme together.
+ */
+export async function getLiveTheme(siteId: string, opts: { draft?: boolean } = {}): Promise<ThemeInput | null> {
   const [row] = await db
-    .select({ published: theme.published })
+    .select({ published: theme.published, draft: theme.draft })
     .from(theme)
     .where(and(eq(theme.siteId, siteId), eq(theme.isActive, true)))
     .limit(1);
-  return (row?.published as ThemeInput | null) ?? null;
+  const pick = opts.draft ? (row?.draft ?? row?.published) : row?.published;
+  return (pick as ThemeInput | null) ?? null;
 }
 
 export async function saveThemeDraft(scope: Scope, input: { id: string; data: unknown; baseVersion: number }) {

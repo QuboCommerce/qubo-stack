@@ -1,7 +1,7 @@
 "use client";
 
 import { createUsePuck, FieldLabel, type Field } from "@puckeditor/core";
-import { decorRanges, DecorMark, getPath, hashText, presetList, ThemeStyles, type DecorRange, type DecorValue, type FieldAdapters } from "@qubo/blocks";
+import { decorRanges, DecorMark, getPath, hashText, presetEmptyOptions, presetList, ThemeStyles, type DecorRange, type DecorValue, type FieldAdapters } from "@qubo/blocks";
 import { formatOklch, resolveRoleColor, type Gradient, type Mode, type Theme } from "@qubo/stylekit";
 import { cn } from "@qubo/shared/utils";
 import { AlertTriangle, Highlighter, Loader2 } from "lucide-react";
@@ -64,13 +64,16 @@ export const presetFieldAdapter: NonNullable<FieldAdapters["preset"]> = (def, ct
     render: ({ value, onChange, readOnly, id }) => {
       const items = presetList(def.preset, ctx.theme);
       const current = typeof value === "string" ? value : "";
-      const missing = current && !items.some((i) => i.id === current);
+      const leading = presetEmptyOptions(def.empty);
+      const missing = current && !items.some((i) => i.id === current) && !leading.some((o) => o.value === current);
       return (
         <FieldLabel label={def.meta.label} el="div" readOnly={readOnly}>
           <Select value={current || NONE} onValueChange={(v) => onChange(v === NONE ? "" : v)} disabled={readOnly}>
             <SelectTrigger id={id} size="sm" className="h-8 w-full text-xs"><SelectValue /></SelectTrigger>
             <SelectContent position="popper" className="max-h-80">
-              <SelectItem value={NONE} className="text-xs">{def.empty === "inherit" ? "Inherit" : "None"}</SelectItem>
+              {leading.map((o) => (
+                <SelectItem key={o.value || NONE} value={o.value || NONE} className="text-xs">{o.label}</SelectItem>
+              ))}
               {missing && <SelectItem value={current} className="text-xs text-destructive">Missing “{current}”</SelectItem>}
               {items.map((p) => (
                 <SelectItem key={p.id} value={p.id} className="text-xs">

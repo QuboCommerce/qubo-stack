@@ -38,9 +38,11 @@ reveal and overlay page transitions. Everything else is CSS (`@starting-style`, 
 `animation-timeline`, `popover`), so pages work without JavaScript and under reduced motion.
 No animation library: CSS plus WAAPI.
 
-Known gaps: preview hosts render draft documents with the **published** theme; the studio
-canvas does not run the site runtime (no effects, nav overflow or transitions in the editor);
-per-page transition and effect overrides (plan section 2.8) are not built.
+Preview hosts render the theme **draft**; live hosts the published theme. The studio canvas
+runs `startCanvasRuntime` (effects, header menus, ambient video; scheduled effects always
+shown) and a toolbar button plays the page's transition over the canvas. Page settings live
+on the document root (`root.props.transition` / `.effect`, `""` = theme, `"none"` = off),
+resolved by `page-settings.ts`; header and footer groups do not get them.
 
 Before adding a feature, name its row. If no row fits, add a row here and in the plan first,
 then build it. Never add the same idea as a per-block field in two places.

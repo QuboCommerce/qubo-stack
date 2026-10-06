@@ -7,3 +7,4 @@ export * from "./decor";
 export * from "./blueprint";
 export * from "./json-schema";
 export * from "./puck";
+export * from "./page-fields";

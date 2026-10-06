@@ -119,6 +119,9 @@ Built (ds5): `mask: none|circle|arch|squircle|blob|slant|custom`, `hover: zoom|l
 
 ### 2.8 Page meta (document)
 `page.transition?: presetId | "none"`, `page.effect?: presetId | "none"` override theme.
+Built: stored on the document root (`root.props`), empty means "follow the theme". A page's
+transition plays when a visitor leaves that page (the next page uncovers with the same
+preset). A page effect is always on; only the theme's own effect follows its date window.
 
 ## 3. Runtime decisions
 

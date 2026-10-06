@@ -7,7 +7,8 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, us
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Puck, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
-import { instantiate, registry, type Capability, type DocumentData, type SiteType } from "@qubo/blocks";
+import { instantiate, pageOverlay, pageSettings, registry, type Capability, type DocumentData, type SiteType } from "@qubo/blocks";
+import { previewTransition, startCanvasRuntime } from "@qubo/blocks/runtime";
 import { createEditorConfig } from "@qubo/blocks/editor";
 import type { Theme } from "@qubo/stylekit";
 import type { ViewIndex } from "@qubo/studio";
@@ -15,6 +16,7 @@ import {
   AlertTriangle,
   Blocks,
   Check,
+  Clapperboard,
   Eye,
   CloudOff,
   History,
@@ -115,6 +117,22 @@ const viewports: { id: Viewport; label: string; width: number | null; icon: type
   { id: "mobile", label: "Mobile · 390", width: 390, icon: Smartphone },
 ];
 
+// ----------------------------------------------------------------- canvas ---
+
+/** Runs the site runtime (effects, menus, ambient video) inside the canvas iframe. */
+function CanvasRuntime({ document: frameDoc, onDocument, children }: { document?: Document; onDocument: (d: Document | null) => void; children: React.ReactNode }) {
+  useEffect(() => {
+    if (!frameDoc) return;
+    onDocument(frameDoc);
+    const stop = startCanvasRuntime(frameDoc);
+    return () => {
+      stop();
+      onDocument(null);
+    };
+  }, [frameDoc, onDocument]);
+  return <>{children}</>;
+}
+
 // ----------------------------------------------------------------- editor ---
 
 export function StudioEditor(props: StudioEditorProps) {
@@ -143,6 +161,7 @@ export function StudioEditor(props: StudioEditorProps) {
       createEditorConfig(registry, {
         capabilities: site.capabilities,
         fieldContext: { theme: fieldTheme ?? undefined, audience },
+        page: !props.view.key.startsWith("group:"),
         adapters: {
           media: mediaFieldAdapter({ slug: site.slug, id: site.id }),
           duration: durationFieldAdapter,
@@ -151,7 +170,17 @@ export function StudioEditor(props: StudioEditorProps) {
           decor: decorFieldAdapter({ slug: site.slug, documentId: doc.id }),
         },
       }) as Config,
-    [site.capabilities, site.slug, site.id, doc.id, fieldTheme, audience],
+    [site.capabilities, site.slug, site.id, doc.id, fieldTheme, audience, props.view.key],
+  );
+
+  const [canvasDoc, setCanvasDoc] = useState<Document | null>(null);
+  const overrides = useMemo(
+    () => ({
+      iframe: ({ children, document: d }: { children: React.ReactNode; document?: Document }) => (
+        <CanvasRuntime document={d} onDocument={setCanvasDoc}>{children}</CanvasRuntime>
+      ),
+    }),
+    [],
   );
 
   const metadata = useMemo(
@@ -200,9 +229,10 @@ export function StudioEditor(props: StudioEditorProps) {
         onChange={onChange}
         metadata={metadata}
         iframe={{ enabled: true }}
+        overrides={overrides}
         permissions={following ? readOnlyPermissions : editPermissions}
       >
-        <StudioLayout {...props} theme={theme} themeEditor={themeEditor} sync={sync} mode={mode} setMode={setMode} replace={replace} lease={lease} pushRef={pushRef} />
+        <StudioLayout {...props} canvasDoc={canvasDoc} theme={theme} themeEditor={themeEditor} sync={sync} mode={mode} setMode={setMode} replace={replace} lease={lease} pushRef={pushRef} />
       </Puck>
     </TooltipProvider>
   );
@@ -225,7 +255,9 @@ function StudioLayout({
   replace,
   lease,
   pushRef,
+  canvasDoc,
 }: StudioEditorProps & {
+  canvasDoc: Document | null;
   themeEditor: ThemeEditor;
   sync: DocumentSync;
   mode: "light" | "dark";
@@ -328,6 +360,21 @@ function StudioLayout({
     ? { can: themeEditor.canRedo, run: themeEditor.redo, label: "Redo theme change" }
     : { can: history.hasFuture && !following, run: () => history.forward(), label: "Redo" };
   const themeDirty = !!themeEditor.draft && themeSync.hasUnpublishedChanges;
+
+  // The overlay this page leaves through (its own pick or the theme's), played over the canvas.
+  const rootProps = usePuck((s) => s.appState.data.root?.props);
+  const pageTransition = useMemo(() => (theme ? pageOverlay(theme, pageSettings(rootProps)) : null), [theme, rootProps]);
+  const [playing, setPlaying] = useState(false);
+  const playTransition = useCallback(async () => {
+    if (!canvasDoc || !pageTransition || !theme || playing) return;
+    const host = canvasDoc.querySelector<HTMLElement>("[data-theme]") ?? canvasDoc.body;
+    setPlaying(true);
+    try {
+      await previewTransition(host, pageTransition, { theme, hold: 400, reduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches });
+    } finally {
+      setPlaying(false);
+    }
+  }, [canvasDoc, pageTransition, theme, playing]);
   const docDirty = sync.hasUnpublishedChanges;
 
   // One Publish for what you see: the page and, when edited, the theme.
@@ -600,6 +647,18 @@ function StudioLayout({
                 </Tooltip>
               ))}
             </div>
+          )}
+          {tabletUp && theme && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button variant="ghost" size="icon" className="size-8" disabled={!pageTransition || !canvasDoc || playing} onClick={playTransition} aria-label="Play page transition">
+                    <Clapperboard />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{pageTransition ? `Play page transition: ${pageTransition.name}` : "This page has no overlay transition"}</TooltipContent>
+            </Tooltip>
           )}
           {dual && tabletUp && (
             <Tooltip>
