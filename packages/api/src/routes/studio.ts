@@ -4,7 +4,7 @@ import { tenancy } from "../plugins/tenancy";
 import { assertSiteEditable } from "../lib/tenancy";
 import { previewGranted } from "../lib/preview";
 import { db } from "@qubo/db/client";
-import { siteSettings } from "@qubo/db/schema";
+import { organization, siteSettings } from "@qubo/db/schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -369,11 +369,12 @@ export const studioPublic = new Elysia({ prefix: "/render" })
         const id = await studio.sectionGroupDocumentId(site.id, kind);
         return id ? studio.renderableDocument(site.id, id, query.locale, { draft }) : null;
       };
-      const [header, footer, theme, settings] = await Promise.all([
+      const [header, footer, theme, settings, org] = await Promise.all([
         load("header"),
         load("footer"),
         studio.getLiveTheme(site.id, { draft }),
         db.query.siteSettings.findFirst({ where: eq(siteSettings.siteId, site.id) }),
+        db.query.organization.findFirst({ where: eq(organization.id, site.organizationId) }),
       ]);
       const endsAt = settings?.maintenanceEnd ?? null;
       const maintenance = {
@@ -381,7 +382,22 @@ export const studioPublic = new Elysia({ prefix: "/render" })
         message: settings?.maintenanceMessage ?? null,
         endsAt,
       };
-      return { site, header, footer, theme, maintenance };
+      const seo = { title: settings?.metaTitle ?? null, description: settings?.metaDescription ?? site.description ?? null };
+      const hasAddress = Boolean(org?.addressLine1 || org?.city);
+      const business = {
+        legalName: org?.legalName ?? null,
+        companyNumber: org?.companyNumber ?? null,
+        vatNumber: org?.vatNumber ?? null,
+        phone: settings?.phone ?? null,
+        email: settings?.email ?? null,
+        address: hasAddress
+          ? { line1: org?.addressLine1 ?? null, line2: org?.addressLine2 ?? null, postalCode: org?.postalCode ?? null, city: org?.city ?? null, country: org?.country ?? null }
+          : null,
+        openingHours: settings?.openingHours ?? [],
+        geo: settings?.latitude && settings?.longitude ? { latitude: Number(settings.latitude), longitude: Number(settings.longitude) } : null,
+        type: settings?.businessType ?? null,
+      };
+      return { site, seo, business, header, footer, theme, maintenance };
     },
     { query: t.Object({ locale: t.Optional(t.String()) }) },
   )

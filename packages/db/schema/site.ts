@@ -8,6 +8,7 @@ import {
   pgEnum,
   uniqueIndex,
   jsonb,
+  decimal,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -143,6 +144,13 @@ export const siteDomain = pgTable("site_domain", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+/** Two-letter schema.org day codes, Monday first. */
+export const weekdays = ["mo", "tu", "we", "th", "fr", "sa", "su"] as const;
+export type Weekday = (typeof weekdays)[number];
+
+/** One opening-hours rule: the same times on each listed day ("09:00" to "18:00"). */
+export type OpeningHoursRule = { days: Weekday[]; opens: string; closes: string };
+
 export const siteSettings = pgTable("site_settings", {
   id: uuid("id").primaryKey().defaultRandom(),
   siteId: uuid("site_id")
@@ -155,8 +163,17 @@ export const siteSettings = pgTable("site_settings", {
   /** Unlocks `preview.<domain>` (draft storefront). Regenerating it logs every previewer out. */
   previewPin: text("preview_pin"),
   timezone: text("timezone").notNull().default("Europe/Brussels"),
+  /** Title tag of the home page and suffix of every other page ("Page | <meta title>"). Falls back to the site name. */
   metaTitle: text("meta_title"),
   metaDescription: text("meta_description"),
+  /** Public contact details: footer defaults, LocalBusiness structured data and the legal pages. */
+  phone: text("phone"),
+  email: text("email"),
+  /** schema.org type emitted for the business, e.g. "Store" or "Restaurant". Null = LocalBusiness. */
+  businessType: text("business_type"),
+  openingHours: jsonb("opening_hours").$type<OpeningHoursRule[]>().notNull().default([]),
+  latitude: decimal("latitude", { precision: 9, scale: 6 }),
+  longitude: decimal("longitude", { precision: 9, scale: 6 }),
   /** House rules the inbox AI follows when drafting replies: tone, hours, policies. */
   aiInstructions: text("ai_instructions"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

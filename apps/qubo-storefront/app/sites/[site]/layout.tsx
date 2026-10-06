@@ -3,6 +3,7 @@ import { permanentRedirect } from "next/navigation";
 import { instantiate, registry } from "@qubo/blocks";
 import { arrivalScript, mayArriveCovered } from "@qubo/blocks/runtime";
 import { RenderView } from "@/lib/render";
+import { JsonLd, siteLd } from "@/lib/seo";
 import { getStorefront, hostFromParam, requestPath, type Storefront } from "@/lib/site";
 
 const escapeHtml = (v: string) => v.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
@@ -40,6 +41,7 @@ export default async function SiteLayout({ children, params }: { children: React
         {/* Before first paint: keeps the previous page's transition cover up while this one loads. */}
         {mayArriveCovered(sf?.theme) ? <script dangerouslySetInnerHTML={{ __html: arrivalScript() }} /> : null}
         {sf?.maintenance ? <Maintenance sf={sf} /> : children}
+        {sf && !sf.maintenance ? <JsonLd data={siteLd(sf)} /> : null}
       </body>
     </html>
   );

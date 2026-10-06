@@ -21,10 +21,15 @@ The site is then resolved in this order:
 | `/sitemap.xml` | `GET /v1/render/sitemap`: home, published pages, and with `catalog` the collections and products |
 | `/robots.txt` | Blocks everything on dev/preview hosts, otherwise points at the sitemap |
 | `<link rel=canonical>` | Primary verified domain + path, query dropped |
+| `<title>` | `<page> \| <site title>`; the site title is Settings > Business & SEO (else the site name). The home page carries its Studio title or the site title alone |
+| `<meta name=description>` | Page or product description, else the site description from Business & SEO, else General |
+| JSON-LD | `lib/seo.tsx`. Every page: `Organization`, `WebSite` and, once an address is set, the business (`LocalBusiness` or the chosen subtype) with phone, hours and geo. Products: `Product` with `Offer` / `AggregateOffer`. Products, collections and pages: `BreadcrumbList` |
 
 - Non-primary verified domains (and `www.<primary>`) 308 to the primary domain, path kept.
 - A missing page checks the `redirect` table (legacy URLs) before rendering the `not_found` template.
 - Dev (`QUBO_DEV=1`) is always `noindex` and canonical to its own host.
+- Structured data only repeats what the merchant typed in Settings > Business & SEO and the
+  organisation record (legal name, numbers, address): a missing field is left out, never guessed.
 
 ## Caching and publish
 

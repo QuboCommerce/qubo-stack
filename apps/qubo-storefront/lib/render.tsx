@@ -5,6 +5,7 @@ import { QuboRender } from "@qubo/blocks/render";
 import { runtimeTheme } from "@qubo/blocks/runtime";
 import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
 import { requestPath, type Storefront } from "./site";
+import { plainText, siteTitle } from "./seo";
 import { adminOrigin } from "./hosts";
 import { StaffBar } from "@/components/staff-bar";
 import { FormEnhancer } from "@/components/form-enhancer";
@@ -142,24 +143,35 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
   );
 }
 
-/** Page metadata: explicit title → document root title → site name; dev hosts are noindex. */
-export async function viewMetadata(sf: Storefront | null, opts: { title?: string | null; description?: string | null; body?: RenderDocument | null } = {}): Promise<Metadata> {
+/**
+ * Page metadata. Title: `<page> | <site title>`, where the site title is the
+ * Settings meta title (else the site name). The home page carries the site
+ * title alone, or its own Studio title when one is set. Descriptions fall
+ * back to the site description. Dev hosts are noindex.
+ */
+export async function viewMetadata(
+  sf: Storefront | null,
+  opts: { title?: string | null; description?: string | null; body?: RenderDocument | null; home?: boolean } = {},
+): Promise<Metadata> {
   if (!sf) return { title: "No site on this host", robots: { index: false, follow: false } };
   // Canonical drops the query: filters/sorting/tracking params are the same page.
   const path = (await requestPath()).split("?")[0];
   const rootTitle = opts.body?.root?.props?.title;
-  const title = opts.title || (typeof rootTitle === "string" && rootTitle) || sf.site.name;
+  const suffix = siteTitle(sf);
+  const own = opts.title || (typeof rootTitle === "string" && rootTitle) || "";
+  const title = opts.home || !own || own === suffix || own === sf.site.name ? (own && own !== sf.site.name ? own : suffix) : `${own} | ${suffix}`;
+  const description = plainText(opts.description, 300) ?? plainText(sf.seo.description, 300);
   const brand = sf.theme?.brand;
   const icon = brand?.favicon?.url || brand?.mark?.url;
   const og = brand?.ogImage?.url ? [{ url: brand.ogImage.url, alt: brand.ogImage.alt || sf.site.name, width: brand.ogImage.width, height: brand.ogImage.height }] : undefined;
   return {
-    title: title === sf.site.name ? title : { absolute: opts.title ? `${title} · ${sf.site.name}` : title },
+    title: { absolute: title },
     icons: icon ? { icon, apple: brand?.mark?.url || icon } : undefined,
     twitter: og ? { card: "summary_large_image" } : undefined,
-    description: opts.description ?? undefined,
+    description,
     metadataBase: new URL(sf.origin),
     alternates: { canonical: path },
-    openGraph: { siteName: sf.site.name, title, url: path, locale: sf.site.locale.replace("-", "_"), type: "website", images: og },
+    openGraph: { siteName: sf.site.name, title, description, url: path, locale: sf.site.locale.replace("-", "_"), type: "website", images: og },
     robots: sf.noindex ? { index: false, follow: false } : undefined,
   };
 }

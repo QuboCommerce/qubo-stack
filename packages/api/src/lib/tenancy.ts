@@ -14,6 +14,8 @@ export type SiteContext = {
   id: string;
   slug: string;
   name: string;
+  /** One-sentence blurb from General settings; the default meta description. */
+  description: string | null;
   type: SiteType;
   currency: string;
   locale: string;
@@ -49,6 +51,7 @@ export async function resolveSite(
     id: site.id,
     slug: site.slug,
     name: site.name,
+    description: site.description,
     type: site.type,
     currency: site.currency,
     locale: site.locale,
