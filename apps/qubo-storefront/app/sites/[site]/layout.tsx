@@ -11,7 +11,7 @@ const escapeHtml = (v: string) => v.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "
 /** Maintenance page: the site's `maintenance` template, else a built-in notice with the settings message. */
 async function Maintenance({ sf }: { sf: Storefront }) {
   const tpl = await sf.client.getTemplate("maintenance");
-  const fr = sf.site.locale.startsWith("fr");
+  const fr = sf.locale.startsWith("fr");
   const body = tpl?.data ?? {
     root: { props: {} },
     content: [
@@ -35,7 +35,7 @@ export default async function SiteLayout({ children, params }: { children: React
   if (sf?.redirectHost) permanentRedirect(`https://${sf.redirectHost}${await requestPath()}`);
   return (
     // The arrival script may set `data-qb-arriving` on <html> before hydration.
-    <html lang={sf?.site.locale ?? "en"} style={{ height: "100%" }} suppressHydrationWarning>
+    <html lang={sf?.locale ?? "en"} style={{ height: "100%" }} suppressHydrationWarning>
       {/* The theme root fills the viewport, so short pages keep the theme background. */}
       <body style={{ margin: 0, height: "100%" }}>
         {/* Before first paint: keeps the previous page's transition cover up while this one loads. */}

@@ -215,8 +215,15 @@ export function hashText(input: string): string {
   return (h >>> 0).toString(36);
 }
 
+/** The document root is addressed as node id "root"; its `title` feeds the page `<title>`. */
+export const ROOT_NODE_ID = "root";
+
 export function collectTranslatableStrings(data: DocumentData, registry: BlockRegistry): TranslatableString[] {
   const out: TranslatableString[] = [];
+  const rootTitle = data.root?.props?.title;
+  if (typeof rootTitle === "string" && rootTitle.trim()) {
+    out.push({ nodeId: ROOT_NODE_ID, type: "root", path: "title", kind: "text", value: rootTitle, sourceHash: hashText(rootTitle) });
+  }
   walkNodes(data, registry, ({ node }) => {
     const def = registry.get(node.type);
     if (!def) return;
@@ -240,6 +247,8 @@ export function applyTranslations(data: DocumentData, registry: BlockRegistry, e
   if (!entries.length) return data;
   const byNode = new Map<string, TranslationEntry[]>();
   for (const e of entries) byNode.set(e.nodeId, [...(byNode.get(e.nodeId) ?? []), e]);
+  const rootTitle = byNode.get(ROOT_NODE_ID)?.find((e) => e.path === "title" && e.value)?.value;
+  if (rootTitle && typeof data.root?.props?.title === "string") data = { ...data, root: { ...data.root, props: { ...data.root.props, title: rootTitle } } };
   return mapNodes(data, registry, (node) => {
     const list = byNode.get(node.props.id as string);
     if (!list) return node;

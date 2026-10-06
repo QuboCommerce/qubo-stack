@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@qubo/db/client";
 import { asset, assetUsage, document, organization, site, siteLocale, translation, user } from "@qubo/db/schema";
 import { hmFroidHomeFixture } from "@qubo/blocks/fixtures";
-import { registry, setPath, instantiate, collectTranslatableStrings, type DocumentData } from "@qubo/blocks";
+import { registry, setPath, instantiate, collectTranslatableStrings, ROOT_NODE_ID, type DocumentData } from "@qubo/blocks";
 import { eq } from "drizzle-orm";
 import {
   ConflictError,
@@ -68,6 +68,7 @@ function firstString(data: DocumentData) {
 
 function editFirstString(data: DocumentData, value: string): DocumentData {
   const s = firstString(data);
+  if (s.nodeId === ROOT_NODE_ID) return { ...data, root: { ...data.root, props: { ...data.root.props, [s.path]: value } } };
   const walk = (nodes: DocumentData["content"]): DocumentData["content"] =>
     nodes.map((n) => {
       if (n.props.id === s.nodeId) return { ...n, props: setPath(n.props, s.path, value) };

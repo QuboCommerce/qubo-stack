@@ -36,6 +36,34 @@ The site is then resolved in this order:
 - Structured data only repeats what the merchant typed in Settings > Business & SEO and the
   organisation record (legal name, numbers, address): a missing field is left out, never guessed.
 
+## Languages
+
+Only the language part of a locale shows in URLs. The primary language lives at the root; every
+other published `site_locale` is served under `/<lang>` (`/nl/...`). The proxy strips the prefix
+(`splitLocalePath` from `@qubo/shared/locale-url`), rewrites to `/sites/<host>/<rest>` and passes
+the locale as `x-qubo-lang`; `getStorefront` turns it into `sf.locale`, `sf.basePath` and
+`sf.locales`. `/fr/...` on a French-primary site 308s to the root; an unknown prefix is a 404.
+
+| What | Where it is translated |
+| --- | --- |
+| Block text, richtext, media alt | `translation` rows `document:<id>`, path `<nodeId>.<field>`; the document root title is `root.title` |
+| Page title, meta title, meta description, slug | `translation` rows `page:<id>`, written by `upsertPageTranslations` (slugs must be unique per locale) |
+| Site meta title and description | `translation` rows `site:<id>`, `upsertSiteTranslations` |
+| Catalogue names and descriptions | not yet; `/collections` and `/products` paths are shared across languages |
+
+- Secondary-language pages are reached by their translated slug (`/nl/levering-en-betaling`);
+  the primary slug under a prefix 308s to it. A translated title wins over an untranslated meta title.
+- `RenderMetadata.basePath` and `localHref` prefix every link a block builds (`resolveLink`,
+  header brand, search, account, cart). `metadata.links` maps `page:<slug>` to the localized path.
+- `<html lang>`, `og:locale`, `BreadcrumbList` and `inLanguage` follow `sf.locale`; `<head>`
+  carries `hreflang` for every served language plus `x-default` (the primary); the sitemap
+  repeats them as `xhtml:link`; robots blocks `/<lang>/cart`, `/account`, `/search` per language.
+- `SiteHeader` renders a `FR | NL` switch (`languageSwitch` field, `.qb-site-lang`) that points
+  at the same page in each language.
+- Two-letter page slugs at the root are shadowed by the prefix (`/nl` is a language, never a page).
+- `scripts/sites/hm-froid.ts` writes the Dutch overlay from `hm-froid.nl.ts` after each publish by
+  matching the French text; the Studio has no UI for page-level and site-level translations yet.
+
 ## Caching and publish
 
 API reads go through Next's data cache, tagged `site:<slug>` (and `layouts` for host lookups), TTL 300 s.

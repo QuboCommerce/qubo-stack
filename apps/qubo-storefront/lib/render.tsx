@@ -4,7 +4,7 @@ import type { CollectionHeaderData, ProductCard, ProductDetailData, SiteTreeGrou
 import { QuboRender } from "@qubo/blocks/render";
 import { runtimeTheme } from "@qubo/blocks/runtime";
 import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
-import { requestPath, type Storefront } from "./site";
+import { localeLinks, logicalPath, requestPath, type Storefront } from "./site";
 import { tidyName } from "./names";
 export { tidyName };
 import { homeLabel, plainText, siteTitle } from "./seo";
@@ -21,7 +21,12 @@ export type ViewContext = {
   product?: ProductDetail;
   /** Search query on /search?q=. */
   query?: string;
+  /** This page's path per locale when it differs from the current one (translated page slugs). */
+  paths?: Record<string, string>;
 };
+
+/** Root-relative path under the locale prefix being rendered. */
+const at = (sf: Storefront, path: string) => (sf.basePath && path.startsWith("/") ? (path === "/" ? sf.basePath : `${sf.basePath}${path}`) : path);
 
 function toDetail(p: ProductDetail): ProductDetailData {
   const first = p.variants[0];
@@ -54,13 +59,13 @@ function money(sf: Storefront, amount: string | null) {
   if (amount == null) return undefined;
   const value = Number(amount);
   if (!Number.isFinite(value)) return undefined;
-  return new Intl.NumberFormat(sf.site.locale, { style: "currency", currency: sf.site.currency }).format(value);
+  return new Intl.NumberFormat(sf.locale, { style: "currency", currency: sf.site.currency }).format(value);
 }
 
 function toCard(sf: Storefront, p: ProductListItem): ProductCard {
   return {
     title: tidyName(p.name),
-    href: `/products/${p.slug}`,
+    href: at(sf, `/products/${p.slug}`),
     image: p.image ? { src: p.image, alt: tidyName(p.name) } : undefined,
     price: money(sf, p.price),
     compareAt: p.compareAtPrice ? money(sf, p.compareAtPrice) : undefined,
@@ -73,13 +78,16 @@ function toCard(sf: Storefront, p: ProductListItem): ProductCard {
 async function siteTree(sf: Storefront, labels: { pages: string; collections: string }): Promise<SiteTreeGroup[]> {
   const catalog = sf.site.capabilities.includes("catalog");
   const [sitemap, categories] = await Promise.all([sf.client.getSitemap(), catalog ? sf.client.getCategories() : Promise.resolve([])]);
-  const pages: SiteTreeItem[] = [{ title: homeLabel(sf.site.locale), href: "/" }, ...sitemap.pages.map((p) => ({ title: p.title, href: `/${p.slug}` }))];
+  const pages: SiteTreeItem[] = [
+    { title: homeLabel(sf.locale), href: at(sf, "/") },
+    ...sitemap.pages.map((p) => ({ title: p.locales[sf.locale]?.title ?? p.title, href: at(sf, `/${p.locales[sf.locale]?.slug ?? p.slug}`) })),
+  ];
   const children = (parentId: string | null): SiteTreeItem[] =>
     categories
       .filter((c) => (c.parentId ?? null) === parentId)
       .map((c) => {
         const kids = children(c.id);
-        return { title: tidyName(c.name), href: `/collections/${c.slug}`, ...(kids.length ? { children: kids } : {}) };
+        return { title: tidyName(c.name), href: at(sf, `/collections/${c.slug}`), ...(kids.length ? { children: kids } : {}) };
       });
   return [
     { label: labels.pages, items: pages },
@@ -92,17 +100,17 @@ async function collectionHeader(sf: Storefront, handle: string, allTitle: string
   const categories = await sf.client.getCategories();
   const byId = new Map(categories.map((c) => [c.id, c]));
   const current = handle === "all" ? null : categories.find((c) => c.slug === handle);
-  const home = { label: homeLabel(sf.site.locale), href: "/" };
+  const home = { label: homeLabel(sf.locale), href: at(sf, "/") };
   if (!current) {
     const roots = categories.filter((c) => !c.parentId);
     return handle === "all"
-      ? { name: allTitle, description: null, count: null, crumbs: [home], children: roots.map((c) => ({ label: tidyName(c.name), href: `/collections/${c.slug}` })) }
+      ? { name: allTitle, description: null, count: null, crumbs: [home], children: roots.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })) }
       : null;
   }
   const crumbs = [home];
   const chain: typeof categories = [];
   for (let p = current.parentId ? byId.get(current.parentId) : undefined; p; p = p.parentId ? byId.get(p.parentId) : undefined) chain.unshift(p);
-  crumbs.push(...chain.map((c) => ({ label: tidyName(c.name), href: `/collections/${c.slug}` })));
+  crumbs.push(...chain.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })));
   const subtree = (id: string): number =>
     (byId.get(id)?.productCount ?? 0) + categories.filter((c) => c.parentId === id).reduce((n, c) => n + subtree(c.id), 0);
   return {
@@ -110,7 +118,7 @@ async function collectionHeader(sf: Storefront, handle: string, allTitle: string
     description: current.description ?? null,
     count: subtree(current.id),
     crumbs,
-    children: categories.filter((c) => c.parentId === current.id).map((c) => ({ label: tidyName(c.name), href: `/collections/${c.slug}` })),
+    children: categories.filter((c) => c.parentId === current.id).map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })),
   };
 }
 
@@ -193,8 +201,26 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
   return Object.fromEntries(await Promise.all(jobs));
 }
 
+/**
+ * `page:<primary slug>` links inside content point at the translated slug in a
+ * secondary locale. Only fetched when the site serves more than one language.
+ */
+async function pageLinks(sf: Storefront): Promise<Record<string, string> | undefined> {
+  if (sf.locales.length < 2) return undefined;
+  try {
+    const sitemap = await sf.client.getSitemap();
+    const out: Record<string, string> = {};
+    for (const p of sitemap.pages) out[`page:${p.slug}`] = at(sf, `/${p.locales[sf.locale]?.slug ?? p.slug}`);
+    return out;
+  } catch (error) {
+    console.warn("[storefront] page links failed", error);
+    return undefined;
+  }
+}
+
 export async function RenderView({ sf, body, view = {}, documentId }: { sf: Storefront; body: RenderDocument; view?: ViewContext; documentId?: string }) {
   const data = compose(sf, body);
+  const [blockData, links, path] = await Promise.all([loadBlockData(sf, data, view), pageLinks(sf), logicalPath()]);
   const metadata: RenderMetadata = {
     site: {
       id: sf.site.id,
@@ -202,11 +228,14 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
       capabilities: sf.site.capabilities as Capability[],
       name: sf.site.name,
       currency: sf.site.currency,
-      locale: sf.site.locale,
+      locale: sf.locale,
     },
-    locale: sf.site.locale.split("-")[0],
+    locale: sf.locale.split("-")[0],
+    basePath: sf.basePath || undefined,
+    locales: sf.locales.length > 1 ? localeLinks(sf, path, view.paths) : undefined,
+    links,
     theme: sf.theme,
-    data: await loadBlockData(sf, data, view),
+    data: blockData,
   };
   return (
     <>
@@ -226,11 +255,16 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
  */
 export async function viewMetadata(
   sf: Storefront | null,
-  opts: { title?: string | null; description?: string | null; body?: RenderDocument | null; home?: boolean } = {},
+  opts: { title?: string | null; description?: string | null; body?: RenderDocument | null; home?: boolean; paths?: Record<string, string> } = {},
 ): Promise<Metadata> {
   if (!sf) return { title: "No site on this host", robots: { index: false, follow: false } };
   // Canonical drops the query: filters/sorting/tracking params are the same page.
-  const path = (await requestPath()).split("?")[0];
+  const path = (await requestPath()).split("?")[0] ?? "/";
+  // hreflang: this page in every served language, the primary one doubling as x-default.
+  const links = sf.locales.length > 1 ? localeLinks(sf, await logicalPath(), opts.paths) : [];
+  const languages = links.length
+    ? Object.fromEntries([...links.map((l) => [l.locale, l.href]), ["x-default", links.find((l) => l.locale === sf.primaryLocale)?.href ?? "/"]])
+    : undefined;
   const rootTitle = opts.body?.root?.props?.title;
   const suffix = siteTitle(sf);
   const own = opts.title || (typeof rootTitle === "string" && rootTitle) || "";
@@ -245,8 +279,8 @@ export async function viewMetadata(
     twitter: og ? { card: "summary_large_image" } : undefined,
     description,
     metadataBase: new URL(sf.origin),
-    alternates: { canonical: path },
-    openGraph: { siteName: sf.site.name, title, description, url: path, locale: sf.site.locale.replace("-", "_"), type: "website", images: og },
+    alternates: { canonical: path, languages },
+    openGraph: { siteName: sf.site.name, title, description, url: path, locale: sf.locale.replace("-", "_"), type: "website", images: og },
     robots: sf.noindex ? { index: false, follow: false } : undefined,
   };
 }

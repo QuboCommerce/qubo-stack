@@ -143,6 +143,8 @@ export type LayoutResponse = {
   theme: unknown;
   /** Maintenance mode from site settings; `active` already accounts for `endsAt`. */
   maintenance?: { active: boolean; message: string | null; endsAt: string | null };
+  /** Languages the storefront serves: the primary one plus every published secondary locale. */
+  locales: { locale: string; isPrimary: boolean }[];
 };
 
 export type CheckoutRequest = {
@@ -157,6 +159,10 @@ export type TemplateResponse = { documentId: string; data: RenderDocument };
 
 export type PageResponse = {
   documentId: string;
+  /** Slug in the requested locale; differs from the URL when an old primary slug was used. */
+  slug: string;
+  /** Slug per served locale, for hreflang alternates and the language switch. */
+  slugs: Record<string, string>;
   title: string;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -171,8 +177,8 @@ export type SitemapEntry = { slug: string; updatedAt: string };
 export type SitemapResponse = {
   products: SitemapEntry[];
   categories: SitemapEntry[];
-  /** Published pages (home excluded), ordered by title. */
-  pages: (SitemapEntry & { title: string })[];
+  /** Published pages (home excluded), ordered by title, with translated slug/title per secondary locale. */
+  pages: (SitemapEntry & { title: string; locales: Record<string, { slug?: string; title?: string }> })[];
 };
 
 export type RedirectResponse = { to: string; status: number };

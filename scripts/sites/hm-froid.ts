@@ -8,17 +8,37 @@
  * keep editing afterwards. Re-running overwrites the documents it owns and
  * leaves other pages alone. Facts (company, hours, delivery zones, warranty)
  * live in `docs/plans/hm-froid.md`; the copy here is the French master, the
- * Dutch overlay comes with ds6g.
+ * Dutch overlay (`hm-froid.nl.ts`) is written as translation rows right after
+ * each publish, matched on the French text.
  */
 import { and, eq } from "drizzle-orm";
 import { db } from "@qubo/db/client";
-import { asset, page, sectionGroup, site, template, theme } from "@qubo/db/schema";
+import { asset, page, sectionGroup, site, siteLocale, template, theme } from "@qubo/db/schema";
 import { instantiate, registry, validateDocument, type DocumentData, type SlotNode } from "@qubo/blocks";
 import { hmFroidTheme } from "@qubo/stylekit";
 import { mediaUrl } from "@qubo/storage";
-import { createPage, forceSaveDraft, getDocument, getTheme, listPages, notifyRevalidate, publish, publishTheme, saveThemeDraft, updatePage, type Scope } from "@qubo/studio";
+import {
+  createPage,
+  forceSaveDraft,
+  getDocument,
+  getTheme,
+  listPages,
+  notifyRevalidate,
+  publish,
+  publishTheme,
+  saveThemeDraft,
+  stringsOf,
+  translationPath,
+  updatePage,
+  upsertDocumentTranslations,
+  upsertPageTranslations,
+  upsertSiteTranslations,
+  type Scope,
+} from "@qubo/studio";
+import { nl, nlPages } from "./hm-froid.nl";
 
 const SITE_SLUG = process.env.HM_FROID_SITE_SLUG || "hm-froid";
+const NL = "nl-BE";
 
 // ------------------------------------------------------------------ facts ---
 
@@ -531,6 +551,7 @@ function pages(split?: Media): PageSpec[] {
             ...chrome({ spacingTop: "sm", spacingBottom: "xl" }),
           }),
           section("Map", {
+            header: { eyebrow: "", title: "Nous rendre visite", intro: "", align: "start" },
             address: `${company.street}, ${company.city}, Belgique`,
             height: "md",
             showDetails: false,
@@ -878,7 +899,44 @@ function check(label: string, data: DocumentData) {
 async function writeDocument(scope: Scope, id: string, label: string, data: DocumentData) {
   await forceSaveDraft(scope, { id, data: check(label, data) });
   await publish(scope, { id, label: "HM Froid build" });
-  console.log(`  published ${label}`);
+  const missing = await translateDocument(scope, id, data);
+  console.log(`  published ${label}${missing.length ? ` (${missing.length} strings without Dutch)` : ""}`);
+  for (const m of missing) console.warn(`    nl missing: ${JSON.stringify(m)}`);
+}
+
+// Brand names and prices read the same in both languages; no row needed.
+const sameInDutch = (s: string) => /^[\d\s€.,%-]+$/.test(s) || /^\p{Lu}[\p{L}\d-]*( \p{Lu}[\p{L}\d-]*)?$/u.test(s);
+
+async function translateDocument(scope: Scope, documentId: string, data: DocumentData) {
+  const entries: { path: string; value: string; status: "done" }[] = [];
+  const missing: string[] = [];
+  for (const s of stringsOf(data)) {
+    const value = nl[s.value];
+    if (value) entries.push({ path: translationPath(s.nodeId, s.path), value, status: "done" });
+    else if (!sameInDutch(s.value) && !missing.includes(s.value)) missing.push(s.value);
+  }
+  if (entries.length) await upsertDocumentTranslations(scope, { documentId, locale: NL, entries });
+  return missing;
+}
+
+async function translatePage(scope: Scope, pageId: string, slug: string) {
+  const t = nlPages[slug];
+  if (!t) {
+    console.warn(`    no Dutch page fields for /${slug}`);
+    return;
+  }
+  await upsertPageTranslations(scope, { pageId, locale: NL, entries: t });
+}
+
+async function ensureDutch(siteId: string) {
+  const [row] = await db.select().from(siteLocale).where(and(eq(siteLocale.siteId, siteId), eq(siteLocale.locale, NL))).limit(1);
+  if (!row) {
+    await db.insert(siteLocale).values({ siteId, locale: NL, isPrimary: false, isPublished: true });
+  } else if (!row.isPublished) {
+    await db.update(siteLocale).set({ isPublished: true }).where(eq(siteLocale.id, row.id));
+  }
+  await upsertSiteTranslations({ siteId }, { locale: NL, entries: { metaTitle: "HM Froid, horecamateriaal in Brussel", metaDescription: "Nieuw en tweedehands horecamateriaal in Anderlecht: koeling, kooktoestellen, inox en voorbereiding voor restaurants, frituren, beenhouwerijen en bakkerijen." } });
+  console.log(`  ${NL} published`);
 }
 
 async function main() {
@@ -886,6 +944,7 @@ async function main() {
   if (!s) throw new Error(`site ${SITE_SLUG} not found`);
   const scope: Scope = { siteId: s.id };
   console.log(`HM Froid build on ${s.slug} (${s.id})`);
+  await ensureDutch(s.id);
 
   // Theme: push the code version into the live theme row.
   const [t] = await db.select().from(theme).where(and(eq(theme.siteId, s.id), eq(theme.isActive, true))).limit(1);
@@ -939,6 +998,7 @@ async function main() {
       await updatePage(scope, row.id, { title: spec.title, metaTitle: spec.metaTitle ?? null, metaDescription: spec.metaDescription });
     }
     await writeDocument(scope, row!.documentId, `page /${spec.slug}`, spec.doc);
+    await translatePage(scope, row!.id, spec.slug);
   }
 
   // Keep /plan-du-site (blueprint) but make sure it is published.
@@ -946,6 +1006,7 @@ async function main() {
   if (plan) {
     const doc = await getDocument(scope, plan.documentId);
     await writeDocument(scope, plan.documentId, "page /plan-du-site", doc.draft as DocumentData);
+    await translatePage(scope, plan.id, plan.slug);
   }
 
   await notifyRevalidate(s.slug, []).catch((e) => console.warn("  revalidate skipped:", (e as Error).message));

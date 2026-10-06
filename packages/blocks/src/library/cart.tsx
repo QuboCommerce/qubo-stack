@@ -203,6 +203,8 @@ export type CartLabels = {
   remove: string;
   quantity: string;
   error: string;
+  /** Locale prefix for product links (`/nl`). */
+  basePath?: string;
 };
 
 export function CartView({ siteId, locale, currency, labels, preview }: { siteId: string; locale: string; currency: string; labels: CartLabels; preview?: CartLine[] }) {
@@ -255,7 +257,7 @@ export function CartView({ siteId, locale, currency, labels, preview }: { siteId
               <span className="qb-media-placeholder" aria-hidden="true" />
             )}
             <div className="qb-cart-line-info">
-              <a href={`/products/${l.productSlug}`}>{l.title}</a>
+              <a href={`${labels.basePath ?? ""}/products/${l.productSlug}`}>{l.title}</a>
               {l.variantName && l.variantName !== "Default" && l.variantName !== l.title ? <span className="qb-muted qb-small">{l.variantName}</span> : null}
               <span className="qb-small">{fmt.format(Number(l.unitPrice))}</span>
             </div>

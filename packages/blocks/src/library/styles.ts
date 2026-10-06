@@ -514,6 +514,11 @@ a.qb-chat-file:hover { text-decoration: underline; }
 .qb-site-icon { display: inline-flex; color: inherit; padding: 0.35em; border-radius: var(--qb-radius-full); border: 0; background: none; font: inherit; cursor: pointer; }
 .qb-site-icon:hover { color: var(--qb-primary); }
 .qb-site-search-icon { display: none; }
+.qb-site-lang { display: inline-flex; align-items: center; font-size: var(--qb-step--1); letter-spacing: 0.08em; }
+.qb-site-lang a { padding: 0.35em 0.45em; color: var(--qb-muted); text-decoration: none; }
+.qb-site-lang a + a { border-inline-start: var(--qb-border-width) solid var(--qb-border); }
+.qb-site-lang a:hover { color: var(--qb-primary); }
+.qb-site-lang a[aria-current] { color: var(--qb-text); font-weight: 600; }
 @media (max-width: 1400px) { .qb-site-search { display: none; } .qb-site-search-icon { display: inline-flex; } }
 .qb-site-menu-toggle { display: none; }
 .qb-site-header[data-collapse="always"] .qb-site-menu-toggle, .qb-site-header[data-overflow="menu"] .qb-site-menu-toggle { display: inline-flex; }
