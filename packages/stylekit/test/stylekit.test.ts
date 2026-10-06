@@ -241,6 +241,14 @@ describe("design language sections", () => {
     expect(css).not.toContain("@view-transition");
   });
 
+  it("compiles stripes as a repeating gradient in px and inset shadows", () => {
+    const t = defineTheme({ ...minimal, shape: { radius: 3, shadows: [{ id: "plate", name: "Plate", y: 1, blur: 0, inset: true, color: { token: "cream", mix: { alpha: 0.5 } } }] } });
+    const { css } = compileTheme(t);
+    expect(css).toContain('[data-gradient="brushed-lines"] {');
+    expect(css).toMatch(/repeating-linear-gradient\(0deg, oklch\(from var\(--qb-text\) l c h \/ 0\.05\) 0px, oklch\(from var\(--qb-text\) l c h \/ 0\.05\) 1\.02px/);
+    expect(css).toMatch(/--qb-shadow-plate: inset 0px 1px 0px 0px/);
+  });
+
   it("opts into native cross-document transitions only when chosen", () => {
     const t = defineTheme({ ...minimal, motion: { transition: "native" } });
     expect(compileTheme(t).css).toContain("@view-transition { navigation: auto; }");

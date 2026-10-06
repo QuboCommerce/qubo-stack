@@ -200,6 +200,8 @@ export const ShadowSchema = z.object({
   spread: z.number().default(0),
   /** Palette token; `mix.alpha` controls strength. */
   color: RoleRefSchema.default({ token: "ink", mix: { alpha: 0.12 } }),
+  /** Inner shadow: a 1px inset highlight is what sells a metal surface. */
+  inset: z.boolean().default(false),
 });
 export type Shadow = z.infer<typeof ShadowSchema>;
 
@@ -365,7 +367,8 @@ export type Brand = z.infer<typeof BrandSchema>;
 
 // --------------------------------------------------------------- surfaces ---
 
-export const gradientKinds = ["linear", "radial", "conic"] as const;
+/** `stripes` repeats the stops every `size` px along `angle`: hairline textures such as brushed metal, ruled paper, scanlines. */
+export const gradientKinds = ["linear", "radial", "conic", "stripes"] as const;
 
 export const GradientStopSchema = PaintSchema.extend({ at: z.number().min(0).max(100) });
 
@@ -378,6 +381,8 @@ export const GradientSchema = z.object({
   /** Radial centre, % of the box. */
   x: z.number().min(0).max(100).default(50),
   y: z.number().min(0).max(100).default(0),
+  /** Period in px for `stripes`; stop positions are percentages of it. */
+  size: z.number().min(2).max(64).default(4),
   stops: z.array(GradientStopSchema).min(2).max(6),
 });
 export type Gradient = z.infer<typeof GradientSchema>;
@@ -386,6 +391,7 @@ export const builtInGradients: z.input<typeof GradientSchema>[] = [
   { id: "glow", name: "Soft glow from above", kind: "radial", x: 50, y: 0, stops: [{ role: "primary", alpha: 0.22, at: 0 }, { role: "background", alpha: 0, at: 70 }] },
   { id: "fade-down", name: "Fade into the next section", kind: "linear", angle: 180, stops: [{ role: "background", alpha: 1, at: 0 }, { role: "backgroundAlt", alpha: 1, at: 100 }] },
   { id: "accent-wash", name: "Accent wash", kind: "linear", angle: 135, stops: [{ role: "accent", alpha: 0.16, at: 0 }, { role: "background", alpha: 0, at: 60 }] },
+  { id: "brushed-lines", name: "Brushed lines", kind: "stripes", angle: 0, size: 3, stops: [{ role: "text", alpha: 0.05, at: 0 }, { role: "text", alpha: 0.05, at: 34 }, { role: "text", alpha: 0, at: 34 }, { role: "text", alpha: 0, at: 100 }] },
 ];
 
 export const SurfacesSchema = z.object({

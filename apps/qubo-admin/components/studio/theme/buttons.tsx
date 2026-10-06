@@ -182,7 +182,7 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
             onClick={() => {
               const id = uniqueSlug("shadow", theme.shape.shadows.map((s) => s.id));
               const ink = theme.palette.find((p) => p.group === "neutral") ?? theme.palette[0]!;
-              update((t) => ({ ...t, shape: { ...t.shape, shadows: [...t.shape.shadows, { id, name: "New shadow", x: 0, y: 6, blur: 18, spread: 0, color: { token: ink.id, mix: { alpha: 0.15 } } }] } }));
+              update((t) => ({ ...t, shape: { ...t.shape, shadows: [...t.shape.shadows, { id, name: "New shadow", x: 0, y: 6, blur: 18, spread: 0, inset: false, color: { token: ink.id, mix: { alpha: 0.15 } } }] } }));
               setOpenShadow(id);
             }}
           >
@@ -219,6 +219,9 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
                     <SliderField label="Offset" value={s.y} min={0} max={48} step={1} format={(v) => `${v}px`} onChange={(v) => setShadow(s.id, { y: v }, `shy:${s.id}`)} />
                     <SliderField label="Blur" value={s.blur} min={0} max={80} step={1} format={(v) => `${v}px`} onChange={(v) => setShadow(s.id, { blur: v }, `shb:${s.id}`)} />
                     <SliderField label="Spread" value={s.spread} min={-16} max={16} step={1} format={(v) => `${v}px`} onChange={(v) => setShadow(s.id, { spread: v }, `shs:${s.id}`)} />
+                    <Field label="Inset (edge)" inline>
+                      <Switch checked={s.inset} onCheckedChange={(inset) => setShadow(s.id, { inset })} aria-label="Inset shadow" />
+                    </Field>
                     <Button
                       variant="ghost"
                       size="sm"

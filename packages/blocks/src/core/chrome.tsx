@@ -24,6 +24,7 @@ export const sectionChromeFields = {
       overlay: f.number({ label: "Overlay", min: 0, max: 90, step: 5, unit: "%", default: 0 }),
       fit: f.select(["cover", "contain"], { label: "Fit", default: "cover" }),
       gradient: f.preset("gradient", { label: "Gradient", description: "Theme gradient painted over the background, in this section's colours." }),
+      texture: f.preset("gradient", { label: "Texture", description: "A second, fine layer on top of the gradient: brushed lines, grain, ruling." }),
     },
     { label: "Background", group: "style" },
   ),
@@ -113,6 +114,7 @@ export function SectionChrome({
   const v = { ...defaultChrome, ...value };
   const bg = resolveMedia(v.background?.media, ctx.metadata);
   const gradient = v.background?.gradient || "";
+  const texture = v.background?.texture || "";
   const effect = v.effect ? ctx.metadata.theme?.effects.presets.find((e) => e.id === v.effect) : undefined;
   const art = resolveMedia(v.art?.media, ctx.metadata);
   const isVideo = bg && /\.(mp4|webm|mov)(\?|$)/i.test(bg.src);
@@ -153,6 +155,7 @@ export function SectionChrome({
         </div>
       ) : null}
       {gradient ? <div className="qb-section-gradient" data-gradient={gradient} aria-hidden="true" /> : null}
+      {texture ? <div className="qb-section-gradient" data-gradient={texture} aria-hidden="true" /> : null}
       {effect ? <div className="qb-effect" data-effect={effect.id} data-effect-kind={effect.kind} data-effect-scope="section" aria-hidden="true" /> : null}
       {art ? (
         // eslint-disable-next-line @next/next/no-img-element

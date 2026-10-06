@@ -71,6 +71,10 @@ export function paintExpression(paint: Paint): string {
 }
 
 export function gradientExpression(g: Gradient): string {
+  if (g.kind === "stripes") {
+    const px = g.stops.map((s) => `${paintExpression(s)} ${round((s.at / 100) * g.size, 2)}px`).join(", ");
+    return `repeating-linear-gradient(${g.angle}deg, ${px})`;
+  }
   const stops = g.stops.map((s) => `${paintExpression(s)} ${s.at}%`).join(", ");
   if (g.kind === "radial") return `radial-gradient(circle at ${g.x}% ${g.y}%, ${stops})`;
   if (g.kind === "conic") return `conic-gradient(from ${g.angle}deg at ${g.x}% ${g.y}%, ${stops})`;
@@ -232,7 +236,7 @@ function rootDeclarations(theme: Theme): string[] {
   );
   for (const sh of shape.shadows) {
     d.push(
-      `--${CSS_PREFIX}-shadow-${sh.id}: ${sh.x}px ${sh.y}px ${sh.blur}px ${sh.spread}px ${refExpression(normalizeRef(sh.color))};`,
+      `--${CSS_PREFIX}-shadow-${sh.id}: ${sh.inset ? "inset " : ""}${sh.x}px ${sh.y}px ${sh.blur}px ${sh.spread}px ${refExpression(normalizeRef(sh.color))};`,
     );
   }
 
