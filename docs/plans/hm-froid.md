@@ -71,6 +71,12 @@ sweeps on intervals; the daily purge joins them, so a customer VPS needs no cron
 
 ## 1. HM Froid: what we know and what we assume
 
+Source material (customer data, never copied into docs): `.private/legacy-archive/2026-09-18/`
+is a full crawl of hmfroid.be. `manifest.json` maps each URL to a file under `public/pages/`;
+the old info pages (garantie, livraison/retrait, mentions légales, conditions, coordonnées,
+qui sommes-nous) carry real text to rewrite from, not placeholders. `exports/` and
+`../migration-output/2026-09-18/` hold the product and customer data behind the import.
+
 Facts from hmfroid.be and the import (do not invent beyond these):
 
 - Legal entity on the old site: H.M. Catering Equipment s.a. Shop: Avenue Raymond
