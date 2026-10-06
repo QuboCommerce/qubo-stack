@@ -189,16 +189,23 @@ export const SiteHeader = defineSection({
     ),
     side: f.select(["right", "left", "top", "bottom"], { label: "Comes in from", default: "right", group: "layout", description: "Side of the sheet, fullscreen slide and sidebar (left or right)." }),
     megaColumns: f.number({ label: "Mega menu columns", min: 1, max: 4, default: 3, group: "layout" }),
+    stacked: f.toggle({
+      label: "Navigation on its own row",
+      default: false,
+      group: "layout",
+      description: "Bar layouts only. Logo, search and actions on top, the menu below. Fits long menus on laptops.",
+    }),
     sticky: f.toggle({ label: "Stay at the top while scrolling", default: false, group: "layout" }),
     showSearch: f.toggle({ label: "Search", default: true }),
     searchPlaceholder: f.text({ label: "Search placeholder", default: "Search", inline: false }),
     showAccount: f.toggle({ label: "Account", default: true }),
+    accountLabel: f.text({ label: "Account label (empty shows an icon only)", default: "", inline: false }),
     showCart: f.toggle({ label: "Cart", default: true }),
     ctaLabel: f.text({ label: "Button label" }),
     ctaLink: f.link({ label: "Button link" }),
   },
   render: (
-    { logo, name, links, pattern, menu, side, megaColumns, sticky, showSearch, searchPlaceholder, showAccount, showCart, ctaLabel, ctaLink },
+    { logo, name, links, pattern, menu, side, megaColumns, stacked, sticky, showSearch, searchPlaceholder, showAccount, accountLabel, showCart, ctaLabel, ctaLink },
     ctx,
   ) => {
     const siteName = textOf(name) || ctx.metadata.site?.name || "";
@@ -221,6 +228,7 @@ export const SiteHeader = defineSection({
         data-pattern={pattern}
         data-side={side}
         data-sticky={sticky || undefined}
+        data-stacked={(stacked && (pattern === "bar" || pattern === "bar-mega")) || undefined}
         data-collapse={inline ? "auto" : "always"}
         style={{ "--qb-mega-cols": megaColumns } as CSSProperties}
       >
@@ -243,9 +251,16 @@ export const SiteHeader = defineSection({
             </>
           ) : null}
           {showAccount && has(ctx, "accounts") ? (
-            <a className="qb-site-icon" href={ctx.isEditing ? undefined : "/account"} aria-label="Account">
-              <IconGlyph name="user" size="1.25em" />
-            </a>
+            textOf(accountLabel) ? (
+              <a className="qb-button qb-site-account" data-emphasis="outline" data-size="sm" href={ctx.isEditing ? undefined : "/account"}>
+                <IconGlyph name="user" size="1.1em" />
+                <span>{textOf(accountLabel)}</span>
+              </a>
+            ) : (
+              <a className="qb-site-icon" href={ctx.isEditing ? undefined : "/account"} aria-label="Account">
+                <IconGlyph name="user" size="1.25em" />
+              </a>
+            )
           ) : null}
           {showCart && commerce ? (
             <a className="qb-site-icon" href={ctx.isEditing ? undefined : "/cart"} aria-label="Cart">
@@ -346,7 +361,7 @@ export const SiteFooter = defineSection({
                 </a>
               ) : null}
               {address ? (
-                <span>
+                <span style={{ whiteSpace: "pre-line" }}>
                   <IconGlyph name="map-pin" size="1em" /> {address}
                 </span>
               ) : null}

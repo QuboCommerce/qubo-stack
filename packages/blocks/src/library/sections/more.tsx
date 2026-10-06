@@ -461,6 +461,83 @@ export const SiteTree = defineSection({
   },
 });
 
+/** What the host prefetches for CollectionHeader from the category tree. */
+export type CollectionHeaderData = {
+  name: string;
+  description: string | null;
+  count: number | null;
+  crumbs: { label: string; href: string }[];
+  children: { label: string; href: string }[];
+};
+
+const placeholderCollection: CollectionHeaderData = {
+  name: "Collection name",
+  description: "One sentence on what this collection holds and who it is for.",
+  count: 24,
+  crumbs: [{ label: "Home", href: "#" }],
+  children: ["Sub-collection", "Sub-collection", "Sub-collection"].map((label) => ({ label, href: "#" })),
+};
+
+/**
+ * The title block of a collection page: breadcrumb, H1 with the collection
+ * name, optional description and the sub-collections as chips. Data comes
+ * from `metadata.data[nodeId]`; the editor shows a placeholder.
+ */
+export const CollectionHeader = defineSection({
+  name: "CollectionHeader",
+  label: "Collection title",
+  description: "Breadcrumb, the collection name as H1, its description and sub-collections.",
+  category: "commerce",
+  icon: "folder-tree",
+  requires: ["catalog"],
+  keywords: ["collection", "category", "title", "breadcrumb", "subcategories"],
+  fields: {
+    showBreadcrumb: f.toggle({ label: "Breadcrumb", default: true }),
+    homeLabel: f.text({ label: "Home crumb", default: "Home" }),
+    allTitle: f.text({ label: "Title on /collections/all", default: "All collections" }),
+    showDescription: f.toggle({ label: "Description", default: true }),
+    showCount: f.toggle({ label: "Product count", default: true }),
+    countLabel: f.text({ label: "Count wording ({n})", default: "{n} products", inline: false }),
+    showChildren: f.toggle({ label: "Sub-collections", default: true }),
+    align: f.select(["start", "center"], { label: "Align", default: "start", group: "layout" }),
+  },
+  render: ({ showBreadcrumb, homeLabel, showDescription, showCount, countLabel, showChildren, align }, ctx) => {
+    const data = (ctx.metadata.data?.[ctx.id] as CollectionHeaderData | undefined) ?? (ctx.isEditing || ctx.metadata.blueprint ? placeholderCollection : undefined);
+    if (!data) return <></>;
+    const crumbs = data.crumbs.map((c, i) => (i === 0 && homeLabel ? { ...c, label: homeLabel } : c));
+    return (
+      <div className="qb-collection-header" data-align={align}>
+        {showBreadcrumb && crumbs.length ? (
+          <nav className="qb-crumbs" aria-label="Breadcrumb">
+            <ol>
+              {crumbs.map((c, i) => (
+                <li key={i}>
+                  <a href={ctx.isEditing ? undefined : c.href}>{c.label}</a>
+                </li>
+              ))}
+              <li aria-current="page">{data.name}</li>
+            </ol>
+          </nav>
+        ) : null}
+        <h1 className="qb-heading qb-font-display qb-collection-title">{data.name}</h1>
+        {showCount && data.count != null ? <p className="qb-eyebrow qb-collection-count">{countLabel.replace("{n}", String(data.count))}</p> : null}
+        {showDescription && data.description ? <p className="qb-collection-intro">{data.description}</p> : null}
+        {showChildren && data.children.length ? (
+          <ul className="qb-chips">
+            {data.children.map((c, i) => (
+              <li key={i}>
+                <a className="qb-chip" href={ctx.isEditing ? undefined : c.href}>
+                  {c.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+    );
+  },
+});
+
 export const formSections = [Newsletter, ContactForm, MapSection];
 export const siteSections = [AnnouncementBar];
-export const dataSections = [ProductGrid, PostList, SiteTree];
+export const dataSections = [ProductGrid, CollectionHeader, PostList, SiteTree];

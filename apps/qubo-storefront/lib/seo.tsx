@@ -1,4 +1,5 @@
 import type { CategoryNode, ProductDetail } from "@qubo/storefront";
+import { tidyName } from "./names";
 import type { Storefront } from "./site";
 
 /**
@@ -150,6 +151,7 @@ export function categoryCrumbs(categories: CategoryNode[], slug: string): Crumb[
 }
 
 export function productLd(sf: Storefront, product: ProductDetail) {
+  const name = tidyName(product.name);
   const url = `${sf.origin}/products/${encodeURIComponent(product.slug)}`;
   const inStock = (available: number | null) => (available === null || available > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock");
   const variants = product.variants.length ? product.variants : [{ id: product.id, name: null, sku: null, available: null, price: product.basePrice, priceSource: "base" as const }];
@@ -179,7 +181,7 @@ export function productLd(sf: Storefront, product: ProductDetail) {
     "@context": "https://schema.org",
     "@type": "Product",
     "@id": `${url}#product`,
-    name: product.name,
+    name,
     description: plainText(product.description, 500),
     image: product.images.length ? product.images.map((i) => absolute(sf, i.url)) : undefined,
     brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,

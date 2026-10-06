@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import { pageSettings, registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
-import type { ProductCard, ProductDetailData, SiteTreeGroup, SiteTreeItem } from "@qubo/blocks";
+import type { CollectionHeaderData, ProductCard, ProductDetailData, SiteTreeGroup, SiteTreeItem } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
 import { runtimeTheme } from "@qubo/blocks/runtime";
 import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
 import { requestPath, type Storefront } from "./site";
+import { tidyName } from "./names";
+export { tidyName };
 import { homeLabel, plainText, siteTitle } from "./seo";
 import { adminOrigin } from "./hosts";
 import { StaffBar } from "@/components/staff-bar";
@@ -25,11 +27,11 @@ function toDetail(p: ProductDetail): ProductDetailData {
   const first = p.variants[0];
   return {
     slug: p.slug,
-    title: p.name,
+    title: tidyName(p.name),
     brand: p.brand,
     description: p.description,
     sku: p.variants.length === 1 ? (first?.sku ?? null) : null,
-    images: p.images.map((i) => ({ src: i.url, alt: i.alt ?? p.name })),
+    images: p.images.map((i) => ({ src: i.url, alt: i.alt ?? tidyName(p.name) })),
     price: first?.price ?? p.basePrice,
     compareAt: p.compareAtPrice,
     variants: p.variants.map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available })),
@@ -57,15 +59,16 @@ function money(sf: Storefront, amount: string | null) {
 
 function toCard(sf: Storefront, p: ProductListItem): ProductCard {
   return {
-    title: p.name,
+    title: tidyName(p.name),
     href: `/products/${p.slug}`,
-    image: p.image ? { src: p.image, alt: p.name } : undefined,
+    image: p.image ? { src: p.image, alt: tidyName(p.name) } : undefined,
     price: money(sf, p.price),
     compareAt: p.compareAtPrice ? money(sf, p.compareAtPrice) : undefined,
   };
 }
 
 /** Prefetches data for dynamic blocks into `metadata.data[nodeId]`. */
+
 /** Pages and the collection tree for the SiteTree block, from live data. */
 async function siteTree(sf: Storefront, labels: { pages: string; collections: string }): Promise<SiteTreeGroup[]> {
   const catalog = sf.site.capabilities.includes("catalog");
@@ -76,12 +79,39 @@ async function siteTree(sf: Storefront, labels: { pages: string; collections: st
       .filter((c) => (c.parentId ?? null) === parentId)
       .map((c) => {
         const kids = children(c.id);
-        return { title: c.name, href: `/collections/${c.slug}`, ...(kids.length ? { children: kids } : {}) };
+        return { title: tidyName(c.name), href: `/collections/${c.slug}`, ...(kids.length ? { children: kids } : {}) };
       });
   return [
     { label: labels.pages, items: pages },
     { label: labels.collections, items: catalog ? children(null) : [] },
   ];
+}
+
+/** Name, breadcrumb, description, subtree product count and children of the viewed collection. */
+async function collectionHeader(sf: Storefront, handle: string, allTitle: string): Promise<CollectionHeaderData | null> {
+  const categories = await sf.client.getCategories();
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const current = handle === "all" ? null : categories.find((c) => c.slug === handle);
+  const home = { label: homeLabel(sf.site.locale), href: "/" };
+  if (!current) {
+    const roots = categories.filter((c) => !c.parentId);
+    return handle === "all"
+      ? { name: allTitle, description: null, count: null, crumbs: [home], children: roots.map((c) => ({ label: tidyName(c.name), href: `/collections/${c.slug}` })) }
+      : null;
+  }
+  const crumbs = [home];
+  const chain: typeof categories = [];
+  for (let p = current.parentId ? byId.get(current.parentId) : undefined; p; p = p.parentId ? byId.get(p.parentId) : undefined) chain.unshift(p);
+  crumbs.push(...chain.map((c) => ({ label: tidyName(c.name), href: `/collections/${c.slug}` })));
+  const subtree = (id: string): number =>
+    (byId.get(id)?.productCount ?? 0) + categories.filter((c) => c.parentId === id).reduce((n, c) => n + subtree(c.id), 0);
+  return {
+    name: tidyName(current.name),
+    description: current.description ?? null,
+    count: subtree(current.id),
+    crumbs,
+    children: categories.filter((c) => c.parentId === current.id).map((c) => ({ label: tidyName(c.name), href: `/collections/${c.slug}` })),
+  };
 }
 
 async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewContext) {
@@ -102,6 +132,20 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
             return [props.id, []];
           }),
       );
+      return;
+    }
+    if (node.type === "CollectionHeader") {
+      const { id, allTitle } = node.props as { id: string; allTitle?: string };
+      if (view.collection) {
+        jobs.push(
+          collectionHeader(sf, view.collection, allTitle || "All collections")
+            .then((d): [string, unknown] => [id, d ?? undefined])
+            .catch((error) => {
+              console.warn(`[storefront] CollectionHeader ${id} failed`, error);
+              return [id, undefined];
+            }),
+        );
+      }
       return;
     }
     if (node.type !== "ProductGrid") return;
@@ -134,7 +178,8 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
         } else if (props.source === "search") {
           items = view.query ? (await sf.client.getProducts({ query: view.query, limit: limit + 1 })).products : [];
         } else {
-          const handle = props.source === "collection" ? props.collection?.trim() || view.collection : undefined;
+          // On a product page an unset collection means "the same shelf as this product".
+          const handle = props.source === "collection" ? props.collection?.trim() || view.collection || view.product?.categories[0]?.slug : undefined;
           const category = handle && handle !== "all" ? handle : undefined;
           items = (await sf.client.getProducts({ category, limit: limit + 1 })).products;
         }
