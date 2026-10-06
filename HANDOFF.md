@@ -470,6 +470,23 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    every locale's text (`localeTextsAction`), picks whole words with
    `Intl.Segmenter`, merges neighbours into one range and offers to drop ranges
    whose text hash no longer matches.
+29. **Sites run one framework-free runtime island (ds3).** The storefront
+   mounts `SiteRuntime`, a thin client wrapper over `startSiteRuntime` in
+   `@qubo/blocks/runtime`, and passes it only `brand` and `motion` (with the
+   one active transition) via `runtimeTheme`, so the palette never ships twice.
+   It starts snow/particle canvases, pauses below-the-fold decor draw-ins
+   until they scroll into view, and switches on a scheduled site-wide effect
+   (rendered hidden by `ThemeRoot` with `data-effect-schedule`, so cached
+   pages stay correct across the date window). Overlay page transitions work
+   across full page loads: a click covers, the computed cover colour goes to
+   `sessionStorage`, and an inline `<body>` script on the next page paints the
+   same colour before first paint, then the runtime swaps in the real overlay
+   and uncovers after `load` and `minVisible` (capped at 2.5 s; a CSS fallback
+   fades the cover if JS never runs). Back/forward cache restores uncover.
+   `native` stays pure CSS (`@view-transition`). No animation library was
+   added: WAAPI and CSS cover every current preset. Brand favicon/mark and
+   sharing image feed `viewMetadata`. Known gap: preview hosts render draft
+   documents with the published theme.
 
 ## Roadmap
 

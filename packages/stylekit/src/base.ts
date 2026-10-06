@@ -153,6 +153,10 @@ ${["display", "heading", "body", "accent", "mono"]
 /* ---- decor: marks on word ranges (data-decor = preset id, data-decor-kind) */
 .${p}-decor { position: relative; white-space: nowrap; }
 .${p}-decor[data-decor-kind] { z-index: 0; }
+/* Text and background marks may wrap like the words they colour; SVG marks keep the phrase on one line. */
+.${p}-decor:is([data-decor-kind="color"], [data-decor-kind="gradient"], [data-decor-kind="underline"], [data-decor-kind="marker"]) {
+  white-space: normal; -webkit-box-decoration-break: clone; box-decoration-break: clone;
+}
 [data-decor-kind="color"] { color: var(--${p}-decor-color); }
 [data-decor-kind="gradient"] {
   background: linear-gradient(90deg, var(--${p}-decor-color), var(--${p}-accent-text));
@@ -186,6 +190,7 @@ ${["display", "heading", "body", "accent", "mono"]
 /* ---- effects: aurora and grain are CSS; snow and particles are a canvas island */
 .${p}-effect { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: -1; }
 .${p}-effect[data-effect-scope="page"] { position: fixed; z-index: 50; }
+.${p}-effect[data-effect-schedule]:not([data-effect-live]) { display: none; }
 [data-effect-kind="grain"] {
   opacity: var(--${p}-effect-alpha); mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");

@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import { registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
 import type { ProductCard, ProductDetailData } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
+import { runtimeTheme } from "@qubo/blocks/runtime";
 import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
 import { requestPath, type Storefront } from "./site";
 import { adminOrigin } from "./hosts";
 import { StaffBar } from "@/components/staff-bar";
 import { FormEnhancer } from "@/components/form-enhancer";
+import { SiteRuntime } from "@/components/site-runtime";
 
 /** What the current route is about; dynamic blocks default to it. */
 export type ViewContext = {
@@ -134,6 +136,7 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
     <>
       <QuboRender registry={registry} data={data} metadata={metadata} />
       <FormEnhancer />
+      <SiteRuntime theme={runtimeTheme(sf.theme)} />
       <StaffBar siteId={sf.site.id} siteSlug={sf.site.slug} adminOrigin={adminOrigin(new URL(sf.origin).host)} documentId={documentId} />
     </>
   );
@@ -146,12 +149,17 @@ export async function viewMetadata(sf: Storefront | null, opts: { title?: string
   const path = (await requestPath()).split("?")[0];
   const rootTitle = opts.body?.root?.props?.title;
   const title = opts.title || (typeof rootTitle === "string" && rootTitle) || sf.site.name;
+  const brand = sf.theme?.brand;
+  const icon = brand?.favicon?.url || brand?.mark?.url;
+  const og = brand?.ogImage?.url ? [{ url: brand.ogImage.url, alt: brand.ogImage.alt || sf.site.name, width: brand.ogImage.width, height: brand.ogImage.height }] : undefined;
   return {
     title: title === sf.site.name ? title : { absolute: opts.title ? `${title} · ${sf.site.name}` : title },
+    icons: icon ? { icon, apple: brand?.mark?.url || icon } : undefined,
+    twitter: og ? { card: "summary_large_image" } : undefined,
     description: opts.description ?? undefined,
     metadataBase: new URL(sf.origin),
     alternates: { canonical: path },
-    openGraph: { siteName: sf.site.name, title, url: path, locale: sf.site.locale.replace("-", "_"), type: "website" },
+    openGraph: { siteName: sf.site.name, title, url: path, locale: sf.site.locale.replace("-", "_"), type: "website", images: og },
     robots: sf.noindex ? { index: false, follow: false } : undefined,
   };
 }
