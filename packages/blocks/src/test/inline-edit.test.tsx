@@ -69,12 +69,13 @@ describe("inline editing", () => {
     expect([...new Set(failures)]).toEqual([]);
   });
 
-  it("highlighted headings keep the accent while editing", () => {
+  it("decorated headings keep their mark while editing", () => {
     const heading = registry.get("Heading")!;
     const text = createElement("span", { value: "Le froid professionnel" }, "Le froid professionnel");
+    const decor = { preset: "accent", match: "froid", ranges: [] };
     const html = renderToString(
-      createElement(() => heading.component({ ...heading.defaults, text, highlight: "froid", puck: { isEditing: true } }) as ReactNode),
+      createElement(() => heading.component({ ...heading.defaults, text, decor, puck: { isEditing: true, metadata: { theme: hmFroidTheme } } }) as ReactNode),
     );
-    expect(html).toContain('<span class="qb-accent-text">froid</span>');
+    expect(html).toContain('data-decor="accent" data-decor-kind="color">froid</span>');
   });
 });

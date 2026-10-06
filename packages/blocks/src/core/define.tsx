@@ -111,7 +111,13 @@ function build<F extends FieldMap>(input: BlockInput<F>, kind: BlockKind, wrap?:
   const component = (raw: Record<string, unknown>) => {
     // Fill props missing from older documents / partial preset children so
     // render functions can rely on every declared field being present.
-    const props = fillDefaults(input.fields, raw) as PuckProps;
+    // Published documents are stored as saved; upgrade old nodes on the fly.
+    let upgraded = raw;
+    for (let v = typeof raw._v === "number" ? raw._v : 1; v < version; v++) {
+      const step = input.migrate?.[v + 1];
+      if (step) upgraded = { ...step(upgraded), puck: raw.puck, id: raw.id };
+    }
+    const props = fillDefaults(input.fields, upgraded) as PuckProps;
     const ctx = contextFrom(props);
     const inner = render(props as unknown as RenderValues<F> & { id: string }, ctx);
     return wrap ? wrap(props, ctx, inner) : inner;

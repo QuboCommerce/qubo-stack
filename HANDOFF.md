@@ -439,6 +439,23 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    wayfinder) are skipped: tickets are rows in `docs/plans/*.md`, decisions are
    here (`docs/agents/issue-tracker.md`). `qubo-design-language` holds the
    concept tree from `docs/plans/design-system.md` and the taste review.
+27. **Design language is theme data plus a few field kinds (ds1).** New concepts
+   land as a theme section with built-in presets and defaults (`brand`,
+   `surfaces.gradients`, `decor`, `effects`, `motion.transitions`,
+   `motion.nav`), so saved themes keep parsing, and blocks reference presets by
+   id through `f.preset(kind)`, `f.decor(of)`, `f.duration`, `f.easing`.
+   Anything coloured by a preset is compiled as a selector rule on the element
+   (`[data-gradient=id]`, `[data-decor=id]`, `[data-effect=id]`), never a root
+   variable, because role vars change per scheme. Decor ranges are character
+   offsets keyed by the hash of the exact text they were picked on, so each
+   locale keeps its own and edited text falls back to the `match` phrase.
+   Marks are inline SVG revealed with a clip-path wipe on a timer:
+   `pathLength` breaks under `vector-effect: non-scaling-stroke`, and a view()
+   timeline never finishes for above-the-fold heroes. Blocks now also apply
+   `migrate` steps at render, since published documents are not re-saved.
+   Aurora avoids `filter: blur` (raster glitches and cost). Native page
+   transitions are `motion.transition = "native"` (`@view-transition`);
+   overlay presets and the snow/particles canvas arrive with the ds3 runtime.
 
 ## Roadmap
 

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { defineBlock, f, linkTarget, resolveLink, resolveMedia, textOf } from "../core";
+import { Decorated, defineBlock, f, linkTarget, resolveLink, resolveMedia } from "../core";
 import { IconGlyph, iconNames } from "./icons";
 import { alignOptions, aspectOptions, cx, Empty, gap, radiusOptions, Richtext, textAlign, typeSize } from "./shared";
 
@@ -29,22 +29,6 @@ export const Eyebrow = defineBlock({
 
 const levelDefaults: Record<string, number> = { h1: 5, h2: 4, h3: 3, h4: 2, p: 1 };
 
-function highlightWords(text: ReactNode, highlight: string): ReactNode {
-  if (!highlight.trim()) return text;
-  // In the editor `text` is Puck's inline-edit element; highlighted headings
-  // trade inline editing for an exact preview (edit them in the panel).
-  const raw = textOf(text);
-  const i = raw.toLowerCase().indexOf(highlight.toLowerCase());
-  if (i < 0) return text;
-  return (
-    <>
-      {raw.slice(0, i)}
-      <span className="qb-accent-text">{raw.slice(i, i + highlight.length)}</span>
-      {raw.slice(i + highlight.length)}
-    </>
-  );
-}
-
 export const Heading = defineBlock({
   name: "Heading",
   label: "Heading",
@@ -53,11 +37,9 @@ export const Heading = defineBlock({
   icon: "heading",
   fields: {
     text: f.text({ label: "Text", default: "A clear, confident headline", multiline: true }),
-    highlight: f.text({
-      label: "Highlight words",
-      description: "Words inside the heading painted in the accent color.",
-      translatable: true,
-      inline: false,
+    decor: f.decor("text", {
+      label: "Highlight",
+      description: "Marks words of the heading with a theme highlight (colour, squiggle, brush, circle...). Pick the words per language.",
     }),
     level: f.select(["h1", "h2", "h3", "h4", "p"], { label: "Level", default: "h2", group: "style" }),
     size: f.select(["auto", "1", "2", "3", "4", "5", "6"], { label: "Size", default: "auto", group: "style" }),
@@ -65,7 +47,15 @@ export const Heading = defineBlock({
     align: align(),
     balance: f.toggle({ label: "Balance lines", default: true, group: "advanced" }),
   },
-  render: ({ text, highlight, level, size, font, align: a, balance }) => {
+  version: 2,
+  migrate: {
+    // v1 painted the first match of `highlight` in the accent colour.
+    2: ({ highlight, ...props }) => ({
+      ...props,
+      decor: { preset: typeof highlight === "string" && highlight.trim() ? "accent" : "", match: typeof highlight === "string" ? highlight : "", ranges: [] },
+    }),
+  },
+  render: ({ text, decor, level, size, font, align: a, balance }, ctx) => {
     const Tag = level as "h1";
     const step = size === "auto" ? levelDefaults[level]! : Number(size);
     return (
@@ -73,7 +63,7 @@ export const Heading = defineBlock({
         className={cx("qb-heading", `qb-font-${font}`)}
         style={{ fontSize: typeSize(step), textAlign: textAlign(a), textWrap: balance ? "balance" : "wrap" }}
       >
-        {highlightWords(text, highlight)}
+        <Decorated text={text} decor={decor} metadata={ctx.metadata} />
       </Tag>
     );
   },
