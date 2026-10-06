@@ -3,6 +3,7 @@ import { inSchedule, startEffects } from "./effects";
 import { startMedia } from "./media";
 import { startNav } from "./nav";
 import { createTransition, type TransitionRun, type TransitionTheme } from "./transition";
+import { pageTransitionId, type PageSettings } from "../page-settings";
 
 /**
  * Everything a rendered site needs in the browser, framework free: ambient
@@ -65,7 +66,12 @@ function navigable(a: HTMLAnchorElement, e: MouseEvent, win: Window): URL | null
   return url;
 }
 
-function startTransitions(win: Window, theme: TransitionTheme, t: Transition, reduced: boolean): () => void {
+/**
+ * `t` is the overlay this page leaves through (null: links navigate plainly).
+ * Arrival always plays the preset the previous page left through, so a page
+ * with its own transition, or none, still uncovers cleanly.
+ */
+function startTransitions(win: Window, theme: TransitionTheme, t: Transition | null, reduced: boolean): () => void {
   const doc = win.document;
   const html = doc.documentElement;
   let leaving: TransitionRun | null = null;
@@ -78,14 +84,18 @@ function startTransitions(win: Window, theme: TransitionTheme, t: Transition, re
       record = JSON.parse(win.sessionStorage.getItem(ARRIVAL_KEY) ?? "null");
     } catch {}
     win.sessionStorage.removeItem(ARRIVAL_KEY);
-    const run = createTransition(themeHost(doc), t, { theme, covered: true, reduced });
     html.removeAttribute("data-qb-arriving");
     doc.getElementById("qb-arrival")?.remove();
-    const since = record?.t ?? Date.now();
-    void Promise.race([Promise.all([loaded(win), sleep(since + t.minVisible - Date.now())]), sleep(MAX_HOLD)])
-      .then(() => run.uncover())
-      .then(() => run.remove());
+    const came = theme.motion.transitions.find((x) => x.id === arrivingId) ?? t;
+    if (came) {
+      const run = createTransition(themeHost(doc), came, { theme, covered: true, reduced });
+      const since = record?.t ?? Date.now();
+      void Promise.race([Promise.all([loaded(win), sleep(since + came.minVisible - Date.now())]), sleep(MAX_HOLD)])
+        .then(() => run.uncover())
+        .then(() => run.remove());
+    }
   }
+  if (!t) return () => {};
 
   const onClick = (e: MouseEvent) => {
     const a = (e.target as Element | null)?.closest?.("a[href]") as HTMLAnchorElement | null;
@@ -155,11 +165,20 @@ function startDecor(doc: Document): () => void {
   return () => io.disconnect();
 }
 
-/** The smallest theme slice the browser needs: no palette, schemes or presets it will not play. */
-export function runtimeTheme(theme: Theme | undefined): TransitionTheme | undefined {
+/**
+ * The theme slice the browser needs, with `motion.transition` resolved for this
+ * page. Every overlay preset stays: the previous page may have left through
+ * any of them. No palette or schemes.
+ */
+export function runtimeTheme(theme: Theme | undefined, page?: PageSettings): TransitionTheme | undefined {
   if (!theme) return undefined;
-  const t = overlayTransition(theme);
-  return { brand: theme.brand, motion: { ...theme.motion, transitions: t ? [t] : [] } };
+  const transitions = theme.motion.profile === "none" ? [] : theme.motion.transitions;
+  return { brand: theme.brand, motion: { ...theme.motion, transition: pageTransitionId(theme, page), transitions } };
+}
+
+/** Whether pages of this theme can arrive under an overlay (theme default or any page's pick). */
+export function mayArriveCovered(theme: Pick<Theme, "motion"> | undefined): boolean {
+  return Boolean(theme && theme.motion.profile !== "none" && theme.motion.transitions.length);
 }
 
 export function startSiteRuntime(win: Window, theme: TransitionTheme | undefined): () => void {
@@ -178,7 +197,7 @@ export function startSiteRuntime(win: Window, theme: TransitionTheme | undefined
   if (!reduced) stops.push(startDecor(doc));
 
   const t = overlayTransition(theme);
-  if (t) stops.push(startTransitions(win, theme!, t, reduced));
+  if (theme && (t || doc.documentElement.hasAttribute("data-qb-arriving"))) stops.push(startTransitions(win, theme, t, reduced));
   else {
     doc.documentElement.removeAttribute("data-qb-arriving");
     doc.getElementById("qb-arrival")?.remove();

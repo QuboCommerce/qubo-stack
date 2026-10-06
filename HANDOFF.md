@@ -514,6 +514,21 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    (lift, the default and the old behaviour, zoom, border). `startMedia` in
    the site runtime plays ambient videos only while on screen and keeps them
    on the poster under reduced motion. Overlay captions sit inside the frame.
+32. **Draft theme on preview, live canvas, page settings.** The `/layout` API
+   returns the theme draft when the request carries a preview grant
+   (`getLiveTheme(siteId, { draft })`); `/theme` and `/theme.css` stay
+   published. The studio canvas runs `startCanvasRuntime` through Puck's
+   `overrides.iframe`: a MutationObserver keeps one effect canvas per effect
+   element (restart on kind change), re-binds menus and ambient video after
+   edits, and shows scheduled effects all year. The toolbar clapperboard plays
+   the page's overlay transition in the canvas. Pages carry `transition` and
+   `effect` on `root.props` (`""` theme, `"none"` off, or a preset id), hidden
+   on header/footer groups. A page transition is used when leaving that page;
+   the arrival record names the preset, so the runtime ships every transition
+   and the arrival script is emitted when any overlay is possible
+   (`mayArriveCovered`). A page that overrides a native-crossfade theme emits
+   `@view-transition { navigation: none; }`. A page effect ignores the theme
+   schedule.
 
 ## Roadmap
 

@@ -372,7 +372,7 @@ export const studioPublic = new Elysia({ prefix: "/render" })
       const [header, footer, theme, settings] = await Promise.all([
         load("header"),
         load("footer"),
-        studio.getLiveTheme(site.id),
+        studio.getLiveTheme(site.id, { draft }),
         db.query.siteSettings.findFirst({ where: eq(siteSettings.siteId, site.id) }),
       ]);
       const endsAt = settings?.maintenanceEnd ?? null;

@@ -67,6 +67,9 @@ describe("themes", () => {
     const t = await getTheme(s, themeId);
     expect(t.draft.id).toBe(lumeTheme.id);
     expect(t.hasUnpublishedChanges).toBe(true);
+    // Storefronts keep the published theme; a granted preview sees the draft.
+    expect((await getLiveTheme(s.siteId))?.id).toBe(hmFroidTheme.id);
+    expect((await getLiveTheme(s.siteId, { draft: true }))?.id).toBe(lumeTheme.id);
   });
 
   it("is site-scoped", async () => {

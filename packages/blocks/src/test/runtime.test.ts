@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { hmFroidTheme } from "@qubo/stylekit";
+import { pageBlocksNative, pageEffect, pageOverlay, pageTransitionId } from "../page-settings";
 import { ARRIVAL_KEY, arrivalScript, inSchedule, overlayTransition, resolveEasing, runtimeTheme } from "../runtime";
 
 describe("runtime helpers", () => {
@@ -26,8 +27,33 @@ describe("runtime helpers", () => {
     expect(overlayTransition({ motion: { ...base.motion, transition: id } })?.id).toBe(id);
     expect(overlayTransition({ motion: { ...base.motion, transition: id, profile: "none" } })).toBeNull();
     const slim = runtimeTheme({ ...base, motion: { ...base.motion, transition: id } })!;
-    expect(slim.motion.transitions.map((t) => t.id)).toEqual([id]);
+    expect(slim.motion.transitions.map((t) => t.id)).toEqual(base.motion.transitions.map((t) => t.id));
+    expect(slim.motion.transition).toBe(id);
     expect(Object.keys(slim)).toEqual(["brand", "motion"]);
+  });
+
+  it("resolves a page's own transition and effect over the theme", () => {
+    const [a, b] = hmFroidTheme.motion.transitions;
+    const theme = { ...hmFroidTheme, motion: { ...hmFroidTheme.motion, transition: a!.id } };
+    expect(pageTransitionId(theme, {})).toBe(a!.id);
+    expect(pageTransitionId(theme, { transition: b!.id })).toBe(b!.id);
+    expect(pageTransitionId(theme, { transition: "none" })).toBe("");
+    expect(pageTransitionId(theme, { transition: "gone" })).toBe(a!.id);
+    expect(runtimeTheme(theme, { transition: "none" })!.motion.transition).toBe("");
+    expect(pageOverlay(theme, { transition: b!.id })?.id).toBe(b!.id);
+
+    const native = { ...theme, motion: { ...theme.motion, transition: "native" } };
+    expect(pageBlocksNative(native, {})).toBe(false);
+    expect(pageBlocksNative(native, { transition: "none" })).toBe(true);
+    expect(pageBlocksNative(native, { transition: b!.id })).toBe(true);
+
+    const snow = hmFroidTheme.effects.presets[0]!;
+    const fx = { ...hmFroidTheme, effects: { ...hmFroidTheme.effects, active: snow.id, schedule: { enabled: true, from: "12-01", to: "01-06" } } };
+    expect(pageEffect(fx, {})).toEqual({ effect: snow, schedule: "12-01..01-06" });
+    expect(pageEffect(fx, { effect: "none" })).toBeNull();
+    const other = hmFroidTheme.effects.presets[1]!;
+    expect(pageEffect(fx, { effect: other.id })).toEqual({ effect: other });
+    expect(pageEffect({ ...fx, effects: { ...fx.effects, active: "" } }, {})).toBeNull();
   });
 
   it("arrival script paints the stored cover and strips CSS breakouts", () => {

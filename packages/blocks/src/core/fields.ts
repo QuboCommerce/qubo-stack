@@ -137,8 +137,11 @@ const presetSources: Record<PresetKind, string> = {
   effect: "effects.presets",
   transition: "motion.transitions",
 };
-/** A preset id from the theme; "" = none (or inherit, per `empty`). */
-export type PresetDef = Def<"preset", string, { preset: PresetKind; empty: "none" | "inherit" }>;
+/**
+ * A preset id from the theme. "" = none or inherit, per `empty`; with
+ * `empty: "theme"`, "" follows the theme default and "none" switches it off.
+ */
+export type PresetDef = Def<"preset", string, { preset: PresetKind; empty: "none" | "inherit" | "theme" }>;
 
 export type AnyFieldDef =
   | TextDef
@@ -420,9 +423,12 @@ export const f = {
     return { kind: "easing", schema: describe(z.string(), m), default: o.default ?? "", meta: { group: "style", ...m } };
   },
 
-  preset(kind: PresetKind, o: Opts<string, { empty?: "none" | "inherit" }> = {}): PresetDef {
+  preset(kind: PresetKind, o: Opts<string, { empty?: "none" | "inherit" | "theme" }> = {}): PresetDef {
     const m = meta(o, titleCase(kind));
-    const source = `Id from the theme's ${presetSources[kind]}; "" for ${o.empty ?? "none"}.`;
+    const source =
+      o.empty === "theme"
+        ? `Id from the theme's ${presetSources[kind]}; "" for the theme default, "none" for off.`
+        : `Id from the theme's ${presetSources[kind]}; "" for ${o.empty ?? "none"}.`;
     return {
       kind: "preset",
       schema: describe(z.string(), { ...m, description: m.description ? `${m.description} ${source}` : source }),
