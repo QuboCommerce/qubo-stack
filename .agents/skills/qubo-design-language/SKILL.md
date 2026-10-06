@@ -13,17 +13,34 @@ listed in the JSON schema the AI sees. Plan: `docs/plans/design-system.md`.
 
 | Concept | Stored in | Referenced from | Rendered by |
 | --- | --- | --- | --- |
-| Brand (logos, favicon, OG image, icon set, voice) | `theme.brand` | presets, SEO, header | storefront layout, SiteHeader |
+| Brand (logos, mark, favicon, OG image) | `theme.brand` | transitions, SEO, header | storefront layout, SiteHeader |
 | Palette, schemes | `theme.palette`, `theme.schemes` | `f.scheme`, `f.token`, RoleRef | `compileTheme` vars |
-| Type | `theme.typeset` | `f.fontRole`, `f.step("type")` | `compileTheme` |
-| Space, shape | `theme.space`, `theme.shape` | `f.step("space")` | `compileTheme` |
+| Type (font roles, fluid steps) | `theme.typeset` | `f.fontRole`, `f.step("type")` | `compileTheme` (`--qb-font-<role>*`) |
+| Space, shape, buttons | `theme.space`, `theme.shape`, `theme.buttons` | `f.step("space")` | `compileTheme` |
 | Surfaces (gradients, patterns, grain) | `theme.surfaces` | Chrome `background` | `SectionChrome` |
-| Decor (word highlights) | `theme.decor` | `f.decor()` on text fields | `Decorated` in blocks |
-| Motion tokens, reveal, hover | `theme.motion` | Chrome `entrance`, element `hover` | stylekit base CSS |
-| Page transitions | `theme.motion.transitions` | page meta override | storefront `PageTransition` |
-| Effects (snow, particles, grain, aurora) | `theme.effects` | Chrome `effect`, page meta | storefront effects island |
-| Nav patterns | SiteHeader `pattern` | `theme.motion.nav` | SiteHeader + nav island |
-| Media modifiers (mask, aspect, hover) | Image/Video fields | | blocks |
+| Edges, art, entrance | Section Chrome fields | every section | `core/chrome.tsx`, stylekit base CSS |
+| Decor (word highlights per locale) | `theme.decor` | `f.decor` on text fields | `Decorated` / `DecorMark` (`core/decor.tsx`) |
+| Motion tokens, nav enter/exit | `theme.motion` | Chrome `entrance`, SiteHeader | stylekit CSS vars, `data-enter`/`data-exit` |
+| Page transitions | `theme.motion.transitions` | theme default | `runtime/transition.ts` |
+| Effects (snow, particles...), schedule | `theme.effects` | Chrome `effect`, theme page effect | `runtime/effects.ts`, `PageEffect` |
+| Nav patterns | SiteHeader `pattern`, `menu`, `side` | `theme.motion.nav` | native `popover` + `runtime/nav.ts` |
+| Media modifiers | Image/Video `mask`, `hover`, `reveal`, `parallax`; Card `hover` | | `.qb-media-frame` CSS + `runtime/media.ts` |
+
+Editor surfaces: theme panel tabs in `apps/qubo-admin/components/studio/theme/` (brand,
+palette, schemes, typography, buttons, surfaces, decor, transitions, effects, doctor) and
+field controls in `studio/design-fields.tsx`.
+
+## Runtime
+
+One framework-free island: `startSiteRuntime` (`packages/blocks/src/runtime/site.ts`), mounted
+by the storefront's `components/site-runtime.tsx`. It starts nav, media, effects, decor
+reveal and overlay page transitions. Everything else is CSS (`@starting-style`, scroll-driven
+`animation-timeline`, `popover`), so pages work without JavaScript and under reduced motion.
+No animation library: CSS plus WAAPI.
+
+Known gaps: preview hosts render draft documents with the **published** theme; the studio
+canvas does not run the site runtime (no effects, nav overflow or transitions in the editor);
+per-page transition and effect overrides (plan section 2.8) are not built.
 
 Before adding a feature, name its row. If no row fits, add a row here and in the plan first,
 then build it. Never add the same idea as a per-block field in two places.
