@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { defineSection, f, linkTarget, resolveLink, resolveMedia, type SlotNode } from "../../core";
+import { defineSection, f, linkTarget, resolveLink, resolveMedia, textOf, type SlotNode } from "../../core";
 import { anchorFlex, anchorParts, aspectOptions, cx, Empty, gap, radiusOptions } from "../shared";
 import { columnsField, colsStyle, header, SectionHeader } from "./header";
 
@@ -170,6 +170,78 @@ export const Hero = defineSection({
             {mediaEl ? <div className="qb-hero-figure">{mediaEl}</div> : null}
           </>
         )}
+      </div>
+    );
+  },
+});
+
+/**
+ * Scroll-driven hero: a two-door steel cabinet drawn in CSS, pinned while the visitor scrolls.
+ * The doors swing open on `animation-timeline: view()` and the content rises from inside.
+ * Browsers without scroll timelines, reduced motion and the editor get the open state.
+ */
+export const SteelReveal = defineSection({
+  name: "SteelReveal",
+  label: "Steel reveal hero",
+  description: "A two-door steel cabinet that opens as the page scrolls, revealing the headline and buttons inside. CSS only.",
+  category: "sections",
+  icon: "refrigerator",
+  keywords: ["hero", "scroll", "animation", "reveal", "doors", "steel", "inox"],
+  chrome: { spacingTop: "none", spacingBottom: "none", width: "full" },
+  fields: {
+    content: f.slot({
+      label: "Content inside the cabinet",
+      default: [
+        node("Eyebrow", { text: "Since 2008", align: "center", look: "pill" }),
+        node("Heading", { text: "Headline that says what you do", level: "h1", size: "6", align: "center" }),
+        node("Text", { body: "<p>One or two sentences that make the value obvious.</p>", size: "1", align: "center" }),
+        node("ButtonGroup", { align: "center" }),
+      ],
+    }),
+    media: f.media({ label: "Image inside the cabinet", description: "Shown behind the content once the doors open. Empty draws lit shelves." }),
+    interiorScheme: f.scheme({ label: "Interior color scheme", description: "Palette of the inside of the cabinet. Empty uses the section scheme." }),
+    scrollLength: f.select(
+      [
+        { value: "short", label: "Short (half a screen)" },
+        { value: "medium", label: "Medium (one screen)" },
+        { value: "long", label: "Long (one and a half screens)" },
+      ],
+      { label: "Scroll length", default: "medium", group: "layout", description: "How far the visitor scrolls while the doors open." },
+    ),
+    cabinetHeight: f.select(["70vh", "80vh", "90vh"], { label: "Cabinet height", default: "80vh", group: "layout" }),
+    handles: f.toggle({ label: "Door handles", default: true, group: "style" }),
+    scrollHint: f.text({ label: "Scroll hint", default: "Scroll", inline: false, description: "Small label under the cabinet while it is closed. Empty hides it." }),
+  },
+  render: ({ content: Content, media, interiorScheme, scrollLength, cabinetHeight, handles, scrollHint }, ctx) => {
+    const m = resolveMedia(media, ctx.metadata);
+    const hint = textOf(scrollHint);
+    return (
+      <div
+        className="qb-reveal"
+        data-length={scrollLength}
+        data-static={ctx.isEditing || undefined}
+        style={{ "--qb-reveal-h": cabinetHeight } as CSSProperties}
+      >
+        <div className="qb-reveal-stage">
+          <div className="qb-reveal-cabinet">
+            <div className="qb-reveal-interior" data-scheme={interiorScheme || undefined}>
+              {m ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="qb-reveal-media" src={m.src} alt="" fetchPriority="high" style={{ objectPosition: m.objectPosition }} aria-hidden="true" />
+              ) : (
+                <div className="qb-reveal-shelves" aria-hidden="true" />
+              )}
+              <Content className="qb-stack qb-reveal-content" style={{ "--qb-dir": "column", gap: gap("sm"), alignItems: "center", textAlign: "center" } as CSSProperties} />
+            </div>
+            <div className="qb-reveal-door" data-side="start" data-handle={handles || undefined} aria-hidden="true" />
+            <div className="qb-reveal-door" data-side="end" data-handle={handles || undefined} aria-hidden="true" />
+          </div>
+          {hint ? (
+            <p className="qb-reveal-hint" aria-hidden="true">
+              <span>{hint}</span>
+            </p>
+          ) : null}
+        </div>
       </div>
     );
   },
@@ -378,4 +450,4 @@ export const Slideshow = defineSection({
   ),
 });
 
-export const composableSections = [Section, Hero, SplitMedia, RichText, CtaBand, CardGrid, Slideshow];
+export const composableSections = [Section, Hero, SteelReveal, SplitMedia, RichText, CtaBand, CardGrid, Slideshow];

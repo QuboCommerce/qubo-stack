@@ -630,6 +630,22 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    honest empty copy, and the ContactForm `header` default is English
    so every site build must set it.
 
+39. **SteelReveal hero (ds6f): go.** `SteelReveal` (`composable.tsx`) draws a
+   two-door steel cabinet in CSS only (theme roles plus white and black
+   alpha layers, so it reads as metal in any scheme) and pins it while the
+   visitor scrolls: `view-timeline` on the 200vh wrapper, a sticky stage,
+   doors on `rotateY` with `backface-visibility: hidden` so they vanish
+   past 90 degrees, content rising from inside, an optional photo as the
+   interior with a radial vignette for contrast. Scroll length short /
+   medium / long, cabinet height, handles, hint label and interior scheme
+   are fields. Browsers without `animation-timeline`, reduced motion and
+   the Studio canvas (`data-static`) get the open state at normal height.
+   The nav runtime publishes `--qb-header-h` for sticky headers so pinned
+   sections sit under them. The HM home now opens with it. Known: the
+   hero photo is only shown inside the cabinet, the next section follows
+   rather than covering the stage, and the sticky stacked header is
+   145 px tall on desktop which leaves a 755 px stage.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

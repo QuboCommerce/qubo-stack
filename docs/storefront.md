@@ -30,6 +30,7 @@ The site is then resolved in this order:
 - Dev (`QUBO_DEV=1`) is always `noindex` and canonical to its own host.
 - The `SiteTree` block (`/plan-du-site` blueprint) is filled by `loadBlockData` from the same sitemap plus the category tree, so a human-readable site map never drifts from the XML one.
 - `CollectionHeader` is filled the same way: breadcrumb (parent chain from home), description, product count of the whole subtree, and the child shelves. `/collections/all` uses its `allTitle`.
+- `SteelReveal` is a CSS-only scroll-driven hero (two steel doors open on `animation-timeline: view()`); it degrades to its open state without scroll timelines or under reduced motion. Sticky headers publish `--qb-header-h` so pinned sections start below them.
 - `/v1/catalog/products?category=` returns the subtree, since imported products hang on leaf categories.
 - Imported names are shown through `tidyName` (`lib/names.ts`): all-caps categories and lowercase product names become sentence case in titles, cards, breadcrumbs and JSON-LD. Mixed case is left alone.
 - Structured data only repeats what the merchant typed in Settings > Business & SEO and the
