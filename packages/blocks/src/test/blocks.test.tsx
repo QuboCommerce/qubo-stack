@@ -295,3 +295,40 @@ describe("decor", () => {
   });
 });
 
+
+describe("SiteHeader navigation patterns", () => {
+  const header = registry.get("SiteHeader")!;
+  const html = (props: Record<string, unknown>, theme = hmFroidTheme) =>
+    renderToString(header.component({ ...header.defaults, id: "SiteHeader-t", ...props, puck: { metadata: { theme } } }) as never);
+  const links = [{ label: "Shop", link: { kind: "url", value: "/shop" }, image: null, children: [{ label: "Ovens", link: { kind: "url", value: "/ovens" }, description: "Combi and pizza" }] }];
+
+  it("renders the menu as a native popover with the theme's nav motion", () => {
+    const theme = { ...hmFroidTheme, motion: { ...hmFroidTheme.motion, nav: { enter: "circle", exit: "fade", durationIn: 500, durationOut: 200 } } } as typeof hmFroidTheme;
+    const out = html({ pattern: "fullscreen", links }, theme);
+    expect(out).toContain('popover="auto"');
+    expect(out).toMatch(/popovertarget="qb-menu-SiteHeader-t"/i);
+    expect(out).toMatch(/data-menu="fullscreen"[^>]*data-enter="circle"[^>]*data-exit="fade"/);
+    expect(out).toContain('data-collapse="always"');
+    expect(out).not.toContain('class="qb-site-nav"');
+  });
+
+  it("keeps inline links for bar layouts and uses the small-screen menu kind", () => {
+    const out = html({ pattern: "bar", menu: "sheet", side: "left", links });
+    expect(out).toContain('class="qb-site-nav"');
+    expect(out).toMatch(/data-menu="sheet" data-side="left"/);
+    expect(html({ pattern: "bar", menu: "drop", links })).toMatch(/data-menu="drop" data-side="top"/);
+  });
+
+  it("renders mega panels with descriptions", () => {
+    const out = html({ pattern: "bar-mega", links });
+    expect(out).toContain("qb-site-mega");
+    expect(out).toContain("Combi and pizza");
+  });
+
+  it("fills the layout defaults for headers saved before patterns existed", () => {
+    const { pattern: _p, menu: _m, side: _s, ...old } = header.defaults as Record<string, unknown>;
+    const out = renderToString(header.component({ ...old, id: "SiteHeader-o", links, puck: { metadata: {} } }) as never);
+    expect(out).toContain('data-pattern="bar"');
+    expect(out).toMatch(/data-menu="drop"/);
+  });
+});

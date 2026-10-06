@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { defineSection, f, linkTarget, resolveLink, resolveMedia, textOf, type BlockContext, type LinkValue } from "../../core";
 import { IconGlyph } from "../icons";
 import { CartCount } from "../cart";
@@ -31,49 +32,75 @@ function Brand({ logo, name, ctx }: { logo: Parameters<typeof resolveMedia>[0]; 
 const navItem = {
   label: f.text({ label: "Label", default: "Shop" }),
   link: f.link({ label: "Link", default: { kind: "collection", value: "all" } }),
+  image: f.media({ label: "Feature image (mega menus)" }),
   children: f.list(
     {
       label: f.text({ label: "Label", default: "Link" }),
       link: f.link({ label: "Link" }),
+      description: f.text({ label: "Short description (mega menus)", inline: false }),
     },
     { label: "Dropdown links", summary: "label", itemLabel: "Link", default: [] },
   ),
 };
 
-/**
- * Site-wide header (lives in the `header` section group). The mobile menu is a
- * <details> disclosure, so it works without client JavaScript.
- */
-export const SiteHeader = defineSection({
-  name: "SiteHeader",
-  label: "Site header",
-  description: "Logo, main navigation with optional dropdowns, and search, account and cart shortcuts.",
-  category: "site",
-  icon: "house",
-  keywords: ["header", "navigation", "menu", "navbar", "logo"],
-  chrome: { width: "wide", spacingTop: "xs", spacingBottom: "xs", entrance: "none" },
-  fields: {
-    logo: f.media({ label: "Logo" }),
-    name: f.text({ label: "Site name (shown without a logo)", default: "My store", inline: false }),
-    links: f.list(navItem, { label: "Navigation", summary: "label", itemLabel: "Menu item", default: [{}] }),
-    showSearch: f.toggle({ label: "Search", default: true }),
-    searchPlaceholder: f.text({ label: "Search placeholder", default: "Search", inline: false }),
-    showAccount: f.toggle({ label: "Account", default: true }),
-    showCart: f.toggle({ label: "Cart", default: true }),
-    ctaLabel: f.text({ label: "Button label" }),
-    ctaLink: f.link({ label: "Button link" }),
-  },
-  render: ({ logo, name, links, showSearch, searchPlaceholder, showAccount, showCart, ctaLabel, ctaLink }, ctx) => {
-    const siteName = textOf(name) || ctx.metadata.site?.name || "";
-    const nav = (
-      <ul className="qb-site-nav-list">
-        {links.map((item, i) =>
-          item.children.length ? (
+type NavItem = {
+  label: string;
+  link: LinkValue;
+  image: Parameters<typeof resolveMedia>[0];
+  children: { label: string; link: LinkValue; description: string }[];
+};
+
+export const headerPatterns = ["bar", "bar-mega", "sidebar", "sheet", "fullscreen"] as const;
+export type HeaderPattern = (typeof headerPatterns)[number];
+export type MenuPanelKind = "drop" | "sheet" | "fullscreen";
+
+/** The menu panel kind used below the breakpoint (or always, for menu-button patterns). */
+export const menuPanelKind = (pattern: HeaderPattern, menu: MenuPanelKind): MenuPanelKind =>
+  pattern === "sheet" || pattern === "fullscreen" ? pattern : menu;
+
+const menuIdOf = (id: string) => `qb-menu-${(id || "site").replace(/[^\w-]/g, "")}`;
+
+function DesktopList({ links, mega, name, ctx }: { links: NavItem[]; mega: boolean; name: string; ctx: BlockContext }) {
+  return (
+    <ul className="qb-site-nav-list">
+      {links.map((item, i) => {
+        if (!item.children.length) {
+          return (
             <li key={i} className="qb-site-nav-item">
-              <details className="qb-site-dropdown">
-                <summary>
-                  {item.label} <IconGlyph name="chevron-down" size="0.9em" />
-                </summary>
+              <NavLink label={item.label} link={item.link} ctx={ctx} />
+            </li>
+          );
+        }
+        const feature = mega ? resolveMedia(item.image, ctx.metadata) : null;
+        return (
+          <li key={i} className="qb-site-nav-item" data-mega={mega || undefined}>
+            <details className="qb-site-dropdown" name={name}>
+              <summary>
+                {item.label} <IconGlyph name="chevron-down" size="0.9em" />
+              </summary>
+              {mega ? (
+                <div className="qb-site-mega" data-feature={feature ? true : undefined}>
+                  <ul>
+                    {item.children.map((child, j) => (
+                      <li key={j}>
+                        <a href={ctx.isEditing ? undefined : resolveLink(child.link, ctx.metadata)} {...linkTarget(child.link)}>
+                          <strong>{child.label}</strong>
+                          {child.description ? <span>{child.description}</span> : null}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                  <a className="qb-site-mega-all" href={ctx.isEditing ? undefined : resolveLink(item.link, ctx.metadata)} {...linkTarget(item.link)}>
+                    {feature ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={feature.src} alt={feature.alt} style={{ objectPosition: feature.objectPosition }} />
+                    ) : null}
+                    <span>
+                      {item.label} <IconGlyph name="arrow-right" size="1em" />
+                    </span>
+                  </a>
+                </div>
+              ) : (
                 <ul>
                   <li>
                     <NavLink label={item.label} link={item.link} ctx={ctx} />
@@ -84,17 +111,104 @@ export const SiteHeader = defineSection({
                     </li>
                   ))}
                 </ul>
-              </details>
-            </li>
+              )}
+            </details>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function PanelList({ links, ctx }: { links: NavItem[]; ctx: BlockContext }) {
+  return (
+    <ul className="qb-site-panel-list">
+      {links.map((item, i) => (
+        <li key={i} style={{ "--i": i } as CSSProperties}>
+          {item.children.length ? (
+            <details>
+              <summary>
+                {item.label} <IconGlyph name="chevron-down" size="0.8em" />
+              </summary>
+              <ul>
+                <li>
+                  <NavLink label={item.label} link={item.link} ctx={ctx} />
+                </li>
+                {item.children.map((child, j) => (
+                  <li key={j}>
+                    <NavLink label={child.label} link={child.link} ctx={ctx} />
+                  </li>
+                ))}
+              </ul>
+            </details>
           ) : (
-            <li key={i} className="qb-site-nav-item">
-              <NavLink label={item.label} link={item.link} ctx={ctx} />
-            </li>
-          ),
-        )}
-      </ul>
-    );
+            <NavLink label={item.label} link={item.link} ctx={ctx} />
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
+ * Site-wide header (lives in the `header` section group). Five layouts share one
+ * markup: inline links (`bar`, `bar-mega`), a vertical rail (`sidebar`) or a
+ * menu button only (`sheet`, `fullscreen`). The menu panel is a native popover
+ * opened by `popovertarget`, so it opens, closes and light-dismisses without
+ * client JavaScript; enter and leave follow `theme.motion.nav` in CSS.
+ */
+export const SiteHeader = defineSection({
+  name: "SiteHeader",
+  label: "Site header",
+  description: "Logo, main navigation as a bar, mega menu, sidebar, side sheet or fullscreen menu, and search, account and cart shortcuts.",
+  category: "site",
+  icon: "house",
+  keywords: ["header", "navigation", "menu", "navbar", "logo", "mega menu", "sidebar", "drawer", "fullscreen"],
+  chrome: { width: "wide", spacingTop: "xs", spacingBottom: "xs", entrance: "none" },
+  fields: {
+    logo: f.media({ label: "Logo" }),
+    name: f.text({ label: "Site name (shown without a logo)", default: "My store", inline: false }),
+    links: f.list(navItem, { label: "Navigation", summary: "label", itemLabel: "Menu item", default: [{}] }),
+    pattern: f.select(
+      [
+        { value: "bar", label: "Bar with dropdowns" },
+        { value: "bar-mega", label: "Bar with mega menus" },
+        { value: "sidebar", label: "Sidebar" },
+        { value: "sheet", label: "Menu button, side sheet" },
+        { value: "fullscreen", label: "Menu button, fullscreen" },
+      ],
+      { label: "Layout", default: "bar", group: "layout", description: "How the navigation sits on large screens." },
+    ),
+    menu: f.select(
+      [
+        { value: "drop", label: "Drop down" },
+        { value: "sheet", label: "Side sheet" },
+        { value: "fullscreen", label: "Fullscreen" },
+      ],
+      { label: "Menu on small screens", default: "drop", group: "layout", description: "Used by the bar and sidebar layouts once the screen gets narrow." },
+    ),
+    side: f.select(["right", "left", "top", "bottom"], { label: "Comes in from", default: "right", group: "layout", description: "Side of the sheet, fullscreen slide and sidebar (left or right)." }),
+    megaColumns: f.number({ label: "Mega menu columns", min: 1, max: 4, default: 3, group: "layout" }),
+    sticky: f.toggle({ label: "Stay at the top while scrolling", default: false, group: "layout" }),
+    showSearch: f.toggle({ label: "Search", default: true }),
+    searchPlaceholder: f.text({ label: "Search placeholder", default: "Search", inline: false }),
+    showAccount: f.toggle({ label: "Account", default: true }),
+    showCart: f.toggle({ label: "Cart", default: true }),
+    ctaLabel: f.text({ label: "Button label" }),
+    ctaLink: f.link({ label: "Button link" }),
+  },
+  render: (
+    { logo, name, links, pattern, menu, side, megaColumns, sticky, showSearch, searchPlaceholder, showAccount, showCart, ctaLabel, ctaLink },
+    ctx,
+  ) => {
+    const siteName = textOf(name) || ctx.metadata.site?.name || "";
+    const items = links as NavItem[];
+    const inline = pattern === "bar" || pattern === "bar-mega" || pattern === "sidebar";
+    const panel = menuPanelKind(pattern, menu);
+    const menuId = menuIdOf(ctx.id);
+    const nav = ctx.metadata.theme?.motion.nav;
     const commerce = has(ctx, "commerce");
+    const searchLabel = textOf(searchPlaceholder) || "Search";
     const cta =
       ctaLabel && ctaLink?.value ? (
         <a className="qb-button qb-site-cta" data-emphasis="primary" data-size="sm" href={ctx.isEditing ? undefined : resolveLink(ctaLink, ctx.metadata)} {...linkTarget(ctaLink)}>
@@ -102,19 +216,28 @@ export const SiteHeader = defineSection({
         </a>
       ) : null;
     return (
-      <header className="qb-site-header">
+      <header
+        className="qb-site-header"
+        data-pattern={pattern}
+        data-side={side}
+        data-sticky={sticky || undefined}
+        data-collapse={inline ? "auto" : "always"}
+        style={{ "--qb-mega-cols": megaColumns } as CSSProperties}
+      >
         <Brand logo={logo} name={siteName} ctx={ctx} />
-        <nav className="qb-site-nav" aria-label="Main">
-          {nav}
-        </nav>
+        {inline ? (
+          <nav className="qb-site-nav" aria-label="Main">
+            <DesktopList links={items} mega={pattern === "bar-mega"} name={`${menuId}-dd`} ctx={ctx} />
+          </nav>
+        ) : null}
         <div className="qb-site-actions">
           {showSearch ? (
             <>
               <form className="qb-site-search" action="/search" role="search">
                 <IconGlyph name="search" size="1em" />
-                <input type="search" name="q" placeholder={textOf(searchPlaceholder)} aria-label={textOf(searchPlaceholder) || "Search"} />
+                <input type="search" name="q" placeholder={textOf(searchPlaceholder)} aria-label={searchLabel} />
               </form>
-              <a className="qb-site-icon qb-site-search-icon" href={ctx.isEditing ? undefined : "/search"} aria-label={textOf(searchPlaceholder) || "Search"}>
+              <a className="qb-site-icon qb-site-search-icon" href={ctx.isEditing ? undefined : "/search"} aria-label={searchLabel}>
                 <IconGlyph name="search" size="1.25em" />
               </a>
             </>
@@ -131,15 +254,29 @@ export const SiteHeader = defineSection({
             </a>
           ) : null}
           {cta}
-          <details className="qb-site-menu">
-            <summary aria-label="Menu">
-              <IconGlyph name="menu" size="1.4em" />
-            </summary>
-            <nav aria-label="Mobile">
-              {nav}
-              {cta}
-            </nav>
-          </details>
+          <button type="button" className="qb-site-icon qb-site-menu-toggle" popoverTarget={menuId} aria-label="Menu">
+            <IconGlyph name="menu" size="1.4em" />
+          </button>
+        </div>
+        <div
+          id={menuId}
+          popover="auto"
+          className="qb-site-menu-panel"
+          data-menu={panel}
+          data-side={panel === "drop" ? "top" : side}
+          data-enter={nav?.enter ?? "slide"}
+          data-exit={nav?.exit ?? "fade"}
+        >
+          <div className="qb-site-menu-top">
+            <Brand logo={logo} name={siteName} ctx={ctx} />
+            <button type="button" className="qb-site-icon" popoverTarget={menuId} popoverTargetAction="hide" aria-label="Close menu">
+              <IconGlyph name="x" size="1.4em" />
+            </button>
+          </div>
+          <nav aria-label="Menu">
+            <PanelList links={items} ctx={ctx} />
+          </nav>
+          {cta}
         </div>
       </header>
     );

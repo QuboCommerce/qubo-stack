@@ -487,6 +487,21 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    added: WAAPI and CSS cover every current preset. Brand favicon/mark and
    sharing image feed `viewMetadata`. Known gap: preview hosts render draft
    documents with the published theme.
+30. **Header menus are native popovers (ds4).** `SiteHeader` has five layouts
+   (`bar`, `bar-mega`, `sidebar`, `sheet`, `fullscreen`) plus a small-screen
+   menu kind (`drop`, `sheet`, `fullscreen`) and a side (left, right, top,
+   bottom). Every menu panel is a `popover` opened by `popovertarget`, so it
+   opens, closes, light-dismisses and sits in the top layer with no
+   JavaScript; this replaced the `<details>` mobile menu. Enter and leave come
+   from `theme.motion.nav` as `data-enter` / `data-exit` on the panel and play
+   in CSS (`@starting-style`, `transition-behavior: allow-discrete`), so the
+   studio and the storefront need no motion code. Desktop dropdowns stay
+   `<details name>` (exclusive accordion). `startNav` in the site runtime only
+   adds polish: the circle grows from the menu button, a menu link closes the
+   menu before the page cover, Escape and outside clicks close dropdowns, and
+   a bar whose links do not fit first drops the search field to an icon and
+   then collapses to the menu button (`data-overflow`). The sidebar is a fixed
+   rail above 900px and shifts the themed root with padding.
 
 ## Roadmap
 

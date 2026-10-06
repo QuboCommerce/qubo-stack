@@ -106,9 +106,9 @@ schedule?: { from: "12-01", to: "01-06" } }`. Section Chrome gets `effect: prese
 `prefers-reduced-motion`. Theme default plus section override: both scopes, section wins.
 
 ### 2.6 Nav pattern (SiteHeader)
-`pattern: "bar" | "bar-mega" | "sidebar" | "sheet" | "fullscreen"`, plus `megaColumns`, `side:
-left|right`, `reveal: slide|fade|circle` for fullscreen. The no-JS `<details>` fallback stays;
-enhanced variants mount a client island.
+`pattern: "bar" | "bar-mega" | "sidebar" | "sheet" | "fullscreen"`, plus `menu: drop|sheet|fullscreen`
+(small screens), `megaColumns`, `side: left|right|top|bottom` and `sticky`. Built (ds4): menu panels
+are native popovers, motion comes from `theme.motion.nav` in CSS, the site runtime adds polish only.
 
 ### 2.7 Media modifiers (Image/Video)
 `mask: none|circle|blob|arch|rounded|custom-svg`, `aspect`, `hover`, `caption`, `parallax`.
@@ -175,7 +175,7 @@ copy the resulting `SKILL.md` files in and delete generated folders.
 | ds1-schema (done) | P1 | stylekit: brand, surfaces, decor, motion v2, effects, nav schemas with defaults and migration of the 4 themes; blocks: `f.decor(of)`, `f.duration`, `f.easing`, `f.preset(kind)`; chrome: surface, reveal, effect; Heading highlight migration | tsc, bun test (round-trips, hm-froid theme migration), JSON schema lists presets |
 | ds2-editor (done) | P2 | theme panel: Brand, Surfaces, Decor, Motion (tokens, transitions, tester), Effects tabs; block panel: DurationField, EasingField, PresetField, per-locale range modal | Playwright: set fr/nl ranges on HM hero, save a transition preset, Test plays |
 | ds3-runtime (done) | P3 | storefront: decor, surface, reveal choreography, `motion` dep, PageTransition island (View Transitions), effects canvas | real request on HM preview host, Lighthouse perf within 5 pts, reduced-motion check |
-| ds4-nav | P4 | SiteHeader patterns bar-mega / sidebar / sheet / fullscreen with nav motion, no-JS fallback kept | Playwright at 3 viewports |
+| ds4-nav (done) | P4 | SiteHeader patterns bar-mega / sidebar / sheet / fullscreen with nav motion, no-JS fallback kept (native popover) | Playwright at 3 viewports |
 | ds5-media | P5 | Image/Video masks, aspect, hover, parallax; Card hover | visual check |
 | ds6-hmfroid | P6 | HM Froid theme and pages built with the new concepts, humanizer pass, design-review checklist | Ali review, publish |
 | ds7-tailg | P7 | TailG same | Ali review, DNS switch |
