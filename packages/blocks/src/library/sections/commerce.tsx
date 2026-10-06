@@ -1,4 +1,4 @@
-import { defineSection, f, linkTarget, resolveLink, type BlockContext } from "../../core";
+import { defineSection, f, linkTarget, localHref, resolveLink, type BlockContext } from "../../core";
 import { IconGlyph } from "../icons";
 import { BuyBox, CartView, type BuyVariant, type CartLine } from "../cart";
 
@@ -123,7 +123,7 @@ export const ProductDetail = defineSection({
               currency={money.currency}
               product={{ slug: data.slug, title: data.title, image: main?.src ?? null }}
               variants={data.variants}
-              labels={{ ...p.labels, cartHref: "/cart" }}
+              labels={{ ...p.labels, cartHref: localHref("/cart", ctx.metadata) }}
             />
           )}
           {secondary || (ctx.isEditing && p.secondaryLabel) ? (
@@ -197,7 +197,8 @@ export const Cart = defineSection({
           ...p.labels,
           empty: p.emptyText,
           continueLabel: p.continueLabel,
-          continueHref: resolveLink(p.continueLink, ctx.metadata) ?? "/",
+          continueHref: resolveLink(p.continueLink, ctx.metadata) ?? localHref("/", ctx.metadata),
+          basePath: ctx.metadata.basePath,
           checkout: p.checkoutLabel,
           note: p.note,
         }}

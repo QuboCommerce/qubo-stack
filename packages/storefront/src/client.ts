@@ -41,6 +41,8 @@ export type StorefrontClientOptions = {
    */
   headers?: HeadersInit;
   fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
+  /** Secondary locale to render in (`nl-BE`); documents come back with that overlay applied. Omit for the primary. */
+  locale?: string;
 };
 
 const qs = (params: Record<string, string | undefined>) => {
@@ -108,6 +110,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     baseUrl,
     siteSlug: options.siteSlug,
     host: options.host,
+    locale: options.locale,
 
     getSite: () =>
       request<{ site: SiteSummary }>("/sites/current").then((r) => r.site),
@@ -138,12 +141,12 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
       ),
 
     /** Site, header/footer section groups and the live theme in one call. */
-    getLayout: (locale?: string) =>
+    getLayout: (locale: string | undefined = options.locale) =>
       request<LayoutResponse>(`/render/layout${qs({ locale })}`),
 
     /** Published template for a resource kind; null when the site has none. */
     getTemplate: (kind: TemplateKind, params: { handle?: string; locale?: string } = {}) =>
-      orNull(request<TemplateResponse>(`/render/templates/${encodeURIComponent(kind)}${qs(params)}`)),
+      orNull(request<TemplateResponse>(`/render/templates/${encodeURIComponent(kind)}${qs({ locale: options.locale, ...params })}`)),
 
     /** Verified domains; the primary one is the canonical host. */
     getDomains: () => request<DomainsResponse>("/render/domains"),
@@ -183,7 +186,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     checkPreview: () => request<{ granted: boolean }>("/render/preview/check").then((r) => r.granted),
 
     /** Published standalone page by slug; null when missing or unpublished. */
-    getPage: (slug: string, locale?: string) =>
+    getPage: (slug: string, locale: string | undefined = options.locale) =>
       orNull(
         request<PageResponse>(
           `/render/pages/${slug.split("/").map(encodeURIComponent).join("/")}${qs({ locale })}`,

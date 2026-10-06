@@ -53,6 +53,14 @@ Dev hosts render `noindex`. Publishing calls `notifyRevalidate` (`packages/studi
 which POSTs to `QUBO_REVALIDATE_URL` signed with `x-qubo-signature` (HMAC of
 `QUBO_REVALIDATE_SECRET`). Sitemap and robots are per host.
 
+## Languages
+
+Primary language at the root, others under `/<lang>` (proxy strips it into `x-qubo-lang`). Blocks
+must build links with `localHref(path, ctx.metadata)` so they stay inside the language; translated
+strings come from `translation` rows (`document:<id>`, `page:<id>`, `site:<id>`) and are overlaid at
+render time (`renderableDocument`, `publishedPage`). Catalogue names are not translated yet. See
+`docs/storefront.md` > Languages.
+
 ## Draft vs published
 
 `studio.renderableDocument(siteId, id, locale, { draft })` and `publishedPage(..., { includeDrafts })`

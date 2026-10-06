@@ -10,6 +10,7 @@
     "./constants": "./lib/constants.ts",
     "./site-url": "./lib/site-url.ts",
     "./admin-url": "./lib/admin-url.ts",
+    "./locale-url": "./lib/locale-url.ts",
     "./client-ip": "./lib/client-ip.ts"
   },
   "dependencies": {

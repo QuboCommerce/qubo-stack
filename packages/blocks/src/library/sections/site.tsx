@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { defineSection, f, linkTarget, resolveLink, resolveMedia, textOf, type BlockContext, type LinkValue } from "../../core";
+import { defineSection, f, linkTarget, localHref, resolveLink, resolveMedia, textOf, type BlockContext, type LinkValue } from "../../core";
 import { IconGlyph } from "../icons";
 import { CartCount } from "../cart";
 
@@ -18,7 +18,7 @@ function NavLink({ label, link, ctx, className }: { label: string; link: LinkVal
 function Brand({ logo, name, ctx }: { logo: Parameters<typeof resolveMedia>[0]; name: string; ctx: BlockContext }) {
   const media = resolveMedia(logo, ctx.metadata);
   return (
-    <a className="qb-site-brand" href={ctx.isEditing ? undefined : "/"} aria-label={name}>
+    <a className="qb-site-brand" href={ctx.isEditing ? undefined : localHref("/", ctx.metadata)} aria-label={name}>
       {media ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={media.src} alt={media.alt || name} />
@@ -201,13 +201,29 @@ export const SiteHeader = defineSection({
     showAccount: f.toggle({ label: "Account", default: true }),
     accountLabel: f.text({ label: "Account label (empty shows an icon only)", default: "", inline: false }),
     showCart: f.toggle({ label: "Cart", default: true }),
+    languageSwitch: f.toggle({
+      label: "Language switch",
+      default: true,
+      description: "Shows the site's published languages as links. Hidden while the site has one language.",
+    }),
     ctaLabel: f.text({ label: "Button label" }),
     ctaLink: f.link({ label: "Button link" }),
   },
   render: (
-    { logo, name, links, pattern, menu, side, megaColumns, stacked, sticky, showSearch, searchPlaceholder, showAccount, accountLabel, showCart, ctaLabel, ctaLink },
+    { logo, name, links, pattern, menu, side, megaColumns, stacked, sticky, showSearch, searchPlaceholder, showAccount, accountLabel, showCart, languageSwitch, ctaLabel, ctaLink },
     ctx,
   ) => {
+    const locales = ctx.metadata.locales ?? [];
+    const switcher =
+      languageSwitch && locales.length > 1 ? (
+        <nav className="qb-site-lang" aria-label="Language">
+          {locales.map((l) => (
+            <a key={l.locale} href={ctx.isEditing ? undefined : l.href} hrefLang={l.locale} lang={l.locale} aria-current={l.current ? "true" : undefined}>
+              {l.label}
+            </a>
+          ))}
+        </nav>
+      ) : null;
     const siteName = textOf(name) || ctx.metadata.site?.name || "";
     const items = links as NavItem[];
     const inline = pattern === "bar" || pattern === "bar-mega" || pattern === "sidebar";
@@ -241,33 +257,34 @@ export const SiteHeader = defineSection({
         <div className="qb-site-actions">
           {showSearch ? (
             <>
-              <form className="qb-site-search" action="/search" role="search">
+              <form className="qb-site-search" action={localHref("/search", ctx.metadata)} role="search">
                 <IconGlyph name="search" size="1em" />
                 <input type="search" name="q" placeholder={textOf(searchPlaceholder)} aria-label={searchLabel} />
               </form>
-              <a className="qb-site-icon qb-site-search-icon" href={ctx.isEditing ? undefined : "/search"} aria-label={searchLabel}>
+              <a className="qb-site-icon qb-site-search-icon" href={ctx.isEditing ? undefined : localHref("/search", ctx.metadata)} aria-label={searchLabel}>
                 <IconGlyph name="search" size="1.25em" />
               </a>
             </>
           ) : null}
           {showAccount && has(ctx, "accounts") ? (
             textOf(accountLabel) ? (
-              <a className="qb-button qb-site-account" data-emphasis="outline" data-size="sm" href={ctx.isEditing ? undefined : "/account"}>
+              <a className="qb-button qb-site-account" data-emphasis="outline" data-size="sm" href={ctx.isEditing ? undefined : localHref("/account", ctx.metadata)}>
                 <IconGlyph name="user" size="1.1em" />
                 <span>{textOf(accountLabel)}</span>
               </a>
             ) : (
-              <a className="qb-site-icon" href={ctx.isEditing ? undefined : "/account"} aria-label="Account">
+              <a className="qb-site-icon" href={ctx.isEditing ? undefined : localHref("/account", ctx.metadata)} aria-label="Account">
                 <IconGlyph name="user" size="1.25em" />
               </a>
             )
           ) : null}
           {showCart && commerce ? (
-            <a className="qb-site-icon" href={ctx.isEditing ? undefined : "/cart"} aria-label="Cart">
+            <a className="qb-site-icon" href={ctx.isEditing ? undefined : localHref("/cart", ctx.metadata)} aria-label="Cart">
               <IconGlyph name="shopping-bag" size="1.25em" />
               {ctx.metadata.site?.id && !ctx.isEditing ? <CartCount siteId={ctx.metadata.site.id} /> : null}
             </a>
           ) : null}
+          {switcher}
           {cta}
           <button type="button" className="qb-site-icon qb-site-menu-toggle" popoverTarget={menuId} aria-label="Menu">
             <IconGlyph name="menu" size="1.4em" />

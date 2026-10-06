@@ -27,6 +27,10 @@ export type AssetInfo = {
 export type RenderMetadata = {
   site?: { id: string; type: SiteType; capabilities: Capability[]; name?: string; currency?: string; locale?: string };
   locale?: string;
+  /** URL prefix of the locale being rendered (`/nl`); empty for the primary language. */
+  basePath?: string;
+  /** Every published language of the site, with the current page's URL in each; drives the header switch. */
+  locales?: LocaleLink[];
   theme?: Theme;
   /** Preview light/dark for dual-mode themes (Studio toggle). */
   mode?: "light" | "dark" | "system";
@@ -39,6 +43,8 @@ export type RenderMetadata = {
   /** Render with schema placeholders instead of content (component inspector). */
   blueprint?: boolean;
 };
+
+export type LocaleLink = { locale: string; label: string; href: string; current: boolean };
 
 export type BlockContext = {
   id: string;
@@ -68,6 +74,13 @@ export function resolveMedia(media: MediaValue | null | undefined, meta: RenderM
   return out;
 }
 
+/** A site-internal path under the locale prefix being rendered: `/cart` → `/nl/cart`. */
+export function localHref(path: string, meta: RenderMetadata): string {
+  const base = meta.basePath ?? "";
+  if (!base || !path.startsWith("/") || path.startsWith("//")) return path;
+  return path === "/" ? base : `${base}${path}`;
+}
+
 export function resolveLink(link: LinkValue | null | undefined, meta: RenderMetadata): string | undefined {
   if (!link || !link.value) return undefined;
   const v = link.value.trim();
@@ -75,7 +88,7 @@ export function resolveLink(link: LinkValue | null | undefined, meta: RenderMeta
   if (mapped) return mapped;
   switch (link.kind) {
     case "url":
-      return v;
+      return localHref(v, meta);
     case "anchor":
       return v.startsWith("#") ? v : `#${v}`;
     case "email":
@@ -83,11 +96,11 @@ export function resolveLink(link: LinkValue | null | undefined, meta: RenderMeta
     case "phone":
       return `tel:${v.replace(/[^\d+]/g, "")}`;
     case "page":
-      return v === "home" ? "/" : `/${v.replace(/^\//, "")}`;
+      return localHref(v === "home" ? "/" : `/${v.replace(/^\//, "")}`, meta);
     case "product":
-      return `/products/${v}`;
+      return localHref(`/products/${v}`, meta);
     case "collection":
-      return `/collections/${v}`;
+      return localHref(`/collections/${v}`, meta);
   }
 }
 

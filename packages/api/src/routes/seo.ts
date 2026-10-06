@@ -1,7 +1,7 @@
 import { Elysia, t } from "elysia";
 import { db } from "@qubo/db/client";
-import { category, page, product, redirect, siteDomain } from "@qubo/db/schema";
-import { and, asc, eq, isNotNull } from "drizzle-orm";
+import { category, page, product, redirect, siteDomain, translation } from "@qubo/db/schema";
+import { and, asc, eq, inArray, isNotNull, like } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
 
 /**
@@ -21,7 +21,7 @@ export const seo = new Elysia({ prefix: "/render" })
   })
   .get("/sitemap", async ({ site, status }) => {
     if (!site) return status(400, { error: "site_not_resolved" });
-    const [products, categories, pages] = await Promise.all([
+    const [products, categories, pages, pageSlugs] = await Promise.all([
       db
         .select({ slug: product.slug, updatedAt: product.updatedAt })
         .from(product)
@@ -33,15 +33,27 @@ export const seo = new Elysia({ prefix: "/render" })
         .where(eq(category.siteId, site.id))
         .orderBy(asc(category.position)),
       db
-        .select({ slug: page.slug, title: page.title, updatedAt: page.updatedAt, isHomepage: page.isHomepage })
+        .select({ id: page.id, slug: page.slug, title: page.title, updatedAt: page.updatedAt, isHomepage: page.isHomepage })
         .from(page)
         .where(and(eq(page.siteId, site.id), eq(page.state, "PUBLISHED")))
         .orderBy(asc(page.title)),
+      // Translated slugs and titles per locale (`page:<id>` rows), for hreflang and localized trees.
+      db
+        .select({ ownerRef: translation.ownerRef, path: translation.path, locale: translation.locale, value: translation.value })
+        .from(translation)
+        .where(and(eq(translation.siteId, site.id), like(translation.ownerRef, "page:%"), inArray(translation.path, ["slug", "title"]))),
     ]);
+    const perPage = new Map<string, Record<string, { slug?: string; title?: string }>>();
+    for (const t of pageSlugs) {
+      const id = t.ownerRef.slice("page:".length);
+      const byLocale = perPage.get(id) ?? {};
+      (byLocale[t.locale] ??= {})[t.path as "slug" | "title"] = t.value;
+      perPage.set(id, byLocale);
+    }
     return {
       products,
       categories,
-      pages: pages.filter((p) => !p.isHomepage).map(({ slug, title, updatedAt }) => ({ slug, title, updatedAt })),
+      pages: pages.filter((p) => !p.isHomepage).map(({ id, slug, title, updatedAt }) => ({ slug, title, updatedAt, locales: perPage.get(id) ?? {} })),
     };
   })
   .get(

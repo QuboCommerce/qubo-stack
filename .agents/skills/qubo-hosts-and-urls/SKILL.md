@@ -52,6 +52,14 @@ like any site host.
 
 Dev hosts and `QUBO_DEV=1` render with `noindex`.
 
+## Language prefix
+
+Only the language part of a locale is a URL segment: primary at the root, other published
+languages under `/<lang>` (`/nl/levering-en-betaling`). Helpers in `@qubo/shared/locale-url`:
+`localizePath`, `splitLocalePath`, `localePrefix`, `languageLabel`. In the storefront use
+`localeHref(sf, locale, path)` / `sf.basePath`; in blocks `localHref(path, ctx.metadata)`. Never
+concatenate `/nl` by hand.
+
 ## Env vars that carry URLs
 
 `QUBO_API_URL` (server to server, loopback or container name), `QUBO_TRUSTED_ORIGINS`,

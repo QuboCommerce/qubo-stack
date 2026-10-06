@@ -4,7 +4,7 @@ import { tenancy } from "../plugins/tenancy";
 import { assertSiteEditable } from "../lib/tenancy";
 import { previewGranted } from "../lib/preview";
 import { db } from "@qubo/db/client";
-import { organization, siteSettings } from "@qubo/db/schema";
+import { organization, siteLocale, siteSettings } from "@qubo/db/schema";
 import { eq } from "drizzle-orm";
 
 /**
@@ -369,20 +369,32 @@ export const studioPublic = new Elysia({ prefix: "/render" })
         const id = await studio.sectionGroupDocumentId(site.id, kind);
         return id ? studio.renderableDocument(site.id, id, query.locale, { draft }) : null;
       };
-      const [header, footer, theme, settings, org] = await Promise.all([
+      const [header, footer, theme, settings, org, localeRows] = await Promise.all([
         load("header"),
         load("footer"),
         studio.getLiveTheme(site.id, { draft }),
         db.query.siteSettings.findFirst({ where: eq(siteSettings.siteId, site.id) }),
         db.query.organization.findFirst({ where: eq(organization.id, site.organizationId) }),
+        db
+          .select({ locale: siteLocale.locale, isPrimary: siteLocale.isPrimary, isPublished: siteLocale.isPublished })
+          .from(siteLocale)
+          .where(eq(siteLocale.siteId, site.id)),
       ]);
+      // The primary language always serves; others only once published (drafts also in site preview).
+      const locales = localeRows.filter((l) => l.isPrimary || l.isPublished || draft).map((l) => ({ locale: l.locale, isPrimary: l.isPrimary }));
+      if (!locales.some((l) => l.isPrimary)) locales.unshift({ locale: site.locale, isPrimary: true });
       const endsAt = settings?.maintenanceEnd ?? null;
       const maintenance = {
         active: Boolean(settings?.maintenanceMode) && !(endsAt && endsAt < new Date()),
         message: settings?.maintenanceMessage ?? null,
         endsAt,
       };
-      const seo = { title: settings?.metaTitle ?? null, description: settings?.metaDescription ?? site.description ?? null };
+      const primary = locales.find((l) => l.isPrimary)?.locale;
+      const localized = query.locale && query.locale !== primary ? await studio.siteTranslations(site.id, query.locale) : {};
+      const seo = {
+        title: localized.metaTitle ?? settings?.metaTitle ?? null,
+        description: localized.metaDescription ?? settings?.metaDescription ?? site.description ?? null,
+      };
       const hasAddress = Boolean(org?.addressLine1 || org?.city);
       const business = {
         legalName: org?.legalName ?? null,
@@ -397,7 +409,7 @@ export const studioPublic = new Elysia({ prefix: "/render" })
         geo: settings?.latitude && settings?.longitude ? { latitude: Number(settings.latitude), longitude: Number(settings.longitude) } : null,
         type: settings?.businessType ?? null,
       };
-      return { site, seo, business, header, footer, theme, maintenance };
+      return { site, seo, business, header, footer, theme, maintenance, locales };
     },
     { query: t.Object({ locale: t.Optional(t.String()) }) },
   )
@@ -406,11 +418,11 @@ export const studioPublic = new Elysia({ prefix: "/render" })
     async ({ site, params, query, status, headers }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
       const draft = await previewGranted(site.id, headers);
-      const found = await studio.publishedPage(site.id, decodeURIComponent(params["*"] ?? "").replace(/^\/+|\/+$/g, ""), { includeDrafts: draft });
+      const found = await studio.publishedPage(site.id, decodeURIComponent(params["*"] ?? "").replace(/^\/+|\/+$/g, ""), { includeDrafts: draft, locale: query.locale });
       if (!found?.documentId) return status(404, { error: "not_found" });
       const data = await studio.renderableDocument(site.id, found.documentId, query.locale, { draft });
       if (!data) return status(404, { error: "not_found" });
-      return { documentId: found.documentId, title: found.title, metaTitle: found.metaTitle, metaDescription: found.metaDescription, data };
+      return { documentId: found.documentId, slug: found.slug, slugs: found.slugs, title: found.title, metaTitle: found.metaTitle, metaDescription: found.metaDescription, data };
     },
     { query: t.Object({ locale: t.Optional(t.String()) }) },
   )

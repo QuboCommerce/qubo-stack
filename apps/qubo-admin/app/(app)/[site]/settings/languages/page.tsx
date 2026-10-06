@@ -103,8 +103,8 @@ export default async function LanguageSettings({ params }: { params: Promise<{ s
           <p className="mt-3 flex items-start gap-2 px-3 text-[12.5px] text-muted-foreground xs:px-1">
             <Info className="mt-0.5 size-3.5 shrink-0" />
             <span>
-              Translating in the Studio and the language switcher on the site are still in development. Until they ship, visitors only see the primary language.
-              Languages and translations set up here carry over.
+              A published language is served under its own prefix (for example /nl) with a switcher in the header and hreflang tags. Translating page
+              content in the Studio is still in development; translations added by other means carry over.
             </span>
           </p>
         </SettingsGroup>

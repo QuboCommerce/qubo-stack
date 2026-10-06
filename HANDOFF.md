@@ -646,6 +646,30 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    rather than covering the stage, and the sticky stacked header is
    145 px tall on desktop which leaves a 755 px stage.
 
+### 40. Languages: prefix routing and translated slugs (ds6g, 2026-10-06)
+
+Only the language part of a locale is a URL segment. The primary language
+serves at the root, every other published `site_locale` under `/<lang>`
+(`/nl/...`); `/fr/...` on a French-primary site 308s to the root and an
+unknown prefix is a 404. The proxy strips the prefix into `x-qubo-lang`
+and `getStorefront` resolves `sf.locale`, `sf.basePath`, `sf.locales`.
+Pages in another language are reached by a translated slug stored as
+`translation` rows `page:<id>` (`title`, `metaTitle`, `metaDescription`,
+`slug`, unique per locale); the primary slug under a prefix 308s to it,
+and a translated title wins over an untranslated meta title. Site meta
+title and description live under `site:<id>`; the document root title is
+now a translatable string (`root.title`) so `<title>` follows the language.
+Blocks prefix every link through `localHref` / `RenderMetadata.basePath`;
+the header shows a `FR | NL` switch; `<html lang>`, `og:locale`, JSON-LD
+`inLanguage`, `hreflang` + `x-default` in head and sitemap (`xhtml:link`)
+and per-language robots rules follow. HM Froid ships Dutch for the header,
+footer, templates and all pages from `scripts/sites/hm-froid.nl.ts`
+(matched on the French text after each publish). Known gaps: catalogue
+names and descriptions stay French, `/collections` and `/products` paths
+are shared across languages, two-letter page slugs at the root are
+unreachable, and the Studio has no UI yet for page-level or site-level
+translations (the Languages settings note says so).
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

@@ -1,5 +1,5 @@
-import { page, sectionGroup, site, template } from "@qubo/db/schema";
-import { and, asc, eq, ne } from "drizzle-orm";
+import { page, sectionGroup, site, siteLocale, template, translation } from "@qubo/db/schema";
+import { and, asc, eq, ne, sql } from "drizzle-orm";
 import type { Capability } from "@qubo/blocks";
 import { document } from "@qubo/db/schema";
 import { sameContent } from "./content";
@@ -165,17 +165,85 @@ export async function sectionGroupDocumentId(siteId: string, kind: SectionGroupK
 }
 
 /** Used by storefronts: a published standalone page by slug (`""` = homepage). Site preview also sees drafts. */
-export async function publishedPage(siteId: string, slug: string, opts: { includeDrafts?: boolean } = {}) {
-  const [row] = await db
-    .select({ documentId: page.documentId, title: page.title, metaTitle: page.metaTitle, metaDescription: page.metaDescription })
-    .from(page)
-    .where(
-      and(
-        eq(page.siteId, siteId),
-        slug ? eq(page.slug, slug) : eq(page.isHomepage, true),
-        opts.includeDrafts ? ne(page.state, "ARCHIVED") : eq(page.state, "PUBLISHED"),
-      ),
-    )
-    .limit(1);
-  return row?.documentId ? row : null;
+export const PAGE_FIELDS = ["title", "metaTitle", "metaDescription", "slug"] as const;
+export type PageField = (typeof PAGE_FIELDS)[number];
+
+export type PublishedPage = {
+  id: string;
+  documentId: string;
+  /** Slug in the requested locale (the primary slug when none is translated). */
+  slug: string;
+  primarySlug: string;
+  title: string;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  /** Slug per published locale, the primary one included, for hreflang and the language switch. */
+  slugs: Record<string, string>;
+};
+
+/** Translation overlays of a page's own fields (`page:<id>` rows): `{ "nl-BE": { title, slug } }`. */
+async function pageOverlays(siteId: string, pageId: string): Promise<Record<string, Partial<Record<PageField, string>>>> {
+  const rows = await db
+    .select({ locale: translation.locale, path: translation.path, value: translation.value })
+    .from(translation)
+    .where(and(eq(translation.siteId, siteId), eq(translation.ownerRef, `page:${pageId}`)));
+  const out: Record<string, Partial<Record<PageField, string>>> = {};
+  for (const r of rows) {
+    if (!(PAGE_FIELDS as readonly string[]).includes(r.path)) continue;
+    (out[r.locale] ??= {})[r.path as PageField] = r.value;
+  }
+  return out;
+}
+
+async function publishedLocales(siteId: string) {
+  const rows = await db
+    .select({ locale: siteLocale.locale, isPrimary: siteLocale.isPrimary, isPublished: siteLocale.isPublished })
+    .from(siteLocale)
+    .where(eq(siteLocale.siteId, siteId));
+  return { primary: rows.find((l) => l.isPrimary)?.locale ?? null, published: rows.filter((l) => l.isPrimary || l.isPublished).map((l) => l.locale) };
+}
+
+/**
+ * A published page by slug. In a secondary locale the slug is matched against
+ * that locale's translated slug first, then the primary slug (so old links
+ * still resolve and the storefront can redirect to the translated one).
+ */
+export async function publishedPage(siteId: string, slug: string, opts: { includeDrafts?: boolean; locale?: string } = {}): Promise<PublishedPage | null> {
+  const state = opts.includeDrafts ? ne(page.state, "ARCHIVED") : eq(page.state, "PUBLISHED");
+  const select = { id: page.id, documentId: page.documentId, slug: page.slug, title: page.title, metaTitle: page.metaTitle, metaDescription: page.metaDescription };
+  type Row = { id: string; documentId: string | null; slug: string; title: string; metaTitle: string | null; metaDescription: string | null };
+  let row: Row | undefined;
+  if (slug && opts.locale) {
+    const [hit] = await db
+      .select(select)
+      .from(page)
+      .innerJoin(translation, and(eq(translation.ownerRef, sql`'page:' || ${page.id}`), eq(translation.path, "slug"), eq(translation.locale, opts.locale)))
+      .where(and(eq(page.siteId, siteId), eq(translation.value, slug), state))
+      .limit(1);
+    row = hit;
+  }
+  if (!row) {
+    const [hit] = await db
+      .select(select)
+      .from(page)
+      .where(and(eq(page.siteId, siteId), slug ? eq(page.slug, slug) : eq(page.isHomepage, true), state))
+      .limit(1);
+    row = hit;
+  }
+  if (!row?.documentId) return null;
+  const [overlays, locales] = await Promise.all([pageOverlays(siteId, row.id), publishedLocales(siteId)]);
+  const own = opts.locale && opts.locale !== locales.primary ? (overlays[opts.locale] ?? {}) : {};
+  const slugs: Record<string, string> = {};
+  for (const l of locales.published) slugs[l] = (l === locales.primary ? undefined : overlays[l]?.slug) ?? row.slug;
+  return {
+    id: row.id,
+    documentId: row.documentId,
+    slug: own.slug ?? row.slug,
+    primarySlug: row.slug,
+    title: own.title ?? row.title,
+    // A translated title must not be shadowed by the primary language's meta title.
+    metaTitle: own.metaTitle ?? (own.title ? null : row.metaTitle),
+    metaDescription: own.metaDescription ?? (own.title ? null : row.metaDescription),
+    slugs,
+  };
 }

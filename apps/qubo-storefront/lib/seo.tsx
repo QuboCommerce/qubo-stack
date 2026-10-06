@@ -90,7 +90,7 @@ export function webSiteLd(sf: Storefront) {
     "@id": `${sf.origin}/#website`,
     name: sf.site.name,
     url: `${sf.origin}/`,
-    inLanguage: sf.site.locale,
+    inLanguage: sf.locale,
     publisher: { "@id": organizationId(sf) },
   };
 }
@@ -129,7 +129,7 @@ export function siteLd(sf: Storefront) {
 }
 
 export function breadcrumbLd(sf: Storefront, crumbs: Crumb[]) {
-  const items = [{ name: homeLabel(sf.site.locale), path: "/" }, ...crumbs];
+  const items = [{ name: homeLabel(sf.locale), path: sf.basePath || "/" }, ...crumbs.map((c) => ({ ...c, path: `${sf.basePath}${c.path}` }))];
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -152,7 +152,7 @@ export function categoryCrumbs(categories: CategoryNode[], slug: string): Crumb[
 
 export function productLd(sf: Storefront, product: ProductDetail) {
   const name = tidyName(product.name);
-  const url = `${sf.origin}/products/${encodeURIComponent(product.slug)}`;
+  const url = `${sf.origin}${sf.basePath}/products/${encodeURIComponent(product.slug)}`;
   const inStock = (available: number | null) => (available === null || available > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock");
   const variants = product.variants.length ? product.variants : [{ id: product.id, name: null, sku: null, available: null, price: product.basePrice, priceSource: "base" as const }];
   const prices = variants.map((v) => Number(v.price)).filter((n) => Number.isFinite(n));
