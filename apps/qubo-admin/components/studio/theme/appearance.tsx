@@ -87,7 +87,7 @@ const easings = [
   { value: "linear", label: "Linear" },
 ];
 
-const entranceLabel: Record<(typeof entrancePresets)[number], string> = { none: "None", fade: "Fade in", rise: "Rise", scale: "Zoom", blur: "Unblur" };
+const entranceLabel: Record<(typeof entrancePresets)[number], string> = { none: "None", fade: "Fade in", rise: "Rise", scale: "Zoom", blur: "Unblur", mask: "Reveal", slide: "Slide in" };
 
 const flavors = [
   { id: "fancy", label: "Fancy", hint: "Lively header navigation, expressive sections. Storefronts and studios." },

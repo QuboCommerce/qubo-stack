@@ -11,6 +11,8 @@ import {
   embedSrc,
   instantiate,
   library,
+  decorRanges,
+  hashText,
   migrateDocument,
   registry,
   toJsonSchema,
@@ -175,7 +177,7 @@ describe("fixtures", () => {
     );
     expect(html).toContain("Chambre froide positive");
     expect(html).toContain('href="/products/vitrine-150"');
-    expect(html).toContain('<span class="qb-accent-text">froid professionnel</span>');
+    expect(html).toMatch(/<span class="qb-decor" data-decor="squiggle" data-decor-kind="squiggle" data-decor-animate="true">froid professionnel<svg class="qb-decor-mark"[^>]*><path d="M1 4[^"]*"><\/path><\/svg><\/span>/);
     expect(html).toContain('href="tel:+3220000000"');
   });
 
@@ -252,3 +254,44 @@ describe("site type presets", () => {
     }
   });
 });
+
+describe("decor", () => {
+  const heading = registry.get("Heading")!;
+  const html = (props: Record<string, unknown>) =>
+    renderToString(heading.component({ ...heading.defaults, ...props, puck: { metadata: { theme: hmFroidTheme } } }) as never);
+
+  it("prefers ranges picked on this exact text and merges overlaps", () => {
+    const text = "the cold or the cold";
+    const ranges = [{ hash: hashText(text), at: [[16, 20], [4, 8], [6, 9]] as [number, number][] }];
+    expect(decorRanges(text, { preset: "box", match: "the", ranges })).toEqual([[4, 9], [16, 20]]);
+  });
+
+  it("falls back to the phrase when the text changed since the ranges were picked", () => {
+    const value = { preset: "box", match: "cold", ranges: [{ hash: hashText("old text"), at: [[0, 3]] as [number, number][] }] };
+    expect(decorRanges("Stay COLD", value)).toEqual([[5, 9]]);
+    expect(decorRanges("Stay warm", value)).toEqual([]);
+  });
+
+  it("tells the AI where preset ids come from", () => {
+    const json = JSON.stringify(toJsonSchema(registry));
+    expect(json).toContain("Id from the theme's surfaces.gradients");
+    expect(json).toContain("Id from the theme's effects.presets");
+  });
+
+  it("renders nothing extra for unknown presets", () => {
+    expect(html({ text: "Le froid", decor: { preset: "nope", match: "froid", ranges: [] } })).not.toContain("qb-decor");
+  });
+
+  it("upgrades v1 highlight to the accent decor, on load and at render", () => {
+    const v1 = { id: "Heading-1", text: "Le froid professionnel", highlight: "froid", level: "h2", _v: 1 };
+    const { data } = migrateDocument({ root: { props: {} }, content: [{ type: "Heading", props: v1 }] }, registry);
+    const props = data.content[0]!.props as Record<string, unknown>;
+    expect(props._v).toBe(2);
+    expect(props.highlight).toBeUndefined();
+    expect(props.decor).toEqual({ preset: "accent", match: "froid", ranges: [] });
+    expect(renderToString(heading.component({ ...v1, puck: { metadata: { theme: hmFroidTheme } } }) as never)).toContain(
+      'data-decor="accent" data-decor-kind="color">froid</span>',
+    );
+  });
+});
+

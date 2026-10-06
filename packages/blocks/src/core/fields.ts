@@ -111,8 +111,41 @@ export interface ResponsiveDef<T = unknown> extends Def<"responsive", Responsive
   inner: AnyFieldDef;
 }
 
+/**
+ * Marks word ranges of a sibling text field (`of`) with a theme decor preset.
+ * Ranges are character offsets keyed by the hash of the exact text they were
+ * picked on, so every locale keeps its own and edited text drops stale marks.
+ * `match` is a phrase fallback (case-insensitive, first hit) used when no
+ * range matches, e.g. for AI-written or migrated content.
+ */
+export type DecorRange = { hash: string; at: [number, number][] };
+export type DecorValue = { preset: string; match: string; ranges: DecorRange[] };
+export type DecorDef = Def<"decor", DecorValue, { of: string }>;
+
+/** Milliseconds. Edited with a 100ms-step slider plus an exact input. */
+export type DurationDef = Def<"duration", number, { min: number; max: number }>;
+
+/** "" = the theme easing; otherwise a named curve from `easingPresets` or any CSS easing. */
+export type EasingDef = Def<"easing", string>;
+
+/** Theme preset lists a field can point at. */
+export const presetKinds = ["gradient", "decor", "effect", "transition"] as const;
+export type PresetKind = (typeof presetKinds)[number];
+const presetSources: Record<PresetKind, string> = {
+  gradient: "surfaces.gradients",
+  decor: "decor",
+  effect: "effects.presets",
+  transition: "motion.transitions",
+};
+/** A preset id from the theme; "" = none (or inherit, per `empty`). */
+export type PresetDef = Def<"preset", string, { preset: PresetKind; empty: "none" | "inherit" }>;
+
 export type AnyFieldDef =
   | TextDef
+  | DecorDef
+  | DurationDef
+  | EasingDef
+  | PresetDef
   | RichtextDef
   | NumberDef
   | ToggleDef
@@ -172,6 +205,14 @@ const mediaSchema = z
     focal: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }).optional(),
   })
   .nullable();
+
+const decorSchema = z.object({
+  preset: z.string().default(""),
+  match: z.string().default(""),
+  ranges: z
+    .array(z.object({ hash: z.string(), at: z.array(z.tuple([z.number().int().min(0), z.number().int().min(0)])) }))
+    .default([]),
+});
 
 const linkSchema = z.object({
   kind: z.enum(linkKinds),
@@ -345,6 +386,50 @@ export const f = {
       meta: { group: "content", ...m },
       accept: o.accept ?? "image",
       translatableAlt: o.translatableAlt ?? true,
+    };
+  },
+
+  /** Word marks for the text field `of` (a sibling key). */
+  decor(of: string, o: Opts<DecorValue> = {}): DecorDef {
+    const m = meta(o, "Highlight");
+    return {
+      kind: "decor",
+      schema: describe(decorSchema, m) as unknown as z.ZodType<DecorValue>,
+      default: o.default ?? { preset: "", match: "", ranges: [] },
+      meta: { group: "style", ...m },
+      of,
+    };
+  },
+
+  duration(o: Opts<number, { min?: number; max?: number }> = {}): DurationDef {
+    const m = meta(o, "Duration");
+    const min = o.min ?? 0;
+    const max = o.max ?? 3000;
+    return {
+      kind: "duration",
+      schema: describe(z.number().int().min(min).max(max), m),
+      default: o.default ?? 300,
+      meta: { group: "style", ...m },
+      min,
+      max,
+    };
+  },
+
+  easing(o: Opts<string> = {}): EasingDef {
+    const m = meta(o, "Easing");
+    return { kind: "easing", schema: describe(z.string(), m), default: o.default ?? "", meta: { group: "style", ...m } };
+  },
+
+  preset(kind: PresetKind, o: Opts<string, { empty?: "none" | "inherit" }> = {}): PresetDef {
+    const m = meta(o, titleCase(kind));
+    const source = `Id from the theme's ${presetSources[kind]}; "" for ${o.empty ?? "none"}.`;
+    return {
+      kind: "preset",
+      schema: describe(z.string(), { ...m, description: m.description ? `${m.description} ${source}` : source }),
+      default: o.default ?? "",
+      meta: { group: "style", ...m },
+      preset: kind,
+      empty: o.empty ?? "none",
     };
   },
 

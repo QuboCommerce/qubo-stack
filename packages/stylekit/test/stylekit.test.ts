@@ -219,3 +219,32 @@ describe("doctor", () => {
     expect(diagnoseTheme(smossieTheme).richness.score).toBeGreaterThan(diagnoseTheme(defineTheme(minimal)).richness.score);
   });
 });
+
+describe("design language sections", () => {
+  it("fills brand, surfaces, decor, effects and transitions for themes saved before them", () => {
+    const t = defineTheme(minimal);
+    expect(t.brand.logo).toBeNull();
+    expect(t.surfaces.gradients.map((g) => g.id)).toContain("glow");
+    expect(t.decor.map((d) => d.id)).toEqual(expect.arrayContaining(["accent", "squiggle", "brush", "circle"]));
+    expect(t.effects.presets.map((e) => e.kind)).toEqual(expect.arrayContaining(["snow", "aurora", "grain"]));
+    expect(t.motion.transition).toBe("");
+    expect(t.motion.transitions.map((x) => x.id)).toEqual(["translucent", "icon", "fullscreen"]);
+    expect(t.motion.nav).toMatchObject({ enter: "slide", exit: "fade" });
+  });
+
+  it("paints gradients and decor on the element so they follow the section scheme", () => {
+    const { css } = compileTheme(defineTheme(minimal));
+    expect(css).toContain('[data-theme="mini"] [data-gradient="glow"] {');
+    expect(css).toMatch(/radial-gradient\(circle at 50% 0%, oklch\(from var\(--qb-primary\) l c h \/ 0\.22\) 0%/);
+    expect(css).toMatch(/\[data-decor="squiggle"\] \{\s+--qb-decor-color: var\(--qb-accent-text\);\s+--qb-decor-thickness: 3px;/);
+    expect(css).toContain("--qb-nav-in: 380ms;");
+    expect(css).not.toContain("@view-transition");
+  });
+
+  it("opts into native cross-document transitions only when chosen", () => {
+    const t = defineTheme({ ...minimal, motion: { transition: "native" } });
+    expect(compileTheme(t).css).toContain("@view-transition { navigation: auto; }");
+    const off = defineTheme({ ...minimal, motion: { transition: "native", profile: "none" } });
+    expect(compileTheme(off).css).not.toContain("@view-transition");
+  });
+});

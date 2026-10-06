@@ -60,11 +60,14 @@ Storefront: favicon/OG/manifest read from it (ties into the SEO layer already bu
 Theme holds named decoration presets: `{ id, kind: "squiggle" | "stroke" | "box" | "underline"
 | "gradient" | "circle" | "highlighter", color: RoleRef, thickness, offset, animate }`. Each kind
 is an inline SVG or CSS paint under `<span class="qb-decor" data-kind>`.
-Document side: new field kind `f.ranges()` stores **per-locale character ranges**:
+Document side: field kind `f.decor(of)` stores **character ranges keyed by the hash of the
+exact text they were picked on** (built in ds1), so each locale keeps its own:
 
 ```
-decor: { preset: "squiggle-accent", ranges: { fr: [[6,13]], nl: [[0,8],[22,27]] } }
+decor: { preset: "squiggle", match: "froid", ranges: [{ hash: "1x9k2a", at: [[6,13]] }, { hash: "0p3d7q", at: [[0,8],[22,27]] }] }
 ```
+
+`match` is a phrase fallback for AI-written or migrated content when no range hash matches.
 
 Offsets, not words, so "the" twice is fine and multiple highlights per heading work. The
 translation `sourceHash` already marks when a source changes, so stale ranges are flagged in
@@ -169,7 +172,7 @@ copy the resulting `SKILL.md` files in and delete generated folders.
 | id | phase | scope | gate |
 | --- | --- | --- | --- |
 | ds0-skills | P0 | install skills from section 5, write `qubo-design-language` skeleton | files exist, no em-dashes |
-| ds1-schema | P1 | stylekit: brand, surfaces, decor, motion v2, effects, nav schemas with defaults and migration of the 4 themes; blocks: `f.ranges`, `f.duration`, `f.easing`, `f.preset(kind)`; chrome: surface, reveal, effect; Heading highlight migration | tsc, bun test (round-trips, hm-froid theme migration), JSON schema lists presets |
+| ds1-schema (done) | P1 | stylekit: brand, surfaces, decor, motion v2, effects, nav schemas with defaults and migration of the 4 themes; blocks: `f.decor(of)`, `f.duration`, `f.easing`, `f.preset(kind)`; chrome: surface, reveal, effect; Heading highlight migration | tsc, bun test (round-trips, hm-froid theme migration), JSON schema lists presets |
 | ds2-editor | P2 | theme panel: Brand, Surfaces, Decor, Motion (tokens, transitions, tester), Effects tabs; block panel: DurationField, EasingField, PresetField, per-locale range modal | Playwright: set fr/nl ranges on HM hero, save a transition preset, Test plays |
 | ds3-runtime | P3 | storefront: decor, surface, reveal choreography, `motion` dep, PageTransition island (View Transitions), effects canvas | real request on HM preview host, Lighthouse perf within 5 pts, reduced-motion check |
 | ds4-nav | P4 | SiteHeader patterns bar-mega / sidebar / sheet / fullscreen with nav motion, no-JS fallback kept | Playwright at 3 viewports |
