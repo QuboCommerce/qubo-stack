@@ -11,6 +11,7 @@ import { seo } from "./routes/seo";
 import { forms } from "./routes/forms";
 import { chat } from "./routes/chat";
 import { sites } from "./routes/sites";
+import { edge } from "./routes/edge";
 import { studioPublic, studioRoutes } from "./routes/studio";
 
 const allowedOrigins = (process.env.QUBO_TRUSTED_ORIGINS ?? "")
@@ -42,6 +43,6 @@ export const app = new Elysia()
   .use(webhooks)
   .use(inbound)
   // Versioned public API; the storefront client pins it (API_VERSION in @qubo/storefront).
-  .group("/v1", (v1) => v1.use(sites).use(catalog).use(commerce).use(account).use(studioRoutes).use(studioPublic).use(seo).use(forms).use(chat));
+  .group("/v1", (v1) => v1.use(sites).use(catalog).use(commerce).use(account).use(studioRoutes).use(studioPublic).use(seo).use(forms).use(chat).use(edge));
 
 export type App = typeof app;

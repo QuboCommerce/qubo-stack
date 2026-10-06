@@ -15,6 +15,7 @@
     "@qubo/ai": "workspace:*",
     "@qubo/blocks": "workspace:*",
     "@qubo/db": "workspace:*",
+    "@qubo/domains": "workspace:*",
     "@qubo/geo": "workspace:*",
     "@qubo/inbox": "workspace:*",
     "@qubo/portal-client": "workspace:*",

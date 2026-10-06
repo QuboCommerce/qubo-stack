@@ -55,3 +55,12 @@ export async function isAllowedStorefrontOrigin(origin: string): Promise<boolean
     .limit(1);
   return Boolean(row);
 }
+
+/** `qubo.<ip>.sslip.io` for this server's own IP: the install-day admin address (see @qubo/domains). */
+export async function isFallbackAdminHost(host: string) {
+  const { fallbackAdminHost } = await import("@qubo/domains");
+  const { serverIps } = await import("@qubo/domains/server");
+  const admin = process.env.ADMIN_SUBDOMAIN?.trim() || "qubo";
+  const ips = await serverIps().catch(() => [] as string[]);
+  return ips.some((ip) => fallbackAdminHost(ip, admin) === host.toLowerCase());
+}

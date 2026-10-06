@@ -40,7 +40,6 @@ qubo-stack/                     Turborepo + pnpm workspace
 │   ├── realtime/   @qubo/realtime platform event bus: Postgres outbox + LISTEN/NOTIFY → SSE
 │   └── storefront/ @qubo/storefront typed client for storefronts → API (pinned to /v1)
 ├── .changeset/                    Changesets; one fixed version for the product (0.0.2)
-├── caddy/Caddyfile                qubo.<domain> → admin, site domains → storefront
 ├── scripts/                       legacy archive + importer + link-env
 ├── .zed/                          settings.json + tasks.json
 └── docker-compose.yml
@@ -55,7 +54,7 @@ qubo-stack/                     Turborepo + pnpm workspace
 | API | `qubo-elysia` | 3333 |
 | Control plane | `qubo-admin` | 4000 |
 | Storefront (all sites) | `qubo-storefront` | 3000 |
-| Edge proxy | `caddy-edge` | 80/443 |
+| Edge proxy | Coolify's Traefik, or `qubo-edge` (`--profile edge`) | 80/443 |
 
 Network: `qubo-network`. Compose project name: `qubo`.
 
@@ -109,7 +108,7 @@ connecting as the OS user.
 | Forms | TanStack Form + Zod 4 (Standard Schema, no adapter) |
 | UI | Tailwind v4 + shadcn/ui (new-york) |
 | Payments | Stripe (cards, Bancontact, Apple Pay) |
-| Proxy | Caddy 2 |
+| Proxy | Traefik v3 (HTTP provider fed by the API) |
 
 ## Database
 
@@ -406,6 +405,30 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    user manages the target organisation; the site count is the real ceiling
    across all organisations, not per organisation. Not built yet: delete site,
    logo upload during creation, cross-site inbox.
+25. **Custom domains are self-service; Traefik learns them from the API.**
+   Settings → Domains connects a domain (`app/domain-actions.ts`), enforcing
+   `customDomainsPerSite` from the plan and one site per hostname. `@qubo/domains`
+   holds the rules: `parseDomain` (pasted URLs, IDN, rejects IPs, public suffixes,
+   `qubo.`/`preview.` and the platform base), the records each domain needs
+   (A for the host, TXT `_qubo-verify`, recommended `www` and `qubo` CNAMEs),
+   per-record grading against public resolvers (`ok`, `missing`, `wrong`,
+   `proxied` for Cloudflare orange cloud, `ipv6` for a stray AAAA) and DNS
+   provider detection from nameservers with panel paths for about 20 hosts. The
+   API sweeps due domains every 15 s (`next_check_at`: 30 s for a fresh domain,
+   backing off to 12 h; verified ones every 6 h) and publishes
+   `site.domain.changed` on any status change, so the page updates live. A domain
+   is verified the first time the A and TXT records hold and is never
+   un-verified by a later failed check. `GET /v1/edge/traefik` (optional
+   `QUBO_EDGE_TOKEN` as `?token=`) returns routers for every verified domain
+   plus its `qubo.`, `preview.` and `www.` hosts (www redirects to the apex),
+   the platform subdomains, and `qubo.<ip>.sslip.io` as the install-day admin
+   address until a first domain is verified. Coolify's proxy polls it
+   (docs/VPS.md); `docker compose --profile edge` runs a standalone Traefik
+   for servers without Coolify. Caddy is gone. Each domain has a login-free
+   setup link (`/dns/<token>`, revocable) for whoever manages the DNS. Gaps:
+   the portal does not yet map organisations to server IPs, removing a domain
+   leaves its certificate in the edge store until it expires, and only
+   `QUBO_SERVER_IP` (or the resolved public URL) decides which IP is correct.
 
 ## Roadmap
 
@@ -423,6 +446,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 - [ ] Rebuild category tree, recover missing products
 - [ ] Panel CRUD: products, variants, media, orders
 - [ ] Comparison pass against `../../Karima/kyf-moves` (1-year-old panel)
+- [x] Self-service custom domains: DNS guide, live verification, Traefik routing
 - [ ] Domain/DNS cutover from ShopApplication
 
 ## Conventions

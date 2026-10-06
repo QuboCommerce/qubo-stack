@@ -1,5 +1,6 @@
 import { purgeInboxFiles, wakeSnoozed } from "@qubo/inbox/server";
 import { triageDue } from "@qubo/inbox/ai";
+import { checkDue } from "@qubo/domains/server";
 import { storageConfigured } from "@qubo/storage/server";
 import { startHeartbeatLoop } from "@qubo/portal-client";
 import { app } from "./index";
@@ -33,3 +34,14 @@ setInterval(() => {
     .catch((e) => console.error("[inbox-ai] sweep failed", e))
     .finally(() => (triaging = false));
 }, 5_000).unref();
+
+// Custom domains: re-checks DNS on a schedule (eager right after a domain is added) and
+// verifies a domain the moment its records hold; the edge picks it up on its next poll.
+let checkingDomains = false;
+setInterval(() => {
+  if (checkingDomains) return;
+  checkingDomains = true;
+  void checkDue()
+    .catch((e) => console.error("[domains] sweep failed", e))
+    .finally(() => (checkingDomains = false));
+}, 15_000).unref();

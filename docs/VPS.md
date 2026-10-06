@@ -99,6 +99,27 @@ http://localhost:8000 to create the admin account.
 - *Keep the old edge for now*: Server → Proxy → **None** before anything deploys, and keep
   using `docker-compose.traefik.yml`-style labels against the existing network.
 
+**Qubo routes.** Qubo does not use per-app domains in Coolify. Its API publishes every
+verified domain as Traefik dynamic config, and Coolify's Traefik polls it. In Server → Proxy →
+Configuration, add to the Traefik `command:` list and restart the proxy:
+
+```yaml
+- '--providers.http.endpoint=http://qubo-elysia:3333/v1/edge/traefik?token=<QUBO_EDGE_TOKEN>'
+- '--providers.http.pollInterval=10s'
+```
+
+The proxy must reach the API container: put `qubo-elysia` on the `coolify` network (or use
+the name Coolify gives it). Match the instance env to the proxy: `QUBO_EDGE_ENTRYPOINT_HTTP`
+and `_HTTPS` (Coolify: `http`, `https`), `QUBO_EDGE_CERT_RESOLVER` (Coolify: `letsencrypt`),
+`QUBO_EDGE_ADMIN_URL` and `QUBO_EDGE_STOREFRONT_URL` (the containers as the proxy sees them).
+Set `QUBO_SERVER_IP` to the public IP customers must point their A record at.
+
+Before any domain is verified the admin answers on `qubo.<ip-with-dashes>.sslip.io`. Then add
+a domain in Settings → Domains and follow the records it lists; it goes live on its own.
+
+Without Coolify, `docker compose --profile edge up -d` starts the same Traefik (`qubo-edge`,
+needs `ACME_EMAIL`).
+
 Add the dev-VPS ssh alias to your notes:
 
 ```
