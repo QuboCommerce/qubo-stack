@@ -26,6 +26,12 @@ export const catalog = new Elysia({ prefix: "/catalog" })
           slug: category.slug,
           parentId: category.parentId,
           position: category.position,
+          description: category.description,
+          productCount: sql<number>`(
+            select count(*)::int from ${productCategory}
+            join ${product} on ${product.id} = ${productCategory.productId}
+            where ${productCategory.categoryId} = ${category.id} and ${product.isArchived} = false
+          )`,
         })
         .from(category)
         .where(eq(category.siteId, site.id))
@@ -58,29 +64,20 @@ export const catalog = new Elysia({ prefix: "/catalog" })
       }
 
       if (query.category) {
-        const [matched] = await db
-          .select({ id: category.id })
+        // A collection shows its whole subtree: imported catalogues attach
+        // products to leaves, and the root ("Froid commercial") must not be empty.
+        const tree = await db
+          .select({ id: category.id, parentId: category.parentId, slug: category.slug })
           .from(category)
-          .where(
-            and(
-              eq(category.siteId, site.id),
-              eq(category.slug, query.category),
-            ),
-          )
-          .limit(1);
-
-        if (!matched) return { site: site.slug, products: [] };
-
-        const memberships = await db
-          .select({ productId: productCategory.productId })
-          .from(productCategory)
-          .where(eq(productCategory.categoryId, matched.id));
-
-        if (!memberships.length) return { site: site.slug, products: [] };
+          .where(eq(category.siteId, site.id));
+        const root = tree.find((c) => c.slug === query.category);
+        if (!root) return { site: site.slug, products: [] };
+        const ids = [root.id];
+        for (let i = 0; i < ids.length; i++) for (const c of tree) if (c.parentId === ids[i] && !ids.includes(c.id)) ids.push(c.id);
         conditions.push(
           inArray(
             product.id,
-            memberships.map((row) => row.productId),
+            db.select({ id: productCategory.productId }).from(productCategory).where(inArray(productCategory.categoryId, ids)),
           ),
         );
       }

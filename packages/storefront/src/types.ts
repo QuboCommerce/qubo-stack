@@ -33,6 +33,9 @@ export type CategoryNode = {
   slug: string;
   parentId: string | null;
   position: number;
+  description?: string | null;
+  /** Products directly in this category (not its children). */
+  productCount?: number;
 };
 
 export type ProductListItem = {

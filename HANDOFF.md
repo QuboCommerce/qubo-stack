@@ -603,6 +603,33 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    again, created pages exist in the site locale only (translations in
    ds6g), and the Settings link has no `#features` anchor to scroll to.
 
+38. **HM Froid site build (ds6e).** `scripts/sites/hm-froid.ts` is the
+   source of truth for the whole HM Froid site: it publishes the Inox
+   theme to the active theme row, rewrites the header and footer groups,
+   the home / collection / collection list / product / not found
+   templates, and creates or overwrites 16 pages (company, trades, legal,
+   occasions, rachat, brands, FAQ, plan du site). Rerun it after any copy
+   change (`set -a; . ./.env; set +a; bun run scripts/sites/hm-froid.ts`);
+   the storefront data cache can lag up to 300 s because the script does
+   not carry the `qd` revalidate env. Facts in the script come from the
+   plan only (founded 2008, no installation, warranty, delivery table).
+   Supporting changes: `CollectionHeader` block (breadcrumb, subtree
+   product count, child shelves, `allTitle` for `/collections/all`);
+   `SiteHeader` gains `accountLabel` (labelled "Mon profil" button) and
+   `stacked` (logo, search and actions on top, menu below; the only way
+   eight mega menus fit a 1440 px laptop); `/v1/catalog/categories`
+   returns `description` and `productCount`, and `?category=` covers the
+   whole subtree because products hang on leaf categories; `tidyName`
+   (`lib/names.ts`) sentence-cases shouting category names and
+   lowercase product names in titles, cards, crumbs and JSON-LD; the
+   Inox palette lost its blue tint (neutrals near zero chroma, graphite
+   primary, cobalt only for links, eyebrows and the focus ring). Known:
+   product names are fixed cosmetically only (catalogue cleanup is its
+   own plan), `/marques` is static because products carry no brand,
+   `nos-occasions` and `destockage` are nearly empty so their grids show
+   honest empty copy, and the ContactForm `header` default is English
+   so every site build must set it.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

@@ -1,9 +1,10 @@
 import { builtInGradients, defineTheme } from "../schema";
 
 /**
- * HM Froid "Inox": the site takes its material from the catalogue. Polished
- * steel, graphite, paper white, and one cobalt accent carried over from the
- * old blue. Steel is never a flat fill, only the `brushed` and `polished`
+ * HM Froid "Inox": the site takes its material from the catalogue. White,
+ * chrome and black carry the page; cobalt is the single accent (links,
+ * eyebrows, status, at most one band per page) carried over from the old
+ * blue. Steel is never a flat fill, only the `brushed` and `polished`
  * gradients on a `plate` section, so it reads as metal and not as grey.
  */
 export const hmFroidTheme = defineTheme({
@@ -12,34 +13,34 @@ export const hmFroidTheme = defineTheme({
   description: "Brushed stainless steel, graphite and paper white with a single cobalt accent. Sharp but safe: 3px radius, hairline borders.",
   modeStrategy: "light",
   palette: [
-    { id: "cobalt", name: "Cobalt", group: "brand", locked: true, value: "oklch(0.47 0.17 258)", description: "The one accent: buttons, links, status. Inherits the old HM blue." },
+    { id: "cobalt", name: "Cobalt", group: "brand", locked: true, value: "oklch(0.47 0.17 258)", description: "The one accent: links, eyebrows, status and a single band per page. Inherits the old HM blue. Never a button fill on paper." },
     { id: "cobalt-light", name: "Cobalt light", group: "brand", value: "oklch(0.8 0.08 255)", description: "Links and eyebrows on graphite." },
-    { id: "steel", name: "Steel", group: "accent", value: "oklch(0.82 0.008 240)", description: "Plate background. Only ever shown through the brushed or polished gradient." },
-    { id: "steel-dark", name: "Steel dark", group: "accent", value: "oklch(0.62 0.01 240)", description: "Shadow side of the plate; borders on steel." },
-    { id: "chrome", name: "Chrome", group: "accent", value: "oklch(0.94 0.005 235)", description: "Highlight sweep on steel; raised surfaces on the plate." },
-    { id: "paper", name: "Paper", group: "neutral", value: "oklch(0.975 0.004 230)", description: "Page background. Not pure white." },
-    { id: "paper-card", name: "Paper card", group: "neutral", value: "oklch(0.995 0.002 230)", description: "Cards and inputs on paper." },
-    { id: "line", name: "Hairline", group: "neutral", value: "oklch(0.88 0.008 240)", description: "Borders on paper." },
-    { id: "ash", name: "Ash", group: "neutral", value: "oklch(0.46 0.015 250)", description: "Muted text on paper." },
-    { id: "graphite", name: "Graphite", group: "neutral", value: "oklch(0.2 0.012 250)", description: "Body text; dark bands (hero plinth, footer)." },
-    { id: "graphite-raised", name: "Graphite raised", group: "neutral", value: "oklch(0.27 0.012 250)", description: "Cards on graphite." },
-    { id: "graphite-line", name: "Graphite line", group: "neutral", value: "oklch(0.36 0.012 250)", description: "Borders on graphite." },
+    { id: "steel", name: "Steel", group: "accent", value: "oklch(0.82 0.004 240)", description: "Plate background. Only ever shown through the brushed or polished gradient." },
+    { id: "steel-dark", name: "Steel dark", group: "accent", value: "oklch(0.6 0.005 240)", description: "Shadow side of the plate; borders on steel." },
+    { id: "chrome", name: "Chrome", group: "accent", value: "oklch(0.95 0.002 235)", description: "Highlight sweep on steel; raised surfaces on the plate." },
+    { id: "paper", name: "Paper", group: "neutral", value: "oklch(0.98 0.002 230)", description: "Page background. Off-white, a breath cooler than paper." },
+    { id: "paper-card", name: "Paper card", group: "neutral", value: "oklch(1 0 0)", description: "Cards and inputs on paper: true white." },
+    { id: "line", name: "Hairline", group: "neutral", value: "oklch(0.88 0.004 240)", description: "Borders on paper." },
+    { id: "ash", name: "Ash", group: "neutral", value: "oklch(0.46 0.008 250)", description: "Muted text on paper." },
+    { id: "graphite", name: "Graphite", group: "neutral", value: "oklch(0.19 0.006 250)", description: "Body text; dark bands (hero plinth, footer)." },
+    { id: "graphite-raised", name: "Graphite raised", group: "neutral", value: "oklch(0.26 0.006 250)", description: "Cards on graphite." },
+    { id: "graphite-line", name: "Graphite line", group: "neutral", value: "oklch(0.35 0.006 250)", description: "Borders on graphite." },
   ],
   schemes: [
     {
       id: "paper",
       name: "Paper canvas",
-      description: "Default page background. Catalogue, text pages, forms.",
+      description: "Default page background. Catalogue, text pages, forms. Buttons are graphite; cobalt is reserved for links and eyebrows.",
       light: {
         background: "paper",
         backgroundAlt: "chrome",
         text: "graphite",
         textMuted: "ash",
         heading: "graphite",
-        primary: "cobalt",
-        onPrimary: "paper-card",
-        secondary: "graphite",
-        onSecondary: "paper-card",
+        primary: "graphite",
+        onPrimary: "chrome",
+        secondary: "steel",
+        onSecondary: "graphite",
         surface: "paper-card",
         onSurface: "graphite",
         accent: "steel",
@@ -187,7 +188,7 @@ export const hmFroidTheme = defineTheme({
           { role: "background", alpha: 0, at: 25 },
           { role: "backgroundAlt", alpha: 0.35, at: 50 },
           { role: "surface", alpha: 0.8, at: 72 },
-          { role: "background", alpha: 0, at: 100 },
+          { role: "surface", alpha: 0.9, at: 100 },
         ],
       },
     ],

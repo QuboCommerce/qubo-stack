@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RenderView, viewMetadata } from "@/lib/render";
+import { RenderView, tidyName, viewMetadata } from "@/lib/render";
 import { JsonLd, breadcrumbLd, categoryCrumbs } from "@/lib/seo";
 import { getStorefront, hostFromParam, notFoundOrRedirect } from "@/lib/site";
 
@@ -17,7 +17,7 @@ async function load(params: Params) {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { hit } = await load(params);
-  return hit ? viewMetadata(hit.sf, { title: hit.category.name, body: hit.tpl.data }) : {};
+  return hit ? viewMetadata(hit.sf, { title: tidyName(hit.category.name), body: hit.tpl.data }) : {};
 }
 
 export default async function CollectionPage({ params }: { params: Params }) {

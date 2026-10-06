@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { QuboApiError } from "@qubo/storefront";
-import { RenderView, viewMetadata } from "@/lib/render";
+import { RenderView, tidyName, viewMetadata } from "@/lib/render";
 import { JsonLd, breadcrumbLd, productLd } from "@/lib/seo";
 import { getStorefront, hostFromParam, notFoundOrRedirect } from "@/lib/site";
 
@@ -24,12 +24,12 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const { hit } = await load(params);
   if (!hit) return {};
   const meta = await viewMetadata(hit.sf, {
-    title: hit.product.metaTitle || hit.product.name,
+    title: hit.product.metaTitle || tidyName(hit.product.name),
     description: hit.product.metaDescription || hit.product.description,
     body: hit.tpl.data,
   });
   const image = hit.product.images[0];
-  return image ? { ...meta, openGraph: { ...meta.openGraph, type: "website", images: [{ url: image.url, alt: image.alt ?? hit.product.name }] } } : meta;
+  return image ? { ...meta, openGraph: { ...meta.openGraph, type: "website", images: [{ url: image.url, alt: image.alt ?? tidyName(hit.product.name) }] } } : meta;
 }
 
 export default async function ProductPage({ params }: { params: Params }) {
@@ -37,8 +37,8 @@ export default async function ProductPage({ params }: { params: Params }) {
   if (!hit) return notFoundOrRedirect(sf);
   const parent = hit.product.categories[0];
   const crumbs = [
-    ...(parent ? [{ name: parent.name, path: `/collections/${encodeURIComponent(parent.slug)}` }] : []),
-    { name: hit.product.name, path: `/products/${encodeURIComponent(hit.product.slug)}` },
+    ...(parent ? [{ name: tidyName(parent.name), path: `/collections/${encodeURIComponent(parent.slug)}` }] : []),
+    { name: tidyName(hit.product.name), path: `/products/${encodeURIComponent(hit.product.slug)}` },
   ];
   return (
     <>
