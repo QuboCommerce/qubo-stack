@@ -127,6 +127,13 @@
       "when": 1791252765847,
       "tag": "0017_domains",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791279479495,
+      "tag": "0018_site_trash",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@ import "server-only";
 
 import { db } from "@qubo/db/client";
 import { organization, organizationMember, site, siteDomain, user } from "@qubo/db/schema";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
@@ -48,7 +48,7 @@ export const getUserSites = cache(async () => {
     .from(organizationMember)
     .innerJoin(site, eq(site.organizationId, organizationMember.organizationId))
     .innerJoin(organization, eq(organization.id, site.organizationId))
-    .where(eq(organizationMember.userId, currentUser.id))
+    .where(and(eq(organizationMember.userId, currentUser.id), isNull(site.deletedAt)))
     .orderBy(asc(organization.createdAt), asc(site.name)), getAccess()]);
 
   const domains = rows.length

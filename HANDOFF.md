@@ -541,6 +541,16 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    Languages page reads `studio.translationCoverage(siteId)` (done, stale and
    total per non-primary locale) and says plainly that the storefront locale
    switch and Studio translating are not built yet.
+34. **Site recycle bin.** `site.deleted_at` / `deleted_by_id` (migration 0018).
+   `@qubo/studio` `trash.ts`: `trashSite` (drafts only, guard in the UPDATE),
+   `restoreSite`, `purgeSite` (only rows already in the bin, so a bare id can
+   never delete a live site), `purgeTrashedSites` (daily from
+   `packages/api/src/server.ts`, `TRASH_RETENTION_DAYS` = 60). Every resolver
+   filters `deleted_at is null`: API `resolveSite` (slug header and host join),
+   admin `getUserSites`, `servedHosts` (edge config) and the portal quota
+   counts. Slug and domains stay reserved while in the bin so a restore is
+   exact. Gap: a purge cascades the `asset` rows but leaves the files in
+   storage. Live sites cannot be deleted yet (needs the typed-name guard).
 
 ## Roadmap
 

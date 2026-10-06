@@ -1,6 +1,7 @@
 import { purgeInboxFiles, wakeSnoozed } from "@qubo/inbox/server";
 import { triageDue } from "@qubo/inbox/ai";
 import { checkDue } from "@qubo/domains/server";
+import { purgeTrashedSites } from "@qubo/studio";
 import { storageConfigured } from "@qubo/storage/server";
 import { startHeartbeatLoop } from "@qubo/portal-client";
 import { app } from "./index";
@@ -45,3 +46,11 @@ setInterval(() => {
     .catch((e) => console.error("[domains] sweep failed", e))
     .finally(() => (checkingDomains = false));
 }, 15_000).unref();
+
+// Sites in the recycle bin are purged for good after TRASH_RETENTION_DAYS. Once a day is plenty.
+const purgeSites = () =>
+  void purgeTrashedSites()
+    .then((n) => n && console.log(`[sites] purged ${n} trashed site${n === 1 ? "" : "s"}`))
+    .catch((e) => console.error("[sites] purge failed", e));
+setTimeout(purgeSites, 60_000).unref();
+setInterval(purgeSites, 86_400_000).unref();

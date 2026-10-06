@@ -5,7 +5,7 @@ import {
   siteDomain,
   user,
 } from "@qubo/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { access } from "@qubo/portal-client";
 
 export type SiteType = (typeof site.$inferSelect)["type"];
@@ -62,7 +62,7 @@ export async function resolveSite(
     const [row] = await db
       .select(columns)
       .from(site)
-      .where(eq(site.slug, slug))
+      .where(and(eq(site.slug, slug), isNull(site.deletedAt)))
       .limit(1);
     return row ?? null;
   }
@@ -78,7 +78,7 @@ export async function resolveSite(
     .select(columns)
     .from(siteDomain)
     .innerJoin(site, eq(site.id, siteDomain.siteId))
-    .where(eq(siteDomain.hostname, host))
+    .where(and(eq(siteDomain.hostname, host), isNull(site.deletedAt)))
     .limit(1);
 
   return row ?? null;

@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
-import { ArrowRightLeft, Building2, Rocket } from "lucide-react";
+import { ArrowRightLeft, Building2, Rocket, RotateCcw, Trash2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { moveDraftSiteAction, publishSiteAction } from "@/app/site-ownership-actions";
+import { moveDraftSiteAction, publishSiteAction, purgeSiteAction, restoreSiteAction, trashSiteAction } from "@/app/site-ownership-actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import type { ActionState } from "@/lib/action-state";
@@ -58,7 +59,7 @@ export function PublishSiteDialog({ site, siteName, currentOrgId, orgs }: { site
   return (
     <Dialog open={open} onOpenChange={(v) => (setOpen(v), setConfirmed(false))}>
       <DialogTrigger asChild>
-        <Button size="sm"><Rocket /> Publish…</Button>
+        <Button size="sm"><Rocket /> Publish</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form action={action} className="grid gap-4">
@@ -93,26 +94,109 @@ export function MoveDraftDialog({ site, siteName, currentOrgId, orgs }: { site: 
   const others = orgs.filter((o) => o.id !== currentOrgId);
   const [org, setOrg] = useState(others[0]?.id ?? "");
   const [state, action, pending] = useActionState(moveDraftSiteAction, null);
-  useResult(state, `${siteName} moved`, () => setOpen(false));
+  useResult(state, `${siteName} transferred`, () => setOpen(false));
   if (!others.length) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline"><ArrowRightLeft /> Move…</Button>
+        <Button size="sm" variant="outline"><ArrowRightLeft /> Transfer</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form action={action} className="grid gap-4">
           <input type="hidden" name="site" value={site} />
           <DialogHeader>
-            <DialogTitle>Move {siteName}</DialogTitle>
-            <DialogDescription>Drafts can move freely. The site&apos;s media and the organisation&apos;s fonts come along.</DialogDescription>
+            <DialogTitle>Transfer {siteName}</DialogTitle>
+            <DialogDescription>Drafts can be transferred freely. The site&apos;s media and the organisation&apos;s fonts come along.</DialogDescription>
           </DialogHeader>
           <OrgPicker orgs={others} value={org} onChange={setOrg} />
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-            <Button type="submit" disabled={!org || pending}>{pending ? "Moving…" : "Move"}</Button>
+            <Button type="submit" disabled={!org || pending}>{pending ? "Transferring…" : "Transfer"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/** Draft to the recycle bin. When the current site goes, the page moves to a site that still exists. */
+export function TrashSiteButton({ siteId, siteName, isCurrent, nextHref, retentionDays }: { siteId: string; siteName: string; isCurrent: boolean; nextHref: string; retentionDays: number }) {
+  const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const [state, action, pending] = useActionState(trashSiteAction, null);
+  useResult(state, `${siteName} moved to the recycle bin`, () => {
+    setOpen(false);
+    if (isCurrent) router.replace(nextHref);
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="icon-sm" variant="ghost" aria-label={`Delete ${siteName}`} title="Delete" className="text-muted-foreground hover:text-destructive">
+          <Trash2 />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <form action={action} className="grid gap-4">
+          <input type="hidden" name="siteId" value={siteId} />
+          <DialogHeader>
+            <DialogTitle>Delete {siteName}?</DialogTitle>
+            <DialogDescription>
+              It goes to the recycle bin at the bottom of this page, with its pages, theme, products and domains. You can restore it for {retentionDays} days; after that it is deleted for good.
+            </DialogDescription>
+          </DialogHeader>
+          {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
+          <DialogFooter>
+            <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+            <Button type="submit" variant="destructive" disabled={pending}>{pending ? "Deleting…" : "Delete site"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function RestoreSiteButton({ siteId, siteName }: { siteId: string; siteName: string }) {
+  const [state, action, pending] = useActionState(restoreSiteAction, null);
+  useResult(state, `${siteName} restored`, () => {});
+  return (
+    <form action={action} className="contents">
+      <input type="hidden" name="siteId" value={siteId} />
+      <Button size="sm" variant="outline" type="submit" disabled={pending}><RotateCcw /> {pending ? "Restoring…" : "Restore"}</Button>
+      {state?.error && <span className="text-xs text-destructive">{state.error}</span>}
+    </form>
+  );
+}
+
+/** Permanent delete before the retention period ends. */
+export function PurgeSiteButton({ siteId, siteName }: { siteId: string; siteName: string }) {
+  const [open, setOpen] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const [state, action, pending] = useActionState(purgeSiteAction, null);
+  useResult(state, `${siteName} deleted for good`, () => setOpen(false));
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => (setOpen(v), setConfirmed(false))}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">Delete now</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <form action={action} className="grid gap-4">
+          <input type="hidden" name="siteId" value={siteId} />
+          <DialogHeader>
+            <DialogTitle>Delete {siteName} for good?</DialogTitle>
+            <DialogDescription>Everything in it is removed now: pages, theme, products, customers, orders, media and domains. There is no way back.</DialogDescription>
+          </DialogHeader>
+          <label className="flex items-start gap-2.5 text-sm">
+            <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-4 accent-foreground" />
+            <span>I understand this can&apos;t be undone.</span>
+          </label>
+          {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
+          <DialogFooter>
+            <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
+            <Button type="submit" variant="destructive" disabled={!confirmed || pending}>{pending ? "Deleting…" : "Delete for good"}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

@@ -1,7 +1,9 @@
 import "server-only";
 
 import { db } from "@qubo/db/client";
-import { asset, font, organization, organizationMember, site } from "@qubo/db/schema";
+import { asset, font, organization, organizationMember, site, user } from "@qubo/db/schema";
+import * as studio from "@qubo/studio";
+import { StudioError, ValidationError } from "@qubo/studio";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { getAccess, requireUser } from "@/lib/admin";
 
@@ -81,3 +83,52 @@ export async function publish(siteId: string, targetOrgId: string) {
     await tx.update(site).set({ publishedAt: new Date(), updatedAt: new Date() }).where(eq(site.id, siteId));
   });
 }
+
+// ------------------------------------------------------------ recycle bin ---
+
+/** Manager of the site's organisation, deleted or not. Returns the organisation. */
+async function assertManagerOf(siteId: string) {
+  const orgs = await manageableOrgs();
+  const [row] = await db.select({ organizationId: site.organizationId }).from(site).where(eq(site.id, siteId)).limit(1);
+  if (!row) throw new OwnershipError("Site not found.");
+  if (!orgs.some((o) => o.id === row.organizationId)) throw new OwnershipError("Only owners and admins of the site's organisation can do this.");
+  return row.organizationId;
+}
+
+const lifecycleError = (e: unknown) => {
+  if (e instanceof StudioError) return new OwnershipError(e instanceof ValidationError ? (e.issues[0]?.message ?? e.message) : e.message);
+  return e;
+};
+
+/** Draft to the bin. */
+export async function trashSite(siteId: string) {
+  const user = await requireUser();
+  await assertManagerOf(siteId);
+  await studio.trashSite(siteId, user.id).catch((e) => Promise.reject(lifecycleError(e)));
+}
+
+export async function restoreSite(siteId: string) {
+  await assertManagerOf(siteId);
+  await studio.restoreSite(siteId).catch((e) => Promise.reject(lifecycleError(e)));
+}
+
+/** Permanent, without waiting the retention period. */
+export async function purgeSite(siteId: string) {
+  await assertManagerOf(siteId);
+  await studio.purgeSite(siteId).catch((e) => Promise.reject(lifecycleError(e)));
+}
+
+/** The bin for one organisation, with who deleted each site and when it is purged. */
+export async function recycleBin(organizationId: string) {
+  const rows = await studio.trashedSites([organizationId]);
+  const byIds = rows.map((r) => r.deletedById).filter((id): id is string => !!id);
+  const users = byIds.length ? await db.select({ id: user.id, name: user.name }).from(user).where(inArray(user.id, byIds)) : [];
+  return rows.map((r) => ({
+    ...r,
+    deletedAt: r.deletedAt!,
+    deletedBy: users.find((u) => u.id === r.deletedById)?.name ?? null,
+    purgeAt: studio.purgeDate(r.deletedAt!),
+    daysLeft: studio.daysLeft(r.deletedAt!),
+  }));
+}
+export type TrashedSite = Awaited<ReturnType<typeof recycleBin>>[number];
