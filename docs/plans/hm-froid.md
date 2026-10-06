@@ -76,8 +76,10 @@ Facts from hmfroid.be and the import (do not invent beyond these):
 - Legal entity on the old site: H.M. Catering Equipment s.a. Shop: Avenue Raymond
   Vanderbruggen 18-20, 1070 Anderlecht (Bruxelles). Phone +32 2 411 80 02.
 - Sells and buys **new and used** horeca equipment: grandes cuisines, snack, restaurant,
-  boucherie, poissonnerie, friterie, pizzeria, boulangerie, pâtisserie. About 5000 references
-  online; 3949 imported with 3946 photos; no descriptions yet (products fix, separate job).
+  boucherie, poissonnerie, friterie, pizzeria, boulangerie, pâtisserie. The old site says
+  "about 5000"; we imported 3949 with 3946 photos, so the copy says **"plus de 3 900
+  produits"** (exact and more credible than a round number; thin space per French
+  typography). No descriptions yet (products fix, separate job).
 - Brands carried: Bertos, MBM, Robot Coupe, Tefcold, Hällde, Henkovac, Santos, Dexion,
   Angelo Forni, Broaster, Da Venix, Gargano, Kisag, Knox, Modular, Potis, Ronda, Vulcan,
   Wooster.
@@ -85,16 +87,27 @@ Facts from hmfroid.be and the import (do not invent beyond these):
   Rôtissoire et gyros, Inox neutre, Ventilation, Lavage, Balances, Grill et toaster,
   Cafétéria et bar, Pizzeria et pasta, plus Occasions, Promotions, Déstockage, Liquidation.
 
-Open questions for Mostapha (one batch; assumptions in brackets are used until answered):
+Answers from Ali (2026-10-06), used as facts from here on:
 
-1. Founding year: the dev hero says 2006, HANDOFF says 2008. [2008]
-2. Services actually offered: delivery (zones, price), installation, after-sales repair,
-   rachat of used equipment, rental? [sale, delivery in Belgium, rachat; no installation claim]
-3. Opening hours and whether the showroom takes walk-ins. [Mon-Fri, by appointment on Sat]
-4. Payment methods and VAT number for the legal pages. [left blank, marked TODO in draft]
-5. Logo files and 10 to 20 photos of the shop, stock and team. Stock photos are not used;
-   without real photos the hero uses product cut-outs from the catalogue.
-6. Languages: French only, or French plus Dutch? [French; Dutch later via Languages page]
+1. Founded in **2008**. The dev hero's "2006" is wrong.
+2. Services: sale of new and used equipment, **delivery**, **after-sales repair (SAV)**,
+   **rachat** of used equipment. **No installation claim** anywhere in the copy.
+3. Opening hours: **Lun-Ven 9h-18h, Sam 10h-16h**. Walk-ins welcome.
+4. Payments: not wired yet. The product needs a provider abstraction (Stripe, Mollie, Polar)
+   as its own plan, not here. For the copy, name the methods that fit a 2 000 to 15 000 EUR
+   purchase and that Mollie exposes natively in Belgium: **virement bancaire** (the default
+   for pro buyers, with an invoice), **Bancontact**, **Visa / Mastercard**, **Apple Pay**.
+   Klarna and other instalment schemes are left out until a provider is live; a "paiement
+   en plusieurs fois" promise we cannot honour is worse than silence. The Livraison et
+   paiement page shows methods as a list that comes from site settings, so wiring a
+   provider later changes the data, not the page. VAT number: still TODO, left blank with a
+   visible placeholder in the legal drafts.
+5. Images: Ali generates the hero and section visuals. Build stops before ds6e until they
+   land; everything that does not need imagery (theme, SEO, pages registry) goes first.
+6. Languages: **French and Dutch** (fr-BE default, nl-BE second). Flemish register: local
+   and professional, playful where the French is playful, no forced wordplay. Translation
+   overlays already exist in `@qubo/studio`; the storefront still needs locale routing, so
+   Dutch is phase ds6g below rather than out of scope.
 
 No testimonials, counters or certifications appear on the site unless Mostapha supplies them.
 
@@ -179,18 +192,19 @@ undertone in the steel highlights and as the single accent.
 | ds6b-pages | page blueprints registry, Create page dialog on `/online-store/pages` (the nav link exists, the page does not), categories legal, commerce, company, utility, capability gating with link to modules, `SiteTree` block, `/plan-du-site` | bun test for blueprints; Playwright create from blueprint |
 | ds6c-theme | Inox theme in stylekit (replaces Arctic as the `business` default and the HM theme), `texture` surface kind, `brushed` and `polished` gradients, `plate` button, Barlow fonts | schema tests; theme doctor passes; screenshot of the theme on the current pages |
 | ds6d-seo | `LocalBusiness`, `Product`, `BreadcrumbList`, `Organization` JSON-LD in `viewMetadata` / render; title pattern; sitemap includes collections and pages | curl the HTML, validate with the schema.org validator |
-| ds6e-build | header, footer, home, occasions, rachat, 4 trade pages, brands, contact, qui sommes-nous, livraison et paiement, garantie et SAV, 3 legal, plan du site; product and collection templates restyled; copy humanized | taste review from `qubo-design-language`; Lighthouse SEO 100, a11y 95+; Ali review |
+| ds6e-build | header, footer, home, occasions, rachat, 4 trade pages, brands, contact, qui sommes-nous, livraison et paiement, garantie et SAV, 3 legal, plan du site; product and collection templates restyled; copy humanized; **waits for Ali's images** | taste review from `qubo-design-language`; Lighthouse SEO 100, a11y 95+; Ali review |
 | ds6f-hero | `SteelReveal` experiment | screenshot go/no-go |
+| ds6g-locale | storefront locale routing (`/nl/...` prefix for non-default locales, `<html lang>`, `hreflang` and `x-default` in sitemap and head, locale-aware URL helpers in `@qubo/shared`), Dutch overlays for every HM page and the header/footer, nl-BE product and collection names where the catalogue has them, language switch in the header | Playwright: `/nl/` renders Dutch, `/` renders French, hreflang pairs validate; native-register review of the Dutch copy |
 
-Order: ds6a, ds6c, ds6d, ds6b, ds6e, ds6f. ds6c before ds6b so the Create page dialog is
-seen in the new theme only on the storefront (the admin is unaffected). Products fix
-(descriptions, duplicate roots, category slugs) runs in parallel as its own plan and is a
-prerequisite for the collection pages to rank; the trade pages work without it.
+Order: ds6a, ds6c, ds6d, ds6b, ds6e, ds6f, ds6g. ds6c before ds6b so the Create page dialog is
+seen in the new theme only on the storefront (the admin is unaffected). ds6e cannot start before
+Ali's images arrive; if they are late, ds6g's routing half runs first and the Dutch copy follows
+the French. Products fix (descriptions, duplicate roots, category slugs) runs in parallel as its
+own plan and is a prerequisite for the collection pages to rank; the trade pages work without it.
 
-Effort: ds6a one session; ds6b one; ds6c half; ds6d half; ds6e two; ds6f half.
+Effort: ds6a one session; ds6b one; ds6c half; ds6d half; ds6e two; ds6f half; ds6g one.
 
 ## 5. Out of scope here
 
-Dutch translation of the site (Languages page is ready; storefront locale routing is in
-`core-platform.md`), onboarding flow, the site bundle export (0.1), deleting published sites,
-Shopify-style theme file editor.
+Payment provider abstraction (Stripe, Mollie, Polar; own plan), onboarding flow, the site
+bundle export (0.1), deleting published sites, Shopify-style theme file editor.
