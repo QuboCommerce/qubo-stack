@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -6,6 +7,7 @@ import {
   uuid,
   pgEnum,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -118,9 +120,19 @@ export const siteDomain = pgTable("site_domain", {
   siteId: uuid("site_id")
     .notNull()
     .references(() => site.id, { onDelete: "cascade" }),
+  /** Bare host (no `www.`); `www.`, `qubo.` and `preview.` variants follow it. */
   hostname: text("hostname").notNull().unique(),
   isPrimary: boolean("is_primary").notNull().default(false),
+  /** Set once the TXT proof and the address record both check out. Never cleared by a failed recheck. */
   verifiedAt: timestamp("verified_at"),
+  /** Value of the `_qubo-verify` TXT record that proves control of the domain. */
+  verifyToken: text("verify_token").notNull().default(sql`replace(gen_random_uuid()::text, '-', '')`),
+  /** Opens the login-free DNS instructions page; regenerate to revoke a shared link. */
+  shareToken: text("share_token").notNull().unique().default(sql`replace(gen_random_uuid()::text, '-', '')`),
+  /** Last DNS check, per record (see @qubo/domains `DnsReport`). */
+  dns: jsonb("dns").$type<unknown>(),
+  checkedAt: timestamp("checked_at"),
+  nextCheckAt: timestamp("next_check_at").defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

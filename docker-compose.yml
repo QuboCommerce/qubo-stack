@@ -51,6 +51,19 @@ services:
       - PORTAL_URL=${PORTAL_URL:-}
       - QUBO_CHANNEL=${QUBO_CHANNEL:-stable}
       - PORT=3333
+      # Custom domains: DNS checks and the routes the edge polls (GET /v1/edge/traefik).
+      - ADMIN_SUBDOMAIN=${ADMIN_SUBDOMAIN:-qubo}
+      - PLATFORM_BASE_DOMAIN=${PLATFORM_BASE_DOMAIN:-}
+      - QUBO_SERVER_IP=${QUBO_SERVER_IP:-}
+      - QUBO_PUBLIC_URL=${ADMIN_URL:-}
+      - QUBO_DNS_SERVERS=${QUBO_DNS_SERVERS:-}
+      - QUBO_EDGE_TOKEN=${QUBO_EDGE_TOKEN:-}
+      - QUBO_EDGE_CERT_RESOLVER=${QUBO_EDGE_CERT_RESOLVER:-letsencrypt}
+      - QUBO_EDGE_ENTRYPOINT_HTTP=${QUBO_EDGE_ENTRYPOINT_HTTP:-http}
+      - QUBO_EDGE_ENTRYPOINT_HTTPS=${QUBO_EDGE_ENTRYPOINT_HTTPS:-https}
+      - QUBO_EDGE_ADMIN_URL=${QUBO_EDGE_ADMIN_URL:-http://qubo-admin:4000}
+      - QUBO_EDGE_STOREFRONT_URL=${QUBO_EDGE_STOREFRONT_URL:-http://qubo-storefront:3000}
+      - QUBO_EDGE_PLATFORM=${QUBO_EDGE_PLATFORM:-1}
       # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
       - STORAGE_DIR=/data/media
       - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
@@ -84,6 +97,10 @@ services:
       - NEXT_PUBLIC_PANEL_URL=${ADMIN_URL:-https://qubo.hmfroid.be}
       - QUBO_API_URL=http://qubo-elysia:3333
       - ADMIN_SUBDOMAIN=${ADMIN_SUBDOMAIN:-qubo}
+      # Domains page: server address shown to the user and the DNS checks it runs.
+      - PLATFORM_BASE_DOMAIN=${PLATFORM_BASE_DOMAIN:-}
+      - QUBO_SERVER_IP=${QUBO_SERVER_IP:-}
+      - QUBO_DNS_SERVERS=${QUBO_DNS_SERVERS:-}
       # Inbox replies are e-mailed from the admin.
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-}
@@ -140,23 +157,33 @@ services:
     networks:
       - qubo-network
 
-  caddy-edge:
-    image: caddy:2-alpine
-    container_name: caddy-edge
+  # Standalone edge for servers without Coolify (`docker compose --profile edge up -d`).
+  # On Coolify, its own Traefik polls the same endpoint instead (docs/VPS.md).
+  qubo-edge:
+    image: traefik:v3.5
+    container_name: qubo-edge
     restart: unless-stopped
+    profiles:
+      - edge
+    command:
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --entrypoints.https.http3
+      - --providers.http.endpoint=http://qubo-elysia:3333/v1/edge/traefik?token=${QUBO_EDGE_TOKEN:-}
+      - --providers.http.pollInterval=10s
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - edge_certs:/letsencrypt
     networks:
       - qubo-network
     depends_on:
-      - qubo-admin
-      - qubo-storefront
+      - qubo-elysia
 
 networks:
   qubo-network:
@@ -165,5 +192,4 @@ networks:
 volumes:
   pgdata:
   media:
-  caddy_data:
-  caddy_config:
+  edge_certs:

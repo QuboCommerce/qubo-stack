@@ -71,7 +71,7 @@ sender and is not wired yet.
 ## Admin host and the Edit pen
 
 The panel lives at `qubo.<site domain>` (`ADMIN_SUBDOMAIN`, dev override `QUBO_ADMIN_HOSTS`);
-build its URLs with `@qubo/shared/admin-url`, never by hand. Caddy sends `qubo.*` to qubo-admin;
+build its URLs with `@qubo/shared/admin-url`, never by hand. The edge (Traefik, fed by `/v1/edge/traefik`) sends `qubo.*` to qubo-admin;
 the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the site of its host
 (`qubo.hmfroid.be` → HM Froid), trusts `https://qubo.<verified domain>` origins dynamically, sends
 `X-Robots-Tag: noindex` + a disallow-all `robots.txt`, and serves a per-site web-app manifest.

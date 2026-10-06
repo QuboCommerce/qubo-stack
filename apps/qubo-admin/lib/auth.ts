@@ -3,7 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@qubo/db/client";
 import * as schema from "@qubo/db/schema";
 import { siteHostFromAdminHost } from "@qubo/shared/admin-url";
-import { isVerifiedSiteHost } from "@/lib/admin-host";
+import { isFallbackAdminHost, isVerifiedSiteHost } from "@/lib/admin-host";
 import { recordDevice } from "@/lib/sessions";
 
 /** Own prefix so the panel cookie never collides with storefront customer sessions. */
@@ -25,6 +25,7 @@ export const auth = betterAuth({
       const url = new URL(origin);
       const siteHost = url.protocol === "https:" ? siteHostFromAdminHost(url.host) : null;
       if (siteHost && (await isVerifiedSiteHost(siteHost))) return [...staticOrigins, origin];
+      if (url.protocol === "https:" && (await isFallbackAdminHost(url.host))) return [...staticOrigins, origin];
     } catch {}
     return staticOrigins;
   },

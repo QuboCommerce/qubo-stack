@@ -16,6 +16,7 @@
   "dependencies": {
     "@elysiajs/cors": "^1.2",
     "@qubo/db": "workspace:*",
+    "@qubo/domains": "workspace:*",
     "@qubo/inbox": "workspace:*",
     "@qubo/shared": "workspace:*",
     "@qubo/storage": "workspace:*",

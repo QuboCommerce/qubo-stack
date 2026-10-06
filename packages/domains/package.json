@@ -1,0 +1,25 @@
+{
+  "name": "@qubo/domains",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Custom domains: DNS plan, provider detection, verification checks and the Traefik edge config.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@qubo/db": "workspace:*",
+    "@qubo/realtime": "workspace:*",
+    "drizzle-orm": "^0.44",
+    "tldts": "^7.4.16"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5"
+  }
+}

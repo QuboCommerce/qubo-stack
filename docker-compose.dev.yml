@@ -17,7 +17,3 @@ services:
   qubo-storefront:
     profiles:
       - production
-
-  caddy-edge:
-    profiles:
-      - production

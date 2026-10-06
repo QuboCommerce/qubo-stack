@@ -71,7 +71,7 @@ location:
 4. Do not alter MX/SPF/DKIM/DMARC records.
 5. Put ShopApplication catalogue changes on a short freeze.
 6. Generate fresh exports and run the idempotent importer one final time.
-7. Point only the website records to Caddy.
+7. Add the domain in Settings → Domains and point only the records it lists (A, `_qubo-verify` TXT, `www`, `qubo`) to the server.
 8. Verify TLS, canonical redirects, checkout webhook reachability and email.
 9. Keep the legacy host and the previous DNS values available for rollback.
 
