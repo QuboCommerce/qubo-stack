@@ -1,11 +1,12 @@
 import type { Theme, Transition } from "@qubo/stylekit";
 import { inSchedule, startEffects } from "./effects";
+import { startNav } from "./nav";
 import { createTransition, type TransitionRun, type TransitionTheme } from "./transition";
 
 /**
  * Everything a rendered site needs in the browser, framework free: ambient
- * effects, decor marks that wait until they scroll into view, and overlay page
- * transitions across full page loads. The storefront mounts it once per page.
+ * effects, decor marks that wait until they scroll into view, header menus and
+ * overlay page transitions across full page loads. The storefront mounts it once per page.
  */
 
 export const ARRIVAL_KEY = "qb-transition";
@@ -162,7 +163,7 @@ export function runtimeTheme(theme: Theme | undefined): TransitionTheme | undefi
 export function startSiteRuntime(win: Window, theme: TransitionTheme | undefined): () => void {
   const doc = win.document;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const stops: (() => void)[] = [];
+  const stops: (() => void)[] = [startNav(doc)];
 
   // A scheduled site-wide effect is rendered hidden; switch it on inside its window.
   doc.querySelectorAll<HTMLElement>('[data-effect-scope="page"][data-effect-schedule]').forEach((el) => {
