@@ -7,6 +7,8 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireSite } from "@/lib/admin";
 import { emitDocumentPublished } from "@/lib/events";
+import { localeLabel } from "@/lib/format";
+import { getLocales } from "@/lib/queries";
 
 /**
  * Studio server actions. Rules live in @qubo/studio; these only resolve
@@ -156,5 +158,38 @@ export async function rollbackAction(slug: string, input: { documentId: string; 
     return loadDraftAction(slug, input.documentId);
   } catch (e) {
     return { ok: false as const, error: message(e) };
+  }
+}
+
+export type LocaleText = { locale: string; label: string; primary: boolean; text: string | null; status: "missing" | "stale" | "draft" | "done" | "source" };
+
+/**
+ * The same text field in every site language, for per-language word picking
+ * (heading highlights). The primary text comes from the editor, since it may
+ * not be saved yet; translations come from the saved draft.
+ */
+export async function localeTextsAction(
+  slug: string,
+  input: { documentId: string; path: string },
+): Promise<{ ok: true; locales: LocaleText[] } | { ok: false; error: string }> {
+  try {
+    const { scope, site } = await context(slug);
+    const rows = await getLocales(site.id);
+    const multilingual = (site.capabilities ?? []).includes("locales");
+    const locales: LocaleText[] = [];
+    for (const l of rows) {
+      const label = localeLabel[l.locale] ?? l.locale;
+      if (l.isPrimary) {
+        locales.unshift({ locale: l.locale, label, primary: true, text: null, status: "source" });
+        continue;
+      }
+      if (!multilingual) continue;
+      const entries = await studio.listDocumentTranslations(scope, input.documentId, l.locale).catch(() => []);
+      const hit = entries.find((e) => e.path === input.path);
+      locales.push({ locale: l.locale, label, primary: false, text: hit?.value ?? null, status: hit ? hit.status : "missing" });
+    }
+    return { ok: true, locales };
+  } catch (e) {
+    return { ok: false, error: message(e) };
   }
 }

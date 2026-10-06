@@ -12,7 +12,8 @@
     "./render": "./src/render.tsx",
     "./core": "./src/core/index.ts",
     "./fixtures": "./src/fixtures/index.ts",
-    "./presets": "./src/presets/index.ts"
+    "./presets": "./src/presets/index.ts",
+    "./runtime": "./src/runtime/index.ts"
   },
   "scripts": {
     "test": "vitest run",

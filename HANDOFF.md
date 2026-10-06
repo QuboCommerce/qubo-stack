@@ -456,6 +456,20 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    Aurora avoids `filter: blur` (raster glitches and cost). Native page
    transitions are `motion.transition = "native"` (`@view-transition`);
    overlay presets and the snow/particles canvas arrive with the ds3 runtime.
+28. **One runtime drives the studio previews and the storefront (ds2).**
+   `@qubo/blocks/runtime` holds the transition overlay (`createTransition`,
+   `previewTransition`, WAAPI, fixed or contained scope) and the effects canvas
+   (`startEffect`, colour read from the canvas's computed `color`, paused off
+   screen and on hidden tabs, one still frame for reduced motion). The theme
+   panel's Test buttons call the same code the ds3 islands will, so a preview
+   cannot drift from production. Theme pages (Brand, Gradients, Word
+   highlights, Effects, Transitions with menu motion) preview inside
+   `ThemeScope` with the compiled CSS. The Puck field sidebar has no theme CSS
+   (the canvas is an iframe), so field swatches use resolved colours and the
+   "Highlight words" dialog renders its own `ThemeStyles`. That dialog lists
+   every locale's text (`localeTextsAction`), picks whole words with
+   `Intl.Segmenter`, merges neighbours into one range and offers to drop ranges
+   whose text hash no longer matches.
 
 ## Roadmap
 

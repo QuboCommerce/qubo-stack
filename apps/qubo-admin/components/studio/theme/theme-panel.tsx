@@ -5,7 +5,9 @@ import { diagnoseTheme, type Mode, type Role } from "@qubo/stylekit";
 import { cn } from "@qubo/shared/utils";
 import {
   AlertTriangle,
+  Blend,
   Check,
+  Highlighter,
   CloudOff,
   History,
   Loader2,
@@ -14,11 +16,14 @@ import {
   Palette,
   Redo2,
   RectangleHorizontal,
+  Snowflake,
+  Stamp,
   SunMoon,
   SwatchBook,
   Trash2,
   Type,
   Undo2,
+  Clapperboard,
 } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -41,6 +46,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { relativeTime } from "@/lib/format";
 import { AppearancePage, MotionPage } from "./appearance";
+import { BrandPage } from "./brand";
+import { DecorPage } from "./decor";
+import { EffectsPage } from "./effects";
+import { GradientsPage } from "./surfaces";
+import { TransitionsPage } from "./transitions";
 import { ButtonsPage } from "./buttons";
 import { Group, NavRow, SubHeader, Swatch, tokenColor } from "./controls";
 import { DoctorPage, HealthRing } from "./doctor";
@@ -58,15 +68,22 @@ type Page =
   | { id: "typography" }
   | { id: "buttons" }
   | { id: "motion" }
-  | { id: "doctor" };
+  | { id: "doctor" }
+  | { id: "brand" }
+  | { id: "gradients" }
+  | { id: "decor" }
+  | { id: "effects" }
+  | { id: "transitions" };
+
+type SimplePage = Exclude<Page["id"], "scheme">;
 
 export type ThemeNav = {
-  go: (id: "home" | "palette" | "schemes" | "appearance" | "typography" | "buttons" | "motion" | "doctor") => void;
+  go: (id: SimplePage) => void;
   scheme: (id: string, mode?: Mode, role?: Role | string) => void;
   token: (id: string) => void;
 };
 
-const titles: Record<Exclude<Page["id"], "scheme">, string> = {
+const titles: Record<SimplePage, string> = {
   home: "Theme",
   palette: "Palette",
   schemes: "Colour schemes",
@@ -75,16 +92,23 @@ const titles: Record<Exclude<Page["id"], "scheme">, string> = {
   buttons: "Buttons & shape",
   motion: "Motion & layout",
   doctor: "Palette Doctor",
+  brand: "Brand",
+  gradients: "Gradients",
+  decor: "Word highlights",
+  effects: "Effects",
+  transitions: "Transitions",
 };
 
 export function ThemePanel({
   site,
+  siteId,
   editor,
   builder,
   mode,
   setMode,
 }: {
   site: string;
+  siteId: string;
   editor: ThemeEditor;
   builder: boolean;
   mode: Mode;
@@ -236,6 +260,30 @@ export function ThemePanel({
                 <NavRow icon={<Move3d />} label="Motion & layout" meta={`${cap(draft.motion.profile)} motion · ${cap(draft.flavor.id)}`} onClick={() => nav.go("motion")} />
               </div>
             </Group>
+            <Group title="Design language" className="px-2 [&>div:first-child]:px-2">
+              <div className="space-y-0.5">
+                <NavRow
+                  icon={<Stamp />}
+                  label="Brand"
+                  meta={[draft.brand.logo?.url && "Logo", draft.brand.mark?.url && "Mark", draft.brand.favicon?.url && "Favicon", draft.brand.voice.tone && "Voice"].filter(Boolean).join(" · ") || "Logo, favicon, sharing image, voice"}
+                  onClick={() => nav.go("brand")}
+                />
+                <NavRow icon={<Blend />} label="Gradients" meta={`${draft.surfaces.gradients.length} section backgrounds`} onClick={() => nav.go("gradients")} />
+                <NavRow icon={<Highlighter />} label="Word highlights" meta={draft.decor.map((d) => d.name).slice(0, 3).join(" · ") || "None"} onClick={() => nav.go("decor")} />
+                <NavRow
+                  icon={<Snowflake />}
+                  label="Effects"
+                  meta={draft.effects.active ? `Site-wide: ${draft.effects.presets.find((e) => e.id === draft.effects.active)?.name ?? draft.effects.active}` : `${draft.effects.presets.length} presets`}
+                  onClick={() => nav.go("effects")}
+                />
+                <NavRow
+                  icon={<Clapperboard />}
+                  label="Transitions"
+                  meta={draft.motion.transition === "native" ? "Browser crossfade" : draft.motion.transitions.find((t) => t.id === draft.motion.transition)?.name ?? "Pages swap instantly"}
+                  onClick={() => nav.go("transitions")}
+                />
+              </div>
+            </Group>
             <Group title="Health" className="px-2 [&>div:first-child]:px-2">
               <NavRow
                 icon={<HealthRing value={report.health} size={22} className="[&_span]:text-[0px]" />}
@@ -257,6 +305,11 @@ export function ThemePanel({
         {page.id === "typography" && <TypographyPage theme={theme} update={update} mode={mode} />}
         {page.id === "buttons" && <ButtonsPage theme={theme} update={update} mode={mode} />}
         {page.id === "motion" && <MotionPage theme={theme} update={update} />}
+        {page.id === "brand" && <BrandPage theme={theme} update={update} site={{ slug: site, id: siteId }} mode={mode} />}
+        {page.id === "gradients" && <GradientsPage theme={theme} update={update} mode={mode} />}
+        {page.id === "decor" && <DecorPage theme={theme} update={update} mode={mode} />}
+        {page.id === "effects" && <EffectsPage theme={theme} update={update} mode={mode} />}
+        {page.id === "transitions" && <TransitionsPage theme={theme} update={update} mode={mode} />}
         {page.id === "doctor" && <DoctorPage theme={theme} report={report} nav={nav} mode={mode} />}
       </div>
 

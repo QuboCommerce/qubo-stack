@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { cn } from "@qubo/shared/utils";
 import type { SectionEntry } from "@/lib/section-catalog";
 import { AddSectionDialog } from "./add-section-dialog";
+import { decorFieldAdapter, durationFieldAdapter, easingFieldAdapter, presetFieldAdapter } from "./design-fields";
 import { mediaFieldAdapter } from "./media-field";
 import { discardDraftAction, loadDraftAction, publishAction } from "@/app/studio-actions";
 import { loadThemeAction, publishThemeAction } from "@/app/theme-actions";
@@ -123,9 +124,9 @@ export function StudioEditor(props: StudioEditorProps) {
   const themeEditor = useThemeEditor(site.slug, props.themeRecord);
   // The canvas previews the theme draft live; deferring keeps sliders responsive.
   const theme = useDeferredValue(themeEditor.theme ?? props.theme);
-  // Field options (scheme/button pickers) only change when those lists do.
+  // Field options (scheme, button and preset pickers) only change when those lists do.
   const fieldThemeKey = theme
-    ? JSON.stringify([theme.schemes.map((s) => [s.id, s.name]), theme.buttons.map((b) => [b.id, b.name]), theme.defaultScheme, theme.defaultButton])
+    ? JSON.stringify([theme.schemes.map((s) => [s.id, s.name]), theme.buttons.map((b) => [b.id, b.name]), theme.defaultScheme, theme.defaultButton, [theme.decor, theme.surfaces.gradients, theme.effects.presets, theme.motion.transitions].map((l) => l.map((x) => [x.id, x.name]))])
     : "";
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fieldTheme = useMemo(() => theme, [fieldThemeKey]);
@@ -142,9 +143,15 @@ export function StudioEditor(props: StudioEditorProps) {
       createEditorConfig(registry, {
         capabilities: site.capabilities,
         fieldContext: { theme: fieldTheme ?? undefined, audience },
-        adapters: { media: mediaFieldAdapter({ slug: site.slug, id: site.id }) },
+        adapters: {
+          media: mediaFieldAdapter({ slug: site.slug, id: site.id }),
+          duration: durationFieldAdapter,
+          easing: easingFieldAdapter,
+          preset: presetFieldAdapter,
+          decor: decorFieldAdapter({ slug: site.slug, documentId: doc.id }),
+        },
       }) as Config,
-    [site.capabilities, site.slug, site.id, fieldTheme, audience],
+    [site.capabilities, site.slug, site.id, doc.id, fieldTheme, audience],
   );
 
   const metadata = useMemo(
@@ -495,7 +502,7 @@ function StudioLayout({
       </div>
       {leftTab === "theme" ? (
         <div className="min-h-0 flex-1">
-          <ThemePanel site={site.slug} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} />
+          <ThemePanel site={site.slug} siteId={site.id} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} />
         </div>
       ) : (
         <div className={cn("studio-puck-panel min-h-0 flex-1 overflow-y-auto", leftTab === "add" && "px-3 py-2")}>
@@ -753,7 +760,7 @@ function StudioLayout({
               </SheetHeader>
               <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/30" aria-hidden />
               <div className="min-h-0 flex-1">
-                {sheet === "fields" ? right : sheet === "theme" ? <ThemePanel site={site.slug} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} /> : left}
+                {sheet === "fields" ? right : sheet === "theme" ? <ThemePanel site={site.slug} siteId={site.id} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} /> : left}
               </div>
             </SheetContent>
           </Sheet>
