@@ -113,6 +113,9 @@ are native popovers, motion comes from `theme.motion.nav` in CSS, the site runti
 ### 2.7 Media modifiers (Image/Video)
 `mask: none|circle|blob|arch|rounded|custom-svg`, `aspect`, `hover`, `caption`, `parallax`.
 Video gains a gif-style autoplay/loop/muted preset and poster from focal.
+Built (ds5): `mask: none|circle|arch|squircle|blob|slant|custom`, `hover: zoom|lift|color|shine`,
+`reveal: fade|rise|wipe|grow`, `parallax: subtle|strong`, `captionPosition: below|overlay`, all CSS on
+`.qb-media-frame`. Video shares mask, reveal and parallax; ambient loops pause off-screen. Card `hover`.
 
 ### 2.8 Page meta (document)
 `page.transition?: presetId | "none"`, `page.effect?: presetId | "none"` override theme.
@@ -176,7 +179,7 @@ copy the resulting `SKILL.md` files in and delete generated folders.
 | ds2-editor (done) | P2 | theme panel: Brand, Surfaces, Decor, Motion (tokens, transitions, tester), Effects tabs; block panel: DurationField, EasingField, PresetField, per-locale range modal | Playwright: set fr/nl ranges on HM hero, save a transition preset, Test plays |
 | ds3-runtime (done) | P3 | storefront: decor, surface, reveal choreography, `motion` dep, PageTransition island (View Transitions), effects canvas | real request on HM preview host, Lighthouse perf within 5 pts, reduced-motion check |
 | ds4-nav (done) | P4 | SiteHeader patterns bar-mega / sidebar / sheet / fullscreen with nav motion, no-JS fallback kept (native popover) | Playwright at 3 viewports |
-| ds5-media | P5 | Image/Video masks, aspect, hover, parallax; Card hover | visual check |
+| ds5-media (done) | P5 | Image/Video masks, aspect, hover, parallax; Card hover | visual check |
 | ds6-hmfroid | P6 | HM Froid theme and pages built with the new concepts, humanizer pass, design-review checklist | Ali review, publish |
 | ds7-tailg | P7 | TailG same | Ali review, DNS switch |
 

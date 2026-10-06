@@ -332,3 +332,52 @@ describe("SiteHeader navigation patterns", () => {
     expect(out).toMatch(/data-menu="drop"/);
   });
 });
+
+describe("media modifiers", () => {
+  const render = (name: string, props: Record<string, unknown>) => {
+    const def = registry.get(name)!;
+    return renderToString(def.component({ ...def.defaults, id: `${name}-t`, ...props, puck: { metadata: { theme: hmFroidTheme } } }) as never);
+  };
+  const image = { url: "https://example.com/a.jpg", alt: "Oven" };
+
+  it("wraps images in a frame carrying shape, parallax and reveal", () => {
+    const out = render("Image", { image, mask: "arch", parallax: "subtle", reveal: "rise", hover: "zoom", radius: "md" });
+    expect(out).toMatch(/class="qb-figure" data-reveal="rise" data-hover="zoom"/);
+    expect(out).toMatch(/class="qb-media-frame" data-mask="arch" data-parallax="subtle"/);
+    expect(out).toContain("--qb-frame-radius:var(--qb-radius-md)");
+    expect(out).toContain('class="qb-image"');
+  });
+
+  it("gives circle shapes a square ratio unless one is chosen", () => {
+    expect(render("Image", { image, mask: "circle" })).toContain("aspect-ratio:1/1");
+    expect(render("Image", { image, mask: "circle", aspect: "4/5" })).toContain("aspect-ratio:4/5");
+    expect(render("Image", { image })).not.toContain("data-ratio");
+  });
+
+  it("only applies a custom shape when a mask image is chosen", () => {
+    expect(render("Image", { image, mask: "custom" })).not.toContain("data-mask");
+    const out = render("Image", { image, mask: "custom", maskImage: { url: "https://example.com/m.svg", alt: "" } });
+    expect(out).toContain('data-mask="custom"');
+    expect(out).toContain("--qb-mask-image:url(&quot;https://example.com/m.svg&quot;)");
+  });
+
+  it("renders overlay captions inside the frame", () => {
+    const out = render("Image", { image, caption: "Fresh", captionPosition: "overlay" });
+    expect(out).toMatch(/qb-media-frame[^]*qb-figure-overlay[^>]*>Fresh/);
+    expect(render("Image", { image, caption: "Fresh" })).toContain('<figcaption class="qb-muted">Fresh');
+  });
+
+  it("marks ambient videos for the runtime and shares the frame", () => {
+    const out = render("Video", { video: { url: "https://example.com/v.mp4", alt: "" }, mask: "squircle", reveal: "fade" });
+    expect(out).toContain("data-ambient");
+    expect(out).toMatch(/data-reveal="fade"[^]*data-mask="squircle"/);
+    expect(render("Video", { video: { url: "https://example.com/v.mp4", alt: "" }, mode: "player" })).not.toContain("data-ambient");
+  });
+
+  it("keeps the linked card lift by default and offers other hovers", () => {
+    expect(render("Card", { image, content: () => null, link: { kind: "url", value: "/x" } })).toMatch(/data-linked="true" data-hover="lift"/);
+    const out = render("Card", { image, content: () => null, hover: "zoom" });
+    expect(out).toContain('data-hover="zoom"');
+    expect(out).toContain('class="qb-card-figure"');
+  });
+});

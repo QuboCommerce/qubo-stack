@@ -33,7 +33,7 @@ export const alignOptions = ["inherit", "start", "center", "end"] as const;
 export type AlignOption = (typeof alignOptions)[number];
 export const textAlign = (a: AlignOption): CSSProperties["textAlign"] => (a === "inherit" ? undefined : a);
 
-export const aspectRatios = ["auto", "1/1", "4/3", "3/2", "16/9", "21/9", "3/4", "2/3", "9/16"] as const;
+export const aspectRatios = ["auto", "1/1", "4/3", "3/2", "16/9", "21/9", "4/5", "3/4", "2/3", "9/16"] as const;
 export const aspectOptions = aspectRatios.map((r) => ({ value: r, label: r === "auto" ? "Original" : r.replace("/", ":") }));
 
 export const radiusOptions = ["none", "sm", "md", "lg", "xl", "full"] as const;

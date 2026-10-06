@@ -502,6 +502,18 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    a bar whose links do not fit first drops the search field to an icon and
    then collapses to the menu button (`data-overflow`). The sidebar is a fixed
    rail above 900px and shifts the themed root with padding.
+31. **Media modifiers are CSS on a frame (ds5).** Image and Video render a
+   `.qb-media-frame` inside the figure that carries ratio, corner radius and
+   shape (`mask`: circle, arch, squircle, blob, slant or a custom SVG/PNG via
+   `--qb-mask-image`). Circle and squircle fall back to 1:1 when the ratio is
+   Original. Parallax and scroll reveal are scroll-driven CSS
+   (`animation-timeline`) inside `@supports` and a no-preference motion
+   query, so unsupported browsers and reduced motion get a still image. Image
+   hovers (zoom, lift, grey to colour, shine) only apply under
+   `(hover: hover)`; reduced motion keeps colour only. Card gained `hover`
+   (lift, the default and the old behaviour, zoom, border). `startMedia` in
+   the site runtime plays ambient videos only while on screen and keeps them
+   on the poster under reduced motion. Overlay captions sit inside the frame.
 
 ## Roadmap
 
