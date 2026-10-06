@@ -168,10 +168,96 @@ export const ButtonGroup = defineBlock({
   ),
 });
 
+export const mediaMasks = ["none", "circle", "arch", "squircle", "blob", "slant", "custom"] as const;
+export type MediaMask = (typeof mediaMasks)[number];
+
+/** Shape, scroll reveal and parallax: shared by Image and Video, all CSS. */
+const mediaFx = {
+  mask: f.select(
+    [
+      { value: "none", label: "None" },
+      { value: "circle", label: "Circle" },
+      { value: "arch", label: "Arch" },
+      { value: "squircle", label: "Soft square" },
+      { value: "blob", label: "Blob" },
+      { value: "slant", label: "Slanted edge" },
+      { value: "custom", label: "Custom shape" },
+    ],
+    { label: "Shape", default: "none", group: "style" },
+  ),
+  maskImage: f.media({ label: "Custom shape (SVG or PNG, transparent parts are hidden)", group: "style", translatableAlt: false }),
+  reveal: f.select(
+    [
+      { value: "none", label: "None" },
+      { value: "fade", label: "Fade" },
+      { value: "rise", label: "Rise" },
+      { value: "wipe", label: "Wipe up" },
+      { value: "grow", label: "Grow" },
+    ],
+    { label: "Reveal on scroll", default: "none", group: "style" },
+  ),
+  parallax: f.select(["none", "subtle", "strong"], { label: "Parallax", default: "none", group: "style" }),
+};
+
+type MediaFxValues = { mask: MediaMask; maskImage: Parameters<typeof resolveMedia>[0]; reveal: string; parallax: string };
+
+/** Square shapes default to a square ratio when the ratio is left on Original. */
+const frameRatio = (aspect: string, mask: MediaMask) =>
+  aspect !== "auto" ? aspect : mask === "circle" || mask === "squircle" ? "1/1" : undefined;
+
+function MediaFigure({
+  fx,
+  aspect,
+  radius,
+  hover,
+  caption,
+  captionPosition,
+  ctx,
+  children,
+}: {
+  fx: MediaFxValues;
+  aspect: string;
+  radius: string;
+  hover?: string;
+  caption?: string;
+  captionPosition?: string;
+  ctx: { metadata: Parameters<typeof resolveMedia>[1] };
+  children: ReactNode;
+}) {
+  const maskSrc = fx.mask === "custom" ? resolveMedia(fx.maskImage, ctx.metadata)?.src : undefined;
+  const ratio = frameRatio(aspect, fx.mask);
+  const overlay = caption && captionPosition === "overlay";
+  return (
+    <figure
+      className="qb-figure"
+      data-reveal={fx.reveal !== "none" ? fx.reveal : undefined}
+      data-hover={hover && hover !== "none" ? hover : undefined}
+    >
+      <div
+        className="qb-media-frame"
+        data-mask={fx.mask !== "none" && (fx.mask !== "custom" || maskSrc) ? fx.mask : undefined}
+        data-parallax={fx.parallax !== "none" ? fx.parallax : undefined}
+        data-ratio={ratio ? true : undefined}
+        style={
+          {
+            aspectRatio: ratio,
+            "--qb-frame-radius": `var(--qb-radius-${radius})`,
+            ...(maskSrc ? { "--qb-mask-image": `url(${JSON.stringify(maskSrc)})` } : {}),
+          } as CSSProperties
+        }
+      >
+        {children}
+        {overlay ? <figcaption className="qb-figure-overlay">{caption}</figcaption> : null}
+      </div>
+      {caption && !overlay ? <figcaption className="qb-muted">{caption}</figcaption> : null}
+    </figure>
+  );
+}
+
 export const Image = defineBlock({
   name: "Image",
   label: "Image",
-  description: "Picture from the media library with ratio, corner radius, caption and optional link.",
+  description: "Picture from the media library with ratio, shape, corner radius, hover, scroll reveal, parallax, caption and optional link.",
   category: "elements",
   icon: "image",
   fields: {
@@ -179,11 +265,23 @@ export const Image = defineBlock({
     aspect: f.select(aspectOptions.map((o) => o), { label: "Aspect ratio", default: "auto", group: "style" }),
     fit: f.select(["cover", "contain"], { label: "Fit", default: "cover", group: "style" }),
     radius: f.select(radiusOptions, { label: "Corners", default: "lg", group: "style" }),
+    ...mediaFx,
+    hover: f.select(
+      [
+        { value: "none", label: "None" },
+        { value: "zoom", label: "Zoom" },
+        { value: "lift", label: "Lift" },
+        { value: "color", label: "Grey to colour" },
+        { value: "shine", label: "Shine" },
+      ],
+      { label: "Hover", default: "none", group: "style", description: "Best on linked images: movement on hover reads as clickable." },
+    ),
     caption: f.text({ label: "Caption" }),
+    captionPosition: f.select(["below", "overlay"], { label: "Caption position", default: "below", group: "style" }),
     link: f.link({ label: "Link", default: { kind: "url", value: "" } }),
     priority: f.toggle({ label: "Load first (above the fold)", group: "advanced" }),
   },
-  render: ({ image, aspect, fit, radius, caption, link, priority }, ctx) => {
+  render: ({ image, aspect, fit, radius, mask, maskImage, reveal, parallax, hover, caption, captionPosition, link, priority }, ctx) => {
     const media = resolveMedia(image, ctx.metadata);
     if (!media) return <Empty label="Choose an image" ctx={ctx} minHeight={180} />;
     const img = (
@@ -196,26 +294,20 @@ export const Image = defineBlock({
         height={media.height}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : undefined}
-        style={{
-          aspectRatio: aspect === "auto" ? undefined : aspect,
-          objectFit: fit,
-          objectPosition: media.objectPosition,
-          borderRadius: `var(--qb-radius-${radius})`,
-        }}
+        style={{ objectFit: fit, objectPosition: media.objectPosition }}
       />
     );
     const href = resolveLink(link, ctx.metadata);
     return (
-      <figure className="qb-figure">
+      <MediaFigure fx={{ mask, maskImage, reveal, parallax }} aspect={aspect} radius={radius} hover={hover} caption={caption} captionPosition={captionPosition} ctx={ctx}>
         {href && !ctx.isEditing ? (
-          <a href={href} {...linkTarget(link)}>
+          <a className="qb-media-link" href={href} {...linkTarget(link)}>
             {img}
           </a>
         ) : (
           img
         )}
-        {caption ? <figcaption className="qb-muted">{caption}</figcaption> : null}
-      </figure>
+      </MediaFigure>
     );
   },
 });
@@ -223,38 +315,50 @@ export const Image = defineBlock({
 export const Video = defineBlock({
   name: "Video",
   label: "Video",
-  description: "Self-hosted video file with poster; autoplays muted as a loop or shows controls.",
+  description: "Self-hosted video file with poster; plays muted on a loop like a GIF or shows controls. Same shapes, reveal and parallax as images.",
   category: "elements",
   icon: "video",
   fields: {
     video: f.media({ label: "Video", accept: "video", translatableAlt: false }),
     mobileVideo: f.media({ label: "Mobile video (optional)", accept: "video", translatableAlt: false }),
     poster: f.media({ label: "Poster image", translatableAlt: false }),
-    mode: f.select(["ambient", "player"], { label: "Mode", default: "ambient", description: "Ambient = muted autoplay loop; player = controls." }),
+    mode: f.select(
+      [
+        { value: "ambient", label: "Loop like a GIF" },
+        { value: "player", label: "Player with controls" },
+      ],
+      { label: "Mode", default: "ambient", description: "Loops play muted, pause off-screen and show the poster when reduced motion is on." },
+    ),
     aspect: f.select(aspectOptions.map((o) => o), { label: "Aspect ratio", default: "16/9", group: "style" }),
     radius: f.select(radiusOptions, { label: "Corners", default: "lg", group: "style" }),
+    ...mediaFx,
+    caption: f.text({ label: "Caption" }),
   },
-  render: ({ video, mobileVideo, poster, mode, aspect, radius }, ctx) => {
+  render: ({ video, mobileVideo, poster, mode, aspect, radius, mask, maskImage, reveal, parallax, caption }, ctx) => {
     const src = resolveMedia(video, ctx.metadata);
     if (!src) return <Empty label="Choose a video" ctx={ctx} minHeight={180} />;
     const mobile = resolveMedia(mobileVideo, ctx.metadata);
-    const posterSrc = resolveMedia(poster, ctx.metadata)?.src;
+    const posterMedia = resolveMedia(poster, ctx.metadata);
     const ambient = mode === "ambient";
     return (
-      <video
-        className="qb-video"
-        poster={posterSrc}
-        autoPlay={ambient}
-        muted={ambient}
-        loop={ambient}
-        playsInline
-        controls={!ambient}
-        preload={ambient ? "auto" : "metadata"}
-        style={{ aspectRatio: aspect === "auto" ? undefined : aspect, borderRadius: `var(--qb-radius-${radius})` }}
-      >
-        {mobile ? <source src={mobile.src} media="(max-width: 767px)" /> : null}
-        <source src={src.src} />
-      </video>
+      <MediaFigure fx={{ mask, maskImage, reveal, parallax }} aspect={aspect} radius={radius} caption={caption} ctx={ctx}>
+        <video
+          className="qb-video"
+          poster={posterMedia?.src}
+          autoPlay={ambient}
+          muted={ambient}
+          loop={ambient}
+          playsInline
+          controls={!ambient}
+          disablePictureInPicture={ambient || undefined}
+          data-ambient={ambient || undefined}
+          preload={ambient ? "auto" : "metadata"}
+          style={{ objectPosition: posterMedia?.objectPosition }}
+        >
+          {mobile ? <source src={mobile.src} media="(max-width: 767px)" /> : null}
+          <source src={src.src} />
+        </video>
+      </MediaFigure>
     );
   },
 });
@@ -470,21 +574,32 @@ export const Card = defineBlock({
     link: f.link({ label: "Card link", default: { kind: "url", value: "" } }),
     look: f.select(["surface", "outline", "plain"], { label: "Look", default: "surface", group: "style" }),
     padding: f.step("space", { label: "Padding", default: "md", max: "xl" }),
+    hover: f.select(
+      [
+        { value: "none", label: "None" },
+        { value: "lift", label: "Lift" },
+        { value: "zoom", label: "Zoom image" },
+        { value: "border", label: "Highlight border" },
+      ],
+      { label: "Hover (linked cards)", default: "lift", group: "style" },
+    ),
   },
-  render: ({ image, aspect, content: Content, link, look, padding }, ctx) => {
+  render: ({ image, aspect, content: Content, link, look, padding, hover }, ctx) => {
     const img = resolveMedia(image, ctx.metadata);
     const href = resolveLink(link, ctx.metadata);
     return (
-      <article className="qb-card" data-look={look} data-linked={href ? true : undefined}>
+      <article className="qb-card" data-look={look} data-linked={href ? true : undefined} data-hover={hover !== "none" ? hover : undefined}>
         {img ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            className="qb-card-media"
-            src={img.src}
-            alt={img.alt}
-            loading="lazy"
-            style={{ aspectRatio: aspect === "auto" ? undefined : aspect, objectPosition: img.objectPosition }}
-          />
+          <div className="qb-card-figure">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="qb-card-media"
+              src={img.src}
+              alt={img.alt}
+              loading="lazy"
+              style={{ aspectRatio: aspect === "auto" ? undefined : aspect, objectPosition: img.objectPosition }}
+            />
+          </div>
         ) : null}
         <Content className="qb-card-body" style={{ padding: look === "plain" ? `${gap("sm")} 0` : gap(padding) } as CSSProperties} />
         {href && !ctx.isEditing ? <a className="qb-card-link" href={href} aria-label="Open" {...linkTarget(link)} /> : null}
