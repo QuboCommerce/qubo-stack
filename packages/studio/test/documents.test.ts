@@ -19,6 +19,7 @@ import {
   restoreRevision,
   rollback,
   saveDraft,
+  translationCoverage,
   upsertDocumentTranslations,
   createPreviewToken,
   verifyPreviewToken,
@@ -200,6 +201,10 @@ describe("translations", () => {
     await upsertDocumentTranslations(a, { documentId: doc.id, locale: "nl-BE", entries: [{ path: target.path, value: "Hallo" }] });
     rows = await listDocumentTranslations(a, doc.id, "nl-BE");
     expect(rows[0]).toMatchObject({ value: "Hallo", status: "done" });
+    const before = await translationCoverage(a.siteId);
+    expect(before["nl-BE"]!.done).toBeGreaterThanOrEqual(1);
+    expect(before["nl-BE"]!.total).toBeGreaterThanOrEqual(rows.length);
+    expect(Object.keys(before)).not.toContain("en");
 
     await publish(a, { id: doc.id });
     const rendered = await renderableDocument(a.siteId, doc.id, "nl-BE");
@@ -212,6 +217,9 @@ describe("translations", () => {
     expect(row!.status).toBe("stale");
     rows = await listDocumentTranslations(a, doc.id, "nl-BE");
     expect(rows[0]!.status).toBe("stale");
+    const after = await translationCoverage(a.siteId);
+    expect(after["nl-BE"]!.stale).toBe(before["nl-BE"]!.stale + 1);
+    expect(after["nl-BE"]!.done).toBe(before["nl-BE"]!.done - 1);
 
     // Empty value clears the translation.
     await upsertDocumentTranslations(a, { documentId: doc.id, locale: "nl-BE", entries: [{ path: target.path, value: " " }] });

@@ -73,6 +73,7 @@ import { useLiveCanvas, useStudioLease, type StudioLease } from "./use-studio-le
 import { peerColor } from "@/components/presence";
 import { ViewPicker } from "./view-picker";
 import { ThemePanel } from "./theme/theme-panel";
+import { CanvasScrollbar } from "./canvas-scrollbar";
 import { useThemeEditor, type ThemeEditor, type ThemeRecord } from "./theme/use-theme-editor";
 
 type ViewEntry = ViewIndex["groups"][number]["entries"][number];
@@ -360,6 +361,8 @@ function StudioLayout({
     ? { can: themeEditor.canRedo, run: themeEditor.redo, label: "Redo theme change" }
     : { can: history.hasFuture && !following, run: () => history.forward(), label: "Redo" };
   const themeDirty = !!themeEditor.draft && themeSync.hasUnpublishedChanges;
+
+  const [scrollDrag, setScrollDrag] = useState(false);
 
   // The overlay this page leaves through (its own pick or the theme's), played over the canvas.
   const rootProps = usePuck((s) => s.appState.data.root?.props);
@@ -771,13 +774,19 @@ function StudioLayout({
         <main className="relative flex min-w-0 flex-1 flex-col overflow-auto">
           <div className={cn("flex min-h-0 flex-1 justify-center", tabletUp && "p-3 lg:p-4 min-[1920px]:p-6")}>
             <div
-              className={cn(
-                "studio-canvas relative h-full min-h-0 overflow-hidden bg-background transition-[width] duration-300 ease-out",
-                tabletUp && "rounded-xl border shadow-sm",
-              )}
+              className="relative h-full min-h-0 transition-[width] duration-300 ease-out"
               style={{ width: vp.width ? `min(100%, ${vp.width}px)` : "100%" }}
             >
-              <Puck.Preview />
+              <div
+                className={cn(
+                  "studio-canvas relative z-10 h-full overflow-hidden bg-background",
+                  tabletUp && "rounded-xl border shadow-sm",
+                  scrollDrag && "[&_iframe]:pointer-events-none",
+                )}
+              >
+                <Puck.Preview />
+              </div>
+              <CanvasScrollbar doc={canvasDoc} inset={!tabletUp} onDrag={setScrollDrag} />
             </div>
           </div>
         </main>

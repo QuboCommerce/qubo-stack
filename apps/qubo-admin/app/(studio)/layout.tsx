@@ -17,7 +17,7 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 export default function StudioRootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
-      <body className="overflow-hidden font-sans antialiased">
+      <body className="font-sans antialiased">
         <Providers>{children}</Providers>
         <StaffHint />
       </body>

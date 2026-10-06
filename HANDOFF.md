@@ -529,6 +529,18 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    (`mayArriveCovered`). A page that overrides a native-crossfade theme emits
    `@view-transition { navigation: none; }`. A page effect ignores the theme
    schedule.
+33. **Studio canvas scroll, languages page.** Puck mirrors the host `<body>`
+   classes and stylesheets into the canvas iframe, so the studio body must not
+   carry overflow or layout classes (an `overflow-hidden` there froze the
+   canvas). Host-only rules go in studio.css scoped with `body:has(.studio)`,
+   which the iframe body never matches. The canvas hides its native scrollbar
+   (style injected into the iframe head) and `CanvasScrollbar` draws a thin
+   bar in the gutter beside the card (inset on phones): shown while
+   scrolling, hidden after 2s idle, wider on hover, draggable, click to page.
+   The gutter is 11px so it fits the smallest canvas padding (p-3). The
+   Languages page reads `studio.translationCoverage(siteId)` (done, stale and
+   total per non-primary locale) and says plainly that the storefront locale
+   switch and Studio translating are not built yet.
 
 ## Roadmap
 

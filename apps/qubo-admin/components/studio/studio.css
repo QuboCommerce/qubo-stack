@@ -6,6 +6,15 @@
   --puck-color-azure-11: color-mix(in oklab, var(--primary) 10%, transparent);
 }
 
+/*
+ * The studio never scrolls the page itself. Scoped with :has() because Puck
+ * copies the body classes into the canvas iframe, where a class like
+ * overflow-hidden would stop the site from scrolling.
+ */
+body:has(.studio) {
+  overflow: hidden;
+}
+
 .studio-puck-panel {
   font-size: 13px;
 }
