@@ -45,6 +45,9 @@ qd down          # close the session
 - Storefront must run `next dev --hostname localhost`, not `127.0.0.1`: Next builds proxy
   URLs as `localhost:<port>` and only treats same-host rewrites as internal when they match.
 - Turbopack panic or stale chunks: `rm -rf apps/<app>/.next` then restart.
+- A page renders but never hydrates and a `/_next/static` chunk returns 403: the host is not in
+  `QUBO_DEV_ORIGINS` (Next `allowedDevOrigins`). `*.x` matches one label only, so `qd` also
+  adds `*.preview.<sitesBaseDomain>` for preview hosts.
 - Hairpin NAT: test public hosts with `curl --resolve host:443:127.0.0.1 https://host/`.
 - Logs show "Rate limiting could not determine a client IP" when hitting a service directly
   instead of through the edge; harmless in dev.

@@ -110,7 +110,7 @@ function serviceEnv(cfg, name) {
     QUBO_DEV: "1",
     QUBO_DEV_MODE: cfg.mode,
     // Hosts allowed to load dev assets/HMR through the edge (Next allowedDevOrigins).
-    QUBO_DEV_ORIGINS: [...Object.values(s).map((x) => x.host), cfg.mode === "remote" && cfg.sitesBaseDomain ? `*.${cfg.sitesBaseDomain}` : null].filter(Boolean).join(","),
+    QUBO_DEV_ORIGINS: [...Object.values(s).map((x) => x.host), ...(cfg.mode === "remote" && cfg.sitesBaseDomain ? [`*.${cfg.sitesBaseDomain}`, `*.preview.${cfg.sitesBaseDomain}`] : [])].filter(Boolean).join(","),
     FORCE_COLOR: process.env.NO_COLOR ? undefined : process.env.FORCE_COLOR ?? "1",
   };
   const tpl = (v) => String(v)

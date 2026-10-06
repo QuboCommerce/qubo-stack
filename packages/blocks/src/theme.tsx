@@ -31,6 +31,23 @@ export function ThemeStyles({ theme, includeBase = true, fonts = true }: { theme
   );
 }
 
+/** The theme's site-wide effect. A scheduled one renders hidden; the site runtime switches it on in its window. */
+function PageEffect({ theme }: { theme: Theme }) {
+  const fx = theme.effects;
+  const effect = fx.active ? fx.presets.find((e) => e.id === fx.active) : undefined;
+  if (!effect) return null;
+  return (
+    <div
+      className="qb-effect"
+      data-effect={effect.id}
+      data-effect-kind={effect.kind}
+      data-effect-scope="page"
+      data-effect-schedule={fx.schedule.enabled ? `${fx.schedule.from}..${fx.schedule.to}` : undefined}
+      aria-hidden="true"
+    />
+  );
+}
+
 export type ThemeMode = "light" | "dark" | "system";
 
 /** Scopes a subtree to a theme: `data-theme` + page scheme + mode. */
@@ -62,6 +79,7 @@ export function ThemeRoot({
     >
       {styles ? <ThemeStyles theme={theme} /> : null}
       {children}
+      <PageEffect theme={theme} />
     </div>
   );
 }

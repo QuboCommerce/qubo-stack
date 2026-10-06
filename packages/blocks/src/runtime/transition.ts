@@ -35,8 +35,11 @@ export function resolveEasing(value: string, theme?: Pick<Theme, "motion">): str
   return (easingPresets as Record<string, string>)[value] ?? value;
 }
 
+/** The theme slice transitions read: brand assets for the icon, motion for the easing. */
+export type TransitionTheme = Pick<Theme, "brand" | "motion">;
+
 export type TransitionOptions = {
-  theme: Theme;
+  theme: TransitionTheme;
   /** `fixed` covers the viewport (storefront); `contained` fills the host (studio preview). */
   scope?: "fixed" | "contained";
   /** Circle origin in px relative to the host, e.g. the clicked link. */
@@ -53,7 +56,7 @@ export type TransitionRun = {
   remove: () => void;
 };
 
-function iconUrl(t: Transition, theme: Theme): string | null {
+function iconUrl(t: Transition, theme: TransitionTheme): string | null {
   const b = theme.brand;
   if (t.icon === "logo") return b.logo?.url || b.mark?.url || null;
   if (t.icon === "mark") return b.mark?.url || b.favicon?.url || b.logo?.url || null;

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { permanentRedirect } from "next/navigation";
 import { instantiate, registry } from "@qubo/blocks";
+import { arrivalScript, overlayTransition } from "@qubo/blocks/runtime";
 import { RenderView } from "@/lib/render";
 import { getStorefront, hostFromParam, requestPath, type Storefront } from "@/lib/site";
 
@@ -32,9 +33,14 @@ export default async function SiteLayout({ children, params }: { children: React
   const sf = await getStorefront(hostFromParam((await params).site));
   if (sf?.redirectHost) permanentRedirect(`https://${sf.redirectHost}${await requestPath()}`);
   return (
-    <html lang={sf?.site.locale ?? "en"} style={{ height: "100%" }}>
+    // The arrival script may set `data-qb-arriving` on <html> before hydration.
+    <html lang={sf?.site.locale ?? "en"} style={{ height: "100%" }} suppressHydrationWarning>
       {/* The theme root fills the viewport, so short pages keep the theme background. */}
-      <body style={{ margin: 0, height: "100%" }}>{sf?.maintenance ? <Maintenance sf={sf} /> : children}</body>
+      <body style={{ margin: 0, height: "100%" }}>
+        {/* Before first paint: keeps the previous page's transition cover up while this one loads. */}
+        {overlayTransition(sf?.theme) ? <script dangerouslySetInnerHTML={{ __html: arrivalScript() }} /> : null}
+        {sf?.maintenance ? <Maintenance sf={sf} /> : children}
+      </body>
     </html>
   );
 }
