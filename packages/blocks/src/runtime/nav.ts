@@ -68,6 +68,20 @@ export function startNav(doc: Document): () => void {
     offs.push(() => ro.disconnect());
   }
 
+  // Sticky headers publish their height so pinned sections (SteelReveal) can sit below them.
+  const sticky = doc.querySelector<HTMLElement>('.qb-section[data-block="SiteHeader"]:has(.qb-site-header[data-sticky])');
+  if (sticky && "ResizeObserver" in win) {
+    const root = doc.documentElement;
+    const measure = () => root.style.setProperty("--qb-header-h", `${Math.round(sticky.getBoundingClientRect().height)}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(sticky);
+    offs.push(() => {
+      ro.disconnect();
+      root.style.removeProperty("--qb-header-h");
+    });
+  }
+
   const openDropdowns = () => Array.from(doc.querySelectorAll<HTMLDetailsElement>(".qb-site-dropdown[open]"));
   const onDocClick = (e: MouseEvent) => {
     const target = e.target as Node | null;

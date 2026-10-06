@@ -292,20 +292,20 @@ function homeDoc(hero?: Media, split?: Media): DocumentData {
   return {
     root: { props: { title: "HM Froid, matériel horeca neuf et d'occasion à Bruxelles" } },
     content: [
-      section("Hero", {
-        layout: "split",
-        mediaPosition: "end",
-        mediaAspect: "3/2",
-        mediaRadius: "sm",
-        minHeight: "auto",
+      section("SteelReveal", {
         media: hero ?? { alt: "" },
+        interiorScheme: "graphite",
+        scrollLength: "medium",
+        cabinetHeight: "80vh",
+        handles: true,
+        scrollHint: "Faites défiler",
         content: [
-          eyebrow(`Anderlecht, depuis ${company.since}`, { icon: "map-pin" }),
-          h1("Matériel horeca professionnel, neuf et d'occasion", { size: "6", balance: true, decor: { preset: "accent", match: "neuf et d'occasion", ranges: [] } }),
-          text(`<p>Froid commercial, cuisson, inox et préparation : ${company.catalogue} pour la restauration, les friteries, les boucheries et les commerces de bouche. Livraison en Belgique, service après-vente et rachat de votre ancien matériel.</p>`, { size: "1", tone: "muted" }),
-          buttons(button("Voir le catalogue", collectionLink("all"), "primary", { icon: "arrow-right", iconPosition: "end" }), button("Demander un devis", pageLink("contact"), "outline")),
+          eyebrow(`Anderlecht, depuis ${company.since}`, { icon: "map-pin", align: "center" }),
+          h1("Matériel horeca professionnel, neuf et d'occasion", { size: "5", align: "center", balance: true, decor: { preset: "accent", match: "neuf et d'occasion", ranges: [] } }),
+          text(`<p>Froid commercial, cuisson, inox et préparation : ${company.catalogue} pour la restauration, les friteries, les boucheries et les commerces de bouche.</p>`, { size: "1", align: "center" }),
+          node("ButtonGroup", { align: "center", gap: "xs", buttons: [button("Voir le catalogue", collectionLink("all"), "primary", { icon: "arrow-right", iconPosition: "end" }), button("Demander un devis", pageLink("contact"), "outline")] }),
         ],
-        ...chrome({ scheme: "plate", width: "wide", spacingTop: "2xl", spacingBottom: "2xl", background: { gradient: "brushed", texture: "brushed-lines" } }),
+        ...chrome({ scheme: "plate", width: "full", spacingTop: "none", spacingBottom: "none", background: { gradient: "brushed", texture: "brushed-lines" } }),
       }),
       section("CardGrid", {
         header: { eyebrow: "Nos rayons", title: "Tout l'équipement d'une cuisine professionnelle", intro: "Du neuf garanti et de l'occasion révisée en atelier. Chaque rayon se visite aussi au showroom.", align: "start", titleSize: "4" },
