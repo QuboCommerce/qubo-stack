@@ -125,6 +125,41 @@ export async function translationProgress(scope: Scope, documentId: string) {
   return out;
 }
 
+export type TranslationCoverage = { done: number; stale: number; total: number };
+
+/**
+ * Site-wide completion per non-primary locale over every document's draft, in
+ * two queries: `{ "nl-BE": { done: 40, stale: 2, total: 120 } }`. `done`
+ * counts current translations only; stale ones are counted apart.
+ */
+export async function translationCoverage(siteId: string): Promise<Record<string, TranslationCoverage>> {
+  const [locales, docs, rows] = await Promise.all([
+    db.select({ locale: siteLocale.locale }).from(siteLocale).where(and(eq(siteLocale.siteId, siteId), eq(siteLocale.isPrimary, false))),
+    db.select({ id: document.id, draft: document.draftData }).from(document).where(eq(document.siteId, siteId)),
+    db
+      .select({ ownerRef: translation.ownerRef, path: translation.path, locale: translation.locale, status: translation.status, sourceHash: translation.sourceHash })
+      .from(translation)
+      .where(eq(translation.siteId, siteId)),
+  ]);
+  const byKey = new Map(rows.map((r) => [`${r.locale}|${r.ownerRef}|${r.path}`, r]));
+  const out: Record<string, TranslationCoverage> = {};
+  for (const { locale } of locales) out[locale] = { done: 0, stale: 0, total: 0 };
+  for (const d of docs) {
+    for (const str of stringsOf(d.draft as DocumentData)) {
+      const path = translationPath(str.nodeId, str.path);
+      for (const locale of Object.keys(out)) {
+        const c = out[locale]!;
+        c.total++;
+        const t = byKey.get(`${locale}|document:${d.id}|${path}`);
+        if (!t) continue;
+        if (t.sourceHash !== str.sourceHash || t.status === "stale") c.stale++;
+        else c.done++;
+      }
+    }
+  }
+  return out;
+}
+
 /**
  * Storefront read: published tree with the locale overlay applied. Stale
  * translations still render (better than falling back mid-sentence).
