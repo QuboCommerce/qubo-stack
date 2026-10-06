@@ -429,6 +429,16 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    the portal does not yet map organisations to server IPs, removing a domain
    leaves its certificate in the edge store until it expires, and only
    `QUBO_SERVER_IP` (or the resolved public URL) decides which IP is correct.
+26. **Agent skills are vendored, plans live in `docs/plans/`.** General skills
+   are copied into `.agents/skills/` as plain files (MIT, upstream LICENSE kept
+   per folder): Matt Pocock's grill-me, grilling, tdd, diagnosing-bugs,
+   code-review, pr, codebase-design, improve-codebase-architecture,
+   domain-modeling, to-tickets, handoff, writing-for-agents and prototype;
+   blader's humanizer; elayadesign's landing-page-design, rewritten so visual
+   values defer to the theme. Issue-tracker driven skills (triage, to-spec,
+   wayfinder) are skipped: tickets are rows in `docs/plans/*.md`, decisions are
+   here (`docs/agents/issue-tracker.md`). `qubo-design-language` holds the
+   concept tree from `docs/plans/design-system.md` and the taste review.
 
 ## Roadmap
 

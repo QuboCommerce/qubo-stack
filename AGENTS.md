@@ -35,5 +35,34 @@ Load by name when the task matches the description.
 | `qubo-realtime-collab` | presence, live events, Studio leases, form merges |
 | `qubo-storefront-rendering` | Puck documents, templates, blocks, theme, SEO on the storefront |
 | `qubo-portal-link` | Portal link, licence/entitlements, site quota, `@qubo/portal-client` |
+| `qubo-design-language` | designing a site, adding a block, field or any visual feature |
+
+Vendored general skills (MIT, upstream noted in each folder):
+
+| Skill | Use when |
+| --- | --- |
+| `landing-page-design` | planning or writing a site page: structure, copy, proof, SEO intent |
+| `humanizer` | any prose a visitor or customer reads |
+| `grill-me`, `grilling` | being interviewed about a plan until every branch is resolved |
+| `tdd` | building a feature or fix test first |
+| `diagnosing-bugs` | hard bugs and performance regressions |
+| `code-review` | reviewing a branch diff before merge |
+| `pr` | writing a pull request or merge summary |
+| `codebase-design`, `improve-codebase-architecture`, `domain-modeling` | module design, deepening surveys, glossary and ADRs |
+| `to-tickets` | breaking a plan into tickets with blocking edges |
+| `handoff` | compacting a session for the next agent |
+| `writing-for-agents` | writing skills, AGENTS.md or docs an agent reads |
+| `prototype` | a throwaway prototype to answer a design question |
 
 Customer VPS setup (users, SSH, firewall, Coolify): `docs/VPS.md`.
+Plans: `docs/plans/`.
+
+## Agent skills
+
+### Issue tracker
+
+Local: plans in `docs/plans/`, decisions in `HANDOFF.md`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single context: `GLOSSARY.md` and `docs/adr/` at the root, created lazily. See `docs/agents/domain.md`.
