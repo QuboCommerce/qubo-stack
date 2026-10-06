@@ -23,7 +23,9 @@ host (see `qubo-hosts-and-urls`).
 `lib/render.tsx` composes header + body + footer into one Puck document and injects the
 theme once (`themedRoot`). `loadBlockData` fills data-driven blocks before render
 (ProductGrid: `collection` / `manual` / newest; prices via `Intl.NumberFormat` with the
-site locale and currency). `viewMetadata()` sets title, OpenGraph, `metadataBase`, robots.
+site locale and currency). `viewMetadata()` sets title (`<page> | <site title>`), description,
+OpenGraph, `metadataBase`, robots. `lib/seo.tsx` builds the JSON-LD (`siteLd` in the layout,
+`productLd` / `breadcrumbLd` on routes) from `sf.seo` and `sf.business` (Settings > Business & SEO).
 Routes under `app/sites/[site]/` use the `templateRoute(kind)` factory.
 
 ## Adding a block

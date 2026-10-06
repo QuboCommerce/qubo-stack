@@ -16,6 +16,7 @@ import {
   Scale,
   ShieldCheck,
   Sparkles,
+  Store,
   Truck,
   Users,
   type LucideIcon,
@@ -37,6 +38,7 @@ export const settingsGroups: { label: string; items: SettingsSection[] }[] = [
     label: "Site",
     items: [
       { slug: "general", label: "General", description: "Name, site type, features and currency.", icon: Building2, ready: true },
+      { slug: "business", label: "Business & SEO", description: "Contact details, opening hours, legal identity and how the site appears in search.", icon: Store, ready: true },
       { slug: "brand", label: "Brand", description: "Logo variants, favicon and social sharing image.", icon: Palette },
       { slug: "domains", label: "Domains", description: "Web addresses that point to this site.", icon: Globe, ready: true },
       { slug: "languages", label: "Languages", description: "Primary language and published translations.", icon: Languages, ready: true },

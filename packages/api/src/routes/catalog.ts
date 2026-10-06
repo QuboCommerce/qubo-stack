@@ -158,7 +158,7 @@ export const catalog = new Elysia({ prefix: "/catalog" })
 
       if (!item) return status(404, { error: "product_not_found" });
 
-      const [images, variants] = await Promise.all([
+      const [images, variants, categories] = await Promise.all([
         db
           .select({ url: productImage.url, alt: productImage.alt })
           .from(productImage)
@@ -180,6 +180,12 @@ export const catalog = new Elysia({ prefix: "/catalog" })
           .leftJoin(inventoryItem, eq(inventoryItem.variantId, productVariant.id))
           .where(eq(productVariant.productId, item.id))
           .orderBy(asc(productVariant.position)),
+        db
+          .select({ name: category.name, slug: category.slug })
+          .from(productCategory)
+          .innerJoin(category, eq(category.id, productCategory.categoryId))
+          .where(eq(productCategory.productId, item.id))
+          .orderBy(asc(category.position)),
       ]);
 
       const prices = await resolvePrices(
@@ -199,6 +205,7 @@ export const catalog = new Elysia({ prefix: "/catalog" })
         product: {
           ...item,
           images,
+          categories,
           variants: variants.map((variant) => {
             const price = prices.get(
               keyOf({ productId: item.id, variantId: variant.id }),

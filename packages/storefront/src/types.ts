@@ -66,6 +66,10 @@ export type ProductDetail = {
   compareAtPrice: string | null;
   images: { url: string; alt: string | null }[];
   variants: ProductVariantDetail[];
+  metaTitle: string | null;
+  metaDescription: string | null;
+  /** Categories this product sits in; the first one is the breadcrumb parent. */
+  categories: { name: string; slug: string }[];
 };
 
 export type ProductListResponse = {
@@ -107,8 +111,29 @@ export type TemplateKind =
   | "maintenance"
   | (string & {});
 
+export type Weekday = "mo" | "tu" | "we" | "th" | "fr" | "sa" | "su";
+/** Same times on each listed day, "HH:MM" 24h. */
+export type OpeningHoursRule = { days: Weekday[]; opens: string; closes: string };
+
+/** Who runs the site: organisation identity plus the site's public contact details. */
+export type SiteBusiness = {
+  legalName: string | null;
+  companyNumber: string | null;
+  vatNumber: string | null;
+  phone: string | null;
+  email: string | null;
+  address: { line1: string | null; line2: string | null; postalCode: string | null; city: string | null; country: string | null } | null;
+  openingHours: OpeningHoursRule[];
+  geo: { latitude: number; longitude: number } | null;
+  /** schema.org type, e.g. "Store". Null = LocalBusiness. */
+  type: string | null;
+};
+
 export type LayoutResponse = {
   site: SiteSummary;
+  /** Site-wide title and description; the title is also the suffix of every page title. */
+  seo: { title: string | null; description: string | null };
+  business: SiteBusiness;
   header: RenderDocument | null;
   footer: RenderDocument | null;
   /** Published theme JSON (validated by @qubo/stylekit on the storefront). */

@@ -10,6 +10,8 @@ export type Storefront = {
   host: string;
   client: StorefrontClient;
   site: LayoutResponse["site"];
+  seo: LayoutResponse["seo"];
+  business: LayoutResponse["business"];
   header: LayoutResponse["header"];
   footer: LayoutResponse["footer"];
   theme: Theme | undefined;
@@ -82,6 +84,8 @@ export const getStorefront = cache(async (host: string): Promise<Storefront | nu
         host,
         client,
         site: layout.site,
+        seo: layout.seo,
+        business: layout.business,
         header: layout.header,
         footer: layout.footer,
         theme: parseTheme(layout.theme, host),

@@ -565,6 +565,22 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    injection); scripts run from a shell must POST `/api/revalidate` signed
    with `.qubo/revalidate.secret` by hand, otherwise the storefront serves the
    old theme for up to 300 s.
+36. **Structured data and Business & SEO (ds6d).** `site_settings` gains
+   `phone`, `email`, `business_type`, `opening_hours` (jsonb rules
+   `{days, opens, closes}`), `latitude`, `longitude` (migration 0019); the
+   organisation row already held legal name, numbers and address. Admin:
+   Settings > Business & SEO (`settings/business`) edits both rows in one
+   three-way-merged form (`businessSpec`, hours expanded to seven rows by
+   `lib/opening-hours.ts`) and calls `notifyRevalidate`. API `/render/layout`
+   returns `seo {title, description}` and `business`; product detail returns
+   `metaTitle`, `metaDescription`, `categories`. Storefront `lib/seo.tsx`:
+   `siteLd` (Organization + WebSite + LocalBusiness subtype, only with an
+   address) in the layout, `productLd` (Offer / AggregateOffer, availability
+   from tracked stock) and `breadcrumbLd` on routes. Title rule in
+   `viewMetadata`: `<page> | <site title>`, home alone. Nothing is inferred:
+   empty settings fields are omitted from the JSON-LD. Known: the old HM home
+   still carries an FAQ block with placeholder answers (rebuilt in ds6e), and
+   legacy products with tracked stock 0 announce `OutOfStock` (products fix).
 
 ## Roadmap
 
