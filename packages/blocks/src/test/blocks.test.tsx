@@ -215,7 +215,7 @@ describe("puck & AI contracts", () => {
     // builder-only art is hidden for merchants
     expect(hero.fields.section.objectFields.art).toBeUndefined();
     const schemeOptions = hero.fields.section.objectFields.scheme.options.map((o: any) => o.value);
-    expect(schemeOptions).toEqual(expect.arrayContaining(["", "ice", "polar-night"]));
+    expect(schemeOptions).toEqual(expect.arrayContaining(["", "paper", "plate", "graphite"]));
     expect(config.categories?.sections?.components).toContain("Hero");
   });
 

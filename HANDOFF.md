@@ -551,6 +551,20 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    counts. Slug and domains stay reserved while in the bin so a restore is
    exact. Gap: a purge cascades the `asset` rows but leaves the files in
    storage. Live sites cannot be deleted yet (needs the typed-name guard).
+35. **HM Froid Inox theme (ds6c).** `packages/stylekit/src/themes/hm-froid.ts`
+   replaces the Arctic look under the same `hm-froid` id: cobalt accent,
+   `paper` / `plate` / `graphite` / `cobalt` schemes, Barlow Condensed +
+   Barlow, radius 3, inset `plate-edge` shadow. Rule: steel is never a flat
+   grey; it only shows up through gradients (`brushed`, `polished`,
+   `brushed-lines`). Stylekit additions: gradient kind `stripes`
+   (`repeating-linear-gradient`, px `size`), built-in `brushed-lines`,
+   `Shadow.inset`. Section chrome (`packages/blocks/src/core/chrome.tsx`) has a
+   `background.texture` second gradient layer. Admin theme editor: Stripes
+   kind with Period slider, Inset toggle. Published to the HM site as theme
+   revision 2. Dev quirk: `notifyRevalidate` only works inside qd (env
+   injection); scripts run from a shell must POST `/api/revalidate` signed
+   with `.qubo/revalidate.secret` by hand, otherwise the storefront serves the
+   old theme for up to 300 s.
 
 ## Roadmap
 

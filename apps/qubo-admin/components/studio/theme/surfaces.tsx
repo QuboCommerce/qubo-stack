@@ -9,7 +9,7 @@ import { Group, SliderField, uniqueSlug } from "./controls";
 import { AddButton, duplicateIn, NameInput, PaintField, PresetRows, type ThemeUpdate } from "./design-controls";
 import { ThemeScope } from "./preview";
 
-const kindLabel: Record<Gradient["kind"], string> = { linear: "Linear", radial: "Radial", conic: "Conic" };
+const kindLabel: Record<Gradient["kind"], string> = { linear: "Linear", radial: "Radial", conic: "Conic", stripes: "Stripes" };
 
 /** A themed box painted with the compiled `[data-gradient]` rule, so it is the real output. */
 export function GradientSwatch({ theme, mode, id, className, children }: { theme: Theme; mode: Mode; id: string; className?: string; children?: React.ReactNode }) {
@@ -50,7 +50,7 @@ export function GradientsPage({ theme, update, mode }: { theme: Theme; update: T
           const id = uniqueSlug("gradient", list.map((g) => g.id));
           setList((l) => [
             ...l,
-            { id, name: "New gradient", kind: "linear", angle: 180, x: 50, y: 0, stops: [{ role: "primary", alpha: 0.2, at: 0 }, { role: "background", alpha: 0, at: 100 }] },
+            { id, name: "New gradient", kind: "linear", angle: 180, x: 50, y: 0, size: 4, stops: [{ role: "primary", alpha: 0.2, at: 0 }, { role: "background", alpha: 0, at: 100 }] },
           ]);
           setOpen(id);
         }}
@@ -79,7 +79,8 @@ function GradientEditor({ theme, mode, gradient: g, onChange, onBack }: { theme:
           {gradientKinds.map((k) => <ToggleGroupItem key={k} value={k} className="flex-1 text-xs">{kindLabel[k]}</ToggleGroupItem>)}
         </ToggleGroup>
         {g.kind !== "radial" && <SliderField label="Angle" value={g.angle} min={0} max={360} step={5} format={(v) => `${v}°`} onChange={(angle) => set({ angle }, "angle")} />}
-        {g.kind !== "linear" && (
+        {g.kind === "stripes" && <SliderField label="Period" value={g.size} min={2} max={64} format={(v) => `${v}px`} onChange={(size) => set({ size }, "size")} />}
+        {g.kind !== "linear" && g.kind !== "stripes" && (
           <div className="grid grid-cols-2 gap-3">
             <SliderField label="Centre X" value={g.x} min={0} max={100} format={(v) => `${v}%`} onChange={(x) => set({ x }, "x")} />
             <SliderField label="Centre Y" value={g.y} min={0} max={100} format={(v) => `${v}%`} onChange={(y) => set({ y }, "y")} />
