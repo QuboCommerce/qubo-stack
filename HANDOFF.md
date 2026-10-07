@@ -682,6 +682,25 @@ agent opens stays inside the open project. Ali opens a window on the
 project only, with `node_modules`, `.next`, `.turbo` and `dist` excluded
 from scanning.
 
+### 42. Section kits: HM Froid as a Puck replica of a hand-made page (ds6h, 2026-10-07)
+
+Ali iterated the HM Froid landing page with Manus and asked for an exact
+replica in Puck. The generic library could not express it (custom grid
+rhythms, metal plates, a mega menu with video, a diagonal logo drift), so
+Qubo gained section kits: a block family with its own CSS, icons and
+runtime, turned on by `theme.kits`. The Manus CSS is ported mechanically
+(`scripts/kits/port-css.mjs`: prefix, scope, token mapping, overrides)
+instead of rewritten, and the blocks mirror its DOM with every string,
+link and image as a field, so the page stays editable and the CSS stays
+diffable against the source. Kit blocks are hidden from the Add section
+dialog unless the theme turns the kit on. Fixed along the way: the
+primary-language `basePath` was `/`, which made every local link a
+protocol-relative `//path` (and SEO URLs `//products`); library images
+now keep the kit's aspect ratios; kit themes load every declared font
+weight. Known gaps: no WebGL shader, about 109 KB of kit CSS inline, kit
+media sourced from `ref-material/` at build time. See "Section kits" in
+`docs/storefront.md` and 4a in `docs/plans/hm-froid.md`.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

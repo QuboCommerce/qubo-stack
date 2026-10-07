@@ -8,6 +8,7 @@ import { siteChromeSections } from "./sections/site";
 import { commerceSections } from "./sections/commerce";
 import { accountSections } from "./sections/account";
 import { chatBlocks } from "./sections/chat";
+import { ChapterMasthead, chapterSections } from "./kits/chapters";
 
 export * from "./elements";
 export * from "./layout";
@@ -22,6 +23,8 @@ export { useCart, CartCount, ClearCart, type CartLine } from "./cart";
 export { header, headerFields, SectionHeader, type HeaderValue } from "./sections/header";
 export { iconNames, iconSet, IconGlyph } from "./icons";
 export { blockCss } from "./styles";
+export * from "./kits/chapters";
+export { kitCss, sectionKits, themeHasKit, type SectionKit } from "./kits";
 
 /** Every block in the universal library, in drawer order. */
 export const library = [
@@ -34,6 +37,8 @@ export const library = [
   ...commerceSections,
   ...accountSections,
   ...chatBlocks,
+  ChapterMasthead,
+  ...chapterSections,
   ...layoutBlocks,
   ...elementBlocks,
 ];

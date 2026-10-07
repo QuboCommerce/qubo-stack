@@ -22,6 +22,7 @@ export function AddSectionDialog({
   capabilities,
   insertAfter,
   themeName,
+  kits,
   onInsert,
 }: {
   open: boolean;
@@ -31,13 +32,16 @@ export function AddSectionDialog({
   /** Label of the section the new one goes after; null = end of page. */
   insertAfter: string | null;
   themeName?: string;
+  /** Section kits the theme turns on. */
+  kits?: readonly string[];
   onInsert: (entry: SectionEntry) => void;
 }) {
   const [tab, setTab] = useState<Tab>("library");
   const [group, setGroup] = useState<SectionGroupId | "all">("all");
   const [query, setQuery] = useState("");
 
-  const catalog = useMemo(() => sectionCatalog(registry, capabilities), [capabilities]);
+  const kitKey = (kits ?? []).join(",");
+  const catalog = useMemo(() => sectionCatalog(registry, capabilities, kitKey ? kitKey.split(",") : []), [capabilities, kitKey]);
   const q = query.trim().toLowerCase();
   const matches = catalog.filter((e) => (!q || q.split(/\s+/).every((w) => e.search.includes(w))) && (group === "all" || e.group === group));
   // Available sections first inside each group; locked ones stay discoverable.

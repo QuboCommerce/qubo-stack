@@ -42,8 +42,11 @@ function presetIsDefault(def: BlockDefinition, props: Record<string, unknown>) {
   return Object.entries(props).every(([k, v]) => same(defaults[k], v));
 }
 
-/** One entry per section and per distinct preset, grouped and capability-checked. */
-export function sectionCatalog(registry: BlockRegistry, capabilities: readonly string[]): SectionEntry[] {
+/**
+ * One entry per section and per distinct preset, grouped and capability-checked.
+ * Kit sections appear only when the theme turns their kit on.
+ */
+export function sectionCatalog(registry: BlockRegistry, capabilities: readonly string[], kits: readonly string[] = []): SectionEntry[] {
   const caps = new Set(capabilities);
   const groupOf = (name: string): SectionGroupId =>
     sectionGroups.find((g) => (g.blocks as readonly string[]).includes(name))?.id ?? "more";
@@ -51,6 +54,7 @@ export function sectionCatalog(registry: BlockRegistry, capabilities: readonly s
   const entries: SectionEntry[] = [];
   for (const def of registry.list()) {
     if (def.kind !== "section") continue;
+    if (def.kit && !kits.includes(def.kit)) continue;
     const missing = (def.requires ?? []).filter((c) => !caps.has(c));
     const base = {
       type: def.name,

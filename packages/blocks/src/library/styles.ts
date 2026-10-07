@@ -17,8 +17,9 @@ export const blockCss = /* css */ `
   background: color-mix(in oklab, var(--qb-text) 4%, transparent);
 }
 .qb-media-placeholder { display: block; aspect-ratio: var(--qb-media-aspect, 1/1); border-radius: var(--qb-radius-md); background: color-mix(in oklab, var(--qb-text) 8%, transparent); }
-[data-theme] img, [data-theme] video { max-width: 100%; display: block; }
-[data-theme] :where(h1, h2, h3, h4, p, figure, blockquote, ul, ol) { margin: 0; }
+/* Section kits bring their own element rules; :not(:where()) keeps these resets out without adding specificity. */
+[data-theme] img:not(:where([data-kit] *)), [data-theme] video:not(:where([data-kit] *)) { max-width: 100%; display: block; }
+[data-theme] :where(h1, h2, h3, h4, p, figure, blockquote, ul, ol):not(:where([data-kit] *)) { margin: 0; }
 
 /* ---- layout ------------------------------------------------------------ */
 .qb-stack { display: flex; flex-direction: var(--qb-dir, column); min-width: 0; }

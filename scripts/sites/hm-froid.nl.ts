@@ -640,4 +640,324 @@ export const nl: Record<string, string> = {
   "Page introuvable": "Pagina niet gevonden",
   "Matériel horeca d'occasion": "Tweedehands horecamateriaal",
   "Rachat de matériel horeca": "Overname van horecamateriaal",
+
+  // ---- chapters home, header and footer ----
+  "Aller au contenu":
+    "Naar de inhoud",
+  "Anderlecht, Bruxelles":
+    "Anderlecht, Brussel",
+  "Depuis 2008":
+    "Sinds 2008",
+  "Lun–Ven 9h–18h · Sam 10h–16h":
+    "Ma–vr 9u–18u · Za 10u–16u",
+  "Matériel horeca · Anderlecht":
+    "Horecamateriaal · Anderlecht",
+  "Explorer les rayons":
+    "Bekijk de afdelingen",
+  "Occasions & rachat":
+    "Tweedehands & overname",
+  "Nous contacter":
+    "Contacteer ons",
+  "Les rayons":
+    "De afdelingen",
+  "Un projet ?":
+    "Een project?",
+  "La solution":
+    "De oplossing",
+  "HM Froid.":
+    "HM Froid.",
+  "Le matériel qui vous convient.\nOn vous aide à le trouver.":
+    "Het materiaal dat bij u past.\nWij helpen u het te vinden.",
+  "HM Froid, C’est *Le* Catalogue Professionnel.":
+    "HM Froid, *Dé* Professionele Catalogus.",
+  "Plaque d’inox sous une lumière bleue et un voile de vapeur froide":
+    "Inox plaat onder blauw licht en een sluier van koude damp",
+  "Parler à HM Froid":
+    "Spreek met HM Froid",
+  "Parcourir tout le catalogue":
+    "Doorblader de volledige catalogus",
+  "Besoin d’un conseil ?":
+    "Advies nodig?",
+  "sous-catégories":
+    "subcategorieën",
+  "Familles de produits":
+    "Productfamilies",
+  "Le froid professionnel, selon votre activité.":
+    "Professionele koeling, afgestemd op uw zaak.",
+  "Les postes de cuisson et les gammes modulaires.":
+    "Kookposten en modulaire reeksen.",
+  "Surfaces de travail et équipements inox.":
+    "Werkvlakken en inox uitrusting.",
+  "Les outils qui préparent le service.":
+    "Het gereedschap dat de service voorbereidt.",
+  "Lavage, ventilation, bar et équipements spécialisés.":
+    "Vaat, ventilatie, bar en gespecialiseerde uitrusting.",
+  "Matériel de seconde main, déstockage et reprise.":
+    "Tweedehands materiaal, uitverkoop en overname.",
+  "Matériel d’occasion":
+    "Tweedehands materiaal",
+  "Afficher nos partenaires":
+    "Toon onze partners",
+  "Replier nos partenaires":
+    "Verberg onze partners",
+  "Logo Angelo Forni":
+    "Logo Angelo Forni",
+  "Du matériel professionnel pour celles et ceux qui font le service.":
+    "Professioneel materiaal voor wie elke dag de service draait.",
+  "Comment choisir":
+    "Hoe kiezen",
+  "Questions pratiques":
+    "Praktische vragen",
+  "Appeler HM Froid":
+    "Bel HM Froid",
+  "© HM Froid · Anderlecht":
+    "© HM Froid · Anderlecht",
+  "À Anderlecht depuis 2008":
+    "In Anderlecht sinds 2008",
+  "Retour en haut ↑":
+    "Terug naar boven ↑",
+  "HM Froid, matériel horeca neuf et d’occasion à Bruxelles":
+    "HM Froid, nieuw en tweedehands horecamateriaal in Brussel",
+  "Du bon\nmatériel.\n*Pour un service\n[qui tourne.]*":
+    "Goed\nmateriaal.\n*Voor een service\n[die draait.]*",
+  "Un poste à remplacer, une cuisine à équiper ? Trouvez le matériel qui convient à votre activité, à votre espace et à votre budget. Comparez le neuf et l’occasion, puis échangez avec HM Froid avant de choisir.":
+    "Een toestel vervangen, een keuken inrichten? Vind het materiaal dat past bij uw zaak, uw ruimte en uw budget. Vergelijk nieuw en tweedehands en overleg met HM Froid voor u kiest.",
+  "Matériel neuf et d’occasion":
+    "Nieuw en tweedehands materiaal",
+  "D’occasion":
+    "Tweedehands",
+  "Parcourir le catalogue":
+    "Doorblader de catalogus",
+  "Parler de mon besoin":
+    "Mijn noden bespreken",
+  "Aperçu du matériel HM Froid":
+    "Overzicht van het materiaal van HM Froid",
+  "HM Froid · Anderlecht":
+    "HM Froid · Anderlecht",
+  "{n} sur {total}":
+    "{n} van {total}",
+  "Choisir une image ou un film":
+    "Kies een beeld of een film",
+  "Élément précédent":
+    "Vorige",
+  "Élément suivant":
+    "Volgende",
+  "Ligne de cuisson professionnelle en acier inoxydable, prête pour le service":
+    "Professionele kooklijn in roestvrij staal, klaar voor de service",
+  "Cuisson, du poste au service":
+    "Koken, van toestel tot service",
+  "Afficher la ligne de cuisson":
+    "Toon de kooklijn",
+  "Plan de travail inox et matériel de préparation dans une cuisine professionnelle":
+    "Inox werkblad en voorbereidingsmateriaal in een professionele keuken",
+  "L’inox au travail":
+    "Inox aan het werk",
+  "Afficher la préparation inox":
+    "Toon de inox voorbereiding",
+  "Équipements horeca d’occasion présentés dans un espace professionnel":
+    "Tweedehands horecamateriaal opgesteld in een professionele ruimte",
+  "Une seconde vie, un nouvel usage":
+    "Een tweede leven, een nieuwe taak",
+  "Afficher les équipements d’occasion":
+    "Toon het tweedehands materiaal",
+  "L’inox, la lumière et la vapeur froide":
+    "Inox, licht en koude damp",
+  "Voir le film inox et vapeur froide":
+    "Bekijk de film over inox en koude damp",
+  "Des repères concrets pour votre choix":
+    "Concrete ijkpunten voor uw keuze",
+  "Un showroom au cœur de Bruxelles":
+    "Een showroom in hartje Brussel",
+  "Neuf & occasion":
+    "Nieuw & tweedehands",
+  "Deux façons de trouver le bon équipement":
+    "Twee manieren om het juiste toestel te vinden",
+  "Plus de 3 900 produits":
+    "Meer dan 3 900 producten",
+  "Pour les professionnels de l’Horeca":
+    "Voor de horecaprofessional",
+  "Les contraintes du terrain":
+    "De realiteit op de werkvloer",
+  "Quand le matériel\n*freine le service.*":
+    "Als het materiaal\n*de service afremt.*",
+  "Une dimension oubliée, une capacité mal adaptée, un budget engagé au mauvais endroit. Le choix se fait une fois. Ses conséquences se retrouvent à chaque service.":
+    "Een vergeten afmeting, een capaciteit die niet klopt, budget op de verkeerde plek. U kiest één keer. De gevolgen voelt u bij elke service.",
+  "La place est déjà comptée.":
+    "Elke vierkante meter telt.",
+  "Un poste trop encombrant peut grignoter la surface de préparation et compliquer les déplacements. Les bonnes dimensions comptent autant que la référence.":
+    "Een te groot toestel snoept werkruimte af en maakt het rondlopen lastiger. De juiste afmetingen tellen even zwaar als de referentie.",
+  "Le service, lui, n’attend pas.":
+    "De service wacht niet.",
+  "Un appareil mal adapté à votre cadence peut devenir le point de blocage de toute une ligne. Partez de votre usage réel, pas seulement d’une fiche produit.":
+    "Een toestel dat uw tempo niet volgt, kan een hele lijn ophouden. Vertrek van hoe u echt werkt, niet alleen van een productfiche.",
+  "Le budget doit rester utile.":
+    "Uw budget moet renderen.",
+  "Tout remplacer n’est pas toujours la priorité. Un besoin précis mérite un choix précis, en considérant aussi bien le neuf que l’occasion.":
+    "Alles vervangen is niet altijd de prioriteit. Een precieze nood vraagt een precieze keuze, met nieuw én tweedehands in het achterhoofd.",
+  "Le point de départ ?":
+    "Het vertrekpunt?",
+  "Votre espace, votre cadence, votre budget.":
+    "Uw ruimte, uw tempo, uw budget.",
+  "Trouver mon rayon":
+    "Vind mijn afdeling",
+  "Le catalogue":
+    "De catalogus",
+  "Trouvez votre\n*confort*":
+    "Vind uw\n*comfort*",
+  "Conserver, cuire, préparer ou remplacer un poste. Entrez par ce que vous avez besoin de faire, puis comparez les équipements.":
+    "Bewaren, koken, voorbereiden of een toestel vervangen. Start bij wat u moet doen en vergelijk dan de toestellen.",
+  "Armoire réfrigérée professionnelle dans un environnement horeca":
+    "Professionele koelkast in een horecazaak",
+  "Conservez, exposez et organisez vos produits au froid.":
+    "Bewaar, toon en organiseer uw producten koel.",
+  "Cuisson & fours":
+    "Koken & ovens",
+  "Composez une ligne de cuisson adaptée à votre carte.":
+    "Stel een kooklijn samen die bij uw kaart past.",
+  "Inox & préparation":
+    "Inox & voorbereiding",
+  "Faites place à la préparation, au lavage et au rangement.":
+    "Maak plaats voor voorbereiding, afwas en opberging.",
+  "Occasions & déstockage":
+    "Tweedehands & uitverkoop",
+  "Explorez la seconde main pour votre prochain équipement.":
+    "Ontdek tweedehands voor uw volgende toestel.",
+  "Équipement horeca d’occasion présenté dans un espace professionnel":
+    "Tweedehands horecatoestel opgesteld in een professionele ruimte",
+  "Une autre voie":
+    "Een andere weg",
+  "Votre budget compte.\n*Votre besoin aussi.*":
+    "Uw budget telt.\n*Uw noden ook.*",
+  "Ouvrir, remplacer, compléter : vous n’investissez pas pour les mêmes raisons. Comparez le neuf, les occasions et les fins de série selon ce dont votre cuisine a réellement besoin. Et si un appareil n’a plus sa place chez vous, explorez aussi la possibilité d’un rachat.":
+    "Openen, vervangen, aanvullen: u investeert niet altijd om dezelfde reden. Vergelijk nieuw, tweedehands en eindereeksen volgens wat uw keuken echt nodig heeft. En heeft een toestel bij u geen plaats meer, bekijk dan ook of wij het kunnen overnemen.",
+  "Stock et disponibilités évoluent. Consultez les annonces en ligne ou contactez l’équipe.":
+    "Voorraad en beschikbaarheid veranderen. Bekijk het aanbod online of contacteer het team.",
+  "Les métiers de bouche":
+    "De voedingsberoepen",
+  "Chaque métier,\n*[son équipement.]*":
+    "Elk vak,\n*[zijn uitrusting.]*",
+  "Vous ne préparez pas les mêmes produits, ni au même rythme. Entrez par votre métier pour trouver un premier point de départ.":
+    "U bereidt niet dezelfde producten, en niet aan hetzelfde tempo. Start bij uw vak voor een eerste vertrekpunt.",
+  "Friteuses, cuisson & froid":
+    "Friteuses, koken & koeling",
+  "Préparation, inox & froid":
+    "Voorbereiding, inox & koeling",
+  "Du froid à la cuisson":
+    "Van koeling tot koken",
+  "Boulangerie & pâtisserie":
+    "Bakkerij & patisserie",
+  "Fours, préparation & froid":
+    "Ovens, voorbereiding & koeling",
+  "Pour le rythme du métier":
+    "Op het ritme van het vak",
+  "Préparer.\n*[Ranger.] [Faire place.]*":
+    "Voorbereiden.\n*[Opbergen.] [Plaats maken.]*",
+  "Un plan de travail dégagé, des ustensiles à portée, un rangement qui suit vos gestes. Tables, plonges, étagères et chariots vous permettent de composer des postes autour de votre façon de travailler.":
+    "Een vrij werkblad, gerei binnen handbereik, opberging die uw bewegingen volgt. Met werktafels, spoeltafels, rekken en wagens bouwt u posten rond uw manier van werken.",
+  "Explorer l’inox neutre":
+    "Bekijk het inox werkmateriaal",
+  "Équipements inox":
+    "Inox uitrusting",
+  "Services HM Froid":
+    "Diensten van HM Froid",
+  "Le service continue":
+    "De service loopt door",
+  "Après le choix,\n*[la suite compte.]*":
+    "Na de keuze\n*[telt wat volgt.]*",
+  "Pensez aussi au trajet jusqu’à votre cuisine. La livraison est proposée : convenez avec l’équipe des modalités pour votre équipement et vos accès.":
+    "Denk ook aan de weg tot in uw keuken. Levering is mogelijk: overleg met het team over de levering van uw toestel en de toegang tot uw zaak.",
+  "Un besoin de réparation après l’achat ? Vous avez un interlocuteur à contacter. HM Froid propose un service après-vente : échangez avec l’équipe sur les possibilités.":
+    "Een herstelling nodig na aankoop? U hebt een vast aanspreekpunt. HM Froid biedt dienst na verkoop: bespreek de mogelijkheden met het team.",
+  "Anderlecht · Bruxelles":
+    "Anderlecht · Brussel",
+  "Mieux voir.\n*Mieux choisir.*":
+    "Beter zien.\n*Beter kiezen.*",
+  "Une fiche produit ne montre pas tout. Venez découvrir le matériel et poser vos questions au showroom d’Anderlecht. Une référence précise en tête ? Appelez avant votre visite pour vérifier sa disponibilité.":
+    "Een productfiche toont niet alles. Kom het materiaal bekijken en stel uw vragen in de showroom in Anderlecht. Hebt u een referentie in gedachten? Bel voor uw bezoek om te checken of ze beschikbaar is.",
+  "Itinéraire vers HM Froid":
+    "Route naar HM Froid",
+  "HM Froid · Showroom":
+    "HM Froid · Showroom",
+  "Avenue Raymond Vanderbruggen 18–20\n1070 Anderlecht, Bruxelles":
+    "Raymond Vanderbruggenlaan 18–20\n1070 Anderlecht, Brussel",
+  "Lundi – vendredi":
+    "Maandag – vrijdag",
+  "9h – 18h":
+    "9u – 18u",
+  "10h – 16h":
+    "10u – 16u",
+  "Du besoin au choix":
+    "Van nood tot keuze",
+  "Et maintenant ?":
+    "En nu?",
+  "Pas besoin d’avoir déjà une référence en tête. Commencez par ce qui vous manque et les contraintes de votre cuisine.":
+    "U hoeft nog geen referentie in gedachten te hebben. Begin bij wat u mist en bij de beperkingen van uw keuken.",
+  "Repérez votre besoin.":
+    "Bepaal wat u nodig hebt.",
+  "Un appareil à remplacer, un poste à compléter ? Explorez le rayon qui vous concerne et notez vos dimensions, votre usage et votre budget.":
+    "Een toestel vervangen, een post aanvullen? Bekijk de afdeling die u aanbelangt en noteer uw afmetingen, uw gebruik en uw budget.",
+  "Parlons de votre cuisine.":
+    "Laten we over uw keuken praten.",
+  "Appelez l’équipe ou passez au showroom avec vos mesures et vos questions. Si une référence vous intéresse, vérifiez sa disponibilité avant de vous déplacer.":
+    "Bel het team of kom langs in de showroom met uw afmetingen en vragen. Interesseert een referentie u, check dan of ze beschikbaar is voor u zich verplaatst.",
+  "Appeler l’équipe":
+    "Bel het team",
+  "Choisissez avec les bons repères.":
+    "Kies op basis van feiten.",
+  "Confirmez les caractéristiques, la disponibilité et les conditions applicables. Si vous avez besoin d’une livraison, convenez de la suite avec HM Froid.":
+    "Bevestig de kenmerken, de beschikbaarheid en de voorwaarden. Hebt u levering nodig, spreek dan het vervolg af met HM Froid.",
+  "Préparer ma visite":
+    "Mijn bezoek voorbereiden",
+  "Avant de\n*vous décider.*":
+    "Voor u\n*beslist.*",
+  "Les points à clarifier pour choisir en connaissance de cause. Une question sur votre situation ? Parlons-en directement.":
+    "Wat u best uitklaart om met kennis van zaken te kiezen. Een vraag over uw situatie? Laten we er rechtstreeks over praten.",
+  "Poser ma question":
+    "Mijn vraag stellen",
+  "Comment choisir entre neuf et occasion ?":
+    "Hoe kies ik tussen nieuw en tweedehands?",
+  "Partez de votre usage, des dimensions disponibles et de votre budget. HM Froid propose les deux possibilités. Comparez les caractéristiques des références qui vous intéressent et faites confirmer leur disponibilité avant de décider.":
+    "Vertrek van uw gebruik, de beschikbare ruimte en uw budget. HM Froid biedt beide. Vergelijk de kenmerken van de referenties die u interesseren en laat de beschikbaarheid bevestigen voor u beslist.",
+  "Puis-je voir le matériel avant de choisir ?":
+    "Kan ik het materiaal zien voor ik kies?",
+  "Vous pouvez passer au showroom, Avenue Raymond Vanderbruggen 18–20 à Anderlecht, du lundi au vendredi de 9h à 18h et le samedi de 10h à 16h. Pour un équipement précis, appelez d’abord afin de vérifier sa disponibilité.":
+    "U kunt langskomen in de showroom, Raymond Vanderbruggenlaan 18–20 in Anderlecht, van maandag tot vrijdag van 9u tot 18u en op zaterdag van 10u tot 16u. Zoekt u een specifiek toestel, bel dan eerst om de beschikbaarheid te checken.",
+  "Une livraison est-elle possible ?":
+    "Is levering mogelijk?",
+  "HM Froid propose la livraison de matériel. Contactez l’équipe pour confirmer les modalités, les frais éventuels, les accès et le délai pour l’équipement qui vous intéresse.":
+    "HM Froid levert materiaal. Contacteer het team om de voorwaarden, eventuele kosten, de toegang en de termijn te bevestigen voor het toestel dat u interesseert.",
+  "Et si j’ai besoin d’une réparation ?":
+    "En als ik een herstelling nodig heb?",
+  "HM Froid propose un service après-vente pour les réparations. Expliquez votre besoin à l’équipe afin de vérifier les possibilités et les modalités.":
+    "HM Froid biedt dienst na verkoop voor herstellingen. Leg uw probleem uit aan het team, zodat we de mogelijkheden en voorwaarden kunnen nagaan.",
+  "J’ai du matériel à vendre. Puis-je le faire reprendre ?":
+    "Ik heb materiaal te koop. Kunt u het overnemen?",
+  "HM Froid propose le rachat de matériel horeca d’occasion. Présentez votre équipement à l’équipe pour savoir si une reprise est envisageable et en discuter les modalités.":
+    "HM Froid koopt tweedehands horecamateriaal over. Stel uw toestel voor aan het team om te horen of een overname mogelijk is en om de voorwaarden te bespreken.",
+  "Que préparer avant de contacter HM Froid ?":
+    "Wat houd ik klaar voor ik HM Froid contacteer?",
+  "Vos dimensions, l’usage prévu, votre budget et, si vous en avez une, la référence repérée. Pour une livraison, pensez aussi aux accès à votre établissement. Ces informations rendent l’échange plus concret.":
+    "Uw afmetingen, het geplande gebruik, uw budget en, als u er een hebt, de referentie die u gezien hebt. Voor een levering denkt u best ook aan de toegang tot uw zaak. Met die informatie wordt het gesprek concreter.",
+  "Un besoin précis ?":
+    "Een concrete vraag?",
+  "Évoluez\n*dans l’horeca*":
+    "Groei verder\n*in de horeca*",
+  "Un poste à remplacer ou un projet plus large ? Parlons de votre activité, de vos contraintes et de ce qui vous manque. Le premier pas, c’est un échange concret.":
+    "Een toestel vervangen of een groter project? Vertel ons over uw zaak, uw beperkingen en wat u mist. De eerste stap is een concreet gesprek.",
+  "Ou venir au showroom":
+    "Of kom naar de showroom",
+  // Single words the brand-name heuristic would otherwise skip.
+  Neuf: "Nieuw",
+  Rayons: "Afdelingen",
+  Showroom: "Showroom",
+  Menu: "Menu",
+  Fermer: "Sluiten",
+  Samedi: "Zaterdag",
+  Livraison: "Levering",
+  Confidentialité: "Privacy",
+  Préparer: "Voorbereiden",
+  Ranger: "Opbergen",
+  Laver: "Spoelen",
+  Déplacer: "Verplaatsen",
+  "NOS PARTENAIRES": "ONZE PARTNERS",
 };

@@ -200,6 +200,7 @@ undertone in the steel highlights and as the single accent.
 | ds6d-seo (done 2026-10-06) | `LocalBusiness`, `Product`, `BreadcrumbList`, `Organization` JSON-LD in `viewMetadata` / render; title pattern; sitemap includes collections and pages | curl the HTML, validate with the schema.org validator |
 | ds6e-build (done 2026-10-06) | header, footer, home, occasions, rachat, 4 trade pages, brands, contact, qui sommes-nous, livraison et paiement, garantie et SAV, 3 legal, plan du site; product and collection templates restyled; copy humanized; **waits for Ali's images** | taste review from `qubo-design-language`; Lighthouse SEO 100, a11y 95+; Ali review |
 | ds6f-hero (done 2026-10-06, go) | `SteelReveal` experiment | screenshot go/no-go |
+| ds6h-cobalt (done 2026-10-07) | replica of the Manus "Cobalt Chapters" landing page (I11) as the `chapters` section kit: 13 blocks, ported CSS, runtime, line icons, theme kit assets; header, home and footer rebuilt from `hm-froid.chapters.ts`; Dutch for all of it | desktop 1440 and mobile 390 screenshots match the reference height (8897 px desktop); menu, tabs, carousel, FAQ, partner drift checked in Playwright; Studio renders the kit |
 | ds6g-locale (done 2026-10-06) | storefront locale routing (`/nl/...` prefix for non-default locales, `<html lang>`, `hreflang` and `x-default` in sitemap and head, locale-aware URL helpers in `@qubo/shared`), Dutch overlays for every HM page and the header/footer, nl-BE product and collection names where the catalogue has them, language switch in the header | Playwright: `/nl/` renders Dutch, `/` renders French, hreflang pairs validate; native-register review of the Dutch copy |
 
 Order: ds6a, ds6c, ds6d, ds6b, ds6e, ds6f, ds6g. ds6c before ds6b so the Create page dialog is
@@ -209,6 +210,15 @@ the French. Products fix (descriptions, duplicate roots, category slugs) runs in
 own plan and is a prerequisite for the collection pages to rank; the trade pages work without it.
 
 Effort: ds6a one session; ds6b one; ds6c half; ds6d half; ds6e two; ds6f half; ds6g one.
+
+## 4a. Cobalt Chapters: what the replica left out
+
+- The WebGL "metal light" shader on the steel interlude; the section keeps the parallax.
+- The Manus cookie consent mock and the "Versions" explorer (prototype tooling).
+- Kit media is uploaded by the build script from `ref-material/manus-landingpage/`, which is
+  outside the repo; a rebuild on another machine needs that folder or the assets already in the
+  media library (matched by file name).
+- The other HM pages still use the Inox theme blocks; they share the chapters header and footer.
 
 ## 5. Out of scope here
 
