@@ -40,3 +40,6 @@ coverage/
 
 # Per-machine dev runner overrides (scripts/dev/qd)
 .qubo/
+
+# Agent scratch (ad hoc scripts, screenshots, dumps)
+.scratch/

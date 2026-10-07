@@ -670,6 +670,18 @@ are shared across languages, two-letter page slugs at the root are
 unreachable, and the Studio has no UI yet for page-level or site-level
 translations (the Languages settings note says so).
 
+### 41. Agent scratch lives in `.scratch/` (2026-10-07)
+
+Agents used to write ad hoc scripts and screenshots to `/tmp` and open
+them to check results. Zed's agent follow mode added each file as a
+project folder, saved them on the client, and rescanned them on every
+reconnect; together with a `/` worktree that walked `/proc` this ran the
+dev box out of memory. Scratch now goes to the gitignored `.scratch/` at
+the repo root (AGENTS.md hard rule, `qubo-e2e-testing`), so whatever an
+agent opens stays inside the open project. Ali opens a window on the
+project only, with `node_modules`, `.next`, `.turbo` and `dist` excluded
+from scanning.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub
