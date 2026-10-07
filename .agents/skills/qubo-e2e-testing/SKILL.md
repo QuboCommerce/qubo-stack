@@ -6,8 +6,9 @@ description: Verifying Qubo in a real browser with Playwright against the dev ho
 # End-to-end verification
 
 No Playwright test suite is committed yet; verification scripts are written ad hoc and run
-against the live `qd` services. Keep them in `/tmp/shots` (never in the repo) unless a
-reusable suite is being added.
+against the live `qd` services. Keep them and their screenshots in `.scratch/shots` (gitignored,
+never `/tmp`: files outside the repo end up as editor folders) unless a reusable suite is being
+added. Run them from the repo root so `playwright-core` resolves from `node_modules`.
 
 ## Setup
 
