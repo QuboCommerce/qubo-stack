@@ -4,3 +4,4 @@ export * from "./site";
 export * from "./nav";
 export * from "./media";
 export * from "./canvas";
+export * from "./chapters";

@@ -75,6 +75,8 @@ export type BlockInput<F extends FieldMap> = {
   /** Bump when the props shape changes and add a migration. */
   version?: number;
   requires?: Capability[];
+  /** Section kit this block belongs to; offered only when the theme turns the kit on. */
+  kit?: string;
   fields: F;
   presets?: BlockPreset<F>[];
   /** version → upgrade props from (version - 1) to version. */

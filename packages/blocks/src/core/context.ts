@@ -78,7 +78,9 @@ export function resolveMedia(media: MediaValue | null | undefined, meta: RenderM
 export function localHref(path: string, meta: RenderMetadata): string {
   const base = meta.basePath ?? "";
   if (!base || !path.startsWith("/") || path.startsWith("//")) return path;
-  return path === "/" ? base : `${base}${path}`;
+  if (path === "/") return base;
+  // Home anchors and queries sit on the prefix itself: `/#faq` → `/nl#faq`.
+  return path[1] === "#" || path[1] === "?" ? `${base}${path.slice(1)}` : `${base}${path}`;
 }
 
 export function resolveLink(link: LinkValue | null | undefined, meta: RenderMetadata): string | undefined {

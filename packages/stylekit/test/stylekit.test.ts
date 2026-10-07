@@ -136,6 +136,26 @@ describe("compile", () => {
     expect(url).toBe("https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400&display=swap");
   });
 
+  it("loads every declared weight when the theme turns on a kit", () => {
+    const url = googleFontsUrl(
+      defineTheme({
+        ...minimal,
+        kits: [{ id: "chapters" }],
+        typeset: {
+          fonts: [{ id: "m", family: "Manrope", source: "google", weights: [400, 500, 600, 700, 800] }],
+          roles: {
+            display: { font: "m", weight: 700 },
+            heading: { font: "m", weight: 700 },
+            body: { font: "m", weight: 400 },
+            accent: { font: "m", weight: 700 },
+            mono: { font: "m", weight: 400 },
+          },
+        },
+      }),
+    );
+    expect(url).toBe("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+  });
+
   it("emits scoped tokens, schemes and buttons", () => {
     const { css, hash } = compileTheme(defineTheme(minimal));
     expect(css).toContain('[data-theme="mini"] {');

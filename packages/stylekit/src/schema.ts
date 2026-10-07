@@ -466,6 +466,19 @@ export const EffectsSchema = z.object({
 });
 export type Effects = z.infer<typeof EffectsSchema>;
 
+// ------------------------------------------------------------------- kits ---
+
+/**
+ * A section kit the theme turns on: an art-directed block family with its own
+ * stylesheet (see `@qubo/blocks` kits). `assets` fill the kit's image
+ * variables, keyed by the names the kit declares.
+ */
+export const KitRefSchema = z.object({
+  id: slug,
+  assets: z.record(z.string(), BrandAssetSchema).default({}),
+});
+export type KitRef = z.infer<typeof KitRefSchema>;
+
 // ------------------------------------------------------------------ theme ---
 
 export const FlavorRefSchema = z.object({
@@ -494,6 +507,7 @@ export const ThemeSchema = z.object({
   decor: z.array(DecorSchema).default(() => builtInDecor.map((d) => DecorSchema.parse(d))),
   effects: EffectsSchema.default(() => EffectsSchema.parse({})),
   flavor: FlavorRefSchema.default(FlavorRefSchema.parse({})),
+  kits: z.array(KitRefSchema).default([]),
 });
 export type Theme = z.infer<typeof ThemeSchema>;
 export type ThemeInput = z.input<typeof ThemeSchema>;

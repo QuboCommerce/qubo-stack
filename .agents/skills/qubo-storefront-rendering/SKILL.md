@@ -42,6 +42,10 @@ footer, templates and pages through the Studio API and is the reference for a ne
 4. Test in `packages/blocks/src/test/` (`bun test`) and render it on
    `https://hm-froid.dev.by-ali.dev`.
 
+A block that only makes sense with a bespoke design belongs in a section kit
+(`library/kits/<kit>/`, `kit: "<kit>"` on the definition, CSS ported by `scripts/kits/port-css.mjs`).
+See "Section kits" in `docs/storefront.md`.
+
 ## Theme
 
 `@qubo/stylekit`: `defineTheme` validates, `compile` emits `--qb-*` custom properties. The

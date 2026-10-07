@@ -842,6 +842,7 @@ function StudioLayout({
         capabilities={site.capabilities}
         insertAfter={addAt?.after ?? null}
         themeName={theme?.name}
+        kits={theme?.kits?.map((k) => k.id)}
         onInsert={insertSection}
       />
 

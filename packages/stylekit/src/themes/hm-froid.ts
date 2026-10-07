@@ -1,11 +1,10 @@
 import { builtInGradients, defineTheme } from "../schema";
 
 /**
- * HM Froid "Inox": the site takes its material from the catalogue. White,
- * chrome and black carry the page; cobalt is the single accent (links,
- * eyebrows, status, at most one band per page) carried over from the old
- * blue. Steel is never a flat fill, only the `brushed` and `polished`
- * gradients on a `plate` section, so it reads as metal and not as grey.
+ * HM Froid "Cobalt Chapters": mineral paper, graphite and brushed inox, with
+ * cobalt as the rim light and two full cobalt chapters on the landing page
+ * (trades and FAQ). Steel is never a flat fill: it is the inox texture or the
+ * `brushed`/`polished` gradients, so it reads as metal and not as grey.
  */
 export const hmFroidTheme = defineTheme({
   id: "hm-froid",
@@ -13,16 +12,19 @@ export const hmFroidTheme = defineTheme({
   description: "Brushed stainless steel, graphite and paper white with a single cobalt accent. Sharp but safe: 3px radius, hairline borders.",
   modeStrategy: "light",
   palette: [
-    { id: "cobalt", name: "Cobalt", group: "brand", locked: true, value: "oklch(0.47 0.17 258)", description: "The one accent: links, eyebrows, status and a single band per page. Inherits the old HM blue. Never a button fill on paper." },
+    { id: "cobalt", name: "Cobalt", group: "brand", locked: true, value: "#155bc2", description: "The one accent: links, eyebrows, status and a single band per page. Inherits the old HM blue. Never a button fill on paper." },
+    { id: "cobalt-dark", name: "Cobalt dark", group: "brand", value: "#0e438f", description: "Pressed and shadow side of cobalt; the deep end of the cobalt chapters." },
     { id: "cobalt-light", name: "Cobalt light", group: "brand", value: "oklch(0.8 0.08 255)", description: "Links and eyebrows on graphite." },
-    { id: "steel", name: "Steel", group: "accent", value: "oklch(0.82 0.004 240)", description: "Plate background. Only ever shown through the brushed or polished gradient." },
-    { id: "steel-dark", name: "Steel dark", group: "accent", value: "oklch(0.6 0.005 240)", description: "Shadow side of the plate; borders on steel." },
+    { id: "steel", name: "Steel", group: "accent", value: "#c6ceca", description: "Plate background. Only ever shown through the brushed or polished gradient." },
+    { id: "steel-dark", name: "Steel dark", group: "accent", value: "#8b908c", description: "Shadow side of the plate; borders on steel." },
     { id: "chrome", name: "Chrome", group: "accent", value: "oklch(0.95 0.002 235)", description: "Highlight sweep on steel; raised surfaces on the plate." },
-    { id: "paper", name: "Paper", group: "neutral", value: "oklch(0.98 0.002 230)", description: "Page background. Off-white, a breath cooler than paper." },
+    { id: "paper", name: "Paper", group: "neutral", value: "#f2f4f2", description: "Page background: a cool mineral off-white." },
+    { id: "paper-bright", name: "Paper bright", group: "neutral", value: "#fafbfa", description: "Lifted bands on paper: catalogue, showroom." },
     { id: "paper-card", name: "Paper card", group: "neutral", value: "oklch(1 0 0)", description: "Cards and inputs on paper: true white." },
     { id: "line", name: "Hairline", group: "neutral", value: "oklch(0.88 0.004 240)", description: "Borders on paper." },
-    { id: "ash", name: "Ash", group: "neutral", value: "oklch(0.46 0.008 250)", description: "Muted text on paper." },
-    { id: "graphite", name: "Graphite", group: "neutral", value: "oklch(0.19 0.006 250)", description: "Body text; dark bands (hero plinth, footer)." },
+    { id: "ash", name: "Ash", group: "neutral", value: "#70756f", description: "Muted text on paper." },
+    { id: "graphite", name: "Graphite", group: "neutral", value: "#202321", description: "Body text; dark bands (utility bar, footer)." },
+    { id: "ink-soft", name: "Ink soft", group: "neutral", value: "#414541", description: "The second line of a heading, set in a lighter graphite." },
     { id: "graphite-raised", name: "Graphite raised", group: "neutral", value: "oklch(0.26 0.006 250)", description: "Cards on graphite." },
     { id: "graphite-line", name: "Graphite line", group: "neutral", value: "oklch(0.35 0.006 250)", description: "Borders on graphite." },
   ],
@@ -127,15 +129,15 @@ export const hmFroidTheme = defineTheme({
   defaultScheme: "paper",
   typeset: {
     fonts: [
-      { id: "barlow-condensed", family: "Barlow Condensed", fallback: "'Arial Narrow', sans-serif", source: "google", weights: [400, 500, 600, 700] },
-      { id: "barlow", family: "Barlow", fallback: "system-ui, sans-serif", source: "google", weights: [400, 500, 600, 700] },
+      { id: "barlow-condensed", family: "Barlow Condensed", fallback: "'Arial Narrow', sans-serif", source: "google", weights: [600, 700] },
+      { id: "manrope", family: "Manrope", fallback: "Arial, sans-serif", source: "google", weights: [400, 500, 600, 700, 800] },
     ],
     roles: {
-      display: { font: "barlow-condensed", weight: 600, tracking: 0.01, lineHeight: 0.95, uppercase: true },
+      display: { font: "barlow-condensed", weight: 700, tracking: 0.01, lineHeight: 0.95, uppercase: true },
       heading: { font: "barlow-condensed", weight: 600, tracking: 0, lineHeight: 1.1 },
-      body: { font: "barlow", weight: 400, lineHeight: 1.55 },
-      accent: { font: "barlow", weight: 600, tracking: 0.1, lineHeight: 1.4, uppercase: true },
-      mono: { font: "barlow", weight: 500 },
+      body: { font: "manrope", weight: 400, lineHeight: 1.65 },
+      accent: { font: "manrope", weight: 700, tracking: 0.1, lineHeight: 1.4, uppercase: true },
+      mono: { font: "manrope", weight: 500 },
     },
     scale: { baseMin: 16, baseMax: 18, ratioMin: 1.2, ratioMax: 1.3 },
   },
@@ -194,4 +196,6 @@ export const hmFroidTheme = defineTheme({
     ],
   },
   flavor: { id: "grounded" },
+  // The landing page is built from the "chapters" kit; the build script fills its assets.
+  kits: [{ id: "chapters" }],
 });

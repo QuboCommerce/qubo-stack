@@ -1,5 +1,6 @@
 import type { Theme, Transition } from "@qubo/stylekit";
 import { inSchedule, startEffects } from "./effects";
+import { startChapters } from "./chapters";
 import { startMedia } from "./media";
 import { startNav } from "./nav";
 import { createTransition, type TransitionRun, type TransitionTheme } from "./transition";
@@ -184,7 +185,7 @@ export function mayArriveCovered(theme: Pick<Theme, "motion"> | undefined): bool
 export function startSiteRuntime(win: Window, theme: TransitionTheme | undefined): () => void {
   const doc = win.document;
   const reduced = win.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const stops: (() => void)[] = [startNav(doc), startMedia(doc)];
+  const stops: (() => void)[] = [startNav(doc), startMedia(doc), startChapters(doc)];
 
   // A scheduled site-wide effect is rendered hidden; switch it on inside its window.
   doc.querySelectorAll<HTMLElement>('[data-effect-scope="page"][data-effect-schedule]').forEach((el) => {

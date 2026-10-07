@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { createStorefrontClient, QuboApiError, type LayoutResponse, type StorefrontClient } from "@qubo/storefront";
 import { defineTheme, type Theme } from "@qubo/stylekit";
-import { languageLabel, languageOf, localizePath, splitLocalePath } from "@qubo/shared/locale-url";
+import { languageLabel, languageOf, localePrefix, localizePath, splitLocalePath } from "@qubo/shared/locale-url";
 import { devSiteHosts, siteTargets } from "./hosts";
 import { GATE_PATH, PREVIEW_HEADER } from "./preview";
 
@@ -133,7 +133,7 @@ export const getStorefront = cache(async (host: string): Promise<Storefront | nu
         maintenance: layout.maintenance?.active ? layout.maintenance : null,
         locale,
         primaryLocale,
-        basePath: localizePath("/", locale, primaryLocale),
+        basePath: localePrefix(locale, primaryLocale),
         locales: [...served].sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary)),
       };
     } catch (error) {

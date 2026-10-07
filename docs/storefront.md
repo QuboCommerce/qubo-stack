@@ -53,6 +53,9 @@ the locale as `x-qubo-lang`; `getStorefront` turns it into `sf.locale`, `sf.base
 
 - Secondary-language pages are reached by their translated slug (`/nl/levering-en-betaling`);
   the primary slug under a prefix 308s to it. A translated title wins over an untranslated meta title.
+- `RenderMetadata.basePath` is `""` for the primary language and `/<lang>` otherwise (it was `/`,
+  which turned local links into protocol-relative `//path` URLs). `localHref` maps `/#id` to
+  `<base>#id` so home anchors work in every language.
 - `RenderMetadata.basePath` and `localHref` prefix every link a block builds (`resolveLink`,
   header brand, search, account, cart). `metadata.links` maps `page:<slug>` to the localized path.
 - `<html lang>`, `og:locale`, `BreadcrumbList` and `inLanguage` follow `sf.locale`; `<head>`
@@ -155,6 +158,31 @@ the storefront 404s on them and 302s `/admin*` to the panel. The panel opens the
 `/api/media/<org>/<asset>.<ext>` serves media-library files straight from storage (`@qubo/storage`
 `serveMedia`), so block and product image URLs are relative and work on every host of a site. Files
 are immutable (a new upload gets a new id) and cached for a year.
+
+## Section kits
+
+A section kit is a family of blocks that carries its own CSS, icons and behaviour, for a design
+that the generic library cannot express. The first is `chapters` (HM Froid "Cobalt Chapters", a
+port of a hand-made landing page). Files live in `packages/blocks/src/library/kits/<kit>/`.
+
+- **Turned on per theme.** `theme.kits` lists `{ id, assets }`; `assets` maps names used by the
+  kit CSS (`inox-grain`) to media ids. `ThemeStyles` emits the kit CSS only when the theme lists
+  the kit, and the Studio's Add section dialog hides kit blocks otherwise (`def.kit`,
+  `sectionCatalog(registry, capabilities, kits)`).
+- **CSS is ported, not hand-written.** `node scripts/kits/port-css.mjs scripts/kits/<kit>.port.mjs
+  <source.css>` prefixes every class with `qb-<short>-`, scopes it under `[data-kit="<kit>"]`,
+  maps the source palette and fonts to theme tokens, appends `overrides.css` and writes
+  `styles.ts`. Edit `overrides.css` or the port config, never `styles.ts`; regenerate after.
+- **Markup mirrors the source DOM** so the ported CSS applies unchanged; every visible string,
+  link and image is a Puck field. Text used in an attribute (`aria-label`, `data-*`) is
+  `inline: false`.
+- **Behaviour** (menu, carousel, partner drift, reveals, parallax) is `runtime/<kit>.ts`, started
+  by `runtime/site.ts` only when the page holds a kit section. It does not run in the Studio, so
+  reveals stay visible there and Puck's inline-text span is reset in `overrides.css`.
+- **Theme fonts.** A theme with a kit loads every weight its Google fonts declare, because kit CSS
+  picks weights outside the type roles (`googleFontsUrl`).
+- Known costs: the kit CSS is about 109 KB inline per page that uses it; the source's WebGL metal
+  shader is not ported (`[data-ch-steel]` is parallax only).
 
 ## Maintenance
 

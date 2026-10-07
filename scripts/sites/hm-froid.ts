@@ -36,6 +36,7 @@ import {
   type Scope,
 } from "@qubo/studio";
 import { nl, nlPages } from "./hm-froid.nl";
+import { chapterFooterDoc, chapterHomeDoc, chapterMedia, mastheadDoc } from "./hm-froid.chapters";
 
 const SITE_SLUG = process.env.HM_FROID_SITE_SLUG || "hm-froid";
 const NL = "nl-BE";
@@ -148,257 +149,6 @@ async function findMedia(orgId: string, filenamePrefix: string): Promise<Media |
 }
 
 // -------------------------------------------------------------- documents ---
-
-function headerDoc(logo?: Media): DocumentData {
-  const froid = [
-    ["Armoires réfrigérées négatives", "armoires-refrigerees-negatives"],
-    ["Armoires réfrigérées positives", "armoire-refrigerees-positives"],
-    ["Tables réfrigérées", "table-refrigeree"],
-    ["Vitrines réfrigérées", "vitrine"],
-    ["Comptoirs réfrigérés", "comptoirs-refrigeres"],
-    ["Chambres froides", "chambres-froides"],
-    ["Machines à glaçons", "machine-a-glacons"],
-    ["Congélateurs bahuts", "congelateur-bahut"],
-    ["Cellules de refroidissement", "cellule-de-congelation-rapide"],
-    ["Arrières de bar", "arrieres-de-bar"],
-    ["Caves à vin", "caves-a-vin"],
-  ];
-  const cuisson = [
-    ["Gamme MBM Minima 600", "gamme-mbm-minima-600"],
-    ["Gamme MBM Domina 700", "gamme-mbm-domina-700"],
-    ["Gamme MBM Domina 900", "gamme-mbm-domina-900"],
-    ["Friteuses", "friteuse"],
-    ["Plaques à snacker", "plaque-a-snacker"],
-    ["Salamandres", "salamandre"],
-    ["Bains-marie", "cuisson-bain-marie"],
-    ["Crêpières et gaufriers", "crepiere"],
-    ["Marmites et sauteuses", "marmite"],
-  ];
-  const inox = [
-    ["Tables", "tables"],
-    ["Plonges", "plonge"],
-    ["Armoires murales", "armoire-mural"],
-    ["Étagères", "etagere-mural"],
-    ["Chariots", "inox-neutre-chariot"],
-    ["Armoires chauffantes", "armoire-chauffante"],
-  ];
-  const prep = [
-    ["Trancheuses", "trancheuse"],
-    ["Hachoirs", "hachoir"],
-    ["Coupe-légumes", "coupe-legumes"],
-    ["Cutters", "cutter-professionnel-gargano"],
-    ["Robot-Coupe", "robot-coupe"],
-    ["Sous-videuses", "sous-videuse"],
-    ["Batteurs", "batteur"],
-    ["Scies à os", "scie-a-os"],
-  ];
-  const more = [
-    ["Fours", "fours"],
-    ["Ventilation", "ventilation"],
-    ["Lavage", "lavage"],
-    ["Cafétéria et bar", "cafeteria-bar"],
-    ["Pizzeria et pasta", "pizzeria-pasta"],
-    ["Grills et toasters", "grill-toaster"],
-    ["Rôtissoires et gyros", "rotissoire-gyros"],
-    ["Balances", "balances"],
-    ["Déstockage", "destockage"],
-  ];
-  const children = (rows: string[][]) => rows.map(([label, handle]) => ({ label, link: collectionLink(handle!) }));
-  return {
-    root: { props: {} },
-    content: [
-      section("SiteHeader", {
-        logo: logo ?? { alt: "" },
-        name: company.brand,
-        pattern: "bar-mega",
-        stacked: true,
-        megaColumns: 3,
-        sticky: true,
-        links: [
-          { label: "Froid commercial", link: collectionLink("froid-commercial"), children: children(froid) },
-          { label: "Cuisson", link: collectionLink("cuisson"), children: children(cuisson) },
-          { label: "Inox neutre", link: collectionLink("inox-neutre"), children: children(inox) },
-          { label: "Préparation", link: collectionLink("preparation"), children: children(prep) },
-          { label: "Autres rayons", link: collectionLink("all"), children: children(more) },
-          {
-            label: "Occasions et rachat",
-            link: pageLink("materiel-horeca-occasion"),
-            children: [
-              { label: "Matériel d'occasion", link: pageLink("materiel-horeca-occasion"), description: "Révisé en atelier, garanti 6 mois" },
-              { label: "Déstockage", link: collectionLink("destockage"), description: "Neuf à prix réduit, fins de série" },
-              { label: "Rachat de votre matériel", link: pageLink("rachat-materiel-horeca"), description: "Estimation sur photos, enlèvement organisé" },
-            ],
-          },
-        ],
-        showSearch: true,
-        searchPlaceholder: "Rechercher parmi 3 900 produits",
-        showAccount: true,
-        accountLabel: "Mon profil",
-        showCart: true,
-        ctaLabel: "Demander un devis",
-        ctaLink: pageLink("contact"),
-        ...chrome({ width: "wide" }),
-      }),
-    ],
-  };
-}
-
-function footerDoc(logo?: Media): DocumentData {
-  const col = (title: string, links: [string, Link][]) => ({ title, links: links.map(([label, link]) => ({ label, link })) });
-  return {
-    root: { props: {} },
-    content: [
-      section("SiteFooter", {
-        logo: logo ?? { alt: "" },
-        name: company.brand,
-        blurb: `Matériel horeca neuf et d'occasion à Anderlecht depuis ${company.since}. Froid commercial, cuisson, inox et préparation pour les professionnels de bouche.`,
-        columns: [
-          col("Boutique", [
-            ["Froid commercial", collectionLink("froid-commercial")],
-            ["Cuisson", collectionLink("cuisson")],
-            ["Inox neutre", collectionLink("inox-neutre")],
-            ["Préparation", collectionLink("preparation")],
-            ["Tous les rayons", collectionLink("all")],
-            ["Occasions", pageLink("materiel-horeca-occasion")],
-          ]),
-          col("Métiers", [
-            ["Friterie", pageLink("friterie")],
-            ["Boucherie", pageLink("boucherie")],
-            ["Restaurant", pageLink("restaurant")],
-            ["Boulangerie et pâtisserie", pageLink("boulangerie-patisserie")],
-            ["Marques", pageLink("marques")],
-          ]),
-          col("Informations", [
-            ["Qui sommes-nous", pageLink("qui-sommes-nous")],
-            ["Livraison et paiement", pageLink("livraison-et-paiement")],
-            ["Garantie et SAV", pageLink("garantie-et-sav")],
-            ["Rachat de matériel", pageLink("rachat-materiel-horeca")],
-            ["Questions fréquentes", pageLink("questions-frequentes")],
-            ["Plan du site", pageLink("plan-du-site")],
-          ]),
-          col("Légal", [
-            ["Mentions légales", pageLink("mentions-legales")],
-            ["Politique de confidentialité", pageLink("politique-de-confidentialite")],
-            ["Conditions générales", pageLink("conditions-generales")],
-          ]),
-        ],
-        email: company.email,
-        phone: company.phone,
-        address: `${company.street}\n${company.city}\n${company.hours}`,
-        legal: `© {year} ${company.legal} TVA ${company.vat}.`,
-        ...chrome({ scheme: "graphite", width: "wide" }),
-      }),
-    ],
-  };
-}
-
-function homeDoc(hero?: Media, split?: Media): DocumentData {
-  const rayons: [string, string, string][] = [
-    ["Froid commercial", "froid-commercial", "Armoires, tables, vitrines, chambres froides, machines à glaçons."],
-    ["Cuisson", "cuisson", "Fourneaux, friteuses, plaques et gammes modulaires MBM et Bertos."],
-    ["Inox neutre", "inox-neutre", "Tables, plonges, étagères et armoires en acier inoxydable."],
-    ["Préparation", "preparation", "Trancheuses, hachoirs, cutters, sous-videuses, Robot-Coupe."],
-    ["Fours", "fours", "Fours mixtes, à convection et à pizza."],
-    ["Ventilation", "ventilation", "Hottes, moteurs et filtres pour la cuisine."],
-    ["Lavage", "lavage", "Lave-vaisselle, lave-verres et plonges."],
-    ["Cafétéria et bar", "cafeteria-bar", "Machines à café, presse-agrumes, arrières de bar."],
-  ];
-  const trades: [string, string, string, string][] = [
-    ["Friterie", "friterie", "flame", "Friteuses haut rendement, bacs à frites, tables réfrigérées."],
-    ["Boucherie", "boucherie", "beef", "Vitrines, trancheuses, hachoirs, scies à os, chambres froides."],
-    ["Restaurant", "restaurant", "chef-hat", "Fourneaux, fours, tables réfrigérées, lave-vaisselle, inox."],
-    ["Boulangerie et pâtisserie", "boulangerie-patisserie", "croissant", "Vitrines, batteurs, armoires et cellules de refroidissement."],
-  ];
-  return {
-    root: { props: { title: "HM Froid, matériel horeca neuf et d'occasion à Bruxelles" } },
-    content: [
-      section("SteelReveal", {
-        media: hero ?? { alt: "" },
-        interiorScheme: "graphite",
-        scrollLength: "medium",
-        cabinetHeight: "80vh",
-        handles: true,
-        scrollHint: "Faites défiler",
-        content: [
-          eyebrow(`Anderlecht, depuis ${company.since}`, { icon: "map-pin", align: "center" }),
-          h1("Matériel horeca professionnel, neuf et d'occasion", { size: "5", align: "center", balance: true, decor: { preset: "accent", match: "neuf et d'occasion", ranges: [] } }),
-          text(`<p>Froid commercial, cuisson, inox et préparation : ${company.catalogue} pour la restauration, les friteries, les boucheries et les commerces de bouche.</p>`, { size: "1", align: "center" }),
-          node("ButtonGroup", { align: "center", gap: "xs", buttons: [button("Voir le catalogue", collectionLink("all"), "primary", { icon: "arrow-right", iconPosition: "end" }), button("Demander un devis", pageLink("contact"), "outline")] }),
-        ],
-        ...chrome({ scheme: "plate", width: "full", spacingTop: "none", spacingBottom: "none", background: { gradient: "brushed", texture: "brushed-lines" } }),
-      }),
-      section("CardGrid", {
-        header: { eyebrow: "Nos rayons", title: "Tout l'équipement d'une cuisine professionnelle", intro: "Du neuf garanti et de l'occasion révisée en atelier. Chaque rayon se visite aussi au showroom.", align: "start", titleSize: "4" },
-        columns: { base: 1, md: 2, lg: 4 },
-        cards: rayons.map(([title, handle, blurb]) =>
-          node("Card", { look: "outline", hover: "lift", padding: "md", link: collectionLink(handle), content: [heading(title, { level: "h3", size: "2", font: "heading" }), text(`<p>${blurb}</p>`, { size: "-1", tone: "muted" })] }),
-        ),
-        ...chrome({ spacingTop: "2xl", spacingBottom: "lg" }),
-      }),
-      section("ProductGrid", {
-        header: { eyebrow: "Froid commercial", title: "Armoires, tables et vitrines réfrigérées", intro: "", cta: { label: "Tout le froid commercial", link: collectionLink("froid-commercial") }, align: "start", titleSize: "4" },
-        source: "collection",
-        collection: "froid-commercial",
-        limit: 8,
-        columns: { base: 2, md: 3, lg: 4 },
-        emptyText: "Le rayon se remplit. Appelez-nous pour le stock du moment.",
-        ...chrome({ spacingTop: "lg", spacingBottom: "2xl" }),
-      }),
-      section("SplitMedia", {
-        media: split ?? { alt: "" },
-        mediaPosition: "start",
-        mediaAspect: "3/2",
-        mediaRadius: "sm",
-        content: [
-          eyebrow("Neuf et occasion"),
-          heading("Du neuf garanti, de l'occasion révisée", { size: "4", font: "display" }),
-          p("Le matériel neuf est garanti un an pièces pour un usage professionnel. Les occasions passent par notre atelier avant la vente et sont garanties six mois. Nous reprenons aussi votre ancien matériel."),
-          list(["Garantie 1 an sur le neuf, 6 mois sur l'occasion", "Révision en atelier avant chaque vente d'occasion", "Reprise et rachat de votre matériel actuel"]),
-          buttons(button("Voir les occasions", pageLink("materiel-horeca-occasion"), "primary"), button("Faire reprendre mon matériel", pageLink("rachat-materiel-horeca"), "ghost")),
-        ],
-        ...chrome({ scheme: "paper", spacingTop: "2xl", spacingBottom: "2xl" }),
-      }),
-      section("FeatureGrid", {
-        header: { eyebrow: "Par métier", title: "Équiper votre commerce", intro: "Une sélection par activité, avec les rayons qui comptent pour chacune.", align: "start", titleSize: "4" },
-        items: trades.map(([title, slug, icon, blurb]) => ({ icon, title, text: blurb, link: pageLink(slug) })),
-        columns: { base: 1, md: 2, lg: 4 },
-        look: "card",
-        ...chrome({ spacingTop: "2xl", spacingBottom: "2xl" }),
-      }),
-      section("Process", {
-        header: { eyebrow: "Comment ça se passe", title: "De la demande à la mise en service", intro: "", align: "start", titleSize: "4" },
-        layout: "horizontal",
-        steps: [
-          { title: "Choisir", text: "En ligne parmi plus de 3 900 références ou au showroom d'Anderlecht, du lundi au samedi.", icon: "search" },
-          { title: "Devis et commande", text: "Un devis clair, HTVA. Acompte de 40 % à la commande, solde avant la livraison.", icon: "file-text" },
-          { title: "Livraison ou retrait", text: "Livraison assurée partout en Belgique, offerte dès 1 500 € HTVA. Retrait au dépôt en semaine.", icon: "truck" },
-          { title: "Service après-vente", text: "Atelier et interventions du lundi au vendredi. Pièces et conseils pour la durée de vie du matériel.", icon: "wrench" },
-        ],
-        ...chrome({ scheme: "plate", width: "wide", spacingTop: "2xl", spacingBottom: "2xl", background: { gradient: "polished" } }),
-      }),
-      section("Marquee", {
-        items: brands.map(([name]) => ({ text: name })),
-        separator: "dot",
-        size: "2",
-        speed: "slow",
-        ...chrome({ spacingTop: "lg", spacingBottom: "lg" }),
-      }),
-      section("Faq", {
-        header: { eyebrow: "Questions fréquentes", title: "Avant d'acheter", intro: "", align: "start", titleSize: "4" },
-        layout: "side",
-        openFirst: true,
-        items: [
-          { question: "Vendez-vous aux particuliers ?", answer: "Non. HM Froid s'adresse aux professionnels : restaurants, friteries, boucheries, boulangeries, collectivités et revendeurs. Les prix sont affichés hors TVA." },
-          { question: "Installez-vous le matériel ?", answer: "Nous livrons et mettons le matériel à disposition sur place. Le raccordement eau, gaz ou électricité est à prévoir avec votre installateur." },
-          { question: "Quelle garantie sur une occasion ?", answer: "Six mois pour un usage professionnel, après révision en atelier. Le neuf est garanti un an pièces." },
-          { question: "Peut-on venir voir avant d'acheter ?", answer: `Oui, le showroom d'Anderlecht est ouvert du lundi au vendredi de 9h à 18h et le samedi de 10h à 16h.` },
-        ],
-        ...chrome({ spacingTop: "2xl", spacingBottom: "2xl" }),
-      }),
-      contactBand(),
-    ],
-  };
-}
 
 function collectionDoc(all: boolean): DocumentData {
   return {
@@ -946,32 +696,36 @@ async function main() {
   console.log(`HM Froid build on ${s.slug} (${s.id})`);
   await ensureDutch(s.id);
 
-  // Theme: push the code version into the live theme row.
+  // Kit media (photos, film, mark, partner logos) is uploaded once and reused.
+  const userId = process.env.HM_FROID_USER_ID || (await db.select().from(asset).where(eq(asset.organizationId, s.organizationId)).limit(1))[0]?.createdById;
+  if (!userId) throw new Error("no uploader: set HM_FROID_USER_ID");
+  const kit = await chapterMedia(s.organizationId, s.id, userId);
+
+  // Theme: push the code version into the live theme row, with the kit's grain texture.
   const [t] = await db.select().from(theme).where(and(eq(theme.siteId, s.id), eq(theme.isActive, true))).limit(1);
   if (t) {
     const current = await getTheme(scope, t.id);
-    await saveThemeDraft(scope, { id: t.id, data: hmFroidTheme, baseVersion: current.draftVersion });
+    const data = { ...hmFroidTheme, kits: [{ id: "chapters", assets: { "inox-grain": kit.texture } }] };
+    await saveThemeDraft(scope, { id: t.id, data, baseVersion: current.draftVersion });
     await publishTheme(scope, { id: t.id, label: "Inox: chrome, white, graphite" });
     console.log(`  published theme ${t.name}`);
   }
 
-  const logo = await findMedia(s.organizationId, "logo-hmfroid");
-  const hero = await findMedia(s.organizationId, "armoire-refrigeree");
   const split = await findMedia(s.organizationId, "cellule-refroidissement");
-  if (!hero || !split) console.warn("  hero/split images missing from the media library; sections keep an empty media slot");
+  if (!split) console.warn("  split image missing from the media library; sections keep an empty media slot");
 
   // Header and footer.
   const groups = await db.select().from(sectionGroup).where(eq(sectionGroup.siteId, s.id));
   const header = groups.find((g) => g.kind === "header");
   const footer = groups.find((g) => g.kind === "footer");
-  if (header) await writeDocument(scope, header.documentId, "header", headerDoc(logo));
-  if (footer) await writeDocument(scope, footer.documentId, "footer", footerDoc(logo));
+  if (header) await writeDocument(scope, header.documentId, "header", mastheadDoc(kit));
+  if (footer) await writeDocument(scope, footer.documentId, "footer", chapterFooterDoc(kit));
 
   // Templates.
   const templates = await db.select().from(template).where(eq(template.siteId, s.id));
   const tpl = (kind: string) => templates.find((x) => x.resourceKind === kind && (x.handle === "default" || !x.handle));
   const docs: [string, DocumentData][] = [
-    ["home", homeDoc(hero, split)],
+    ["home", chapterHomeDoc(kit)],
     ["collection", collectionDoc(false)],
     ["collection_list", collectionDoc(true)],
     ["product", productDoc()],

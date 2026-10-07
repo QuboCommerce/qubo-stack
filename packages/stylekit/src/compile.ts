@@ -121,7 +121,8 @@ export type CompileOptions = {
 
 /**
  * Google Fonts stylesheet for the theme's `google` fonts, requesting only the
- * weights its type roles use (plus 400/700 for body copy and <strong>).
+ * weights its type roles use (plus 400/700 for body copy and <strong>), or
+ * every declared weight when the theme turns on a section kit.
  * Returns null when the theme uses no Google fonts.
  */
 export function googleFontsUrl(theme: Theme): string | null {
@@ -134,6 +135,8 @@ export function googleFontsUrl(theme: Theme): string | null {
     const weights = new Set<number>();
     for (const role of Object.values(theme.typeset.roles)) if (role.font === font.id) weights.add(snap(role.weight));
     if (theme.typeset.roles.body.font === font.id) [400, 700].forEach((w) => weights.add(snap(w)));
+    // Kit CSS sets its own weights, so a kit theme loads every weight the font declares.
+    if (theme.kits?.length && available) available.forEach((w) => weights.add(w));
     if (!weights.size) weights.add(snap(400));
     const list = [...weights].sort((a, b) => a - b).join(";");
     return `family=${encodeURIComponent(font.family).replace(/%20/g, "+")}:wght@${list}`;

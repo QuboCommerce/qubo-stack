@@ -1,0 +1,25 @@
+/* ---- Qubo integration, hand-written and appended after the port ---------- */
+/* Theme tokens drive the kit's brand colour and fonts. */
+:where([data-theme]) {
+  --qb-ch-cobalt: var(--qb-color-cobalt, #155bc2);
+  --qb-ch-cobalt-dark: var(--qb-color-cobalt-dark, #0e438f);
+  --qb-ch-display: var(--qb-font-display, 'Barlow Condensed', 'Arial Narrow', sans-serif);
+  --qb-ch-body: var(--qb-font-body, 'Manrope', Arial, sans-serif);
+}
+:where([data-kit="chapters"]) *, :where([data-kit="chapters"]) *::before, :where([data-kit="chapters"]) *::after { border-color: currentColor; }
+/* The masthead's wrappers step aside so its header sticks for the whole page. */
+.qb-section:has(> .qb-container > .qb-ch-masthead),
+.qb-section:has(> .qb-container > .qb-ch-masthead) > .qb-container,
+.qb-ch-masthead { display: contents; }
+/* Category panels are rendered on the server; only the selected one shows. */
+.qb-ch-mega-menu__category-content[hidden] { display: none; }
+/* Legal links share the footer's bottom line. */
+.qb-ch-site-footer__legal { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+/* Studio only: Puck wraps inline-editable text in a span, which the reference's
+   decorative `.button span` style rules would otherwise restyle. */
+[data-kit="chapters"] span[data-puck-overlay-portal][contenteditable] {
+  display: inline; margin: 0; padding: 0; border: 0; background: none;
+  font: inherit; color: inherit; letter-spacing: inherit; text-transform: inherit;
+  transform: none; transition: none; opacity: 1;
+}

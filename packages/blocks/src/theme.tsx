@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import type { RenderMetadata } from "./core";
 import { pageBlocksNative, pageEffect, pageSettings, type PageSettings } from "./page-settings";
 import { blockCss } from "./library/styles";
+import { kitCss } from "./library/kits";
 
 const cssCache = new WeakMap<Theme, string>();
 
@@ -22,7 +23,7 @@ export function themeCss(theme: Theme, opts?: CompileOptions): string {
  * fonts (e.g. via next/font) pass `fonts={false}`.
  */
 export function ThemeStyles({ theme, includeBase = true, fonts = true }: { theme: Theme; includeBase?: boolean; fonts?: boolean }) {
-  const css = (includeBase ? baseCss + blockCss : "") + themeCss(theme);
+  const css = (includeBase ? baseCss + blockCss : "") + themeCss(theme) + kitCss(theme);
   const href = fonts ? googleFontsUrl(theme) : null;
   return (
     <>
