@@ -465,7 +465,7 @@ await archivePublicPages(urls);
 await archiveProductImages(rows);
 try {
   const suppliedExport = await readFile(
-    join(process.cwd(), "docs", "reference-material", "hmfroid-full-productlist.txt"),
+    join(process.cwd(), ".private", "reference-material", "hmfroid-full-productlist.txt"),
     "utf8",
   );
   await archiveProductImages(parseDelimited(suppliedExport));

@@ -8,7 +8,7 @@ import postgres from "postgres";
 const root = process.cwd();
 const source =
   process.env.HMF_PRODUCT_EXPORT ??
-  join(root, "docs", "reference-material", "hmfroid-full-productlist.txt");
+  join(root, ".private", "reference-material", "hmfroid-full-productlist.txt");
 const archiveRoot =
   process.env.HMF_ARCHIVE_DIR ??
   join(root, ".private", "legacy-archive", "2026-09-18");
