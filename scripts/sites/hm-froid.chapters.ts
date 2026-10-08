@@ -462,7 +462,7 @@ export function chapterFooterDoc(m: ChapterMedia): DocumentData {
         legal: [action("Mentions légales", pg("mentions-legales")), action("Confidentialité", pg("politique-de-confidentialite")), action("Conditions générales", pg("conditions-generales")), action("Plan du site", pg("plan-du-site"))],
         copyright: "© HM Froid · Anderlecht",
         since: "À Anderlecht depuis 2008",
-        top: "Retour en haut ↑",
+        top: "Retour en haut",
         topLink: anchor("#"),
       }),
     ],

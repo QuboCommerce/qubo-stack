@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ArrowLeft, ArrowRight, ArrowUp, ArrowUpRight } from "lucide-react";
 import { f, linkTarget, resolveLink, resolveMedia, textOf, type BlockContext, type LinkValue, type MediaValue } from "../../../core";
 import { IconGlyph } from "../../icons";
 
@@ -55,10 +56,20 @@ export function Marked({ value, phrase = "qb-ch-heading-phrase" }: { value: unkn
   return <>{stack[0]!.kids}</>;
 }
 
-export const Arrow = ({ glyph = "↗" }: { glyph?: string }) => (
+const arrows = { "up-right": ArrowUpRight, left: ArrowLeft, right: ArrowRight, up: ArrowUp } as const;
+
+/** A line arrow sized to the surrounding text (1em), in place of the reference's text glyphs. */
+export const ArrowIcon = ({ dir = "up-right" }: { dir?: keyof typeof arrows }) => {
+  const Glyph = arrows[dir];
+  return <Glyph className="qb-ch-arrow-icon" strokeWidth={2.25} aria-hidden="true" focusable="false" />;
+};
+
+export const Arrow = ({ dir = "up-right" }: { dir?: keyof typeof arrows }) => (
   <>
     {" "}
-    <span aria-hidden="true">{glyph}</span>
+    <span aria-hidden="true">
+      <ArrowIcon dir={dir} />
+    </span>
   </>
 );
 

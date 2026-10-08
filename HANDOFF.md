@@ -701,6 +701,21 @@ weight. Known gaps: no WebGL shader, about 109 KB of kit CSS inline, kit
 media sourced from `ref-material/` at build time. See "Section kits" in
 `docs/storefront.md` and 4a in `docs/plans/hm-froid.md`.
 
+### 43. HM Froid go-live polish (2026-10-08)
+
+Before the site goes live, Ali asked for no sideways scrolling on phones,
+real icons instead of the arrow glyphs, and a lighter hero wash so the
+inox texture shows. Kit sections now clip `overflow-x` (the source's
+reveal offsets overflowed on phones, in the Manus original too); library
+headings break long words with hyphens, for Dutch compounds such as
+"verkoopvoorwaarden". Arrows are lucide icons inside the source's spans.
+The hero wash is a Studio field (`texture`: faint, visible, strong)
+rather than a CSS edit, defaulting to "visible". The storefront also
+tolerates a page without `slugs` (a stale fetch-cache entry from before
+the locale work returned 500s). An audit found every HM image already
+in the media library; the texture lives on `theme.kits` with no Theme
+tab control yet.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

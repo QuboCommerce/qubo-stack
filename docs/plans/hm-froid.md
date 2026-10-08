@@ -219,6 +219,10 @@ Effort: ds6a one session; ds6b one; ds6c half; ds6d half; ds6e two; ds6f half; d
   outside the repo; a rebuild on another machine needs that folder or the assets already in the
   media library (matched by file name).
 - The other HM pages still use the Inox theme blocks; they share the chapters header and footer.
+- Go-live polish (2026-10-08): no horizontal overflow at 360, 390, 768 and 1440 on 77 sampled
+  URLs, arrows as icons, hero texture as a Studio field ("visible" by default). Every image in
+  the HM documents is a library asset; the inox grain is a library asset set on `theme.kits`, with
+  no Theme tab control yet.
 
 ## 5. Out of scope here
 

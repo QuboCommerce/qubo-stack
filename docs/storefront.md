@@ -181,6 +181,14 @@ port of a hand-made landing page). Files live in `packages/blocks/src/library/ki
   reveals stay visible there and Puck's inline-text span is reset in `overrides.css`.
 - **Theme fonts.** A theme with a kit loads every weight its Google fonts declare, because kit CSS
   picks weights outside the type roles (`googleFontsUrl`).
+- **Arrows are icons.** The source's text glyphs (↗ ← → ↑) are lucide arrows (`ArrowIcon` in
+  `shared.tsx`, class `qb-ch-arrow-icon`, 1em), kept inside the original spans so the source's
+  colour and hover rules still apply.
+- **No sideways overflow.** Every kit section clips `overflow-x`, because reveal offsets
+  (`translate3d(23px,...)`) widened the page on phones, in the source too.
+- **Hero texture** (`ChapterHero.texture`: faint, visible, strong) sets `data-ch-texture`, which
+  tunes the grain opacity and the paper wash in `overrides.css`. "faint" is the source; the wash
+  keeps its angle so the headline stays readable.
 - Known costs: the kit CSS is about 109 KB inline per page that uses it; the source's WebGL metal
   shader is not ported (`[data-ch-steel]` is parallax only).
 
