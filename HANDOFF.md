@@ -19,7 +19,7 @@ site switching, but fully owned. A Site has a **type** (`store`, `services`,
 HM Froid and TailG are `store` sites. A fridge and an e-scooter are ~98% the same
 product shape, so a single catalog/variant/pricing model serves both.
 
-- **Repository:** https://github.com/aliaddas/qubo-stack (push via SSH)
+- **Repository:** https://github.com/QuboCommerce/qubo-stack (push via SSH)
 - **Live legacy site being replaced:** hmfroid.be
 
 ## Architecture
@@ -138,7 +138,7 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
 
 1. **No category tree.** `category` and `product_category` are empty. This is
    *not* an importer bug: the ShopApplication export
-   (`docs/reference-material/hmfroid-full-productlist.txt`) has no category
+   (`.private/reference-material/hmfroid-full-productlist.txt`, not in git) has no category
    column at all — only reference, name, VAT, two prices, image, stock, colour.
    The tree **is recoverable**: `.private/legacy-archive/2026-09-18/admin/
    admin_articles_rubriques.php.html` holds 648 hierarchical entries
@@ -718,7 +718,7 @@ tab control yet.
 
 ### 44. HM Froid in production on Mostapha's VPS (2026-10-08)
 
-Prod for HM Catering now runs on Mostapha's VPS (`qubo@141.227.165.96`,
+Prod for HM Catering now runs on Mostapha's VPS (an OVH box,
 the box that also hosts Coolify, tailg.be and the Portal), not on the dev
 VPS. It was a one-time copy: the dev database (`pg_dump -n public -n
 drizzle` with a postgres:17 client, since the host's is v14), the media
@@ -751,6 +751,18 @@ info pages to their new slugs, `googlesitemap.php` to `/sitemap.xml`.
 For the cutover `QUBO_DNS_SERVERS` points at OVH's authoritative servers
 (the A record has a 24 h TTL); remove it from the prod `.env` once the
 domain shows Connected.
+
+### 45. Repository public under QuboCommerce (2026-10-08)
+
+The repo moved to the `QuboCommerce` GitHub org (so it can change hands
+later) and is public under FSL-1.1-MIT (`LICENSE.md`, licensor Ali
+Addas). The ShopApplication product export had reseller prices, purchase
+prices and stock levels, so it was moved to `.private/reference-material/`
+and purged from every commit with `git filter-repo`; all commit hashes
+before this entry changed. Customer content that is already public on the
+site (HM Froid page scripts, themes, company and VAT numbers) stays as a
+showcase. Product photos were never in git: they sit in a host folder
+served by the `legacy-assets` route, not in the media library.
 
 ## Roadmap
 
