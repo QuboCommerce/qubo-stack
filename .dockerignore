@@ -7,3 +7,5 @@
 **/.env
 **/.env.*
 !**/.env.example
+**/*.test.ts
+**/*.test.tsx

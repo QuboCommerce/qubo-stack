@@ -1,0 +1,15 @@
+# Overlay for a server whose edge is Coolify's Traefik (docs/VPS.md, "Qubo routes").
+#   docker compose -f docker-compose.yml -f docker-compose.coolify.yml up -d
+# The proxy polls qubo-elysia for routes and forwards to qubo-admin and qubo-storefront,
+# so those three join Coolify's network. No ports are published and no labels are needed.
+services:
+  qubo-elysia:
+    networks: [qubo-network, coolify]
+  qubo-admin:
+    networks: [qubo-network, coolify]
+  qubo-storefront:
+    networks: [qubo-network, coolify]
+
+networks:
+  coolify:
+    external: true

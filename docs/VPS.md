@@ -136,6 +136,37 @@ sudo -u qubo -i
 git clone git@github.com:aliaddas/qubo-stack.git ~/qubo-stack   # deploy key: ssh-keygen -t ed25519 -C "qubo@$(hostname)"
 ```
 
+## 8. Deploy the instance next to Coolify
+
+What Mostapha's VPS runs (see HANDOFF #44).
+
+1. **Code.** With a deploy key: clone as in step 7. Without one, push from your machine:
+   on the VPS `git init -b main ~/qubo-stack && git -C ~/qubo-stack config
+   receive.denyCurrentBranch updateInstead`, then locally `git remote add <customer>
+   qubo@SERVER_IP:qubo-stack` and `git push <customer> main`.
+2. **`.env`** (chmod 600): fresh `openssl rand -hex 32` for `POSTGRES_PASSWORD`,
+   `BETTER_AUTH_SECRET`, `QUBO_PREVIEW_SECRET`, `QUBO_REVALIDATE_SECRET`, `QUBO_EDGE_TOKEN`;
+   plus `ADMIN_URL`, `QUBO_TRUSTED_ORIGINS`, `QUBO_SERVER_IP`, `LEGACY_ASSET_HOST_PATH` and
+   the Coolify edge values from step 6.
+3. **Build one image at a time** (an 8 GB box runs out of memory building all three):
+   `C="-f docker-compose.yml -f docker-compose.coolify.yml"`, then
+   `docker compose $C build qubo-elysia`, the same for `qubo-storefront` and `qubo-admin`,
+   then `docker compose $C up -d`.
+4. **Data from another instance** (optional): `pg_dump -Fc -n public -n drizzle` with a client
+   of the server's major version, `pg_restore --no-owner --no-privileges` into
+   `qubo-postgres`, then `delete from portal_link; delete from session;`. Copy the media
+   library into the `qubo_media` volume and `chown -R 1001:1001` it.
+5. **Edge.** Coolify's proxy compose is `/data/coolify/proxy/docker-compose.yml` (root only).
+   Without sudo, edit it through a container (`docker run -v /data/coolify/proxy:/x alpine
+   ...`), keep a copy in `backups/`, and recreate the proxy with `docker run -v
+   /var/run/docker.sock:/var/run/docker.sock -v /data/coolify/proxy:/data/coolify/proxy:ro
+   docker:cli compose -f /data/coolify/proxy/docker-compose.yml up -d`. Other sites blip for
+   a few seconds. "Reset to default" in Coolify's proxy page drops the two lines.
+6. **Backups:** `30 3 * * * $HOME/qubo-stack/scripts/backup.sh >> $HOME/backups/backup.log
+   2>&1` in the deploy user's crontab.
+
+Updates later: `git push <customer> main` (or `git pull`), then step 3 for the changed apps.
+
 ## Routine
 
 | Need | Command |
