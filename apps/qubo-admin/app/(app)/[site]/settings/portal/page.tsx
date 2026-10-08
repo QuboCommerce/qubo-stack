@@ -27,7 +27,7 @@ export default async function PortalSettings({ params }: { params: Promise<{ sit
   const { site } = await requireSite(slug);
   const link = await getLink();
   const ent = entitlementsFor(link);
-  const portalUrl = process.env.PORTAL_URL ?? DEFAULT_PORTAL_URL;
+  const portalUrl = process.env.PORTAL_URL || DEFAULT_PORTAL_URL;
 
   const status =
     ent.source === "licence"

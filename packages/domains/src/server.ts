@@ -30,7 +30,8 @@ function dns() {
   if (resolver) return resolver;
   // Public resolvers, not the box's own: a local cache or split-horizon DNS would lie about what visitors see.
   resolver = new Resolver({ timeout: 3000, tries: 2 });
-  const servers = (process.env.QUBO_DNS_SERVERS ?? "1.1.1.1,8.8.8.8").split(",").map((s) => s.trim()).filter(Boolean);
+  // `||`, not `??`: compose passes an unset variable as "", which would leave no servers (ENOSERVER).
+  const servers = (process.env.QUBO_DNS_SERVERS?.trim() || "1.1.1.1,8.8.8.8").split(",").map((s) => s.trim()).filter(Boolean);
   resolver.setServers(servers);
   return resolver;
 }
