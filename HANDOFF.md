@@ -716,6 +716,42 @@ the locale work returned 500s). An audit found every HM image already
 in the media library; the texture lives on `theme.kits` with no Theme
 tab control yet.
 
+### 44. HM Froid in production on Mostapha's VPS (2026-10-08)
+
+Prod for HM Catering now runs on Mostapha's VPS (`qubo@141.227.165.96`,
+the box that also hosts Coolify, tailg.be and the Portal), not on the dev
+VPS. It was a one-time copy: the dev database (`pg_dump -n public -n
+drizzle` with a postgres:17 client, since the host's is v14), the media
+library into the `qubo_media` volume (owned by uid 1001), and the legacy
+product images into `~/qubo-data/legacy-products`. On prod the dev
+`portal_link` and all sessions were deleted, so the instance is unlinked
+(Free plan: TailG Belgium shows as locked until it is linked to
+`portal.qubo.by-ali.dev`). Content edits happen on prod from now on; dev
+holds a stale copy and is free for test data.
+
+Routing goes through Coolify's Traefik: `docker-compose.coolify.yml`
+adds the apps to the `coolify` network, and the proxy's command polls
+`/v1/edge/traefik` (backup of the old proxy compose in
+`/data/coolify/proxy/backups/`). The code reaches the VPS through a push
+remote (`mostapha-prod`, a non-bare repo with `updateInstead`) because
+the GitHub token cannot add deploy keys; a key is ready on the VPS.
+Nightly `scripts/backup.sh` (03:30, 14 days, DB and media) runs from the
+qubo user's crontab; backups sit on the same disk, so an off-box copy is
+still a gap.
+
+Two bugs surfaced. Compose passes unset variables as `""`, and the DNS
+verifier used `??`, so it had no servers (`ENOSERVER`) and no domain
+could verify in any compose install; it now uses `||` (same for
+`PORTAL_URL`). Image builds failed on `bun:test` imports, so test files
+are now in `.dockerignore`. The old site had no redirects: 3007 legacy
+URLs were imported into `redirect` (`legacy_system = 'hmfroid-v1'`):
+2558 products matched by SKU ("Référence" on the archived page), 25 to
+their old category, 385 categories by `legacy_id`, brands to `/marques`,
+info pages to their new slugs, `googlesitemap.php` to `/sitemap.xml`.
+For the cutover `QUBO_DNS_SERVERS` points at OVH's authoritative servers
+(the A record has a 24 h TTL); remove it from the prod `.env` once the
+domain shows Connected.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub
