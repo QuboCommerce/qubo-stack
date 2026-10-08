@@ -1,13 +1,15 @@
 import "server-only";
 
 import { db } from "@qubo/db/client";
-import { organizationMember, site, siteDomain, user } from "@qubo/db/schema";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { organization, organizationMember, site, siteDomain, user } from "@qubo/db/schema";
+import { and, asc, eq, inArray, isNull } from "drizzle-orm";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { siteUrl } from "@qubo/shared/site-url";
+import { access } from "@qubo/portal-client";
 import { auth } from "@/lib/auth";
+import { touchActivity } from "@/lib/sessions";
 
 export const requireUser = cache(async () => {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -20,13 +22,14 @@ export const requireUser = cache(async () => {
     .limit(1);
 
   if (!authorizedUser) redirect("/sign-in?error=forbidden");
-  return authorizedUser;
+  void touchActivity(session.session.id);
+  return { ...authorizedUser, sessionId: session.session.id };
 });
 
 /** Every site the user can reach through an organization membership. */
 export const getUserSites = cache(async () => {
   const currentUser = await requireUser();
-  const rows = await db
+  const [rows, licence] = await Promise.all([db
     .select({
       id: site.id,
       slug: site.slug,
@@ -38,12 +41,15 @@ export const getUserSites = cache(async () => {
       locale: site.locale,
       logo: site.logo,
       organizationId: site.organizationId,
+      organizationName: organization.name,
+      publishedAt: site.publishedAt,
       memberRole: organizationMember.role,
     })
     .from(organizationMember)
     .innerJoin(site, eq(site.organizationId, organizationMember.organizationId))
-    .where(eq(organizationMember.userId, currentUser.id))
-    .orderBy(asc(site.name));
+    .innerJoin(organization, eq(organization.id, site.organizationId))
+    .where(and(eq(organizationMember.userId, currentUser.id), isNull(site.deletedAt)))
+    .orderBy(asc(organization.createdAt), asc(site.name)), getAccess()]);
 
   const domains = rows.length
     ? await db
@@ -55,6 +61,8 @@ export const getUserSites = cache(async () => {
     const own = domains.filter((d) => d.siteId === r.id);
     return {
       ...r,
+      /** Outside the instance's plan: storefront stays live, admin is closed (see requireSite). */
+      locked: licence.lockedSiteIds.has(r.id),
       /** Primary domain as configured (may be unverified); for display only. */
       domain: own.find((d) => d.isPrimary)?.hostname ?? null,
       /** Where "View site" goes; null until the site has a reachable host. Never build this by hand. */
@@ -65,11 +73,19 @@ export const getUserSites = cache(async () => {
 
 export type AdminSite = Awaited<ReturnType<typeof getUserSites>>[number];
 
-/** Resolves the site from the URL segment; 404 if the user isn't a member. */
+/** Plan usage and locks for this instance, once per request. */
+export const getAccess = cache(() => access());
+
+/**
+ * Resolves the site from the URL segment; 404 if the user isn't a member.
+ * Sites outside the plan redirect to /locked before any page data loads; this
+ * runs for every page, layout and server action, so the lock can't be bypassed client-side.
+ */
 export const requireSite = cache(async (slug: string) => {
   const [currentUser, sites] = await Promise.all([requireUser(), getUserSites()]);
   const current = sites.find((s) => s.slug === slug);
   if (!current) notFound();
+  if (current.locked) redirect(`/locked?site=${encodeURIComponent(current.slug)}`);
   return { user: currentUser, site: current, sites, siteId: current.id };
 });
 

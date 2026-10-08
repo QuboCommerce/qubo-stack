@@ -33,6 +33,9 @@ export type CategoryNode = {
   slug: string;
   parentId: string | null;
   position: number;
+  description?: string | null;
+  /** Products directly in this category (not its children). */
+  productCount?: number;
 };
 
 export type ProductListItem = {
@@ -66,6 +69,10 @@ export type ProductDetail = {
   compareAtPrice: string | null;
   images: { url: string; alt: string | null }[];
   variants: ProductVariantDetail[];
+  metaTitle: string | null;
+  metaDescription: string | null;
+  /** Categories this product sits in; the first one is the breadcrumb parent. */
+  categories: { name: string; slug: string }[];
 };
 
 export type ProductListResponse = {
@@ -107,14 +114,37 @@ export type TemplateKind =
   | "maintenance"
   | (string & {});
 
+export type Weekday = "mo" | "tu" | "we" | "th" | "fr" | "sa" | "su";
+/** Same times on each listed day, "HH:MM" 24h. */
+export type OpeningHoursRule = { days: Weekday[]; opens: string; closes: string };
+
+/** Who runs the site: organisation identity plus the site's public contact details. */
+export type SiteBusiness = {
+  legalName: string | null;
+  companyNumber: string | null;
+  vatNumber: string | null;
+  phone: string | null;
+  email: string | null;
+  address: { line1: string | null; line2: string | null; postalCode: string | null; city: string | null; country: string | null } | null;
+  openingHours: OpeningHoursRule[];
+  geo: { latitude: number; longitude: number } | null;
+  /** schema.org type, e.g. "Store". Null = LocalBusiness. */
+  type: string | null;
+};
+
 export type LayoutResponse = {
   site: SiteSummary;
+  /** Site-wide title and description; the title is also the suffix of every page title. */
+  seo: { title: string | null; description: string | null };
+  business: SiteBusiness;
   header: RenderDocument | null;
   footer: RenderDocument | null;
   /** Published theme JSON (validated by @qubo/stylekit on the storefront). */
   theme: unknown;
   /** Maintenance mode from site settings; `active` already accounts for `endsAt`. */
   maintenance?: { active: boolean; message: string | null; endsAt: string | null };
+  /** Languages the storefront serves: the primary one plus every published secondary locale. */
+  locales: { locale: string; isPrimary: boolean }[];
 };
 
 export type CheckoutRequest = {
@@ -129,6 +159,10 @@ export type TemplateResponse = { documentId: string; data: RenderDocument };
 
 export type PageResponse = {
   documentId: string;
+  /** Slug in the requested locale; differs from the URL when an old primary slug was used. */
+  slug: string;
+  /** Slug per served locale, for hreflang alternates and the language switch. */
+  slugs: Record<string, string>;
   title: string;
   metaTitle: string | null;
   metaDescription: string | null;
@@ -143,7 +177,8 @@ export type SitemapEntry = { slug: string; updatedAt: string };
 export type SitemapResponse = {
   products: SitemapEntry[];
   categories: SitemapEntry[];
-  pages: SitemapEntry[];
+  /** Published pages (home excluded), ordered by title, with translated slug/title per secondary locale. */
+  pages: (SitemapEntry & { title: string; locales: Record<string, { slug?: string; title?: string }> })[];
 };
 
 export type RedirectResponse = { to: string; status: number };

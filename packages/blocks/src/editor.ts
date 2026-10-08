@@ -1,11 +1,13 @@
 import type { Config } from "@puckeditor/core";
-import { toPuckConfig, type BlockRegistry, type Capability, type FieldAdapterContext, type FieldAdapters } from "./core";
+import { pageFields, toPuckConfig, toPuckFields, type BlockRegistry, type Capability, type FieldAdapterContext, type FieldAdapters } from "./core";
 import { themedRoot } from "./theme";
 
 export type EditorConfigOptions = {
   capabilities?: readonly Capability[];
   fieldContext?: FieldAdapterContext;
   adapters?: FieldAdapters;
+  /** Page settings (transition, effect) on the root; off for header and footer groups. */
+  page?: boolean;
 };
 
 /**
@@ -13,10 +15,11 @@ export type EditorConfigOptions = {
  * scheme/button-style pickers list the theme's options.
  */
 export function createEditorConfig(registry: BlockRegistry, opts: EditorConfigOptions = {}): Config {
+  const page = opts.page === false ? {} : toPuckFields(pageFields, "editor", opts.fieldContext, opts.adapters);
   return toPuckConfig(registry, {
     mode: "editor",
     ...opts,
-    root: { ...themedRoot, fields: { title: { type: "text", label: "Page title" } } } as never,
+    root: { ...themedRoot, fields: { title: { type: "text", label: "Page title" }, ...page } } as never,
   });
 }
 

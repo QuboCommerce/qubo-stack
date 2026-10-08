@@ -6,6 +6,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireSiteFromForm } from "@/lib/admin";
+import { emitEntity } from "@/lib/events";
 
 const idSchema = z.uuid();
 const orderStatusSchema = z.enum([
@@ -31,6 +32,7 @@ export async function toggleProductArchive(formData: FormData) {
     .returning({ id: product.id });
 
   if (!updated) throw new Error("Product not found on this site.");
+  await emitEntity(siteId, "product", id);
   revalidatePath(`/${site.slug}/products`);
   revalidatePath(`/${site.slug}`);
 }
@@ -76,6 +78,7 @@ export async function updateOrderStatus(formData: FormData) {
     });
   });
 
+  await emitEntity(siteId, "order", id);
   revalidatePath(`/${site.slug}/orders`);
   revalidatePath(`/${site.slug}`);
 }

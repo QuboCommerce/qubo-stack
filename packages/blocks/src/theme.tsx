@@ -1,7 +1,9 @@
 import { baseCss, compileTheme, googleFontsUrl, type CompileOptions, type Theme } from "@qubo/stylekit";
 import type { ReactNode } from "react";
 import type { RenderMetadata } from "./core";
+import { pageBlocksNative, pageEffect, pageSettings, type PageSettings } from "./page-settings";
 import { blockCss } from "./library/styles";
+import { kitCss } from "./library/kits";
 
 const cssCache = new WeakMap<Theme, string>();
 
@@ -21,13 +23,32 @@ export function themeCss(theme: Theme, opts?: CompileOptions): string {
  * fonts (e.g. via next/font) pass `fonts={false}`.
  */
 export function ThemeStyles({ theme, includeBase = true, fonts = true }: { theme: Theme; includeBase?: boolean; fonts?: boolean }) {
-  const css = (includeBase ? baseCss + blockCss : "") + themeCss(theme);
+  const css = (includeBase ? baseCss + blockCss : "") + themeCss(theme) + kitCss(theme);
   const href = fonts ? googleFontsUrl(theme) : null;
   return (
     <>
       {href ? <link rel="stylesheet" href={href} data-qubo-fonts={theme.id} /> : null}
       <style data-qubo-theme={theme.id} dangerouslySetInnerHTML={{ __html: css }} />
     </>
+  );
+}
+
+/**
+ * The page's site-wide effect (the page's own pick, else the theme's). A
+ * scheduled one renders hidden; the site runtime switches it on in its window.
+ */
+function PageEffect({ theme, page }: { theme: Theme; page?: PageSettings }) {
+  const fx = pageEffect(theme, page);
+  if (!fx) return null;
+  return (
+    <div
+      className="qb-effect"
+      data-effect={fx.effect.id}
+      data-effect-kind={fx.effect.kind}
+      data-effect-scope="page"
+      data-effect-schedule={fx.schedule}
+      aria-hidden="true"
+    />
   );
 }
 
@@ -41,6 +62,7 @@ export function ThemeRoot({
   children,
   styles = true,
   className,
+  page,
 }: {
   theme: Theme | undefined;
   scheme?: string;
@@ -48,6 +70,8 @@ export function ThemeRoot({
   children: ReactNode;
   styles?: boolean;
   className?: string;
+  /** Per-page transition and effect overrides (document root props). */
+  page?: PageSettings;
 }) {
   if (!theme) return <>{children}</>;
   const effectiveMode = theme.modeStrategy === "dual" ? mode : theme.modeStrategy;
@@ -61,16 +85,19 @@ export function ThemeRoot({
       style={{ minHeight: "100%" }}
     >
       {styles ? <ThemeStyles theme={theme} /> : null}
+      {/* Later @view-transition rules win: this page opts out of the theme's crossfade. */}
+      {pageBlocksNative(theme, page) ? <style>{"@view-transition { navigation: none; }"}</style> : null}
       {children}
+      <PageEffect theme={theme} page={page} />
     </div>
   );
 }
 
-type RootProps = { children: ReactNode; puck?: { metadata?: RenderMetadata } };
+type RootProps = { children: ReactNode; puck?: { metadata?: RenderMetadata } } & PageSettings;
 
 export const themedRoot = {
-  render: ({ children, puck }: RootProps) => (
-    <ThemeRoot theme={puck?.metadata?.theme} mode={puck?.metadata?.mode}>
+  render: ({ children, puck, ...props }: RootProps) => (
+    <ThemeRoot theme={puck?.metadata?.theme} mode={puck?.metadata?.mode} page={pageSettings(props)}>
       {children}
     </ThemeRoot>
   ),

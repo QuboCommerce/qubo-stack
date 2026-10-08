@@ -200,6 +200,8 @@ export const ShadowSchema = z.object({
   spread: z.number().default(0),
   /** Palette token; `mix.alpha` controls strength. */
   color: RoleRefSchema.default({ token: "ink", mix: { alpha: 0.12 } }),
+  /** Inner shadow: a 1px inset highlight is what sells a metal surface. */
+  inset: z.boolean().default(false),
 });
 export type Shadow = z.infer<typeof ShadowSchema>;
 
@@ -244,8 +246,67 @@ export type ButtonEmphasis = (typeof buttonEmphases)[number];
 
 // ----------------------------------------------------------------- motion ---
 
-export const entrancePresets = ["none", "fade", "rise", "scale", "blur"] as const;
+export const entrancePresets = ["none", "fade", "rise", "scale", "blur", "mask", "slide"] as const;
 export type EntrancePreset = (typeof entrancePresets)[number];
+
+/** Named curves offered next to a free cubic-bezier input. */
+export const easingPresets = {
+  standard: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+  gentle: "cubic-bezier(0.32, 0.72, 0, 1)",
+  snappy: "cubic-bezier(0.5, 0, 0.1, 1)",
+  linear: "linear",
+  "ease-in-out": "cubic-bezier(0.65, 0, 0.35, 1)",
+  overshoot: "cubic-bezier(0.34, 1.56, 0.64, 1)",
+} as const;
+
+/** A colour taken from the scheme the effect sits in, so presets recolour per section. */
+export const PaintSchema = z.object({
+  role: z.enum(roles).default("primary"),
+  alpha: z.number().min(0).max(1).default(1),
+});
+export type Paint = z.infer<typeof PaintSchema>;
+
+const ms = (max: number, d: number) => z.number().int().min(0).max(max).default(d);
+
+/**
+ * Page transition preset. The overlay covers the page on leave, holds until
+ * the next page has painted and `minVisible` has passed, then uncovers.
+ */
+export const transitionBackgrounds = ["solid", "translucent", "radial"] as const;
+export const transitionMoves = ["fade", "slide-up", "slide-down", "wipe", "circle"] as const;
+export const transitionIcons = ["none", "mark", "logo"] as const;
+export const iconMotions = ["none", "pulse", "rotate", "line", "dots"] as const;
+
+export const TransitionSchema = z.object({
+  id: slug,
+  name: z.string().min(1),
+  background: z.enum(transitionBackgrounds).default("solid"),
+  color: PaintSchema.default({ role: "background", alpha: 1 }),
+  /** Backdrop blur for `translucent`, px. */
+  blur: z.number().min(0).max(40).default(12),
+  move: z.enum(transitionMoves).default("fade"),
+  icon: z.enum(transitionIcons).default("none"),
+  /** Icon size relative to 64px. */
+  iconScale: z.number().min(0.25).max(4).default(1),
+  iconRotation: z.number().min(-180).max(180).default(0),
+  iconMotion: z.enum(iconMotions).default("pulse"),
+  durationIn: ms(3000, 300),
+  durationOut: ms(3000, 400),
+  /** The overlay stays at least this long once fully covering (avoids a flash). */
+  minVisible: ms(5000, 0),
+  /** Empty = the theme easing. */
+  easing: z.string().default(""),
+});
+export type Transition = z.infer<typeof TransitionSchema>;
+
+export const builtInTransitions: z.input<typeof TransitionSchema>[] = [
+  { id: "translucent", name: "Translucent veil", background: "translucent", color: { role: "background", alpha: 0.55 }, move: "fade", durationIn: 220, durationOut: 320 },
+  { id: "icon", name: "Brand glow", background: "radial", color: { role: "primary", alpha: 1 }, move: "fade", icon: "mark", iconMotion: "pulse", durationIn: 300, durationOut: 450, minVisible: 400 },
+  { id: "fullscreen", name: "Full cover", background: "solid", color: { role: "primary", alpha: 1 }, move: "slide-up", icon: "mark", iconMotion: "rotate", durationIn: 450, durationOut: 500, minVisible: 500, easing: easingPresets.gentle },
+];
+
+export const navMoves = ["slide", "fade", "scale", "circle"] as const;
+export type NavMove = (typeof navMoves)[number];
 
 export const MotionSchema = z.object({
   profile: z.enum(["none", "subtle", "lively"]).default("subtle"),
@@ -254,8 +315,169 @@ export const MotionSchema = z.object({
   durationSlow: z.number().min(0).max(6000).default(600),
   easing: z.string().default("cubic-bezier(0.2, 0.8, 0.2, 1)"),
   entrance: z.enum(entrancePresets).default("fade"),
+  /**
+   * `""` none, `"native"` the browser's cross-document view transition (no
+   * overlay, no JavaScript), otherwise a preset id.
+   */
+  transition: z.string().default(""),
+  transitions: z.array(TransitionSchema).default(() => builtInTransitions.map((t) => TransitionSchema.parse(t))),
+  /** Mobile menu, sheets and fullscreen navigation. Enter and exit are set separately. */
+  nav: z
+    .object({
+      enter: z.enum(navMoves).default("slide"),
+      exit: z.enum(navMoves).default("fade"),
+      durationIn: ms(2000, 380),
+      durationOut: ms(2000, 220),
+    })
+    .default({ enter: "slide", exit: "fade", durationIn: 380, durationOut: 220 }),
 });
 export type Motion = z.infer<typeof MotionSchema>;
+
+// ------------------------------------------------------------------ brand ---
+
+/** Same shape as a block media value, so the studio media picker fills it. */
+export const BrandAssetSchema = z.object({
+  assetId: z.string().optional(),
+  url: z.string().optional(),
+  alt: z.string().default(""),
+  width: z.number().int().positive().optional(),
+  height: z.number().int().positive().optional(),
+});
+export type BrandAsset = z.infer<typeof BrandAssetSchema>;
+
+export const BrandSchema = z.object({
+  /** Full logo for light backgrounds. */
+  logo: BrandAssetSchema.nullable().default(null),
+  /** Logo for dark backgrounds; falls back to `logo`. */
+  logoInverse: BrandAssetSchema.nullable().default(null),
+  /** Square symbol: transitions, loading states, favicon fallback. */
+  mark: BrandAssetSchema.nullable().default(null),
+  favicon: BrandAssetSchema.nullable().default(null),
+  /** Default social sharing image (1200x630). */
+  ogImage: BrandAssetSchema.nullable().default(null),
+  /** Guidance for copy, read by people and by the AI. */
+  voice: z
+    .object({
+      tone: z.string().default(""),
+      avoid: z.array(z.string()).default([]),
+    })
+    .default({ tone: "", avoid: [] }),
+});
+export type Brand = z.infer<typeof BrandSchema>;
+
+// --------------------------------------------------------------- surfaces ---
+
+/** `stripes` repeats the stops every `size` px along `angle`: hairline textures such as brushed metal, ruled paper, scanlines. */
+export const gradientKinds = ["linear", "radial", "conic", "stripes"] as const;
+
+export const GradientStopSchema = PaintSchema.extend({ at: z.number().min(0).max(100) });
+
+export const GradientSchema = z.object({
+  id: slug,
+  name: z.string().min(1),
+  kind: z.enum(gradientKinds).default("linear"),
+  /** Degrees for linear/conic; ignored by radial. */
+  angle: z.number().min(0).max(360).default(180),
+  /** Radial centre, % of the box. */
+  x: z.number().min(0).max(100).default(50),
+  y: z.number().min(0).max(100).default(0),
+  /** Period in px for `stripes`; stop positions are percentages of it. */
+  size: z.number().min(2).max(64).default(4),
+  stops: z.array(GradientStopSchema).min(2).max(6),
+});
+export type Gradient = z.infer<typeof GradientSchema>;
+
+export const builtInGradients: z.input<typeof GradientSchema>[] = [
+  { id: "glow", name: "Soft glow from above", kind: "radial", x: 50, y: 0, stops: [{ role: "primary", alpha: 0.22, at: 0 }, { role: "background", alpha: 0, at: 70 }] },
+  { id: "fade-down", name: "Fade into the next section", kind: "linear", angle: 180, stops: [{ role: "background", alpha: 1, at: 0 }, { role: "backgroundAlt", alpha: 1, at: 100 }] },
+  { id: "accent-wash", name: "Accent wash", kind: "linear", angle: 135, stops: [{ role: "accent", alpha: 0.16, at: 0 }, { role: "background", alpha: 0, at: 60 }] },
+  { id: "brushed-lines", name: "Brushed lines", kind: "stripes", angle: 0, size: 3, stops: [{ role: "text", alpha: 0.05, at: 0 }, { role: "text", alpha: 0.05, at: 34 }, { role: "text", alpha: 0, at: 34 }, { role: "text", alpha: 0, at: 100 }] },
+];
+
+export const SurfacesSchema = z.object({
+  gradients: z.array(GradientSchema).default(() => builtInGradients.map((g) => GradientSchema.parse(g))),
+});
+export type Surfaces = z.infer<typeof SurfacesSchema>;
+
+// ------------------------------------------------------------------ decor ---
+
+/** Ways to mark words inside a heading; applied to character ranges per locale. */
+export const decorKinds = ["color", "underline", "squiggle", "stroke", "box", "circle", "marker", "gradient"] as const;
+export type DecorKind = (typeof decorKinds)[number];
+
+export const DecorSchema = z.object({
+  id: slug,
+  name: z.string().min(1),
+  kind: z.enum(decorKinds),
+  color: PaintSchema.default({ role: "accentText", alpha: 1 }),
+  /** Line weight in px (underline, squiggle, box, circle). */
+  thickness: z.number().min(1).max(16).default(3),
+  /** Also paint the words themselves in `color`. */
+  tintText: z.boolean().default(false),
+  /** Draw the mark in when the heading scrolls into view. */
+  animate: z.boolean().default(true),
+});
+export type Decor = z.infer<typeof DecorSchema>;
+
+export const builtInDecor: z.input<typeof DecorSchema>[] = [
+  { id: "accent", name: "Accent colour", kind: "color", animate: false },
+  { id: "squiggle", name: "Squiggle", kind: "squiggle", thickness: 3 },
+  { id: "brush", name: "Brush stroke", kind: "stroke", color: { role: "accent", alpha: 0.85 } },
+  { id: "box", name: "Box", kind: "box", thickness: 2 },
+  { id: "circle", name: "Hand-drawn circle", kind: "circle", thickness: 3 },
+  { id: "marker", name: "Marker", kind: "marker", color: { role: "accent", alpha: 0.35 } },
+  { id: "underline", name: "Underline", kind: "underline", thickness: 4 },
+  { id: "gradient", name: "Gradient fill", kind: "gradient", color: { role: "primary", alpha: 1 } },
+];
+
+// ---------------------------------------------------------------- effects ---
+
+export const effectKinds = ["snow", "particles", "aurora", "grain"] as const;
+export type EffectKind = (typeof effectKinds)[number];
+
+export const EffectSchema = z.object({
+  id: slug,
+  name: z.string().min(1),
+  kind: z.enum(effectKinds),
+  color: PaintSchema.default({ role: "text", alpha: 0.8 }),
+  /** 1..100, particles per 100k px² for snow/particles. */
+  density: z.number().min(1).max(100).default(30),
+  speed: z.number().min(0.1).max(4).default(1),
+  /** Particle size multiplier. */
+  size: z.number().min(0.25).max(4).default(1),
+});
+export type Effect = z.infer<typeof EffectSchema>;
+
+export const builtInEffects: z.input<typeof EffectSchema>[] = [
+  { id: "first-snow", name: "First snow", kind: "snow", color: { role: "background", alpha: 0.9 }, density: 25, speed: 0.8 },
+  { id: "drift", name: "Slow drift", kind: "particles", color: { role: "accentText", alpha: 0.5 }, density: 12, speed: 0.5 },
+  { id: "northern-light", name: "Northern light", kind: "aurora", color: { role: "accent", alpha: 0.35 }, speed: 0.6 },
+  { id: "film-grain", name: "Film grain", kind: "grain", color: { role: "text", alpha: 0.08 } },
+];
+
+export const EffectsSchema = z.object({
+  presets: z.array(EffectSchema).default(() => builtInEffects.map((e) => EffectSchema.parse(e))),
+  /** Site-wide effect id over every page; pages and sections can override. */
+  active: z.string().default(""),
+  /** Only run the site-wide effect between these dates (MM-DD, wraps the new year). */
+  schedule: z
+    .object({ enabled: z.boolean().default(false), from: z.string().regex(/^\d{2}-\d{2}$/).default("12-01"), to: z.string().regex(/^\d{2}-\d{2}$/).default("01-06") })
+    .default({ enabled: false, from: "12-01", to: "01-06" }),
+});
+export type Effects = z.infer<typeof EffectsSchema>;
+
+// ------------------------------------------------------------------- kits ---
+
+/**
+ * A section kit the theme turns on: an art-directed block family with its own
+ * stylesheet (see `@qubo/blocks` kits). `assets` fill the kit's image
+ * variables, keyed by the names the kit declares.
+ */
+export const KitRefSchema = z.object({
+  id: slug,
+  assets: z.record(z.string(), BrandAssetSchema).default({}),
+});
+export type KitRef = z.infer<typeof KitRefSchema>;
 
 // ------------------------------------------------------------------ theme ---
 
@@ -279,8 +501,13 @@ export const ThemeSchema = z.object({
   shape: ShapeSchema.default(ShapeSchema.parse({})),
   buttons: z.array(ButtonStyleSchema).min(1),
   defaultButton: slug,
-  motion: MotionSchema.default(MotionSchema.parse({})),
+  motion: MotionSchema.default(() => MotionSchema.parse({})),
+  brand: BrandSchema.default(() => BrandSchema.parse({})),
+  surfaces: SurfacesSchema.default(() => SurfacesSchema.parse({})),
+  decor: z.array(DecorSchema).default(() => builtInDecor.map((d) => DecorSchema.parse(d))),
+  effects: EffectsSchema.default(() => EffectsSchema.parse({})),
   flavor: FlavorRefSchema.default(FlavorRefSchema.parse({})),
+  kits: z.array(KitRefSchema).default([]),
 });
 export type Theme = z.infer<typeof ThemeSchema>;
 export type ThemeInput = z.input<typeof ThemeSchema>;

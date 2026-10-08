@@ -3,7 +3,7 @@ import { db } from "@qubo/db/client";
 import { order, product, siteCustomer } from "@qubo/db/schema";
 import { and, count, eq, sql } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
-import { assertSiteAccess, listAccessibleSites } from "../lib/tenancy";
+import { assertSiteEditable, listAccessibleSites } from "../lib/tenancy";
 
 export const sites = new Elysia({ prefix: "/sites" })
   .use(tenancy)
@@ -18,9 +18,9 @@ export const sites = new Elysia({ prefix: "/sites" })
   })
   .get("/current/stats", async ({ site, actor, status }) => {
     if (!site) return status(400, { error: "site_not_resolved" });
-    if (!(await assertSiteAccess(actor, site))) {
-      return status(403, { error: "forbidden" });
-    }
+    const gate = await assertSiteEditable(actor, site);
+    if (gate === "locked") return status(402, { error: "site_locked" });
+    if (gate !== "ok") return status(403, { error: "forbidden" });
 
     const [[products], [customers], [orders], [revenue]] = await Promise.all([
       db

@@ -1,0 +1,121 @@
+// Ports a hand-made stylesheet into a Qubo section kit: every class, custom
+// property and keyframe gets the kit prefix, bare element rules are scoped to
+// kit roots, page-level rules move to the theme root, and local asset URLs are
+// swapped for kit variables the theme fills in. Specificity is preserved, so
+// the cascade of the original file still decides.
+//
+//   node scripts/kits/port-css.mjs scripts/kits/chapters.port.mjs <source.css>
+import { readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import postcss from "postcss";
+import selectorParser from "postcss-selector-parser";
+
+const [configPath, sourcePath] = process.argv.slice(2);
+if (!configPath || !sourcePath) {
+  console.error("usage: node scripts/kits/port-css.mjs <config.mjs> <source.css>");
+  process.exit(1);
+}
+const config = (await import(pathToFileURL(resolve(configPath)).href)).default;
+const prefix = `qb-${config.prefix}-`;
+const kitRoot = `:where([data-kit="${config.kit}"])`;
+const themeRoot = ":where([data-theme])";
+
+const dropped = (name) => config.drop.some((d) => (d.endsWith("-") ? name.startsWith(d) : name === d));
+const root = postcss.parse(readFileSync(sourcePath, "utf8"), { from: sourcePath });
+
+const keyframes = new Set();
+root.walkAtRules("keyframes", (at) => keyframes.add(at.params.trim()));
+const renameFrames = (value) => value.replace(/[A-Za-z_][\w-]*/g, (w) => (keyframes.has(w) ? prefix + w : w));
+
+root.walkAtRules("import", (at) => at.remove());
+root.walkAtRules("keyframes", (at) => (at.params = prefix + at.params.trim()));
+
+const compound = (css) => selectorParser().astSync(css).first.nodes;
+
+const transformSelector = selectorParser((selectors) => {
+  selectors.each((sel) => {
+    let drop = false;
+    sel.walk((node) => {
+      if ((node.type === "class" || node.type === "id") && dropped(node.value)) drop = true;
+    });
+    if (drop) return sel.remove();
+    sel.walkIds((id) => {
+      const to = config.ids[id.value];
+      if (!to) throw new Error(`No mapping for #${id.value}; add it to config.ids`);
+      id.replaceWith(...compound(to));
+    });
+    sel.walkAttributes((a) => {
+      const to = config.attributes?.[a.attribute];
+      if (to) a.attribute = to;
+    });
+    sel.walkClasses((c) => {
+      if (!c.value.startsWith(prefix)) c.value = prefix + c.value;
+    });
+
+    // The first compound decides where the rule lives.
+    const first = [];
+    for (const node of sel.nodes) {
+      if (node.type === "combinator") break;
+      first.push(node);
+    }
+    const tagNode = first.find((n) => n.type === "tag");
+    const scoped = first.some((n) => ["class", "id", "attribute", "nesting"].includes(n.type) || (n.type === "pseudo" && n.value === ":where"));
+    if (first.length === 1 && first[0].type === "pseudo" && first[0].value === ":root") {
+      first[0].replaceWith(...compound(themeRoot));
+    } else if (tagNode?.value === "body" && !scoped) {
+      tagNode.replaceWith(...compound(kitRoot));
+    } else if (tagNode?.value === "html" && !scoped) {
+      // Document rules (scroll padding) apply only on pages that use the kit.
+      tagNode.replaceWith(...compound(`html:has(${kitRoot})`));
+    } else if (tagNode?.value === "html" || tagNode?.value === "body") {
+      // Page state classes (html.motion-ready, body.menu-open) stay on the document.
+    } else if (!scoped) {
+      sel.prepend(selectorParser.combinator({ value: " " }));
+      sel.prepend(...compound(kitRoot).reverse());
+    }
+  });
+});
+
+root.walkRules((rule) => {
+  if (rule.parent?.type === "atrule" && /keyframes$/.test(rule.parent.name)) return;
+  const next = transformSelector.processSync(rule.selector, { lossless: false });
+  if (!next.trim()) rule.remove();
+  else rule.selector = next;
+});
+
+root.walkDecls((decl) => {
+  if (decl.prop.startsWith("--") && !decl.prop.startsWith("--qb-")) decl.prop = `--${prefix}${decl.prop.slice(2)}`;
+  decl.value = decl.value.replace(/var\(\s*--(?!qb-)/g, `var(--${prefix}`);
+  if (/^(-webkit-)?animation(-name)?$/.test(decl.prop)) decl.value = renameFrames(decl.value);
+  decl.value = decl.value.replace(/url\(\s*['"]?([^'")]+)['"]?\s*\)/g, (m, url) => {
+    if (/^(data:|https?:)/.test(url)) return m;
+    const to = config.assets[url];
+    if (to === undefined) throw new Error(`Local asset ${url} has no mapping; add it to config.assets`);
+    return to;
+  });
+});
+
+// At-rules left empty by dropped selectors.
+let removed = true;
+while (removed) {
+  removed = false;
+  root.walkAtRules((at) => {
+    if (at.nodes && at.nodes.length === 0) {
+      at.remove();
+      removed = true;
+    }
+  });
+}
+root.walkComments((c) => c.remove());
+
+const css = root.toString().replace(/\n\s*\n+/g, "\n").trim();
+const overrides = config.overrides ? readFileSync(resolve(config.overrides), "utf8") : "";
+writeFileSync(
+  resolve(config.out),
+  `// Generated by scripts/kits/port-css.mjs from ${config.source}.
+// Do not edit by hand: change the overrides file or the config and regenerate.
+export const ${config.exportName} = ${JSON.stringify(`${css}\n${overrides}`)};
+`,
+);
+console.log(`${config.out}: ${((css.length + overrides.length) / 1024).toFixed(1)} KB, ${keyframes.size} keyframes`);

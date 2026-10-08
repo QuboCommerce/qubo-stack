@@ -43,6 +43,104 @@
       "when": 1791013219601,
       "tag": "0005_category_tree",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791068990179,
+      "tag": "0006_platform_event",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791069969552,
+      "tag": "0007_session_device",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791070923283,
+      "tag": "0008_studio_lease",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791078348329,
+      "tag": "0009_site_preview_pin",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791083665734,
+      "tag": "0010_portal_link",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791091936967,
+      "tag": "0011_organization_legal",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791095132124,
+      "tag": "0012_site_published",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791095610759,
+      "tag": "0013_inbox",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791096950463,
+      "tag": "0014_inbox_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791100652505,
+      "tag": "0015_inbox_files",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791101679780,
+      "tag": "0016_inbox_ai",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791252765847,
+      "tag": "0017_domains",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791279479495,
+      "tag": "0018_site_trash",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791283558261,
+      "tag": "0019_site_business",
+      "breakpoints": true
     }
   ]
 }

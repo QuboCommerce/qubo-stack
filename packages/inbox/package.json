@@ -1,0 +1,27 @@
+{
+  "name": "@qubo/inbox",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Conversation engine: channels (forms, chat, e-mail, portal), messages, staff replies, realtime events.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./ai": "./src/ai.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@qubo/db": "workspace:*",
+    "@qubo/realtime": "workspace:*",
+    "@qubo/storage": "workspace:*",
+    "drizzle-orm": "^0.44",
+    "@qubo/ai": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5"
+  }
+}

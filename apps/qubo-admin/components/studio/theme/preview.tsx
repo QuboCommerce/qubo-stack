@@ -42,26 +42,26 @@ export function SchemePreview({ theme, scheme, mode, size = "sm", className }: {
     <ThemeScope theme={theme} mode={mode} scheme={scheme} className={cn("overflow-hidden rounded-lg", lg ? "p-4" : "p-3", className)}>
       <div className="flex items-start gap-3">
         <div className="min-w-0 flex-1">
-          <p className="pk-font-accent" style={{ color: "var(--pk-accent-text)", fontSize: lg ? 10 : 9, marginBottom: 2 }}>Eyebrow</p>
-          <p className="pk-font-heading" style={{ color: "var(--pk-heading)", fontSize: lg ? 20 : 15, lineHeight: 1.15 }}>Heading</p>
-          <p className="pk-font-body" style={{ color: "var(--pk-text)", fontSize: lg ? 12 : 11, marginTop: 4, lineHeight: 1.4 }}>
-            Body text <span style={{ color: "var(--pk-text-muted)" }}>and muted</span> <span style={{ color: "var(--pk-link)", textDecoration: "underline" }}>link</span>
+          <p className="qb-font-accent" style={{ color: "var(--qb-accent-text)", fontSize: lg ? 10 : 9, marginBottom: 2 }}>Eyebrow</p>
+          <p className="qb-font-heading" style={{ color: "var(--qb-heading)", fontSize: lg ? 20 : 15, lineHeight: 1.15 }}>Heading</p>
+          <p className="qb-font-body" style={{ color: "var(--qb-text)", fontSize: lg ? 12 : 11, marginTop: 4, lineHeight: 1.4 }}>
+            Body text <span style={{ color: "var(--qb-text-muted)" }}>and muted</span> <span style={{ color: "var(--qb-link)", textDecoration: "underline" }}>link</span>
           </p>
         </div>
         {lg && (
           <div
             className="w-24 shrink-0 rounded-md p-2"
-            style={{ background: "var(--pk-surface)", color: "var(--pk-on-surface)", border: "1px solid var(--pk-border)", fontSize: 10, lineHeight: 1.3 }}
+            style={{ background: "var(--qb-surface)", color: "var(--qb-on-surface)", border: "1px solid var(--qb-border)", fontSize: 10, lineHeight: 1.3 }}
           >
-            <span className="mb-1 block h-8 rounded-sm" style={{ background: "var(--pk-background-alt)" }} />
+            <span className="mb-1 block h-8 rounded-sm" style={{ background: "var(--qb-background-alt)" }} />
             Card text
           </div>
         )}
       </div>
       <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-        <span className="pk-button" data-emphasis="primary" data-size="sm" style={{ fontSize: lg ? 11 : 10, pointerEvents: "none" }}>Primary</span>
-        <span className="pk-button" data-emphasis="secondary" data-size="sm" style={{ fontSize: lg ? 11 : 10, pointerEvents: "none" }}>Secondary</span>
-        {lg && <span className="pk-badge" style={{ fontSize: 10 }}>Accent</span>}
+        <span className="qb-button" data-emphasis="primary" data-size="sm" style={{ fontSize: lg ? 11 : 10, pointerEvents: "none" }}>Primary</span>
+        <span className="qb-button" data-emphasis="secondary" data-size="sm" style={{ fontSize: lg ? 11 : 10, pointerEvents: "none" }}>Secondary</span>
+        {lg && <span className="qb-badge" style={{ fontSize: 10 }}>Accent</span>}
       </div>
     </ThemeScope>
   );

@@ -136,14 +136,34 @@ describe("compile", () => {
     expect(url).toBe("https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@400&display=swap");
   });
 
+  it("loads every declared weight when the theme turns on a kit", () => {
+    const url = googleFontsUrl(
+      defineTheme({
+        ...minimal,
+        kits: [{ id: "chapters" }],
+        typeset: {
+          fonts: [{ id: "m", family: "Manrope", source: "google", weights: [400, 500, 600, 700, 800] }],
+          roles: {
+            display: { font: "m", weight: 700 },
+            heading: { font: "m", weight: 700 },
+            body: { font: "m", weight: 400 },
+            accent: { font: "m", weight: 700 },
+            mono: { font: "m", weight: 400 },
+          },
+        },
+      }),
+    );
+    expect(url).toBe("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+  });
+
   it("emits scoped tokens, schemes and buttons", () => {
     const { css, hash } = compileTheme(defineTheme(minimal));
     expect(css).toContain('[data-theme="mini"] {');
-    expect(css).toContain("--pk-color-brand: oklch(");
+    expect(css).toContain("--qb-color-brand: oklch(");
     expect(css).toContain('[data-theme="mini"] [data-scheme="base"]');
-    expect(css).toContain("--pk-primary: var(--pk-color-brand);");
-    expect(css).toContain("--pk-link: var(--pk-primary);");
-    expect(css).toContain("--pk-text-muted: oklch(from var(--pk-text) l c h / 0.72);");
+    expect(css).toContain("--qb-primary: var(--qb-color-brand);");
+    expect(css).toContain("--qb-link: var(--qb-primary);");
+    expect(css).toContain("--qb-text-muted: oklch(from var(--qb-text) l c h / 0.72);");
     expect(css).toContain('[data-button-style="default"]');
     expect(css).toContain("color-scheme: light;");
     expect(css).not.toContain('data-mode="dark"');
@@ -217,5 +237,42 @@ describe("doctor", () => {
 
   it("rates smossie richer than the minimal theme", () => {
     expect(diagnoseTheme(smossieTheme).richness.score).toBeGreaterThan(diagnoseTheme(defineTheme(minimal)).richness.score);
+  });
+});
+
+describe("design language sections", () => {
+  it("fills brand, surfaces, decor, effects and transitions for themes saved before them", () => {
+    const t = defineTheme(minimal);
+    expect(t.brand.logo).toBeNull();
+    expect(t.surfaces.gradients.map((g) => g.id)).toContain("glow");
+    expect(t.decor.map((d) => d.id)).toEqual(expect.arrayContaining(["accent", "squiggle", "brush", "circle"]));
+    expect(t.effects.presets.map((e) => e.kind)).toEqual(expect.arrayContaining(["snow", "aurora", "grain"]));
+    expect(t.motion.transition).toBe("");
+    expect(t.motion.transitions.map((x) => x.id)).toEqual(["translucent", "icon", "fullscreen"]);
+    expect(t.motion.nav).toMatchObject({ enter: "slide", exit: "fade" });
+  });
+
+  it("paints gradients and decor on the element so they follow the section scheme", () => {
+    const { css } = compileTheme(defineTheme(minimal));
+    expect(css).toContain('[data-theme="mini"] [data-gradient="glow"] {');
+    expect(css).toMatch(/radial-gradient\(circle at 50% 0%, oklch\(from var\(--qb-primary\) l c h \/ 0\.22\) 0%/);
+    expect(css).toMatch(/\[data-decor="squiggle"\] \{\s+--qb-decor-color: var\(--qb-accent-text\);\s+--qb-decor-thickness: 3px;/);
+    expect(css).toContain("--qb-nav-in: 380ms;");
+    expect(css).not.toContain("@view-transition");
+  });
+
+  it("compiles stripes as a repeating gradient in px and inset shadows", () => {
+    const t = defineTheme({ ...minimal, shape: { radius: 3, shadows: [{ id: "plate", name: "Plate", y: 1, blur: 0, inset: true, color: { token: "cream", mix: { alpha: 0.5 } } }] } });
+    const { css } = compileTheme(t);
+    expect(css).toContain('[data-gradient="brushed-lines"] {');
+    expect(css).toMatch(/repeating-linear-gradient\(0deg, oklch\(from var\(--qb-text\) l c h \/ 0\.05\) 0px, oklch\(from var\(--qb-text\) l c h \/ 0\.05\) 1\.02px/);
+    expect(css).toMatch(/--qb-shadow-plate: inset 0px 1px 0px 0px/);
+  });
+
+  it("opts into native cross-document transitions only when chosen", () => {
+    const t = defineTheme({ ...minimal, motion: { transition: "native" } });
+    expect(compileTheme(t).css).toContain("@view-transition { navigation: auto; }");
+    const off = defineTheme({ ...minimal, motion: { transition: "native", profile: "none" } });
+    expect(compileTheme(off).css).not.toContain("@view-transition");
   });
 });

@@ -1,4 +1,4 @@
-import { defineSection, f, linkTarget, resolveLink, type BlockContext } from "../../core";
+import { defineSection, f, linkTarget, localHref, resolveLink, type BlockContext } from "../../core";
 import { IconGlyph } from "../icons";
 import { BuyBox, CartView, type BuyVariant, type CartLine } from "../cart";
 
@@ -74,16 +74,16 @@ export const ProductDetail = defineSection({
     const secondary = p.secondaryLabel ? resolveLink(p.secondaryLink, ctx.metadata) : undefined;
     const paragraphs = data.description?.split(/\n{2,}|\r\n\r\n/).map((s) => s.trim()).filter(Boolean) ?? [];
     return (
-      <div className="pk-pdp" data-gallery={p.galleryPosition} style={{ "--pk-media-aspect": p.imageAspect } as React.CSSProperties}>
-        <div className="pk-pdp-gallery">
+      <div className="qb-pdp" data-gallery={p.galleryPosition} style={{ "--qb-media-aspect": p.imageAspect } as React.CSSProperties}>
+        <div className="qb-pdp-gallery">
           {main ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="pk-pdp-main" src={main.src} alt={main.alt || data.title} fetchPriority="high" />
+            <img className="qb-pdp-main" src={main.src} alt={main.alt || data.title} fetchPriority="high" />
           ) : (
-            <span className="pk-media-placeholder pk-pdp-main" aria-hidden="true" />
+            <span className="qb-media-placeholder qb-pdp-main" aria-hidden="true" />
           )}
           {rest.length ? (
-            <ul className="pk-pdp-thumbs">
+            <ul className="qb-pdp-thumbs">
               {rest.slice(0, 8).map((img, i) => (
                 <li key={i}>
                   <a href={ctx.isEditing ? undefined : img.src} target="_blank" rel="noreferrer">
@@ -95,23 +95,23 @@ export const ProductDetail = defineSection({
             </ul>
           ) : null}
         </div>
-        <div className="pk-pdp-info">
-          {p.showBrand && data.brand ? <p className="pk-eyebrow">{data.brand}</p> : null}
-          <h1 className="pk-heading pk-font-heading pk-pdp-title">{data.title}</h1>
-          <p className="pk-price" data-size="lg">
+        <div className="qb-pdp-info">
+          {p.showBrand && data.brand ? <p className="qb-eyebrow">{data.brand}</p> : null}
+          <h1 className="qb-heading qb-font-heading qb-pdp-title">{data.title}</h1>
+          <p className="qb-price" data-size="lg">
             <strong>{money.format(data.price)}</strong>
-            {data.compareAt && Number(data.compareAt) > Number(data.price) ? <s className="pk-muted">{money.format(data.compareAt)}</s> : null}
+            {data.compareAt && Number(data.compareAt) > Number(data.price) ? <s className="qb-muted">{money.format(data.compareAt)}</s> : null}
           </p>
-          {p.showSku && data.sku ? <p className="pk-muted pk-small">SKU {data.sku}</p> : null}
+          {p.showSku && data.sku ? <p className="qb-muted qb-small">SKU {data.sku}</p> : null}
           {ctx.isEditing || !ctx.metadata.site?.id ? (
-            <div className="pk-buybox">
-              <div className="pk-buybox-row">
-                <span className="pk-qty" aria-hidden="true">
+            <div className="qb-buybox">
+              <div className="qb-buybox-row">
+                <span className="qb-qty" aria-hidden="true">
                   <button type="button">−</button>
                   <input readOnly value={1} />
                   <button type="button">+</button>
                 </span>
-                <button type="button" className="pk-button" data-emphasis="primary">
+                <button type="button" className="qb-button" data-emphasis="primary">
                   {p.labels.add} — {money.format(data.price)}
                 </button>
               </div>
@@ -123,16 +123,16 @@ export const ProductDetail = defineSection({
               currency={money.currency}
               product={{ slug: data.slug, title: data.title, image: main?.src ?? null }}
               variants={data.variants}
-              labels={{ ...p.labels, cartHref: "/cart" }}
+              labels={{ ...p.labels, cartHref: localHref("/cart", ctx.metadata) }}
             />
           )}
           {secondary || (ctx.isEditing && p.secondaryLabel) ? (
-            <a className="pk-button" data-emphasis="outline" href={ctx.isEditing ? undefined : secondary} {...linkTarget(p.secondaryLink)}>
+            <a className="qb-button" data-emphasis="outline" href={ctx.isEditing ? undefined : secondary} {...linkTarget(p.secondaryLink)}>
               {p.secondaryLabel}
             </a>
           ) : null}
           {p.notes.length ? (
-            <ul className="pk-pdp-notes">
+            <ul className="qb-pdp-notes">
               {p.notes.map((n, i) => (
                 <li key={i}>
                   <IconGlyph name={n.icon} size="1.1em" />
@@ -142,7 +142,7 @@ export const ProductDetail = defineSection({
             </ul>
           ) : null}
           {p.showDescription && paragraphs.length ? (
-            <div className="pk-prose pk-pdp-description">
+            <div className="qb-prose qb-pdp-description">
               {paragraphs.map((t, i) => (
                 <p key={i}>{t}</p>
               ))}
@@ -197,7 +197,8 @@ export const Cart = defineSection({
           ...p.labels,
           empty: p.emptyText,
           continueLabel: p.continueLabel,
-          continueHref: resolveLink(p.continueLink, ctx.metadata) ?? "/",
+          continueHref: resolveLink(p.continueLink, ctx.metadata) ?? localHref("/", ctx.metadata),
+          basePath: ctx.metadata.basePath,
           checkout: p.checkoutLabel,
           note: p.note,
         }}

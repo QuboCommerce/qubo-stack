@@ -3,6 +3,8 @@ export * from "./context";
 export * from "./define";
 export * from "./chrome";
 export * from "./document";
+export * from "./decor";
 export * from "./blueprint";
 export * from "./json-schema";
 export * from "./puck";
+export * from "./page-fields";

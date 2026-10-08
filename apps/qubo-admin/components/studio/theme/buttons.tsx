@@ -70,7 +70,7 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
               <li key={b.id} className={cn("overflow-hidden rounded-lg ring-1 ring-border transition-colors", isOpen && "bg-muted/60")}>
                 <ThemeScope theme={theme} mode={mode} button={b.id} className="flex flex-wrap items-center gap-2 px-3 py-3.5">
                   {(["primary", "secondary", "outline"] as const).map((e) => (
-                    <span key={e} className="pk-button" data-emphasis={e} data-button-style={b.id} data-size="sm" style={{ pointerEvents: "none", fontSize: 12 }}>
+                    <span key={e} className="qb-button" data-emphasis={e} data-button-style={b.id} data-size="sm" style={{ pointerEvents: "none", fontSize: 12 }}>
                       {emphasisLabel[e]}
                     </span>
                   ))}
@@ -182,7 +182,7 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
             onClick={() => {
               const id = uniqueSlug("shadow", theme.shape.shadows.map((s) => s.id));
               const ink = theme.palette.find((p) => p.group === "neutral") ?? theme.palette[0]!;
-              update((t) => ({ ...t, shape: { ...t.shape, shadows: [...t.shape.shadows, { id, name: "New shadow", x: 0, y: 6, blur: 18, spread: 0, color: { token: ink.id, mix: { alpha: 0.15 } } }] } }));
+              update((t) => ({ ...t, shape: { ...t.shape, shadows: [...t.shape.shadows, { id, name: "New shadow", x: 0, y: 6, blur: 18, spread: 0, inset: false, color: { token: ink.id, mix: { alpha: 0.15 } } }] } }));
               setOpenShadow(id);
             }}
           >
@@ -201,7 +201,7 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
                   <ThemeScope theme={theme} mode={mode} className="rounded-md p-1.5">
                     <span
                       className="block size-7 rounded-md"
-                      style={{ background: "var(--pk-surface)", boxShadow: `var(--pk-shadow-${s.id})` }}
+                      style={{ background: "var(--qb-surface)", boxShadow: `var(--qb-shadow-${s.id})` }}
                     />
                   </ThemeScope>
                   <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{s.name}</span>
@@ -219,6 +219,9 @@ export function ButtonsPage({ theme, update, mode }: { theme: Theme; update: (fn
                     <SliderField label="Offset" value={s.y} min={0} max={48} step={1} format={(v) => `${v}px`} onChange={(v) => setShadow(s.id, { y: v }, `shy:${s.id}`)} />
                     <SliderField label="Blur" value={s.blur} min={0} max={80} step={1} format={(v) => `${v}px`} onChange={(v) => setShadow(s.id, { blur: v }, `shb:${s.id}`)} />
                     <SliderField label="Spread" value={s.spread} min={-16} max={16} step={1} format={(v) => `${v}px`} onChange={(v) => setShadow(s.id, { spread: v }, `shs:${s.id}`)} />
+                    <Field label="Inset (edge)" inline>
+                      <Switch checked={s.inset} onCheckedChange={(inset) => setShadow(s.id, { inset })} aria-label="Inset shadow" />
+                    </Field>
                     <Button
                       variant="ghost"
                       size="sm"

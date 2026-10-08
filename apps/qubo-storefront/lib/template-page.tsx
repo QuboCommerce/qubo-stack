@@ -28,7 +28,7 @@ export function templateRoute(
   return {
     async generateMetadata(props: Props): Promise<Metadata> {
       const { sf, tpl, view } = await load(props);
-      const meta = await viewMetadata(sf, { body: tpl?.data, title: opts.title?.(view) });
+      const meta = await viewMetadata(sf, { body: tpl?.data, title: opts.title?.(view), home: kind === "home" });
       return opts.noindex ? { ...meta, robots: { index: false, follow: true } } : meta;
     },
     async Page(props: Props) {

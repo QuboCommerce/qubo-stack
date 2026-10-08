@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
-import type { ProductCard, ProductDetailData } from "@qubo/blocks";
+import { pageSettings, registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
+import type { CollectionHeaderData, ProductCard, ProductDetailData, SiteTreeGroup, SiteTreeItem } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
+import { runtimeTheme } from "@qubo/blocks/runtime";
 import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
-import { requestPath, type Storefront } from "./site";
+import { localeLinks, logicalPath, requestPath, type Storefront } from "./site";
+import { tidyName } from "./names";
+export { tidyName };
+import { homeLabel, plainText, siteTitle } from "./seo";
 import { adminOrigin } from "./hosts";
 import { StaffBar } from "@/components/staff-bar";
+import { FormEnhancer } from "@/components/form-enhancer";
+import { SiteRuntime } from "@/components/site-runtime";
 
 /** What the current route is about; dynamic blocks default to it. */
 export type ViewContext = {
@@ -15,17 +21,22 @@ export type ViewContext = {
   product?: ProductDetail;
   /** Search query on /search?q=. */
   query?: string;
+  /** This page's path per locale when it differs from the current one (translated page slugs). */
+  paths?: Record<string, string>;
 };
+
+/** Root-relative path under the locale prefix being rendered. */
+const at = (sf: Storefront, path: string) => (sf.basePath && path.startsWith("/") ? (path === "/" ? sf.basePath : `${sf.basePath}${path}`) : path);
 
 function toDetail(p: ProductDetail): ProductDetailData {
   const first = p.variants[0];
   return {
     slug: p.slug,
-    title: p.name,
+    title: tidyName(p.name),
     brand: p.brand,
     description: p.description,
     sku: p.variants.length === 1 ? (first?.sku ?? null) : null,
-    images: p.images.map((i) => ({ src: i.url, alt: i.alt ?? p.name })),
+    images: p.images.map((i) => ({ src: i.url, alt: i.alt ?? tidyName(p.name) })),
     price: first?.price ?? p.basePrice,
     compareAt: p.compareAtPrice,
     variants: p.variants.map((v) => ({ id: v.id, name: v.name, price: v.price, available: v.available })),
@@ -48,26 +59,101 @@ function money(sf: Storefront, amount: string | null) {
   if (amount == null) return undefined;
   const value = Number(amount);
   if (!Number.isFinite(value)) return undefined;
-  return new Intl.NumberFormat(sf.site.locale, { style: "currency", currency: sf.site.currency }).format(value);
+  return new Intl.NumberFormat(sf.locale, { style: "currency", currency: sf.site.currency }).format(value);
 }
 
 function toCard(sf: Storefront, p: ProductListItem): ProductCard {
   return {
-    title: p.name,
-    href: `/products/${p.slug}`,
-    image: p.image ? { src: p.image, alt: p.name } : undefined,
+    title: tidyName(p.name),
+    href: at(sf, `/products/${p.slug}`),
+    image: p.image ? { src: p.image, alt: tidyName(p.name) } : undefined,
     price: money(sf, p.price),
     compareAt: p.compareAtPrice ? money(sf, p.compareAtPrice) : undefined,
   };
 }
 
 /** Prefetches data for dynamic blocks into `metadata.data[nodeId]`. */
+
+/** Pages and the collection tree for the SiteTree block, from live data. */
+async function siteTree(sf: Storefront, labels: { pages: string; collections: string }): Promise<SiteTreeGroup[]> {
+  const catalog = sf.site.capabilities.includes("catalog");
+  const [sitemap, categories] = await Promise.all([sf.client.getSitemap(), catalog ? sf.client.getCategories() : Promise.resolve([])]);
+  const pages: SiteTreeItem[] = [
+    { title: homeLabel(sf.locale), href: at(sf, "/") },
+    ...sitemap.pages.map((p) => ({ title: p.locales[sf.locale]?.title ?? p.title, href: at(sf, `/${p.locales[sf.locale]?.slug ?? p.slug}`) })),
+  ];
+  const children = (parentId: string | null): SiteTreeItem[] =>
+    categories
+      .filter((c) => (c.parentId ?? null) === parentId)
+      .map((c) => {
+        const kids = children(c.id);
+        return { title: tidyName(c.name), href: at(sf, `/collections/${c.slug}`), ...(kids.length ? { children: kids } : {}) };
+      });
+  return [
+    { label: labels.pages, items: pages },
+    { label: labels.collections, items: catalog ? children(null) : [] },
+  ];
+}
+
+/** Name, breadcrumb, description, subtree product count and children of the viewed collection. */
+async function collectionHeader(sf: Storefront, handle: string, allTitle: string): Promise<CollectionHeaderData | null> {
+  const categories = await sf.client.getCategories();
+  const byId = new Map(categories.map((c) => [c.id, c]));
+  const current = handle === "all" ? null : categories.find((c) => c.slug === handle);
+  const home = { label: homeLabel(sf.locale), href: at(sf, "/") };
+  if (!current) {
+    const roots = categories.filter((c) => !c.parentId);
+    return handle === "all"
+      ? { name: allTitle, description: null, count: null, crumbs: [home], children: roots.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })) }
+      : null;
+  }
+  const crumbs = [home];
+  const chain: typeof categories = [];
+  for (let p = current.parentId ? byId.get(current.parentId) : undefined; p; p = p.parentId ? byId.get(p.parentId) : undefined) chain.unshift(p);
+  crumbs.push(...chain.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })));
+  const subtree = (id: string): number =>
+    (byId.get(id)?.productCount ?? 0) + categories.filter((c) => c.parentId === id).reduce((n, c) => n + subtree(c.id), 0);
+  return {
+    name: tidyName(current.name),
+    description: current.description ?? null,
+    count: subtree(current.id),
+    crumbs,
+    children: categories.filter((c) => c.parentId === current.id).map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })),
+  };
+}
+
 async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewContext) {
   const jobs: Promise<[string, unknown]>[] = [];
   walkNodes(data, registry, ({ node }) => {
     if (node.type === "ProductDetail") {
       const id = (node.props as { id: string }).id;
       if (view.product) jobs.push(Promise.resolve([id, toDetail(view.product)]));
+      return;
+    }
+    if (node.type === "SiteTree") {
+      const props = node.props as { id: string; pagesLabel?: string; collectionsLabel?: string };
+      jobs.push(
+        siteTree(sf, { pages: props.pagesLabel || "Pages", collections: props.collectionsLabel || "Collections" })
+          .then((groups): [string, unknown] => [props.id, groups])
+          .catch((error) => {
+            console.warn(`[storefront] SiteTree ${props.id} failed`, error);
+            return [props.id, []];
+          }),
+      );
+      return;
+    }
+    if (node.type === "CollectionHeader") {
+      const { id, allTitle } = node.props as { id: string; allTitle?: string };
+      if (view.collection) {
+        jobs.push(
+          collectionHeader(sf, view.collection, allTitle || "All collections")
+            .then((d): [string, unknown] => [id, d ?? undefined])
+            .catch((error) => {
+              console.warn(`[storefront] CollectionHeader ${id} failed`, error);
+              return [id, undefined];
+            }),
+        );
+      }
       return;
     }
     if (node.type !== "ProductGrid") return;
@@ -100,7 +186,8 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
         } else if (props.source === "search") {
           items = view.query ? (await sf.client.getProducts({ query: view.query, limit: limit + 1 })).products : [];
         } else {
-          const handle = props.source === "collection" ? props.collection?.trim() || view.collection : undefined;
+          // On a product page an unset collection means "the same shelf as this product".
+          const handle = props.source === "collection" ? props.collection?.trim() || view.collection || view.product?.categories[0]?.slug : undefined;
           const category = handle && handle !== "all" ? handle : undefined;
           items = (await sf.client.getProducts({ category, limit: limit + 1 })).products;
         }
@@ -114,8 +201,26 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
   return Object.fromEntries(await Promise.all(jobs));
 }
 
+/**
+ * `page:<primary slug>` links inside content point at the translated slug in a
+ * secondary locale. Only fetched when the site serves more than one language.
+ */
+async function pageLinks(sf: Storefront): Promise<Record<string, string> | undefined> {
+  if (sf.locales.length < 2) return undefined;
+  try {
+    const sitemap = await sf.client.getSitemap();
+    const out: Record<string, string> = {};
+    for (const p of sitemap.pages) out[`page:${p.slug}`] = at(sf, `/${p.locales[sf.locale]?.slug ?? p.slug}`);
+    return out;
+  } catch (error) {
+    console.warn("[storefront] page links failed", error);
+    return undefined;
+  }
+}
+
 export async function RenderView({ sf, body, view = {}, documentId }: { sf: Storefront; body: RenderDocument; view?: ViewContext; documentId?: string }) {
   const data = compose(sf, body);
+  const [blockData, links, path] = await Promise.all([loadBlockData(sf, data, view), pageLinks(sf), logicalPath()]);
   const metadata: RenderMetadata = {
     site: {
       id: sf.site.id,
@@ -123,33 +228,59 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
       capabilities: sf.site.capabilities as Capability[],
       name: sf.site.name,
       currency: sf.site.currency,
-      locale: sf.site.locale,
+      locale: sf.locale,
     },
-    locale: sf.site.locale.split("-")[0],
+    locale: sf.locale.split("-")[0],
+    basePath: sf.basePath || undefined,
+    locales: sf.locales.length > 1 ? localeLinks(sf, path, view.paths) : undefined,
+    links,
     theme: sf.theme,
-    data: await loadBlockData(sf, data, view),
+    data: blockData,
   };
   return (
     <>
       <QuboRender registry={registry} data={data} metadata={metadata} />
+      <FormEnhancer />
+      <SiteRuntime theme={runtimeTheme(sf.theme, pageSettings(body.root?.props))} />
       <StaffBar siteId={sf.site.id} siteSlug={sf.site.slug} adminOrigin={adminOrigin(new URL(sf.origin).host)} documentId={documentId} />
     </>
   );
 }
 
-/** Page metadata: explicit title → document root title → site name; dev hosts are noindex. */
-export async function viewMetadata(sf: Storefront | null, opts: { title?: string | null; description?: string | null; body?: RenderDocument | null } = {}): Promise<Metadata> {
+/**
+ * Page metadata. Title: `<page> | <site title>`, where the site title is the
+ * Settings meta title (else the site name). The home page carries the site
+ * title alone, or its own Studio title when one is set. Descriptions fall
+ * back to the site description. Dev hosts are noindex.
+ */
+export async function viewMetadata(
+  sf: Storefront | null,
+  opts: { title?: string | null; description?: string | null; body?: RenderDocument | null; home?: boolean; paths?: Record<string, string> } = {},
+): Promise<Metadata> {
   if (!sf) return { title: "No site on this host", robots: { index: false, follow: false } };
   // Canonical drops the query: filters/sorting/tracking params are the same page.
-  const path = (await requestPath()).split("?")[0];
+  const path = (await requestPath()).split("?")[0] ?? "/";
+  // hreflang: this page in every served language, the primary one doubling as x-default.
+  const links = sf.locales.length > 1 ? localeLinks(sf, await logicalPath(), opts.paths) : [];
+  const languages = links.length
+    ? Object.fromEntries([...links.map((l) => [l.locale, l.href]), ["x-default", links.find((l) => l.locale === sf.primaryLocale)?.href ?? "/"]])
+    : undefined;
   const rootTitle = opts.body?.root?.props?.title;
-  const title = opts.title || (typeof rootTitle === "string" && rootTitle) || sf.site.name;
+  const suffix = siteTitle(sf);
+  const own = opts.title || (typeof rootTitle === "string" && rootTitle) || "";
+  const title = opts.home || !own || own === suffix || own === sf.site.name ? (own && own !== sf.site.name ? own : suffix) : `${own} | ${suffix}`;
+  const description = plainText(opts.description, 300) ?? plainText(sf.seo.description, 300);
+  const brand = sf.theme?.brand;
+  const icon = brand?.favicon?.url || brand?.mark?.url;
+  const og = brand?.ogImage?.url ? [{ url: brand.ogImage.url, alt: brand.ogImage.alt || sf.site.name, width: brand.ogImage.width, height: brand.ogImage.height }] : undefined;
   return {
-    title: title === sf.site.name ? title : { absolute: opts.title ? `${title} · ${sf.site.name}` : title },
-    description: opts.description ?? undefined,
+    title: { absolute: title },
+    icons: icon ? { icon, apple: brand?.mark?.url || icon } : undefined,
+    twitter: og ? { card: "summary_large_image" } : undefined,
+    description,
     metadataBase: new URL(sf.origin),
-    alternates: { canonical: path },
-    openGraph: { siteName: sf.site.name, title, url: path, locale: sf.site.locale.replace("-", "_"), type: "website" },
+    alternates: { canonical: path, languages },
+    openGraph: { siteName: sf.site.name, title, description, url: path, locale: sf.locale.replace("-", "_"), type: "website", images: og },
     robots: sf.noindex ? { index: false, follow: false } : undefined,
   };
 }

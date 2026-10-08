@@ -11,6 +11,8 @@ import { getCategoryTree, subtreeIds } from "@/lib/categories";
 import { assetUrl, money, number, relativeTime } from "@/lib/format";
 import { getCatalogHealth, getProducts } from "@/lib/queries";
 import { cn } from "@qubo/shared/utils";
+import { LiveRefresh } from "@/components/live-events";
+import { RowPresence } from "@/components/presence";
 
 type Search = { q?: string; status?: string; page?: string; view?: string; category?: string };
 
@@ -18,7 +20,7 @@ const uuid = /^[0-9a-f-]{36}$/i;
 
 export default async function ProductsPage({ params, searchParams }: { params: Promise<{ site: string }>; searchParams: Promise<Search> }) {
   const [{ site: slug }, sp] = await Promise.all([params, searchParams]);
-  const { site, siteId } = await requireSite(slug);
+  const { site, siteId, user } = await requireSite(slug);
   const status = sp.status === "active" || sp.status === "archived" ? sp.status : "all";
   const page = Number(sp.page) || 1;
   const tree = await getCategoryTree(siteId);
@@ -44,6 +46,8 @@ export default async function ProductsPage({ params, searchParams }: { params: P
   const currency = site.currency ?? "EUR";
 
   return (
+    <>
+    <LiveRefresh siteId={siteId} userId={user.id} tables={["product", "category"]} />
     <Page
       title="Products"
       width="wide"
@@ -109,6 +113,7 @@ export default async function ProductsPage({ params, searchParams }: { params: P
                           <ImageOff className="size-6 text-muted-foreground" />
                         )}
                         {p.isArchived && <Badge variant="secondary" className="absolute left-2 top-2">Archived</Badge>}
+                        <RowPresence path={`${base}/${p.id}`} className="absolute bottom-2 right-2" />
                       </div>
                       <div className="flex flex-1 flex-col gap-1 border-t p-3">
                         <p className="line-clamp-2 text-[13px] font-medium leading-snug">{p.name}</p>
@@ -154,6 +159,7 @@ export default async function ProductsPage({ params, searchParams }: { params: P
                             </div>
                             <div className="min-w-0">
                               <Link href={`${base}/${p.id}`} className="line-clamp-2 font-medium hover:underline @min-[56rem]:line-clamp-1">{p.name}</Link>
+                              <RowPresence path={`${base}/${p.id}`} className="mt-0.5 flex" />
                               <p className="truncate text-xs text-muted-foreground">
                                 <span className="@min-[36rem]:hidden">{p.isArchived ? "Archived · " : ""}</span>
                                 {p.slug}
@@ -200,5 +206,6 @@ export default async function ProductsPage({ params, searchParams }: { params: P
         </Panel>
       )}
     </Page>
+    </>
   );
 }

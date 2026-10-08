@@ -9,7 +9,8 @@ import { entranceOptions, f, type InferValues } from "./fields";
  * "section id"… so every section ends up slightly different. Here they are
  * declared once; add a control here and every section in every site gains it.
  */
-export const edgeShapes = ["none", "angle", "curve", "wave", "zigzag"] as const;
+export const edgeShapes = ["none", "angle", "curve", "wave", "zigzag", "arch", "torn"] as const;
+export const artMotions = ["none", "float", "parallax", "spin"] as const;
 export type EdgeShape = (typeof edgeShapes)[number];
 
 export const sectionChromeFields = {
@@ -22,6 +23,8 @@ export const sectionChromeFields = {
       media: f.media({ label: "Background media", accept: "any", translatableAlt: false }),
       overlay: f.number({ label: "Overlay", min: 0, max: 90, step: 5, unit: "%", default: 0 }),
       fit: f.select(["cover", "contain"], { label: "Fit", default: "cover" }),
+      gradient: f.preset("gradient", { label: "Gradient", description: "Theme gradient painted over the background, in this section's colours." }),
+      texture: f.preset("gradient", { label: "Texture", description: "A second, fine layer on top of the gradient: brushed lines, grain, ruling." }),
     },
     { label: "Background", group: "style" },
   ),
@@ -39,10 +42,12 @@ export const sectionChromeFields = {
       placement: f.anchor({ label: "Placement", default: "top-right" }),
       size: f.number({ label: "Size", min: 5, max: 100, step: 5, unit: "%", default: 30 }),
       opacity: f.number({ label: "Opacity", min: 0, max: 100, step: 5, unit: "%", default: 100 }),
+      motion: f.select(artMotions, { label: "Motion", default: "none" }),
     },
     { label: "Section art", group: "style", audience: "builder" },
   ),
   entrance: f.select(entranceOptions, { label: "Entrance animation", default: "inherit", group: "style" }),
+  effect: f.preset("effect", { label: "Effect", description: "Ambient effect behind the content (snow, particles, aurora, grain)." }),
   hideOn: f.group(
     {
       mobile: f.toggle({ label: "Hide on mobile" }),
@@ -70,12 +75,14 @@ const edgePaths: Record<Exclude<EdgeShape, "none">, string> = {
   curve: "M0,0 H100 Q50,20 0,0 Z",
   wave: "M0,0 H100 V3 C80,12 60,-2 40,6 C25,12 10,4 0,7 Z",
   zigzag: `M0,0 H100 V2 ${Array.from({ length: 20 }, (_, i) => `L${100 - (i * 5 + 2.5)},${i % 2 ? 2 : 10}`).join(" ")} L0,2 Z`,
+  arch: "M0,0 H100 V0 C75,13 25,13 0,0 Z",
+  torn: "M0,0 H100 V3 L96,6 L91,4 L86,8 L80,5 L74,7 L69,3 L63,6 L57,4 L50,8 L44,5 L38,7 L33,4 L27,6 L21,3 L15,7 L9,4 L4,6 L0,4 Z",
 };
 
 function Edge({ side, shape }: { side: "top" | "bottom"; shape: EdgeShape }) {
   if (shape === "none") return null;
   return (
-    <svg className="pk-edge" data-edge-side={side} viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+    <svg className="qb-edge" data-edge-side={side} viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
       <path d={edgePaths[shape]} fill="currentColor" />
     </svg>
   );
@@ -106,19 +113,22 @@ export function SectionChrome({
 }) {
   const v = { ...defaultChrome, ...value };
   const bg = resolveMedia(v.background?.media, ctx.metadata);
+  const gradient = v.background?.gradient || "";
+  const texture = v.background?.texture || "";
+  const effect = v.effect ? ctx.metadata.theme?.effects.presets.find((e) => e.id === v.effect) : undefined;
   const art = resolveMedia(v.art?.media, ctx.metadata);
   const isVideo = bg && /\.(mp4|webm|mov)(\?|$)/i.test(bg.src);
   const hasEdges = v.edges?.top !== "none" || v.edges?.bottom !== "none";
   const style = {
-    "--pk-section-pt": `var(--pk-gap-${v.spacingTop})`,
-    "--pk-section-pb": `var(--pk-gap-${v.spacingBottom})`,
-    ...(hasEdges ? { "--pk-edge-height": `var(--pk-gap-${v.edges?.height ?? "lg"})` } : {}),
+    "--qb-section-pt": `var(--qb-gap-${v.spacingTop})`,
+    "--qb-section-pb": `var(--qb-gap-${v.spacingBottom})`,
+    ...(hasEdges ? { "--qb-edge-height": `var(--qb-gap-${v.edges?.height ?? "lg"})` } : {}),
   } as CSSProperties;
 
   return (
     <section
       id={v.anchorId || undefined}
-      className="pk-section"
+      className="qb-section"
       data-block={type}
       data-scheme={v.scheme || undefined}
       data-width={v.width}
@@ -130,7 +140,7 @@ export function SectionChrome({
       style={style}
     >
       {bg ? (
-        <div className="pk-section-bg" aria-hidden="true">
+        <div className="qb-section-bg" aria-hidden="true">
           {isVideo ? (
             <video src={bg.src} autoPlay muted loop playsInline style={{ objectFit: v.background.fit }} />
           ) : (
@@ -139,23 +149,27 @@ export function SectionChrome({
           )}
           {v.background.overlay > 0 ? (
             <div
-              style={{ position: "absolute", inset: 0, background: "var(--pk-background)", opacity: v.background.overlay / 100 }}
+              style={{ position: "absolute", inset: 0, background: "var(--qb-background)", opacity: v.background.overlay / 100 }}
             />
           ) : null}
         </div>
       ) : null}
+      {gradient ? <div className="qb-section-gradient" data-gradient={gradient} aria-hidden="true" /> : null}
+      {texture ? <div className="qb-section-gradient" data-gradient={texture} aria-hidden="true" /> : null}
+      {effect ? <div className="qb-effect" data-effect={effect.id} data-effect-kind={effect.kind} data-effect-scope="section" aria-hidden="true" /> : null}
       {art ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          className="pk-section-art"
+          className="qb-section-art"
           src={art.src}
           alt=""
           aria-hidden="true"
+          data-art-motion={v.art.motion && v.art.motion !== "none" ? v.art.motion : undefined}
           style={{ ...anchorToPosition[v.art.placement], width: `${v.art.size}%`, opacity: v.art.opacity / 100 }}
         />
       ) : null}
       <Edge side="top" shape={v.edges?.top ?? "none"} />
-      <div className="pk-container">{children}</div>
+      <div className="qb-container">{children}</div>
       <Edge side="bottom" shape={v.edges?.bottom ?? "none"} />
     </section>
   );

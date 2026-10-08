@@ -30,6 +30,7 @@ import {
 } from "@/lib/queries";
 import { summarizeTheme } from "@/lib/theme-summary";
 import { cn } from "@qubo/shared/utils";
+import { LiveRefresh } from "@/components/live-events";
 
 export default async function HomePage({ params }: { params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
@@ -57,7 +58,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
     caps.has("commerce") && { label: "Open orders", value: number(counts.orders), hint: `${number(data.orderCount)} all time`, icon: ShoppingBag, href: `${base}/orders` },
     caps.has("catalog") && { label: "Products", value: number(data.productCount), hint: `${number(catalog.active)} active`, icon: Package, href: `${base}/products` },
     caps.has("accounts") && { label: "Customers", value: number(data.customerCount), hint: "imported & registered", icon: Users, href: `${base}/customers` },
-    caps.has("leads") && { label: "Inbox", value: number(counts.leads), hint: "unread messages", icon: Inbox, href: `${base}/inbox` },
+    caps.has("leads") && { label: "Inbox", value: number(counts.inbox), hint: "unread conversations", icon: Inbox, href: `${base}/inbox` },
   ].filter(Boolean) as { label: string; value: string; hint: string; icon: typeof Package; href: string }[];
 
   const setup = [
@@ -72,6 +73,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
 
   return (
     <div className="mx-auto w-full max-w-5xl px-0 pb-16 pt-4 xs:px-3 sm:px-5 sm:pt-6 lg:px-8 lg:pt-8 xl:max-w-6xl 2xl:max-w-7xl 3xl:max-w-8xl 3xl:px-10 4xl:max-w-10xl 4xl:px-14">
+      <LiveRefresh siteId={siteId} userId={user.id} tables={["product", "order", "site"]} />
       <div className="@container">
         <header className="mb-5 flex flex-wrap items-end gap-x-3 gap-y-3 px-3 xs:px-0">
           {/* title takes full row on phones so the greeting never squeezes */}

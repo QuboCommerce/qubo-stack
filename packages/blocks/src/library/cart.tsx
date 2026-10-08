@@ -97,7 +97,7 @@ const formatter = (locale: string, currency: string) => {
 /** Header badge; renders nothing until the cart has items (and on the server). */
 export function CartCount({ siteId }: { siteId: string }) {
   const { count } = useCart(siteId);
-  return count ? <span className="pk-cart-count" aria-label={String(count)}>{count > 99 ? "99+" : count}</span> : null;
+  return count ? <span className="qb-cart-count" aria-label={String(count)}>{count > 99 ? "99+" : count}</span> : null;
 }
 
 export type BuyVariant = { id: string; name: string | null; price: string; available: number | null };
@@ -134,11 +134,11 @@ export function BuyBox({
   const named = variants.filter((v) => v.name && v.name !== "Default");
 
   return (
-    <div className="pk-buybox">
+    <div className="qb-buybox">
       {named.length > 1 ? (
-        <label className="pk-field">
-          <span className="pk-label">{labels.option}</span>
-          <select className="pk-input" value={variantId} onChange={(e) => setVariantId(e.target.value)}>
+        <label className="qb-field">
+          <span className="qb-label">{labels.option}</span>
+          <select className="qb-input" value={variantId} onChange={(e) => setVariantId(e.target.value)}>
             {variants.map((v) => (
               <option key={v.id} value={v.id} disabled={v.available === 0}>
                 {v.name} — {fmt.format(Number(v.price))}
@@ -148,9 +148,9 @@ export function BuyBox({
           </select>
         </label>
       ) : null}
-      <div className="pk-buybox-row">
-        <label className="pk-qty">
-          <span className="pk-sr-only">{labels.quantity}</span>
+      <div className="qb-buybox-row">
+        <label className="qb-qty">
+          <span className="qb-sr-only">{labels.quantity}</span>
           <button type="button" aria-label="−" onClick={() => setQuantity((q) => Math.max(1, q - 1))} disabled={soldOut || quantity <= 1}>
             −
           </button>
@@ -169,7 +169,7 @@ export function BuyBox({
         </label>
         <button
           type="button"
-          className="pk-button"
+          className="qb-button"
           data-emphasis="primary"
           disabled={soldOut}
           onClick={() => {
@@ -181,7 +181,7 @@ export function BuyBox({
           {soldOut ? labels.soldOut : `${labels.add} — ${fmt.format(Number(selected.price) * quantity)}`}
         </button>
       </div>
-      <p className="pk-buybox-status" role="status" aria-live="polite">
+      <p className="qb-buybox-status" role="status" aria-live="polite">
         {added ? (
           <>
             {labels.added} <a href={labels.cartHref}>{labels.viewCart}</a>
@@ -203,6 +203,8 @@ export type CartLabels = {
   remove: string;
   quantity: string;
   error: string;
+  /** Locale prefix for product links (`/nl`). */
+  basePath?: string;
 };
 
 export function CartView({ siteId, locale, currency, labels, preview }: { siteId: string; locale: string; currency: string; labels: CartLabels; preview?: CartLine[] }) {
@@ -234,9 +236,9 @@ export function CartView({ siteId, locale, currency, labels, preview }: { siteId
 
   if (!lines.length) {
     return (
-      <div className="pk-cart-empty">
-        <p className="pk-muted">{labels.empty}</p>
-        <a className="pk-button" data-emphasis="primary" href={labels.continueHref}>
+      <div className="qb-cart-empty">
+        <p className="qb-muted">{labels.empty}</p>
+        <a className="qb-button" data-emphasis="primary" href={labels.continueHref}>
           {labels.continueLabel}
         </a>
       </div>
@@ -244,23 +246,23 @@ export function CartView({ siteId, locale, currency, labels, preview }: { siteId
   }
 
   return (
-    <div className="pk-cart">
-      <ul className="pk-cart-lines">
+    <div className="qb-cart">
+      <ul className="qb-cart-lines">
         {lines.map((l) => (
-          <li key={l.variantId} className="pk-cart-line">
+          <li key={l.variantId} className="qb-cart-line">
             {l.image ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={l.image} alt="" loading="lazy" />
             ) : (
-              <span className="pk-media-placeholder" aria-hidden="true" />
+              <span className="qb-media-placeholder" aria-hidden="true" />
             )}
-            <div className="pk-cart-line-info">
-              <a href={`/products/${l.productSlug}`}>{l.title}</a>
-              {l.variantName && l.variantName !== "Default" && l.variantName !== l.title ? <span className="pk-muted pk-small">{l.variantName}</span> : null}
-              <span className="pk-small">{fmt.format(Number(l.unitPrice))}</span>
+            <div className="qb-cart-line-info">
+              <a href={`${labels.basePath ?? ""}/products/${l.productSlug}`}>{l.title}</a>
+              {l.variantName && l.variantName !== "Default" && l.variantName !== l.title ? <span className="qb-muted qb-small">{l.variantName}</span> : null}
+              <span className="qb-small">{fmt.format(Number(l.unitPrice))}</span>
             </div>
-            <label className="pk-qty" data-size="sm">
-              <span className="pk-sr-only">{labels.quantity}</span>
+            <label className="qb-qty" data-size="sm">
+              <span className="qb-sr-only">{labels.quantity}</span>
               <button type="button" aria-label="−" onClick={() => cart.setQuantity(l.variantId, l.quantity - 1)}>
                 −
               </button>
@@ -269,28 +271,28 @@ export function CartView({ siteId, locale, currency, labels, preview }: { siteId
                 +
               </button>
             </label>
-            <strong className="pk-cart-line-total">{fmt.format(Number(l.unitPrice) * l.quantity)}</strong>
-            <button type="button" className="pk-cart-remove" onClick={() => cart.remove(l.variantId)}>
+            <strong className="qb-cart-line-total">{fmt.format(Number(l.unitPrice) * l.quantity)}</strong>
+            <button type="button" className="qb-cart-remove" onClick={() => cart.remove(l.variantId)}>
               {labels.remove}
             </button>
           </li>
         ))}
       </ul>
-      <div className="pk-cart-summary">
-        <p className="pk-cart-subtotal">
+      <div className="qb-cart-summary">
+        <p className="qb-cart-subtotal">
           <span>{labels.subtotal}</span>
           <strong>{fmt.format(subtotal)}</strong>
         </p>
-        {labels.note ? <p className="pk-muted pk-small">{labels.note}</p> : null}
-        <button type="button" className="pk-button" data-emphasis="primary" disabled={busy} onClick={checkout}>
+        {labels.note ? <p className="qb-muted qb-small">{labels.note}</p> : null}
+        <button type="button" className="qb-button" data-emphasis="primary" disabled={busy} onClick={checkout}>
           {busy ? labels.redirecting : labels.checkout}
         </button>
         {error ? (
-          <p className="pk-cart-error" role="alert">
+          <p className="qb-cart-error" role="alert">
             {error}
           </p>
         ) : null}
-        <a className="pk-small" href={labels.continueHref}>
+        <a className="qb-small" href={labels.continueHref}>
           {labels.continueLabel}
         </a>
       </div>

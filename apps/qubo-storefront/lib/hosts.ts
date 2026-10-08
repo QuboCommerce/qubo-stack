@@ -29,3 +29,31 @@ export function platformSubdomainSlug(host: string): string | null {
 
 /** The admin host for a storefront host: dev override, else `qubo.<domain>` (ADMIN_SUBDOMAIN). */
 export { adminHost as adminHostFor, adminOrigin } from "@qubo/shared/admin-url";
+
+/**
+ * Resolution order for a storefront host: dev host map → `<slug>.<PLATFORM_BASE_DOMAIN>`
+ * → `site_domain` (via the API) → `STOREFRONT_DEFAULT_SITE` (single-site installs).
+ */
+export function siteTargets(host: string): ({ siteSlug: string } | { host: string })[] {
+  const devSlug = devSiteHosts().get(host);
+  if (devSlug) return [{ siteSlug: devSlug }];
+  const platformSlug = platformSubdomainSlug(host);
+  if (platformSlug) return [{ siteSlug: platformSlug }];
+  const fallbackSlug = process.env.STOREFRONT_DEFAULT_SITE?.trim();
+  return [{ host }, ...(fallbackSlug ? [{ siteSlug: fallbackSlug }] : [])];
+}
+
+/**
+ * Site preview lives on its own host so nothing is shared with the public site:
+ * `preview.<domain>` for custom domains, `<slug>.preview.<PLATFORM_BASE_DOMAIN>`
+ * on the platform. Returns the host the site resolves under, or null when this
+ * is not a preview host.
+ */
+export function previewSiteHost(host: string): string | null {
+  const base = process.env.PLATFORM_BASE_DOMAIN?.trim().toLowerCase();
+  if (base && host.endsWith(`.preview.${base}`)) {
+    const label = host.slice(0, -`.preview.${base}`.length);
+    return /^[a-z0-9-]+$/.test(label) ? `${label}.${base}` : null;
+  }
+  return host.startsWith("preview.") && host.indexOf(".", "preview.".length) > 0 ? host.slice("preview.".length) : null;
+}

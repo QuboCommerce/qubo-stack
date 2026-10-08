@@ -5,8 +5,8 @@ import { getSessionCookie } from "better-auth/cookies";
 // Mirrors ADMIN_COOKIE_PREFIX in lib/auth.ts (not imported: that pulls in the DB).
 const ADMIN_COOKIE_PREFIX = "qubo-admin";
 
-// /api/me answers CORS preflights and 401s itself.
-const publicRoutes = ["/sign-in", "/sign-up", "/api/auth", "/api/legacy-assets", "/api/me", "/robots.txt", "/manifest.webmanifest"];
+// /api/me, /api/events and /api/presence check the session themselves and answer 401 (no HTML redirect for fetch/EventSource).
+const publicRoutes = ["/sign-in", "/sign-up", "/api/auth", "/api/legacy-assets", "/api/media/", "/api/me", "/api/events", "/api/presence", "/api/studio/", "/dns/", "/robots.txt", "/manifest.webmanifest"];
 
 function isPublicRoute(pathname: string): boolean {
   return publicRoutes.some((route) => pathname.startsWith(route));

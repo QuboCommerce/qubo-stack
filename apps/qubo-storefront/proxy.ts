@@ -1,30 +1,74 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminOrigin, requestHost } from "./lib/hosts";
+import { adminOrigin, previewSiteHost, requestHost } from "./lib/hosts";
+import { GATE_PATH, PREVIEW_COOKIE, PREVIEW_HEADER, previewTokenLooksValid } from "./lib/preview";
 import { siteHostFromAdminHost } from "@qubo/shared/admin-url";
+import { splitLocalePath } from "@qubo/shared/locale-url";
 
 /**
  * One app, many sites: every request is rewritten to `/sites/<host>/<path>`
  * so pages are keyed (and cacheable) per host. The host → site lookup itself
  * happens server-side in lib/site.ts.
+ *
+ * A leading two-letter segment (`/nl/levering`) is a language prefix: it is
+ * stripped from the rewritten path and passed as `x-qubo-lang`. lib/site.ts
+ * decides whether the site actually serves that language.
+ *
+ * Preview hosts (`preview.<domain>`) are gated here, before any site code or
+ * content is reached: no valid cookie → only the PIN page is served.
  */
-export function proxy(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const host = requestHost(req.headers);
   const { pathname, search } = req.nextUrl;
 
   // Admin hosts are served by qubo-admin; never render a storefront on them.
   if (!host || siteHostFromAdminHost(host)) return new NextResponse("Not found", { status: 404 });
 
+  const siteHost = previewSiteHost(host);
+  const preview = siteHost !== null;
+
   if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    return NextResponse.redirect(`${adminOrigin(host)}${pathname.slice("/admin".length) || "/"}`, 302);
+    return NextResponse.redirect(`${adminOrigin(siteHost ?? host)}${pathname.slice("/admin".length) || "/"}`, 302);
   }
 
+  const { lang, path: unprefixed } = splitLocalePath(pathname);
   const headers = new Headers(req.headers);
-  headers.set("x-qubo-host", host);
+  headers.set("x-qubo-host", siteHost ?? host);
   headers.set("x-qubo-path", `${pathname}${search}`);
+  if (lang) headers.set("x-qubo-lang", lang);
+  else headers.delete("x-qubo-lang");
+
+  if (preview) {
+    if (pathname === GATE_PATH) {
+      // Reaching the gate always means "start over", so a stale cookie is dropped here.
+      const res = NextResponse.next({ request: { headers } });
+      res.cookies.delete(PREVIEW_COOKIE);
+      return noindex(res);
+    }
+    const token = req.cookies.get(PREVIEW_COOKIE)?.value;
+    if (!(await previewTokenLooksValid(token))) {
+      const url = req.nextUrl.clone();
+      url.pathname = GATE_PATH;
+      url.search = pathname === "/" && !search ? "" : `?next=${encodeURIComponent(`${pathname}${search}`)}`;
+      const res = NextResponse.rewrite(url, { request: { headers } });
+      if (token) res.cookies.delete(PREVIEW_COOKIE);
+      return noindex(res);
+    }
+    headers.set(PREVIEW_HEADER, token!);
+  } else if (pathname === GATE_PATH) {
+    return new NextResponse("Not found", { status: 404 });
+  }
+
   const url = req.nextUrl.clone();
-  url.pathname = `/sites/${encodeURIComponent(host)}${pathname === "/" ? "" : pathname}`;
+  url.pathname = `/sites/${encodeURIComponent(siteHost ?? host)}${unprefixed === "/" ? "" : unprefixed}`;
   url.search = search;
-  return NextResponse.rewrite(url, { request: { headers } });
+  const res = NextResponse.rewrite(url, { request: { headers } });
+  return preview ? noindex(res) : res;
+}
+
+function noindex(res: NextResponse) {
+  res.headers.set("x-robots-tag", "noindex, nofollow");
+  res.headers.set("cache-control", "private, no-store");
+  return res;
 }
 
 export const config = {

@@ -37,8 +37,9 @@ coverage/
 # Misc
 *.tsbuildinfo
 
-# Local thread transcripts (contain credentials)
-docs/thread-recovery.md
 
 # Per-machine dev runner overrides (scripts/dev/qd)
 .qubo/
+
+# Agent scratch (ad hoc scripts, screenshots, dumps)
+.scratch/

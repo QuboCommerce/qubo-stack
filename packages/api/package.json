@@ -16,11 +16,16 @@
   "dependencies": {
     "@elysiajs/cors": "^1.2",
     "@qubo/db": "workspace:*",
+    "@qubo/domains": "workspace:*",
+    "@qubo/inbox": "workspace:*",
     "@qubo/shared": "workspace:*",
+    "@qubo/storage": "workspace:*",
     "@qubo/studio": "workspace:*",
     "better-auth": "^1.2",
     "drizzle-orm": "^0.44",
-    "elysia": "^1.2"
+    "elysia": "^1.2",
+    "@qubo/portal-client": "workspace:*",
+    "@qubo/realtime": "workspace:*"
   },
   "devDependencies": {
     "@types/bun": "latest",

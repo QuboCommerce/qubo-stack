@@ -3,11 +3,12 @@
 import "@puckeditor/core/puck.css";
 import "./studio.css";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Puck, createUsePuck, useGetPuck, type Config, type Data } from "@puckeditor/core";
-import { instantiate, registry, type Capability, type DocumentData, type SiteType } from "@qubo/blocks";
+import { instantiate, pageOverlay, pageSettings, registry, type Capability, type DocumentData, type SiteType } from "@qubo/blocks";
+import { previewTransition, startCanvasRuntime } from "@qubo/blocks/runtime";
 import { createEditorConfig } from "@qubo/blocks/editor";
 import type { Theme } from "@qubo/stylekit";
 import type { ViewIndex } from "@qubo/studio";
@@ -15,6 +16,8 @@ import {
   AlertTriangle,
   Blocks,
   Check,
+  Clapperboard,
+  Eye,
   CloudOff,
   History,
   Laptop,
@@ -40,6 +43,8 @@ import { toast } from "sonner";
 import { cn } from "@qubo/shared/utils";
 import type { SectionEntry } from "@/lib/section-catalog";
 import { AddSectionDialog } from "./add-section-dialog";
+import { decorFieldAdapter, durationFieldAdapter, easingFieldAdapter, presetFieldAdapter } from "./design-fields";
+import { mediaFieldAdapter } from "./media-field";
 import { discardDraftAction, loadDraftAction, publishAction } from "@/app/studio-actions";
 import { loadThemeAction, publishThemeAction } from "@/app/theme-actions";
 import { Button } from "@/components/ui/button";
@@ -61,9 +66,14 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { relativeTime } from "@/lib/format";
 import { studioHref } from "@/lib/view-meta";
 import { HistorySheet } from "./history-sheet";
+import { useReportPresence } from "@qubo/realtime/client";
+import { BlockPresenceOverlay, DocumentPresence } from "@/components/presence";
 import { useDocumentSync, type DocumentSync } from "./use-document-sync";
+import { useLiveCanvas, useStudioLease, type StudioLease } from "./use-studio-lease";
+import { peerColor } from "@/components/presence";
 import { ViewPicker } from "./view-picker";
 import { ThemePanel } from "./theme/theme-panel";
+import { CanvasScrollbar } from "./canvas-scrollbar";
 import { useThemeEditor, type ThemeEditor, type ThemeRecord } from "./theme/use-theme-editor";
 
 type ViewEntry = ViewIndex["groups"][number]["entries"][number];
@@ -82,6 +92,8 @@ export type StudioEditorProps = {
 };
 
 const usePuck = createUsePuck();
+const readOnlyPermissions = { drag: false, duplicate: false, delete: false, edit: false, insert: false };
+const editPermissions = { drag: true, duplicate: true, delete: true, edit: true, insert: true };
 const ROOT_ZONE = "root:default-zone";
 
 // ------------------------------------------------------------ breakpoints ---
@@ -106,6 +118,22 @@ const viewports: { id: Viewport; label: string; width: number | null; icon: type
   { id: "mobile", label: "Mobile · 390", width: 390, icon: Smartphone },
 ];
 
+// ----------------------------------------------------------------- canvas ---
+
+/** Runs the site runtime (effects, menus, ambient video) inside the canvas iframe. */
+function CanvasRuntime({ document: frameDoc, onDocument, children }: { document?: Document; onDocument: (d: Document | null) => void; children: React.ReactNode }) {
+  useEffect(() => {
+    if (!frameDoc) return;
+    onDocument(frameDoc);
+    const stop = startCanvasRuntime(frameDoc);
+    return () => {
+      stop();
+      onDocument(null);
+    };
+  }, [frameDoc, onDocument]);
+  return <>{children}</>;
+}
+
 // ----------------------------------------------------------------- editor ---
 
 export function StudioEditor(props: StudioEditorProps) {
@@ -115,9 +143,9 @@ export function StudioEditor(props: StudioEditorProps) {
   const themeEditor = useThemeEditor(site.slug, props.themeRecord);
   // The canvas previews the theme draft live; deferring keeps sliders responsive.
   const theme = useDeferredValue(themeEditor.theme ?? props.theme);
-  // Field options (scheme/button pickers) only change when those lists do.
+  // Field options (scheme, button and preset pickers) only change when those lists do.
   const fieldThemeKey = theme
-    ? JSON.stringify([theme.schemes.map((s) => [s.id, s.name]), theme.buttons.map((b) => [b.id, b.name]), theme.defaultScheme, theme.defaultButton])
+    ? JSON.stringify([theme.schemes.map((s) => [s.id, s.name]), theme.buttons.map((b) => [b.id, b.name]), theme.defaultScheme, theme.defaultButton, [theme.decor, theme.surfaces.gradients, theme.effects.presets, theme.motion.transitions].map((l) => l.map((x) => [x.id, x.name]))])
     : "";
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const fieldTheme = useMemo(() => theme, [fieldThemeKey]);
@@ -134,8 +162,26 @@ export function StudioEditor(props: StudioEditorProps) {
       createEditorConfig(registry, {
         capabilities: site.capabilities,
         fieldContext: { theme: fieldTheme ?? undefined, audience },
+        page: !props.view.key.startsWith("group:"),
+        adapters: {
+          media: mediaFieldAdapter({ slug: site.slug, id: site.id }),
+          duration: durationFieldAdapter,
+          easing: easingFieldAdapter,
+          preset: presetFieldAdapter,
+          decor: decorFieldAdapter({ slug: site.slug, documentId: doc.id }),
+        },
       }) as Config,
-    [site.capabilities, fieldTheme, audience],
+    [site.capabilities, site.slug, site.id, doc.id, fieldTheme, audience, props.view.key],
+  );
+
+  const [canvasDoc, setCanvasDoc] = useState<Document | null>(null);
+  const overrides = useMemo(
+    () => ({
+      iframe: ({ children, document: d }: { children: React.ReactNode; document?: Document }) => (
+        <CanvasRuntime document={d} onDocument={setCanvasDoc}>{children}</CanvasRuntime>
+      ),
+    }),
+    [],
   );
 
   const metadata = useMemo(
@@ -147,6 +193,23 @@ export function StudioEditor(props: StudioEditorProps) {
       data: {},
     }),
     [theme, mode, props.locale, site],
+  );
+
+  // One editing tab per document; everyone else follows live (read-only).
+  const lease = useStudioLease({ siteId: site.id, documentId: doc.id, onLost: () => void sync.flush() });
+  const following = lease.role === "follower";
+  const followingRef = useRef(following);
+  followingRef.current = following;
+  const pushRef = useRef<(data: unknown) => void>(() => {});
+  const { markActive } = lease;
+  const onChange = useCallback(
+    (data: unknown) => {
+      if (followingRef.current) return;
+      sync.onChange(data);
+      pushRef.current(data);
+      markActive();
+    },
+    [sync, markActive],
   );
 
   const replace = useCallback(
@@ -164,11 +227,13 @@ export function StudioEditor(props: StudioEditorProps) {
         key={editor.key}
         config={config}
         data={editor.data as Partial<Data>}
-        onChange={sync.onChange}
+        onChange={onChange}
         metadata={metadata}
         iframe={{ enabled: true }}
+        overrides={overrides}
+        permissions={following ? readOnlyPermissions : editPermissions}
       >
-        <StudioLayout {...props} theme={theme} themeEditor={themeEditor} sync={sync} mode={mode} setMode={setMode} replace={replace} />
+        <StudioLayout {...props} canvasDoc={canvasDoc} theme={theme} themeEditor={themeEditor} sync={sync} mode={mode} setMode={setMode} replace={replace} lease={lease} pushRef={pushRef} />
       </Puck>
     </TooltipProvider>
   );
@@ -189,12 +254,18 @@ function StudioLayout({
   mode,
   setMode,
   replace,
+  lease,
+  pushRef,
+  canvasDoc,
 }: StudioEditorProps & {
+  canvasDoc: Document | null;
   themeEditor: ThemeEditor;
   sync: DocumentSync;
   mode: "light" | "dark";
   setMode: (m: "light" | "dark") => void;
   replace: (next: { data: unknown; version: number; hasUnpublishedChanges: boolean }) => void;
+  lease: StudioLease;
+  pushRef: React.RefObject<(data: unknown) => void>;
 }) {
   const router = useRouter();
   const wide = useMedia("(min-width: 1024px)");
@@ -212,7 +283,70 @@ function StudioLayout({
 
   const history = usePuck((s) => s.history);
   const selected = usePuck((s) => s.selectedItem);
+  useReportPresence({ documentId: doc.id, blockId: selected ? String(selected.props.id) : undefined });
   const componentLabel = usePuck((s) => (s.selectedItem ? s.config.components[s.selectedItem.type]?.label ?? s.selectedItem.type : null));
+
+  // ------------------------------------------------ lease + live canvas ---
+  const following = lease.role === "follower";
+  const received = useRef(false);
+  const live = useLiveCanvas({
+    siteId: site.id,
+    documentId: doc.id,
+    role: lease.role,
+    clientId: lease.clientId,
+    onRemote: (data) => {
+      received.current = true;
+      getPuck().dispatch({ type: "setData", data: data as Data });
+    },
+  });
+  pushRef.current = live.push;
+
+  const prevRole = useRef(lease.role);
+  useEffect(() => {
+    const was = prevRole.current;
+    prevRole.current = lease.role;
+    if (lease.role !== "editor" || was === "editor") return;
+    if (was !== "follower") return live.start(getPuck().appState.data);
+    // Took over from someone: rebase autosave on the latest saved draft. The
+    // live canvas we followed may be ahead of it (their last edits); keep it.
+    void (async () => {
+      const res = await loadDraftAction(site.slug, doc.id);
+      if (!res.ok) return void toast.error(res.error);
+      if (!received.current) {
+        replace(res);
+        live.start(res.data);
+        return;
+      }
+      const current = getPuck().appState.data;
+      sync.reset(res.data, res.version, res.hasUnpublishedChanges);
+      sync.onChange(current);
+      live.start(current);
+    })();
+  }, [lease.role, live, getPuck, site.slug, doc.id, replace, sync]);
+
+  // Requests for control (holder side).
+  const shownRequests = useRef(new Set<string>());
+  useEffect(() => {
+    const ids = new Set(lease.requests.map((r) => `lease-${r.clientId}`));
+    for (const id of shownRequests.current) if (!ids.has(id)) toast.dismiss(id);
+    shownRequests.current = ids;
+    for (const r of lease.requests) {
+      toast(`${r.name} wants to edit ${view.label}`, {
+        id: `lease-${r.clientId}`,
+        duration: 60_000,
+        action: {
+          label: "Give control",
+          onClick: async () => {
+            await sync.flush();
+            await lease.grant(r);
+            toast.success(`${r.name} is editing now`, { duration: 2000 });
+          },
+        },
+        cancel: { label: "Keep", onClick: () => lease.dismiss(r) },
+        onDismiss: () => lease.dismiss(r),
+      });
+    }
+  }, [lease, sync, view.label]);
 
   const dual = theme?.modeStrategy === "dual";
   const exitHref = `/${site.slug}/online-store`;
@@ -222,11 +356,28 @@ function StudioLayout({
   const themeActive = !!themeEditor.draft && (tabletUp ? leftTab === "theme" && (wide || leftOpen) : sheet === "theme");
   const undo = themeActive
     ? { can: themeEditor.canUndo, run: themeEditor.undo, label: "Undo theme change" }
-    : { can: history.hasPast, run: () => history.back(), label: "Undo" };
+    : { can: history.hasPast && !following, run: () => history.back(), label: "Undo" };
   const redo = themeActive
     ? { can: themeEditor.canRedo, run: themeEditor.redo, label: "Redo theme change" }
-    : { can: history.hasFuture, run: () => history.forward(), label: "Redo" };
+    : { can: history.hasFuture && !following, run: () => history.forward(), label: "Redo" };
   const themeDirty = !!themeEditor.draft && themeSync.hasUnpublishedChanges;
+
+  const [scrollDrag, setScrollDrag] = useState(false);
+
+  // The overlay this page leaves through (its own pick or the theme's), played over the canvas.
+  const rootProps = usePuck((s) => s.appState.data.root?.props);
+  const pageTransition = useMemo(() => (theme ? pageOverlay(theme, pageSettings(rootProps)) : null), [theme, rootProps]);
+  const [playing, setPlaying] = useState(false);
+  const playTransition = useCallback(async () => {
+    if (!canvasDoc || !pageTransition || !theme || playing) return;
+    const host = canvasDoc.querySelector<HTMLElement>("[data-theme]") ?? canvasDoc.body;
+    setPlaying(true);
+    try {
+      await previewTransition(host, pageTransition, { theme, hold: 400, reduced: window.matchMedia("(prefers-reduced-motion: reduce)").matches });
+    } finally {
+      setPlaying(false);
+    }
+  }, [canvasDoc, pageTransition, theme, playing]);
   const docDirty = sync.hasUnpublishedChanges;
 
   // One Publish for what you see: the page and, when edited, the theme.
@@ -401,7 +552,7 @@ function StudioLayout({
       </div>
       {leftTab === "theme" ? (
         <div className="min-h-0 flex-1">
-          <ThemePanel site={site.slug} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} />
+          <ThemePanel site={site.slug} siteId={site.id} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} />
         </div>
       ) : (
         <div className={cn("studio-puck-panel min-h-0 flex-1 overflow-y-auto", leftTab === "add" && "px-3 py-2")}>
@@ -409,13 +560,19 @@ function StudioLayout({
             <Puck.Outline />
           ) : (
             <>
-              <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Drag a block into any section, or onto the page.</p>
-              <Puck.Components />
+              {following ? (
+                <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Blocks can be added once you are editing.</p>
+              ) : (
+                <>
+                  <p className="px-1 pt-1 pb-3 text-xs text-muted-foreground">Drag a block into any section, or onto the page.</p>
+                  <Puck.Components />
+                </>
+              )}
             </>
           )}
         </div>
       )}
-      {leftTab === "sections" && (
+      {leftTab === "sections" && !following && (
         <div className="shrink-0 border-t p-2">
           <button
             type="button"
@@ -494,6 +651,18 @@ function StudioLayout({
               ))}
             </div>
           )}
+          {tabletUp && theme && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button variant="ghost" size="icon" className="size-8" disabled={!pageTransition || !canvasDoc || playing} onClick={playTransition} aria-label="Play page transition">
+                    <Clapperboard />
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>{pageTransition ? `Play page transition: ${pageTransition.name}` : "This page has no overlay transition"}</TooltipContent>
+            </Tooltip>
+          )}
           {dual && tabletUp && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -523,6 +692,7 @@ function StudioLayout({
             </Tooltip>
           </div>
 
+          <DocumentPresence documentId={doc.id} />
           <SaveStatus sync={themeActive ? themeSync : sync} compact={!wide} />
 
           <DropdownMenu>
@@ -542,14 +712,14 @@ function StudioLayout({
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onSelect={() => setHistoryOpen(true)}>
+              <DropdownMenuItem disabled={following} onSelect={() => setHistoryOpen(true)}>
                 <History /> Version history
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => void sync.flush()}>
+              <DropdownMenuItem disabled={following} onSelect={() => void sync.flush()}>
                 <Check /> Save now <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem variant="destructive" disabled={!sync.hasUnpublishedChanges} onSelect={() => setConfirmDiscard(true)}>
+              <DropdownMenuItem variant="destructive" disabled={!sync.hasUnpublishedChanges || following} onSelect={() => setConfirmDiscard(true)}>
                 <Trash2 /> Discard unpublished changes
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -561,7 +731,7 @@ function StudioLayout({
                 <Button
                   size="sm"
                   className="h-8 gap-1.5 px-3"
-                  disabled={!canPublish || publishing || (!docDirty && !themeDirty) || sync.status === "conflict" || themeSync.status === "conflict"}
+                  disabled={!canPublish || following || publishing || (!docDirty && !themeDirty) || sync.status === "conflict" || themeSync.status === "conflict"}
                   onClick={publish}
                 >
                   {publishing ? <Loader2 className="animate-spin" /> : <Rocket className="sm:hidden" />}
@@ -584,6 +754,8 @@ function StudioLayout({
         </div>
       </header>
 
+      {lease.role === "follower" && <FollowBar lease={lease} what={view.label} />}
+
       {/* -------------------------------------------------------- body --- */}
       <div className="relative flex min-h-0 flex-1">
         {wide ? (
@@ -602,13 +774,19 @@ function StudioLayout({
         <main className="relative flex min-w-0 flex-1 flex-col overflow-auto">
           <div className={cn("flex min-h-0 flex-1 justify-center", tabletUp && "p-3 lg:p-4 min-[1920px]:p-6")}>
             <div
-              className={cn(
-                "studio-canvas relative h-full min-h-0 overflow-hidden bg-background transition-[width] duration-300 ease-out",
-                tabletUp && "rounded-xl border shadow-sm",
-              )}
+              className="relative h-full min-h-0 transition-[width] duration-300 ease-out"
               style={{ width: vp.width ? `min(100%, ${vp.width}px)` : "100%" }}
             >
-              <Puck.Preview />
+              <div
+                className={cn(
+                  "studio-canvas relative z-10 h-full overflow-hidden bg-background",
+                  tabletUp && "rounded-xl border shadow-sm",
+                  scrollDrag && "[&_iframe]:pointer-events-none",
+                )}
+              >
+                <Puck.Preview />
+              </div>
+              <CanvasScrollbar doc={canvasDoc} inset={!tabletUp} onDrag={setScrollDrag} />
             </div>
           </div>
         </main>
@@ -650,7 +828,7 @@ function StudioLayout({
               </SheetHeader>
               <div className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-muted-foreground/30" aria-hidden />
               <div className="min-h-0 flex-1">
-                {sheet === "fields" ? right : sheet === "theme" ? <ThemePanel site={site.slug} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} /> : left}
+                {sheet === "fields" ? right : sheet === "theme" ? <ThemePanel site={site.slug} siteId={site.id} editor={themeEditor} builder={audience === "builder"} mode={mode} setMode={setMode} /> : left}
               </div>
             </SheetContent>
           </Sheet>
@@ -664,9 +842,11 @@ function StudioLayout({
         capabilities={site.capabilities}
         insertAfter={addAt?.after ?? null}
         themeName={theme?.name}
+        kits={theme?.kits?.map((k) => k.id)}
         onInsert={insertSection}
       />
 
+      <BlockPresenceOverlay documentId={doc.id} />
       <HistorySheet
         open={historyOpen}
         onOpenChange={setHistoryOpen}
@@ -707,6 +887,37 @@ function StudioLayout({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// ------------------------------------------------------------- follow bar ---
+
+function FollowBar({ lease, what }: { lease: StudioLease; what: string }) {
+  const h = lease.holder;
+  const [busy, setBusy] = useState(false);
+  const ask = async () => {
+    setBusy(true);
+    try {
+      const res = await lease.request();
+      if (!res.granted && res.holder) toast(`Asked ${res.holder.name} for control`, { duration: 2500 });
+    } catch {
+      toast.error("Couldn't reach the server. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  const sameUser = h && lease.holder?.userId === lease.self;
+  const label = !h ? `Nobody is editing ${what}.` : sameUser ? `You are editing ${what} in another tab.` : `${h.name} is editing ${what}. You see their changes live.`;
+  const action = !h ? "Start editing" : sameUser ? "Edit here" : lease.requested ? "Requested…" : "Request edit";
+  return (
+    <div role="status" className="flex shrink-0 items-center gap-2 border-b bg-muted/60 px-3 py-1.5 text-[13px] sm:px-4">
+      <span className="size-2 shrink-0 rounded-full" style={{ background: h ? peerColor(h.userId) : "var(--muted-foreground)" }} />
+      <Eye className="size-3.5 shrink-0 text-muted-foreground" />
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <Button size="sm" variant="outline" className="h-7" disabled={busy || (lease.requested && !!h && !sameUser)} onClick={ask}>
+        {busy && <Loader2 className="animate-spin" />} {action}
+      </Button>
     </div>
   );
 }

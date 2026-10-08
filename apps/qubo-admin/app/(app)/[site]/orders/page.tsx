@@ -7,16 +7,18 @@ import { requireSite } from "@/lib/admin";
 import { money, shortDate } from "@/lib/format";
 import { getOrders } from "@/lib/queries";
 import { cn } from "@qubo/shared/utils";
+import { LiveRefresh } from "@/components/live-events";
 
 const statuses = ["PENDING", "CONFIRMED", "PROCESSING", "SHIPPED", "DELIVERED", "COMPLETED", "CANCELLED", "REFUNDED"] as const;
 
 export default async function OrdersPage({ params }: { params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
-  const { site, siteId } = await requireSite(slug);
+  const { site, siteId, user } = await requireSite(slug);
   const orders = await getOrders(siteId);
 
   return (
     <Page title="Orders" width="wide" actions={<Button variant="outline" size="sm">Export</Button>}>
+      <LiveRefresh siteId={siteId} userId={user.id} tables={["order"]} />
       <Panel flush className="@container">
         {orders.length === 0 ? (
           <EmptyState

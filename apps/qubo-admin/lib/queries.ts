@@ -2,9 +2,8 @@ import "server-only";
 
 import { db } from "@qubo/db/client";
 import {
+  conversation,
   document,
-  form,
-  formSubmission,
   order,
   organizationMember,
   siteDomain,
@@ -18,7 +17,7 @@ import {
   theme,
   user,
 } from "@qubo/db/schema";
-import { and, count, desc, eq, gte, inArray, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, inArray, ne, sql } from "drizzle-orm";
 
 export async function getDashboardData(siteId: string) {
   const [[products], [customers], [orders], [revenue], recentOrders] =
@@ -145,20 +144,19 @@ export async function getOrders(siteId: string, limit = 200) {
     .limit(limit);
 }
 
-/** Sidebar badges: open orders and unread form submissions. */
+/** Sidebar badges: open orders and unread inbox conversations. */
 export async function getShellCounts(siteId: string) {
-  const [[orders], [leads]] = await Promise.all([
+  const [[orders], [inbox]] = await Promise.all([
     db
       .select({ value: count() })
       .from(order)
       .where(and(eq(order.siteId, siteId), inArray(order.status, ["PENDING", "CONFIRMED", "PROCESSING"]))),
     db
       .select({ value: count() })
-      .from(formSubmission)
-      .innerJoin(form, eq(form.id, formSubmission.formId))
-      .where(and(eq(form.siteId, siteId), eq(formSubmission.status, "new"))),
+      .from(conversation)
+      .where(and(eq(conversation.siteId, siteId), eq(conversation.unread, true), inArray(conversation.status, ["open", "pending"]))),
   ]);
-  return { orders: orders?.value ?? 0, leads: leads?.value ?? 0 };
+  return { orders: orders?.value ?? 0, inbox: inbox?.value ?? 0 };
 }
 
 /** Daily sales for the last `days` days (zero-filled). */

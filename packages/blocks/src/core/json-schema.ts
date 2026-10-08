@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { BlockRegistry } from "./define";
 import type { Capability } from "./context";
+import { pageRootSchema } from "./page-fields";
 
 /**
  * JSON Schema for every block the site can use — the contract an AI generator
@@ -23,7 +24,10 @@ export function toJsonSchema(registry: BlockRegistry, opts: { capabilities?: rea
     $schema: "https://json-schema.org/draft/2020-12/schema",
     title: "Qubo page content",
     type: "object",
-    properties: { content: { type: "array", items: { oneOf: variants } } },
+    properties: {
+      root: { type: "object", properties: { props: z.toJSONSchema(pageRootSchema, { io: "input", unrepresentable: "any" }) } },
+      content: { type: "array", items: { oneOf: variants } },
+    },
     required: ["content"],
   };
 }

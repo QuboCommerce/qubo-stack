@@ -1,0 +1,26 @@
+{
+  "name": "@qubo/storage",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "File storage: local disk or any S3-compatible bucket, plus the upload rules shared by media and inbox attachments.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./media": "./src/media.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "aws4fetch": "^1.0.20",
+    "image-size": "^2.0.2",
+    "@qubo/db": "workspace:*",
+    "drizzle-orm": "^0.44"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "typescript": "^5"
+  }
+}

@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -6,6 +7,8 @@ import {
   uuid,
   pgEnum,
   uniqueIndex,
+  jsonb,
+  decimal,
 } from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
@@ -16,10 +19,27 @@ export const organizationRoleEnum = pgEnum("organization_role", [
   "VIEWER",
 ]);
 
+/**
+ * One organisation = one legal entity (its own VAT number, invoices, customers and GDPR
+ * controller). Sites are brands/storefronts of that entity. Never put two companies in one org.
+ */
 export const organization = pgTable("organization", {
   id: uuid("id").primaryKey().defaultRandom(),
+  /** Display name in the admin, e.g. "TLG Belgium". */
   name: text("name").notNull(),
   slug: text("slug").notNull().unique(),
+  /** As registered, e.g. "TLG-BELGIUM" (KBO/BCE in Belgium). Used on invoices and legal pages. */
+  legalName: text("legal_name"),
+  legalForm: text("legal_form"),
+  /** National company number, e.g. Belgian enterprise number 0655.678.923. */
+  companyNumber: text("company_number"),
+  vatNumber: text("vat_number"),
+  addressLine1: text("address_line1"),
+  addressLine2: text("address_line2"),
+  postalCode: text("postal_code"),
+  city: text("city"),
+  /** ISO 3166-1 alpha-2. */
+  country: text("country"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -85,6 +105,20 @@ export const site = pgTable("site", {
     .references(() => user.id, { onDelete: "cascade" }),
   currency: text("currency").notNull().default("EUR"),
   locale: text("locale").notNull().default("fr-BE"),
+  /**
+   * First publish; null = draft. Drafts are only reachable by staff and on the
+   * PIN-locked preview host, and can move between organisations. Once set it
+   * never clears: the site belongs to its organisation for good (orders,
+   * invoices, customers). Taking a site offline is maintenance mode.
+   */
+  publishedAt: timestamp("published_at"),
+  /**
+   * In the recycle bin since. A trashed site resolves on no host, appears in no
+   * list and counts against no quota, but keeps its slug and domains so a restore
+   * is exact. Purged for good after TRASH_RETENTION_DAYS (studio `purgeTrashedSites`).
+   */
+  deletedAt: timestamp("deleted_at"),
+  deletedById: text("deleted_by_id").references(() => user.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -94,11 +128,28 @@ export const siteDomain = pgTable("site_domain", {
   siteId: uuid("site_id")
     .notNull()
     .references(() => site.id, { onDelete: "cascade" }),
+  /** Bare host (no `www.`); `www.`, `qubo.` and `preview.` variants follow it. */
   hostname: text("hostname").notNull().unique(),
   isPrimary: boolean("is_primary").notNull().default(false),
+  /** Set once the TXT proof and the address record both check out. Never cleared by a failed recheck. */
   verifiedAt: timestamp("verified_at"),
+  /** Value of the `_qubo-verify` TXT record that proves control of the domain. */
+  verifyToken: text("verify_token").notNull().default(sql`replace(gen_random_uuid()::text, '-', '')`),
+  /** Opens the login-free DNS instructions page; regenerate to revoke a shared link. */
+  shareToken: text("share_token").notNull().unique().default(sql`replace(gen_random_uuid()::text, '-', '')`),
+  /** Last DNS check, per record (see @qubo/domains `DnsReport`). */
+  dns: jsonb("dns").$type<unknown>(),
+  checkedAt: timestamp("checked_at"),
+  nextCheckAt: timestamp("next_check_at").defaultNow(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
+
+/** Two-letter schema.org day codes, Monday first. */
+export const weekdays = ["mo", "tu", "we", "th", "fr", "sa", "su"] as const;
+export type Weekday = (typeof weekdays)[number];
+
+/** One opening-hours rule: the same times on each listed day ("09:00" to "18:00"). */
+export type OpeningHoursRule = { days: Weekday[]; opens: string; closes: string };
 
 export const siteSettings = pgTable("site_settings", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -109,9 +160,22 @@ export const siteSettings = pgTable("site_settings", {
   maintenanceMode: boolean("maintenance_mode").notNull().default(false),
   maintenanceMessage: text("maintenance_message"),
   maintenanceEnd: timestamp("maintenance_end"),
+  /** Unlocks `preview.<domain>` (draft storefront). Regenerating it logs every previewer out. */
+  previewPin: text("preview_pin"),
   timezone: text("timezone").notNull().default("Europe/Brussels"),
+  /** Title tag of the home page and suffix of every other page ("Page | <meta title>"). Falls back to the site name. */
   metaTitle: text("meta_title"),
   metaDescription: text("meta_description"),
+  /** Public contact details: footer defaults, LocalBusiness structured data and the legal pages. */
+  phone: text("phone"),
+  email: text("email"),
+  /** schema.org type emitted for the business, e.g. "Store" or "Restaurant". Null = LocalBusiness. */
+  businessType: text("business_type"),
+  openingHours: jsonb("opening_hours").$type<OpeningHoursRule[]>().notNull().default([]),
+  latitude: decimal("latitude", { precision: 9, scale: 6 }),
+  longitude: decimal("longitude", { precision: 9, scale: 6 }),
+  /** House rules the inbox AI follows when drafting replies: tone, hours, policies. */
+  aiInstructions: text("ai_instructions"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

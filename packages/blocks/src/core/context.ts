@@ -27,6 +27,10 @@ export type AssetInfo = {
 export type RenderMetadata = {
   site?: { id: string; type: SiteType; capabilities: Capability[]; name?: string; currency?: string; locale?: string };
   locale?: string;
+  /** URL prefix of the locale being rendered (`/nl`); empty for the primary language. */
+  basePath?: string;
+  /** Every published language of the site, with the current page's URL in each; drives the header switch. */
+  locales?: LocaleLink[];
   theme?: Theme;
   /** Preview light/dark for dual-mode themes (Studio toggle). */
   mode?: "light" | "dark" | "system";
@@ -39,6 +43,8 @@ export type RenderMetadata = {
   /** Render with schema placeholders instead of content (component inspector). */
   blueprint?: boolean;
 };
+
+export type LocaleLink = { locale: string; label: string; href: string; current: boolean };
 
 export type BlockContext = {
   id: string;
@@ -60,10 +66,21 @@ export function resolveMedia(media: MediaValue | null | undefined, meta: RenderM
   const src = asset?.url ?? media.url;
   if (!src) return null;
   const out: ResolvedMedia = { src, alt: media.alt || asset?.alt || "" };
-  if (asset?.width) out.width = asset.width;
-  if (asset?.height) out.height = asset.height;
+  const width = asset?.width ?? media.width;
+  const height = asset?.height ?? media.height;
+  if (width) out.width = width;
+  if (height) out.height = height;
   if (media.focal) out.objectPosition = `${Math.round(media.focal.x * 100)}% ${Math.round(media.focal.y * 100)}%`;
   return out;
+}
+
+/** A site-internal path under the locale prefix being rendered: `/cart` → `/nl/cart`. */
+export function localHref(path: string, meta: RenderMetadata): string {
+  const base = meta.basePath ?? "";
+  if (!base || !path.startsWith("/") || path.startsWith("//")) return path;
+  if (path === "/") return base;
+  // Home anchors and queries sit on the prefix itself: `/#faq` → `/nl#faq`.
+  return path[1] === "#" || path[1] === "?" ? `${base}${path.slice(1)}` : `${base}${path}`;
 }
 
 export function resolveLink(link: LinkValue | null | undefined, meta: RenderMetadata): string | undefined {
@@ -73,7 +90,7 @@ export function resolveLink(link: LinkValue | null | undefined, meta: RenderMeta
   if (mapped) return mapped;
   switch (link.kind) {
     case "url":
-      return v;
+      return localHref(v, meta);
     case "anchor":
       return v.startsWith("#") ? v : `#${v}`;
     case "email":
@@ -81,11 +98,11 @@ export function resolveLink(link: LinkValue | null | undefined, meta: RenderMeta
     case "phone":
       return `tel:${v.replace(/[^\d+]/g, "")}`;
     case "page":
-      return v === "home" ? "/" : `/${v.replace(/^\//, "")}`;
+      return localHref(v === "home" ? "/" : `/${v.replace(/^\//, "")}`, meta);
     case "product":
-      return `/products/${v}`;
+      return localHref(`/products/${v}`, meta);
     case "collection":
-      return `/collections/${v}`;
+      return localHref(`/collections/${v}`, meta);
   }
 }
 

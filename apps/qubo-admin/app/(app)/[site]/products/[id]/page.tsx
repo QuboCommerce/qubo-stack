@@ -7,12 +7,14 @@ import { and, asc, eq } from "drizzle-orm";
 import { saveProduct } from "@/app/product-actions";
 import { CategoryTree } from "@/components/categories/category-tree";
 import { Page } from "@/components/page";
+import { ProductMedia } from "@/components/products/product-media";
 import { Field, Select, SwitchRow, TextArea, TextInput } from "@/components/settings/controls";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { Surface } from "@/components/settings/settings-group";
 import { Badge } from "@/components/ui/badge";
 import { requireSite } from "@/lib/admin";
 import { getCategoryTree } from "@/lib/categories";
+import { productValues } from "@/lib/form-specs";
 import { assetUrl, money, relativeTime } from "@/lib/format";
 
 const uuid = /^[0-9a-f-]{36}$/i;
@@ -59,7 +61,13 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
       width="wide"
       badge={p ? (p.isArchived ? <Badge variant="secondary">Archived</Badge> : <Badge className="border-transparent bg-success/15 text-success">Active</Badge>) : undefined}
     >
-      <SettingsForm action={saveProduct} className="@container">
+      <SettingsForm
+        action={saveProduct}
+        className="@container"
+        noun="product"
+        base={p ? productValues(p, linked) : undefined}
+        watch={p ? { table: "product", id: p.id } : undefined}
+      >
         <input type="hidden" name="site" value={site.slug} />
         <input type="hidden" name="id" value={id} />
         <div className="grid items-start gap-4 @min-[64rem]:grid-cols-[minmax(0,1fr)_20rem] @min-[96rem]:grid-cols-[minmax(0,1fr)_24rem]">
@@ -73,18 +81,16 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
               </Field>
             </Card>
 
-            <Card title="Media" description={images.length ? `${images.length} image${images.length > 1 ? "s" : ""}` : "Uploads arrive with the media library."}>
-              {images.length ? (
-                <ul className="grid grid-cols-3 gap-2 @min-[40rem]:grid-cols-5 @min-[80rem]:grid-cols-7">
-                  {images.map((img, i) => (
-                    <li key={img.id} className={i === 0 ? "col-span-2 row-span-2" : undefined}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={assetUrl(img.url) ?? ""} alt={img.alt ?? ""} className="aspect-square size-full rounded-lg border bg-white object-contain p-1" />
-                    </li>
-                  ))}
-                </ul>
-              ) : (
+            <Card title="Media" description={isNew ? "Save the product first, then add images." : "The first image is the main one. Changes save right away."}>
+              {isNew ? (
                 <div className="grid h-28 place-items-center rounded-lg border border-dashed text-muted-foreground"><ImageOff className="size-5" /></div>
+              ) : (
+                <ProductMedia
+                  site={site.slug}
+                  siteId={siteId}
+                  productId={id}
+                  initial={images.map((img) => ({ url: img.url, alt: img.alt ?? "", src: assetUrl(img.url) ?? img.url }))}
+                />
               )}
             </Card>
 

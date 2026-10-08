@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { RenderView, viewMetadata } from "@/lib/render";
+import { RenderView, tidyName, viewMetadata } from "@/lib/render";
+import { JsonLd, breadcrumbLd, categoryCrumbs } from "@/lib/seo";
 import { getStorefront, hostFromParam, notFoundOrRedirect } from "@/lib/site";
 
 type Params = Promise<{ site: string; handle: string }>;
@@ -11,16 +12,21 @@ async function load(params: Params) {
   const slug = decodeURIComponent(handle);
   const [categories, tpl] = await Promise.all([sf.client.getCategories(), sf.client.getTemplate("collection")]);
   const category = slug === "all" ? { name: null, slug } : categories.find((c) => c.slug === slug);
-  return { sf, hit: category && tpl ? { sf, tpl, category } : null };
+  return { sf, hit: category && tpl ? { sf, tpl, category, categories } : null };
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { hit } = await load(params);
-  return hit ? viewMetadata(hit.sf, { title: hit.category.name, body: hit.tpl.data }) : {};
+  return hit ? viewMetadata(hit.sf, { title: tidyName(hit.category.name), body: hit.tpl.data }) : {};
 }
 
 export default async function CollectionPage({ params }: { params: Params }) {
   const { sf, hit } = await load(params);
   if (!hit) return notFoundOrRedirect(sf);
-  return <RenderView sf={hit.sf} body={hit.tpl.data} view={{ collection: hit.category.slug }} documentId={hit.tpl.documentId} />;
+  return (
+    <>
+      <RenderView sf={hit.sf} body={hit.tpl.data} view={{ collection: hit.category.slug }} documentId={hit.tpl.documentId} />
+      {hit.category.name ? <JsonLd data={breadcrumbLd(hit.sf, categoryCrumbs(hit.categories, hit.category.slug))} /> : null}
+    </>
+  );
 }

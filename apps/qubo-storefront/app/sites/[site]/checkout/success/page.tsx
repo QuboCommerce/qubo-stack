@@ -16,7 +16,7 @@ const copy: Record<string, { title: string; body: string; cta: string }> = {
 async function load(params: Params) {
   const sf = await getStorefront(hostFromParam((await params).site));
   if (!sf || !hasCapability(sf, "commerce")) return null;
-  return { sf, t: copy[sf.site.locale.split("-")[0]] ?? copy.en };
+  return { sf, t: copy[sf.locale.split("-")[0]] ?? copy.en };
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {

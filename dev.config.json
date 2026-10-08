@@ -1,9 +1,29 @@
 {
-  "$comment": "Dev runner config for scripts/dev/qd. Paths are relative to the repo root. Ports = <devDigit>0<portSlot>0; slots are project-agnostic and match the edge routes: 1 app (dev.by-ali.dev), 2 sites (<site>.dev.by-ali.dev), 3 api (api.dev.by-ali.dev). Per-machine overrides live in .qubo/dev.local.json (gitignored).",
+  "$comment": "Dev runner config for scripts/dev/qd. Paths are relative to the repo root. Ports = <devDigit>0<portSlot>0; slots are project-agnostic and match the edge routes: 1 app (dev.by-ali.dev), 2 sites (<site>.dev.by-ali.dev), 3 api (api.dev.by-ali.dev). Per-machine overrides live in .qubo/dev.local.json (gitignored). Project env lives in env/envLocal/envRemote (top level = every service, per service = that one); qd itself only sets PORT, HOST, QUBO_DEV, QUBO_DEV_MODE, QUBO_DEV_ORIGINS.",
   "project": "qubo",
   "session": "qubo",
   "devDigit": 4,
   "sitesBaseDomain": "dev.by-ali.dev",
+  "devSiteSlug": "hm-froid",
+  "env": {
+    "$comment": "Shared by every service. Server-to-server calls use {internal:*} and skip the edge.",
+    "STOREFRONT_URL": "{url:web}",
+    "NEXT_PUBLIC_MARKETING_URL": "{url:web}",
+    "NEXT_PUBLIC_PANEL_URL": "{url:admin}",
+    "QUBO_API_URL": "{internal:api}",
+    "QUBO_TRUSTED_ORIGINS": "{url:web},{url:admin}",
+    "QUBO_ADMIN_HOSTS": "{host:admin}",
+    "QUBO_REVALIDATE_URL": "{internal:web}/api/revalidate",
+    "QUBO_REVALIDATE_SECRET": "{secret:revalidate}"
+  },
+  "envRemote": {
+    "$comment": "Sites are <slug>.<sitesBaseDomain> behind the edge.",
+    "PLATFORM_BASE_DOMAIN": "{sitesBaseDomain}"
+  },
+  "envLocal": {
+    "$comment": "Laptop mode: one site on localhost.",
+    "QUBO_DEV_SITE_HOSTS": "{host:web}={devSiteSlug}"
+  },
   "services": {
     "api": {
       "cwd": "packages/api",
@@ -14,7 +34,10 @@
       ],
       "portSlot": 3,
       "health": "/health",
-      "host": "api.dev.by-ali.dev"
+      "host": "api.dev.by-ali.dev",
+      "env": {
+        "BETTER_AUTH_URL": "{url:api}"
+      }
     },
     "admin": {
       "cwd": "apps/qubo-admin",
@@ -30,7 +53,11 @@
       ],
       "portSlot": 1,
       "health": "/login",
-      "host": "dev.by-ali.dev"
+      "host": "dev.by-ali.dev",
+      "env": {
+        "BETTER_AUTH_URL": "{url:admin}",
+        "PORTAL_URL": "https://portal.qubo.dev.by-ali.dev"
+      }
     },
     "web": {
       "cwd": "apps/qubo-storefront",
@@ -47,7 +74,10 @@
       "portSlot": 2,
       "health": "/",
       "host": "hm-froid.dev.by-ali.dev",
-      "$comment": "Serves every site as <slug>.dev.by-ali.dev (PLATFORM_BASE_DOMAIN); `host` is the one qd probes and prints. --hostname localhost (not {bind}): Next dev builds proxy URLs as localhost:<port>, and host-based rewrites only stay internal when the bind hostname matches. localhost resolves to 127.0.0.1, so it stays loopback-only."
+      "$comment": "Serves every site as <slug>.dev.by-ali.dev (PLATFORM_BASE_DOMAIN); `host` is the one qd probes and prints. --hostname localhost (not {bind}): Next dev builds proxy URLs as localhost:<port>, and host-based rewrites only stay internal when the bind hostname matches. localhost resolves to 127.0.0.1, so it stays loopback-only.",
+      "env": {
+        "BETTER_AUTH_URL": "{url:web}"
+      }
     }
   },
   "order": [

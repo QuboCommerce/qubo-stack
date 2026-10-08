@@ -36,6 +36,8 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-qubo}:${POSTGRES_PASSWORD:-qubo_secret}@qubo-postgres:5432/${POSTGRES_DB:-qubo}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      # Signs preview tokens and visitor IPs between API, admin and storefront.
+      - QUBO_PREVIEW_SECRET=${QUBO_PREVIEW_SECRET:?set QUBO_PREVIEW_SECRET}
       - QUBO_TRUSTED_ORIGINS=${QUBO_TRUSTED_ORIGINS:-https://qubo.hmfroid.be,https://hmfroid.be}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
@@ -43,9 +45,34 @@ services:
       - CHECKOUT_SHIPPING_LABEL=${CHECKOUT_SHIPPING_LABEL:-Livraison professionnelle}
       - RESEND_API_KEY=${RESEND_API_KEY}
       - ORDER_EMAIL_FROM=${ORDER_EMAIL_FROM:-HM Froid <commandes@hmfroid.be>}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - EMAIL_INBOUND_DOMAIN=${EMAIL_INBOUND_DOMAIN:-}
+      - RESEND_WEBHOOK_SECRET=${RESEND_WEBHOOK_SECRET:-}
       - PORTAL_URL=${PORTAL_URL:-}
       - QUBO_CHANNEL=${QUBO_CHANNEL:-stable}
       - PORT=3333
+      # Custom domains: DNS checks and the routes the edge polls (GET /v1/edge/traefik).
+      - ADMIN_SUBDOMAIN=${ADMIN_SUBDOMAIN:-qubo}
+      - PLATFORM_BASE_DOMAIN=${PLATFORM_BASE_DOMAIN:-}
+      - QUBO_SERVER_IP=${QUBO_SERVER_IP:-}
+      - QUBO_PUBLIC_URL=${ADMIN_URL:-}
+      - QUBO_DNS_SERVERS=${QUBO_DNS_SERVERS:-}
+      - QUBO_EDGE_TOKEN=${QUBO_EDGE_TOKEN:-}
+      - QUBO_EDGE_CERT_RESOLVER=${QUBO_EDGE_CERT_RESOLVER:-letsencrypt}
+      - QUBO_EDGE_ENTRYPOINT_HTTP=${QUBO_EDGE_ENTRYPOINT_HTTP:-http}
+      - QUBO_EDGE_ENTRYPOINT_HTTPS=${QUBO_EDGE_ENTRYPOINT_HTTPS:-https}
+      - QUBO_EDGE_ADMIN_URL=${QUBO_EDGE_ADMIN_URL:-http://qubo-admin:4000}
+      - QUBO_EDGE_STOREFRONT_URL=${QUBO_EDGE_STOREFRONT_URL:-http://qubo-storefront:3000}
+      - QUBO_EDGE_PLATFORM=${QUBO_EDGE_PLATFORM:-1}
+      # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
+      - STORAGE_DIR=/data/media
+      - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
+      - STORAGE_BUCKET=${STORAGE_BUCKET:-}
+      - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY:-}
+      - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
+      - STORAGE_REGION=${STORAGE_REGION:-auto}
+    volumes:
+      - media:/data/media
     depends_on:
       qubo-postgres:
         condition: service_healthy
@@ -63,11 +90,30 @@ services:
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-qubo}:${POSTGRES_PASSWORD:-qubo_secret}@qubo-postgres:5432/${POSTGRES_DB:-qubo}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      # Signs preview tokens and visitor IPs between API, admin and storefront.
+      - QUBO_PREVIEW_SECRET=${QUBO_PREVIEW_SECRET:?set QUBO_PREVIEW_SECRET}
       # Base URL of the primary admin host; other qubo.<verified domain> hosts are trusted dynamically.
       - BETTER_AUTH_URL=${ADMIN_URL:-https://qubo.hmfroid.be}
       - NEXT_PUBLIC_PANEL_URL=${ADMIN_URL:-https://qubo.hmfroid.be}
       - QUBO_API_URL=http://qubo-elysia:3333
       - ADMIN_SUBDOMAIN=${ADMIN_SUBDOMAIN:-qubo}
+      # Domains page: server address shown to the user and the DNS checks it runs.
+      - PLATFORM_BASE_DOMAIN=${PLATFORM_BASE_DOMAIN:-}
+      - QUBO_SERVER_IP=${QUBO_SERVER_IP:-}
+      - QUBO_DNS_SERVERS=${QUBO_DNS_SERVERS:-}
+      # Inbox replies are e-mailed from the admin.
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - EMAIL_INBOUND_DOMAIN=${EMAIL_INBOUND_DOMAIN:-}
+      # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
+      - STORAGE_DIR=/data/media
+      - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
+      - STORAGE_BUCKET=${STORAGE_BUCKET:-}
+      - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY:-}
+      - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
+      - STORAGE_REGION=${STORAGE_REGION:-auto}
+    volumes:
+      - media:/data/media
     depends_on:
       qubo-postgres:
         condition: service_healthy
@@ -92,32 +138,52 @@ services:
       - PLATFORM_BASE_DOMAIN=${PLATFORM_BASE_DOMAIN:-}
       - STOREFRONT_DEFAULT_SITE=${STOREFRONT_DEFAULT_SITE:-}
       - QUBO_REVALIDATE_SECRET=${QUBO_REVALIDATE_SECRET}
+      # Signs preview tokens and visitor IPs between API, admin and storefront.
+      - QUBO_PREVIEW_SECRET=${QUBO_PREVIEW_SECRET:?set QUBO_PREVIEW_SECRET}
       - LEGACY_ASSET_ROOT=/data/legacy-products
+      # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
+      - STORAGE_DIR=/data/media
+      - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
+      - STORAGE_BUCKET=${STORAGE_BUCKET:-}
+      - STORAGE_ACCESS_KEY=${STORAGE_ACCESS_KEY:-}
+      - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
+      - STORAGE_REGION=${STORAGE_REGION:-auto}
     volumes:
       - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro
+      - media:/data/media
     depends_on:
       qubo-elysia:
         condition: service_started
     networks:
       - qubo-network
 
-  caddy-edge:
-    image: caddy:2-alpine
-    container_name: caddy-edge
+  # Standalone edge for servers without Coolify (`docker compose --profile edge up -d`).
+  # On Coolify, its own Traefik polls the same endpoint instead (docs/VPS.md).
+  qubo-edge:
+    image: traefik:v3.5
+    container_name: qubo-edge
     restart: unless-stopped
+    profiles:
+      - edge
+    command:
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      - --entrypoints.https.http3
+      - --providers.http.endpoint=http://qubo-elysia:3333/v1/edge/traefik?token=${QUBO_EDGE_TOKEN:-}
+      - --providers.http.pollInterval=10s
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=http
     ports:
       - "80:80"
       - "443:443"
       - "443:443/udp"
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
+      - edge_certs:/letsencrypt
     networks:
       - qubo-network
     depends_on:
-      - qubo-admin
-      - qubo-storefront
+      - qubo-elysia
 
 networks:
   qubo-network:
@@ -125,5 +191,5 @@ networks:
 
 volumes:
   pgdata:
-  caddy_data:
-  caddy_config:
+  media:
+  edge_certs:

@@ -1,0 +1,24 @@
+{
+  "name": "@qubo/realtime",
+  "version": "0.0.2",
+  "private": true,
+  "type": "module",
+  "description": "Platform event bus: Postgres table + LISTEN/NOTIFY, SSE with resume, polling fallback.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./server": "./src/server.ts",
+    "./client": "./src/client.ts"
+  },
+  "scripts": { "typecheck": "tsc -p ." },
+  "dependencies": {
+    "drizzle-orm": "^0.44",
+    "postgres": "^3.4",
+    "zod": "^4.4"
+  },
+  "peerDependencies": { "react": "^19" },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "typescript": "^5"
+  }
+}

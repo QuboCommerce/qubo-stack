@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
-import { defineBlock, f, linkTarget, resolveLink, resolveMedia, textOf } from "../core";
+import { Decorated, defineBlock, f, linkTarget, resolveLink, resolveMedia } from "../core";
 import { IconGlyph, iconNames } from "./icons";
 import { alignOptions, aspectOptions, cx, Empty, gap, radiusOptions, Richtext, textAlign, typeSize } from "./shared";
 
@@ -18,7 +18,7 @@ export const Eyebrow = defineBlock({
     align: align(),
   },
   render: ({ text, icon, look, align: a }) => (
-    <p className="pk-eyebrow pk-font-accent" data-look={look} style={{ textAlign: textAlign(a) }}>
+    <p className="qb-eyebrow qb-font-accent" data-look={look} style={{ textAlign: textAlign(a) }}>
       <span>
         {icon ? <IconGlyph name={icon} size="1em" /> : null}
         {text}
@@ -29,22 +29,6 @@ export const Eyebrow = defineBlock({
 
 const levelDefaults: Record<string, number> = { h1: 5, h2: 4, h3: 3, h4: 2, p: 1 };
 
-function highlightWords(text: ReactNode, highlight: string): ReactNode {
-  if (!highlight.trim()) return text;
-  // In the editor `text` is Puck's inline-edit element; highlighted headings
-  // trade inline editing for an exact preview (edit them in the panel).
-  const raw = textOf(text);
-  const i = raw.toLowerCase().indexOf(highlight.toLowerCase());
-  if (i < 0) return text;
-  return (
-    <>
-      {raw.slice(0, i)}
-      <span className="pk-accent-text">{raw.slice(i, i + highlight.length)}</span>
-      {raw.slice(i + highlight.length)}
-    </>
-  );
-}
-
 export const Heading = defineBlock({
   name: "Heading",
   label: "Heading",
@@ -53,11 +37,9 @@ export const Heading = defineBlock({
   icon: "heading",
   fields: {
     text: f.text({ label: "Text", default: "A clear, confident headline", multiline: true }),
-    highlight: f.text({
-      label: "Highlight words",
-      description: "Words inside the heading painted in the accent color.",
-      translatable: true,
-      inline: false,
+    decor: f.decor("text", {
+      label: "Highlight",
+      description: "Marks words of the heading with a theme highlight (colour, squiggle, brush, circle...). Pick the words per language.",
     }),
     level: f.select(["h1", "h2", "h3", "h4", "p"], { label: "Level", default: "h2", group: "style" }),
     size: f.select(["auto", "1", "2", "3", "4", "5", "6"], { label: "Size", default: "auto", group: "style" }),
@@ -65,15 +47,23 @@ export const Heading = defineBlock({
     align: align(),
     balance: f.toggle({ label: "Balance lines", default: true, group: "advanced" }),
   },
-  render: ({ text, highlight, level, size, font, align: a, balance }) => {
+  version: 2,
+  migrate: {
+    // v1 painted the first match of `highlight` in the accent colour.
+    2: ({ highlight, ...props }) => ({
+      ...props,
+      decor: { preset: typeof highlight === "string" && highlight.trim() ? "accent" : "", match: typeof highlight === "string" ? highlight : "", ranges: [] },
+    }),
+  },
+  render: ({ text, decor, level, size, font, align: a, balance }, ctx) => {
     const Tag = level as "h1";
     const step = size === "auto" ? levelDefaults[level]! : Number(size);
     return (
       <Tag
-        className={cx("pk-heading", `pk-font-${font}`)}
+        className={cx("qb-heading", `qb-font-${font}`)}
         style={{ fontSize: typeSize(step), textAlign: textAlign(a), textWrap: balance ? "balance" : "wrap" }}
       >
-        {highlightWords(text, highlight)}
+        <Decorated text={text} decor={decor} metadata={ctx.metadata} />
       </Tag>
     );
   },
@@ -103,7 +93,7 @@ export const Text = defineBlock({
   render: ({ body, size, tone, align: a, measure }) => (
     <Richtext
       value={body}
-      className={cx(tone === "muted" && "pk-muted")}
+      className={cx(tone === "muted" && "qb-muted")}
       style={{
         fontSize: typeSize(size),
         textAlign: textAlign(a),
@@ -135,7 +125,7 @@ export const Button = defineBlock({
     const glyph = icon ? <IconGlyph name={icon} size="1.1em" /> : null;
     return (
       <a
-        className="pk-button"
+        className="qb-button"
         href={ctx.isEditing ? undefined : href}
         data-emphasis={emphasis}
         data-button-style={buttonStyle || undefined}
@@ -172,16 +162,102 @@ export const ButtonGroup = defineBlock({
   },
   render: ({ buttons: Buttons, align: a, gap: g, stackOnMobile }) => (
     <Buttons
-      className={cx("pk-button-group", stackOnMobile && "pk-stack-mobile")}
+      className={cx("qb-button-group", stackOnMobile && "qb-stack-mobile")}
       style={{ justifyContent: a === "start" ? "flex-start" : a === "end" ? "flex-end" : "center", gap: gap(g) }}
     />
   ),
 });
 
+export const mediaMasks = ["none", "circle", "arch", "squircle", "blob", "slant", "custom"] as const;
+export type MediaMask = (typeof mediaMasks)[number];
+
+/** Shape, scroll reveal and parallax: shared by Image and Video, all CSS. */
+const mediaFx = {
+  mask: f.select(
+    [
+      { value: "none", label: "None" },
+      { value: "circle", label: "Circle" },
+      { value: "arch", label: "Arch" },
+      { value: "squircle", label: "Soft square" },
+      { value: "blob", label: "Blob" },
+      { value: "slant", label: "Slanted edge" },
+      { value: "custom", label: "Custom shape" },
+    ],
+    { label: "Shape", default: "none", group: "style" },
+  ),
+  maskImage: f.media({ label: "Custom shape (SVG or PNG, transparent parts are hidden)", group: "style", translatableAlt: false }),
+  reveal: f.select(
+    [
+      { value: "none", label: "None" },
+      { value: "fade", label: "Fade" },
+      { value: "rise", label: "Rise" },
+      { value: "wipe", label: "Wipe up" },
+      { value: "grow", label: "Grow" },
+    ],
+    { label: "Reveal on scroll", default: "none", group: "style" },
+  ),
+  parallax: f.select(["none", "subtle", "strong"], { label: "Parallax", default: "none", group: "style" }),
+};
+
+type MediaFxValues = { mask: MediaMask; maskImage: Parameters<typeof resolveMedia>[0]; reveal: string; parallax: string };
+
+/** Square shapes default to a square ratio when the ratio is left on Original. */
+const frameRatio = (aspect: string, mask: MediaMask) =>
+  aspect !== "auto" ? aspect : mask === "circle" || mask === "squircle" ? "1/1" : undefined;
+
+function MediaFigure({
+  fx,
+  aspect,
+  radius,
+  hover,
+  caption,
+  captionPosition,
+  ctx,
+  children,
+}: {
+  fx: MediaFxValues;
+  aspect: string;
+  radius: string;
+  hover?: string;
+  caption?: string;
+  captionPosition?: string;
+  ctx: { metadata: Parameters<typeof resolveMedia>[1] };
+  children: ReactNode;
+}) {
+  const maskSrc = fx.mask === "custom" ? resolveMedia(fx.maskImage, ctx.metadata)?.src : undefined;
+  const ratio = frameRatio(aspect, fx.mask);
+  const overlay = caption && captionPosition === "overlay";
+  return (
+    <figure
+      className="qb-figure"
+      data-reveal={fx.reveal !== "none" ? fx.reveal : undefined}
+      data-hover={hover && hover !== "none" ? hover : undefined}
+    >
+      <div
+        className="qb-media-frame"
+        data-mask={fx.mask !== "none" && (fx.mask !== "custom" || maskSrc) ? fx.mask : undefined}
+        data-parallax={fx.parallax !== "none" ? fx.parallax : undefined}
+        data-ratio={ratio ? true : undefined}
+        style={
+          {
+            aspectRatio: ratio,
+            "--qb-frame-radius": `var(--qb-radius-${radius})`,
+            ...(maskSrc ? { "--qb-mask-image": `url(${JSON.stringify(maskSrc)})` } : {}),
+          } as CSSProperties
+        }
+      >
+        {children}
+        {overlay ? <figcaption className="qb-figure-overlay">{caption}</figcaption> : null}
+      </div>
+      {caption && !overlay ? <figcaption className="qb-muted">{caption}</figcaption> : null}
+    </figure>
+  );
+}
+
 export const Image = defineBlock({
   name: "Image",
   label: "Image",
-  description: "Picture from the media library with ratio, corner radius, caption and optional link.",
+  description: "Picture from the media library with ratio, shape, corner radius, hover, scroll reveal, parallax, caption and optional link.",
   category: "elements",
   icon: "image",
   fields: {
@@ -189,43 +265,49 @@ export const Image = defineBlock({
     aspect: f.select(aspectOptions.map((o) => o), { label: "Aspect ratio", default: "auto", group: "style" }),
     fit: f.select(["cover", "contain"], { label: "Fit", default: "cover", group: "style" }),
     radius: f.select(radiusOptions, { label: "Corners", default: "lg", group: "style" }),
+    ...mediaFx,
+    hover: f.select(
+      [
+        { value: "none", label: "None" },
+        { value: "zoom", label: "Zoom" },
+        { value: "lift", label: "Lift" },
+        { value: "color", label: "Grey to colour" },
+        { value: "shine", label: "Shine" },
+      ],
+      { label: "Hover", default: "none", group: "style", description: "Best on linked images: movement on hover reads as clickable." },
+    ),
     caption: f.text({ label: "Caption" }),
+    captionPosition: f.select(["below", "overlay"], { label: "Caption position", default: "below", group: "style" }),
     link: f.link({ label: "Link", default: { kind: "url", value: "" } }),
     priority: f.toggle({ label: "Load first (above the fold)", group: "advanced" }),
   },
-  render: ({ image, aspect, fit, radius, caption, link, priority }, ctx) => {
+  render: ({ image, aspect, fit, radius, mask, maskImage, reveal, parallax, hover, caption, captionPosition, link, priority }, ctx) => {
     const media = resolveMedia(image, ctx.metadata);
     if (!media) return <Empty label="Choose an image" ctx={ctx} minHeight={180} />;
     const img = (
       // eslint-disable-next-line @next/next/no-img-element
       <img
-        className="pk-image"
+        className="qb-image"
         src={media.src}
         alt={media.alt}
         width={media.width}
         height={media.height}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : undefined}
-        style={{
-          aspectRatio: aspect === "auto" ? undefined : aspect,
-          objectFit: fit,
-          objectPosition: media.objectPosition,
-          borderRadius: `var(--pk-radius-${radius})`,
-        }}
+        style={{ objectFit: fit, objectPosition: media.objectPosition }}
       />
     );
     const href = resolveLink(link, ctx.metadata);
     return (
-      <figure className="pk-figure">
+      <MediaFigure fx={{ mask, maskImage, reveal, parallax }} aspect={aspect} radius={radius} hover={hover} caption={caption} captionPosition={captionPosition} ctx={ctx}>
         {href && !ctx.isEditing ? (
-          <a href={href} {...linkTarget(link)}>
+          <a className="qb-media-link" href={href} {...linkTarget(link)}>
             {img}
           </a>
         ) : (
           img
         )}
-        {caption ? <figcaption className="pk-muted">{caption}</figcaption> : null}
-      </figure>
+      </MediaFigure>
     );
   },
 });
@@ -233,38 +315,50 @@ export const Image = defineBlock({
 export const Video = defineBlock({
   name: "Video",
   label: "Video",
-  description: "Self-hosted video file with poster; autoplays muted as a loop or shows controls.",
+  description: "Self-hosted video file with poster; plays muted on a loop like a GIF or shows controls. Same shapes, reveal and parallax as images.",
   category: "elements",
   icon: "video",
   fields: {
     video: f.media({ label: "Video", accept: "video", translatableAlt: false }),
     mobileVideo: f.media({ label: "Mobile video (optional)", accept: "video", translatableAlt: false }),
     poster: f.media({ label: "Poster image", translatableAlt: false }),
-    mode: f.select(["ambient", "player"], { label: "Mode", default: "ambient", description: "Ambient = muted autoplay loop; player = controls." }),
+    mode: f.select(
+      [
+        { value: "ambient", label: "Loop like a GIF" },
+        { value: "player", label: "Player with controls" },
+      ],
+      { label: "Mode", default: "ambient", description: "Loops play muted, pause off-screen and show the poster when reduced motion is on." },
+    ),
     aspect: f.select(aspectOptions.map((o) => o), { label: "Aspect ratio", default: "16/9", group: "style" }),
     radius: f.select(radiusOptions, { label: "Corners", default: "lg", group: "style" }),
+    ...mediaFx,
+    caption: f.text({ label: "Caption" }),
   },
-  render: ({ video, mobileVideo, poster, mode, aspect, radius }, ctx) => {
+  render: ({ video, mobileVideo, poster, mode, aspect, radius, mask, maskImage, reveal, parallax, caption }, ctx) => {
     const src = resolveMedia(video, ctx.metadata);
     if (!src) return <Empty label="Choose a video" ctx={ctx} minHeight={180} />;
     const mobile = resolveMedia(mobileVideo, ctx.metadata);
-    const posterSrc = resolveMedia(poster, ctx.metadata)?.src;
+    const posterMedia = resolveMedia(poster, ctx.metadata);
     const ambient = mode === "ambient";
     return (
-      <video
-        className="pk-video"
-        poster={posterSrc}
-        autoPlay={ambient}
-        muted={ambient}
-        loop={ambient}
-        playsInline
-        controls={!ambient}
-        preload={ambient ? "auto" : "metadata"}
-        style={{ aspectRatio: aspect === "auto" ? undefined : aspect, borderRadius: `var(--pk-radius-${radius})` }}
-      >
-        {mobile ? <source src={mobile.src} media="(max-width: 767px)" /> : null}
-        <source src={src.src} />
-      </video>
+      <MediaFigure fx={{ mask, maskImage, reveal, parallax }} aspect={aspect} radius={radius} caption={caption} ctx={ctx}>
+        <video
+          className="qb-video"
+          poster={posterMedia?.src}
+          autoPlay={ambient}
+          muted={ambient}
+          loop={ambient}
+          playsInline
+          controls={!ambient}
+          disablePictureInPicture={ambient || undefined}
+          data-ambient={ambient || undefined}
+          preload={ambient ? "auto" : "metadata"}
+          style={{ objectPosition: posterMedia?.objectPosition }}
+        >
+          {mobile ? <source src={mobile.src} media="(max-width: 767px)" /> : null}
+          <source src={src.src} />
+        </video>
+      </MediaFigure>
     );
   },
 });
@@ -282,7 +376,7 @@ export const Icon = defineBlock({
     framed: f.toggle({ label: "Framed", default: true, group: "style" }),
   },
   render: ({ icon, size, tone, framed }) => (
-    <span className="pk-icon" data-size={size} data-tone={tone} data-framed={framed || undefined}>
+    <span className="qb-icon" data-size={size} data-tone={tone} data-framed={framed || undefined}>
       <IconGlyph name={icon} size="1em" />
     </span>
   ),
@@ -299,7 +393,7 @@ export const Badge = defineBlock({
     tone: f.select(["primary", "accent", "neutral", "outline"], { label: "Tone", default: "accent", group: "style" }),
   },
   render: ({ text, tone }) => (
-    <span className="pk-badge pk-font-accent" data-tone={tone}>
+    <span className="qb-badge qb-font-accent" data-tone={tone}>
       {text}
     </span>
   ),
@@ -317,9 +411,9 @@ export const Stat = defineBlock({
     align: align(),
   },
   render: ({ value, label, align: a }) => (
-    <div className="pk-stat" style={{ textAlign: textAlign(a) }}>
-      <div className="pk-stat-value pk-font-display">{value}</div>
-      <div className="pk-muted">{label}</div>
+    <div className="qb-stat" style={{ textAlign: textAlign(a) }}>
+      <div className="qb-stat-value qb-font-display">{value}</div>
+      <div className="qb-muted">{label}</div>
     </div>
   ),
 });
@@ -349,11 +443,11 @@ export const List = defineBlock({
   render: ({ items, marker, gap: g }) => {
     const Tag = marker === "number" ? "ol" : "ul";
     return (
-      <Tag className="pk-list" data-marker={marker} style={{ gap: gap(g) }}>
+      <Tag className="qb-list" data-marker={marker} style={{ gap: gap(g) }}>
         {items.map((item, i) => (
           <li key={i}>
             {marker === "check" || (marker === "icon" && item.icon) ? (
-              <IconGlyph className="pk-list-icon" name={marker === "check" ? "check" : item.icon} size="1.1em" />
+              <IconGlyph className="qb-list-icon" name={marker === "check" ? "check" : item.icon} size="1.1em" />
             ) : null}
             <span>{item.text}</span>
           </li>
@@ -380,23 +474,23 @@ export const QuoteBlock = defineBlock({
   render: ({ quote, author, role, avatar, rating, size }, ctx) => {
     const img = resolveMedia(avatar, ctx.metadata);
     return (
-      <figure className="pk-quote" data-size={size}>
+      <figure className="qb-quote" data-size={size}>
         {rating > 0 ? (
-          <div className="pk-rating" aria-label={`${rating} out of 5`}>
+          <div className="qb-rating" aria-label={`${rating} out of 5`}>
             {Array.from({ length: 5 }, (_, i) => (
               <IconGlyph key={i} name="star" size="1em" fill={i < rating ? "currentColor" : "none"} />
             ))}
           </div>
         ) : null}
-        <blockquote className="pk-quote-text">{quote}</blockquote>
-        <figcaption className="pk-quote-author">
+        <blockquote className="qb-quote-text">{quote}</blockquote>
+        <figcaption className="qb-quote-author">
           {img ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={img.src} alt={img.alt} className="pk-avatar" />
+            <img src={img.src} alt={img.alt} className="qb-avatar" />
           ) : null}
           <span>
             <strong>{author}</strong>
-            {role ? <span className="pk-muted"> · {role}</span> : null}
+            {role ? <span className="qb-muted"> · {role}</span> : null}
           </span>
         </figcaption>
       </figure>
@@ -450,12 +544,12 @@ export const Embed = defineBlock({
     if (!src) return <Empty label={url ? "This provider isn't allowed" : "Paste a video, map or booking URL"} ctx={ctx} minHeight={180} />;
     return (
       <iframe
-        className="pk-embed"
+        className="qb-embed"
         src={src}
         title={title}
         loading="lazy"
         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-        style={{ aspectRatio: aspect, borderRadius: `var(--pk-radius-${radius})` }}
+        style={{ aspectRatio: aspect, borderRadius: `var(--qb-radius-${radius})` }}
       />
     );
   },
@@ -480,24 +574,35 @@ export const Card = defineBlock({
     link: f.link({ label: "Card link", default: { kind: "url", value: "" } }),
     look: f.select(["surface", "outline", "plain"], { label: "Look", default: "surface", group: "style" }),
     padding: f.step("space", { label: "Padding", default: "md", max: "xl" }),
+    hover: f.select(
+      [
+        { value: "none", label: "None" },
+        { value: "lift", label: "Lift" },
+        { value: "zoom", label: "Zoom image" },
+        { value: "border", label: "Highlight border" },
+      ],
+      { label: "Hover (linked cards)", default: "lift", group: "style" },
+    ),
   },
-  render: ({ image, aspect, content: Content, link, look, padding }, ctx) => {
+  render: ({ image, aspect, content: Content, link, look, padding, hover }, ctx) => {
     const img = resolveMedia(image, ctx.metadata);
     const href = resolveLink(link, ctx.metadata);
     return (
-      <article className="pk-card" data-look={look} data-linked={href ? true : undefined}>
+      <article className="qb-card" data-look={look} data-linked={href ? true : undefined} data-hover={hover !== "none" ? hover : undefined}>
         {img ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            className="pk-card-media"
-            src={img.src}
-            alt={img.alt}
-            loading="lazy"
-            style={{ aspectRatio: aspect === "auto" ? undefined : aspect, objectPosition: img.objectPosition }}
-          />
+          <div className="qb-card-figure">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="qb-card-media"
+              src={img.src}
+              alt={img.alt}
+              loading="lazy"
+              style={{ aspectRatio: aspect === "auto" ? undefined : aspect, objectPosition: img.objectPosition }}
+            />
+          </div>
         ) : null}
-        <Content className="pk-card-body" style={{ padding: look === "plain" ? `${gap("sm")} 0` : gap(padding) } as CSSProperties} />
-        {href && !ctx.isEditing ? <a className="pk-card-link" href={href} aria-label="Open" {...linkTarget(link)} /> : null}
+        <Content className="qb-card-body" style={{ padding: look === "plain" ? `${gap("sm")} 0` : gap(padding) } as CSSProperties} />
+        {href && !ctx.isEditing ? <a className="qb-card-link" href={href} aria-label="Open" {...linkTarget(link)} /> : null}
       </article>
     );
   },
@@ -524,11 +629,11 @@ export const Price = defineBlock({
       minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
     });
     return (
-      <p className="pk-price" data-size={size}>
-        {prefix ? <span className="pk-muted">{prefix} </span> : null}
-        <strong className="pk-font-display">{fmt.format(amount)}</strong>
-        {compareAt > amount ? <s className="pk-muted">{fmt.format(compareAt)}</s> : null}
-        {suffix ? <span className="pk-muted"> {suffix}</span> : null}
+      <p className="qb-price" data-size={size}>
+        {prefix ? <span className="qb-muted">{prefix} </span> : null}
+        <strong className="qb-font-display">{fmt.format(amount)}</strong>
+        {compareAt > amount ? <s className="qb-muted">{fmt.format(compareAt)}</s> : null}
+        {suffix ? <span className="qb-muted"> {suffix}</span> : null}
       </p>
     );
   },
@@ -553,11 +658,11 @@ export const Logo = defineBlock({
       // eslint-disable-next-line @next/next/no-img-element
       <img src={img.src} alt={img.alt || label} />
     ) : (
-      <span className="pk-font-display">{label}</span>
+      <span className="qb-font-display">{label}</span>
     );
     const href = resolveLink(link, ctx.metadata);
     return (
-      <a className="pk-logo" data-size={height} href={ctx.isEditing ? undefined : href}>
+      <a className="qb-logo" data-size={height} href={ctx.isEditing ? undefined : href}>
         {inner}
       </a>
     );
@@ -585,18 +690,18 @@ export const Avatar = defineBlock({
       .slice(0, 2)
       .toUpperCase();
     return (
-      <div className="pk-avatar-block" data-size={size}>
+      <div className="qb-avatar-block" data-size={size}>
         {img ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img className="pk-avatar" src={img.src} alt={img.alt || name} />
+          <img className="qb-avatar" src={img.src} alt={img.alt || name} />
         ) : (
-          <span className="pk-avatar" aria-hidden="true">
+          <span className="qb-avatar" aria-hidden="true">
             {initials}
           </span>
         )}
         <span>
           <strong>{name}</strong>
-          {caption ? <span className="pk-muted" style={{ display: "block" }}>{caption}</span> : null}
+          {caption ? <span className="qb-muted" style={{ display: "block" }}>{caption}</span> : null}
         </span>
       </div>
     );

@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@qubo/db/client";
 import { asset, assetUsage, document, organization, site, siteLocale, translation, user } from "@qubo/db/schema";
 import { hmFroidHomeFixture } from "@qubo/blocks/fixtures";
-import { registry, setPath, instantiate, collectTranslatableStrings, type DocumentData } from "@qubo/blocks";
+import { registry, setPath, instantiate, collectTranslatableStrings, ROOT_NODE_ID, type DocumentData } from "@qubo/blocks";
 import { eq } from "drizzle-orm";
 import {
   ConflictError,
@@ -19,6 +19,7 @@ import {
   restoreRevision,
   rollback,
   saveDraft,
+  translationCoverage,
   upsertDocumentTranslations,
   createPreviewToken,
   verifyPreviewToken,
@@ -67,6 +68,7 @@ function firstString(data: DocumentData) {
 
 function editFirstString(data: DocumentData, value: string): DocumentData {
   const s = firstString(data);
+  if (s.nodeId === ROOT_NODE_ID) return { ...data, root: { ...data.root, props: { ...data.root.props, [s.path]: value } } };
   const walk = (nodes: DocumentData["content"]): DocumentData["content"] =>
     nodes.map((n) => {
       if (n.props.id === s.nodeId) return { ...n, props: setPath(n.props, s.path, value) };
@@ -200,6 +202,10 @@ describe("translations", () => {
     await upsertDocumentTranslations(a, { documentId: doc.id, locale: "nl-BE", entries: [{ path: target.path, value: "Hallo" }] });
     rows = await listDocumentTranslations(a, doc.id, "nl-BE");
     expect(rows[0]).toMatchObject({ value: "Hallo", status: "done" });
+    const before = await translationCoverage(a.siteId);
+    expect(before["nl-BE"]!.done).toBeGreaterThanOrEqual(1);
+    expect(before["nl-BE"]!.total).toBeGreaterThanOrEqual(rows.length);
+    expect(Object.keys(before)).not.toContain("en");
 
     await publish(a, { id: doc.id });
     const rendered = await renderableDocument(a.siteId, doc.id, "nl-BE");
@@ -212,6 +218,9 @@ describe("translations", () => {
     expect(row!.status).toBe("stale");
     rows = await listDocumentTranslations(a, doc.id, "nl-BE");
     expect(rows[0]!.status).toBe("stale");
+    const after = await translationCoverage(a.siteId);
+    expect(after["nl-BE"]!.stale).toBe(before["nl-BE"]!.stale + 1);
+    expect(after["nl-BE"]!.done).toBe(before["nl-BE"]!.done - 1);
 
     // Empty value clears the translation.
     await upsertDocumentTranslations(a, { documentId: doc.id, locale: "nl-BE", entries: [{ path: target.path, value: " " }] });

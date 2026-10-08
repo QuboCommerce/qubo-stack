@@ -6,10 +6,10 @@ import {
   roleMapFor,
   type NormalizedRef,
 } from "./resolve";
-import type { ButtonStyle, ColorMix, Mode, Role, Scheme, Theme } from "./schema";
+import type { ButtonStyle, ColorMix, Decor, Effect, Gradient, Mode, Paint, Role, Scheme, Theme } from "./schema";
 import { fontRoles, roles } from "./schema";
 
-export const CSS_PREFIX = "pk";
+export const CSS_PREFIX = "qb";
 
 const kebab = (s: string) => s.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 export const roleVar = (role: Role) => `--${CSS_PREFIX}-${kebab(role)}`;
@@ -60,6 +60,45 @@ function colorExpression(base: string, mix?: ColorMix): string {
 
 const refExpression = (ref: NormalizedRef) => colorExpression(`var(${tokenVar(ref.token)})`, ref.mix);
 
+/**
+ * A scheme role at an alpha. Only valid inside a rule on the painted element:
+ * role vars change per scheme, so a root-level custom property would freeze
+ * the root scheme's colour.
+ */
+export function paintExpression(paint: Paint): string {
+  const base = `var(${roleVar(paint.role)})`;
+  return paint.alpha >= 1 ? base : `oklch(from ${base} l c h / ${round(paint.alpha, 3)})`;
+}
+
+export function gradientExpression(g: Gradient): string {
+  if (g.kind === "stripes") {
+    const px = g.stops.map((s) => `${paintExpression(s)} ${round((s.at / 100) * g.size, 2)}px`).join(", ");
+    return `repeating-linear-gradient(${g.angle}deg, ${px})`;
+  }
+  const stops = g.stops.map((s) => `${paintExpression(s)} ${s.at}%`).join(", ");
+  if (g.kind === "radial") return `radial-gradient(circle at ${g.x}% ${g.y}%, ${stops})`;
+  if (g.kind === "conic") return `conic-gradient(from ${g.angle}deg at ${g.x}% ${g.y}%, ${stops})`;
+  return `linear-gradient(${g.angle}deg, ${stops})`;
+}
+
+function decorDeclarations(d: Decor): string[] {
+  return [
+    `--${CSS_PREFIX}-decor-color: ${paintExpression(d.color)};`,
+    `--${CSS_PREFIX}-decor-thickness: ${d.thickness}px;`,
+    ...(d.tintText ? [`color: ${paintExpression(d.color)};`] : []),
+  ];
+}
+
+function effectDeclarations(e: Effect): string[] {
+  return [
+    `--${CSS_PREFIX}-effect-color: ${paintExpression({ role: e.color.role, alpha: 1 })};`,
+    `--${CSS_PREFIX}-effect-alpha: ${e.color.alpha};`,
+    `--${CSS_PREFIX}-effect-speed: ${e.speed};`,
+    `--${CSS_PREFIX}-effect-density: ${e.density};`,
+    `--${CSS_PREFIX}-effect-size: ${e.size};`,
+  ];
+}
+
 function roleDeclarations(scheme: Scheme, mode: Mode): string[] {
   const map = roleMapFor(scheme, mode);
   if (!map) return [];
@@ -82,7 +121,8 @@ export type CompileOptions = {
 
 /**
  * Google Fonts stylesheet for the theme's `google` fonts, requesting only the
- * weights its type roles use (plus 400/700 for body copy and <strong>).
+ * weights its type roles use (plus 400/700 for body copy and <strong>), or
+ * every declared weight when the theme turns on a section kit.
  * Returns null when the theme uses no Google fonts.
  */
 export function googleFontsUrl(theme: Theme): string | null {
@@ -95,6 +135,8 @@ export function googleFontsUrl(theme: Theme): string | null {
     const weights = new Set<number>();
     for (const role of Object.values(theme.typeset.roles)) if (role.font === font.id) weights.add(snap(role.weight));
     if (theme.typeset.roles.body.font === font.id) [400, 700].forEach((w) => weights.add(snap(w)));
+    // Kit CSS sets its own weights, so a kit theme loads every weight the font declares.
+    if (theme.kits?.length && available) available.forEach((w) => weights.add(w));
     if (!weights.size) weights.add(snap(400));
     const list = [...weights].sort((a, b) => a - b).join(";");
     return `family=${encodeURIComponent(font.family).replace(/%20/g, "+")}:wght@${list}`;
@@ -197,7 +239,7 @@ function rootDeclarations(theme: Theme): string[] {
   );
   for (const sh of shape.shadows) {
     d.push(
-      `--${CSS_PREFIX}-shadow-${sh.id}: ${sh.x}px ${sh.y}px ${sh.blur}px ${sh.spread}px ${refExpression(normalizeRef(sh.color))};`,
+      `--${CSS_PREFIX}-shadow-${sh.id}: ${sh.inset ? "inset " : ""}${sh.x}px ${sh.y}px ${sh.blur}px ${sh.spread}px ${refExpression(normalizeRef(sh.color))};`,
     );
   }
 
@@ -208,6 +250,8 @@ function rootDeclarations(theme: Theme): string[] {
     `--${CSS_PREFIX}-duration-slow: ${off ? 0 : motion.durationSlow}ms;`,
     `--${CSS_PREFIX}-ease: ${motion.easing};`,
     `--${CSS_PREFIX}-entrance-distance: ${motion.profile === "lively" ? "32px" : "12px"};`,
+    `--${CSS_PREFIX}-nav-in: ${off ? 0 : motion.nav.durationIn}ms;`,
+    `--${CSS_PREFIX}-nav-out: ${off ? 0 : motion.nav.durationOut}ms;`,
   );
 
   const defaultButton = theme.buttons.find((b) => b.id === theme.defaultButton) ?? theme.buttons[0]!;
@@ -256,6 +300,20 @@ export function compileTheme(theme: Theme, opts: CompileOptions = {}): CompiledT
 
   for (const style of theme.buttons) {
     parts.push(block(`${t} [data-button-style="${style.id}"]`, buttonDeclarations(theme, style)));
+  }
+
+  for (const g of theme.surfaces.gradients) {
+    parts.push(block(`${t} [data-gradient="${g.id}"]`, [`background-image: ${gradientExpression(g)};`]));
+  }
+  for (const d of theme.decor) parts.push(block(`${t} [data-decor="${d.id}"]`, decorDeclarations(d)));
+  for (const e of theme.effects.presets) parts.push(block(`${t} [data-effect="${e.id}"]`, effectDeclarations(e)));
+
+  // Cross-document view transitions cannot be scoped; one theme owns a storefront page.
+  if (theme.motion.transition === "native" && theme.motion.profile !== "none") {
+    parts.push(
+      `@view-transition { navigation: auto; }`,
+      `::view-transition-group(root) { animation-duration: ${theme.motion.durationBase}ms; animation-timing-function: ${theme.motion.easing}; }`,
+    );
   }
 
   const css = parts.filter(Boolean).join("\n\n") + "\n";

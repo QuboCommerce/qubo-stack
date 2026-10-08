@@ -5,7 +5,8 @@ import {
   siteDomain,
   user,
 } from "@qubo/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
+import { access } from "@qubo/portal-client";
 
 export type SiteType = (typeof site.$inferSelect)["type"];
 
@@ -13,11 +14,15 @@ export type SiteContext = {
   id: string;
   slug: string;
   name: string;
+  /** One-sentence blurb from General settings; the default meta description. */
+  description: string | null;
   type: SiteType;
   currency: string;
   locale: string;
   organizationId: string;
   capabilities: SiteCapability[];
+  /** null = draft; see `site.publishedAt`. */
+  publishedAt: Date | null;
 };
 
 export type SiteCapability = (typeof site.$inferSelect)["capabilities"][number];
@@ -46,11 +51,13 @@ export async function resolveSite(
     id: site.id,
     slug: site.slug,
     name: site.name,
+    description: site.description,
     type: site.type,
     currency: site.currency,
     locale: site.locale,
     organizationId: site.organizationId,
     capabilities: site.capabilities,
+    publishedAt: site.publishedAt,
   };
 
   const slug = headers.get("x-qubo-site")?.trim();
@@ -58,7 +65,7 @@ export async function resolveSite(
     const [row] = await db
       .select(columns)
       .from(site)
-      .where(eq(site.slug, slug))
+      .where(and(eq(site.slug, slug), isNull(site.deletedAt)))
       .limit(1);
     return row ?? null;
   }
@@ -74,7 +81,7 @@ export async function resolveSite(
     .select(columns)
     .from(siteDomain)
     .innerJoin(site, eq(site.id, siteDomain.siteId))
-    .where(eq(siteDomain.hostname, host))
+    .where(and(eq(siteDomain.hostname, host), isNull(site.deletedAt)))
     .limit(1);
 
   return row ?? null;
@@ -118,6 +125,20 @@ export async function assertSiteAccess(
     .limit(1);
 
   return Boolean(membership);
+}
+
+/**
+ * Membership plus licence: sites outside the plan (see `access()` in
+ * @qubo/portal-client) stay live on the storefront but can't be edited.
+ * Use this for every back-office read or write; `assertSiteAccess` alone only
+ * answers "is this person staff here".
+ */
+export async function assertSiteEditable(
+  actor: ActorContext | null,
+  siteContext: SiteContext,
+): Promise<"ok" | "forbidden" | "locked"> {
+  if (!(await assertSiteAccess(actor, siteContext))) return "forbidden";
+  return (await access()).lockedSiteIds.has(siteContext.id) ? "locked" : "ok";
 }
 
 /** Every site the actor can switch between, for the admin site picker. */

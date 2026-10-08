@@ -1,9 +1,9 @@
 import type { Config, Field, Fields } from "@puckeditor/core";
 import type { Theme } from "@qubo/stylekit";
-import { buttonEmphases, fontRoles } from "@qubo/stylekit";
+import { buttonEmphases, easingPresets, fontRoles } from "@qubo/stylekit";
 import type { Capability } from "./context";
 import { blockCategories, type BlockDefinition, type BlockRegistry } from "./define";
-import { anchorPoints, defaultsOf, linkKinds, type AnyFieldDef, type FieldKind, type FieldMap } from "./fields";
+import { anchorPoints, defaultsOf, linkKinds, type AnyFieldDef, type FieldKind, type FieldMap, type PresetKind } from "./fields";
 
 export type FieldAdapterContext = {
   theme?: Theme;
@@ -15,6 +15,28 @@ export type FieldAdapterContext = {
 export type FieldAdapters = Partial<{ [K in FieldKind]: (def: Extract<AnyFieldDef, { kind: K }>, ctx: FieldAdapterContext) => Field }>;
 
 const opt = (value: string, label: string) => ({ value, label });
+
+export function presetList(kind: PresetKind, theme: Theme | undefined): { id: string; name: string }[] {
+  if (!theme) return [];
+  switch (kind) {
+    case "gradient":
+      return theme.surfaces.gradients;
+    case "decor":
+      return theme.decor;
+    case "effect":
+      return theme.effects.presets;
+    case "transition":
+      return theme.motion.transitions;
+  }
+}
+
+/** The leading choices of a preset picker, before the theme's presets. */
+export function presetEmptyOptions(empty: "none" | "inherit" | "theme"): { value: string; label: string }[] {
+  if (empty === "theme") return [{ value: "", label: "Theme default" }, { value: "none", label: "None" }];
+  return [{ value: "", label: empty === "inherit" ? "Inherit" : "None" }];
+}
+
+const presetOptions = (kind: PresetKind, theme: Theme | undefined) => presetList(kind, theme).map((p) => opt(p.id, p.name));
 
 function editorField(def: AnyFieldDef, ctx: FieldAdapterContext, adapters: FieldAdapters): Field {
   const custom = adapters[def.kind] as ((d: AnyFieldDef, c: FieldAdapterContext) => Field) | undefined;
@@ -45,6 +67,21 @@ function editorField(def: AnyFieldDef, ctx: FieldAdapterContext, adapters: Field
       return { type: "select", label, options: [opt("", "Theme default"), ...(ctx.theme?.buttons ?? []).map((b) => opt(b.id, b.name))] };
     case "emphasis":
       return { type: "select", label, options: buttonEmphases.map((e) => opt(e, e)) };
+    case "decor":
+      return {
+        type: "object",
+        label,
+        objectFields: {
+          preset: { type: "select", label: "Style", options: [opt("", "None"), ...(ctx.theme?.decor ?? []).map((d) => opt(d.id, d.name))] },
+          match: { type: "text", label: "Words" },
+        },
+      } as Field;
+    case "duration":
+      return { type: "number", label: `${label} (ms)`, min: def.min, max: def.max, step: 50 };
+    case "easing":
+      return { type: "select", label, options: [opt("", "Theme easing"), ...Object.entries(easingPresets).map(([name, value]) => opt(value, name))] };
+    case "preset":
+      return { type: "select", label, options: [...presetEmptyOptions(def.empty).map((o) => opt(o.value, o.label)), ...presetOptions(def.preset, ctx.theme)] };
     case "icon":
     case "anchorId":
       return { type: "text", label };

@@ -25,7 +25,7 @@ export function hmFroidHomeFixture(registry = defaultRegistry): DocumentData {
           n("Eyebrow", { text: "Depuis 2006", look: "pill", icon: "snowflake" }),
           n("Heading", {
             text: "Le froid professionnel, installé et entretenu",
-            highlight: "froid professionnel",
+            decor: { preset: "squiggle", match: "froid professionnel", ranges: [] },
             level: "h1",
             size: "6",
             font: "display",

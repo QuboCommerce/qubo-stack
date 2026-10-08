@@ -55,3 +55,14 @@ export * from "./support";
 
 // Notifications
 export * from "./notifications";
+
+// Realtime event bus
+export * from "./realtime";
+
+// Session devices (geo, takeover)
+export * from "./sessions";
+export * from "./leases";
+
+// Portal link (instance ↔ Qubo Portal)
+export * from "./portal";
+export * from "./ai";
