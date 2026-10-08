@@ -20,6 +20,8 @@ export const blockCss = /* css */ `
 /* Section kits bring their own element rules; :not(:where()) keeps these resets out without adding specificity. */
 [data-theme] img:not(:where([data-kit] *)), [data-theme] video:not(:where([data-kit] *)) { max-width: 100%; display: block; }
 [data-theme] :where(h1, h2, h3, h4, p, figure, blockquote, ul, ol):not(:where([data-kit] *)) { margin: 0; }
+/* Long compound words (Dutch, German) in large headings break instead of widening the page. */
+[data-theme] :where(h1, h2, h3, h4):not(:where([data-kit] *)) { overflow-wrap: break-word; hyphens: auto; }
 
 /* ---- layout ------------------------------------------------------------ */
 .qb-stack { display: flex; flex-direction: var(--qb-dir, column); min-width: 0; }

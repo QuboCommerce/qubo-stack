@@ -4,6 +4,7 @@ import {
   A,
   action,
   Arrow,
+  ArrowIcon,
   brandFields,
   Eyebrow,
   eyebrowFields,
@@ -65,6 +66,18 @@ export const ChapterHero = defineSection({
     }),
     primary: action("Browse the catalogue", "all", "collection"),
     secondary: action("Talk about my needs", "+32 2 000 00 00", "phone"),
+    texture: f.select(
+      [
+        { value: "faint", label: "Faint" },
+        { value: "visible", label: "Visible" },
+        { value: "strong", label: "Strong" },
+      ],
+      {
+        label: "Background texture",
+        default: "visible",
+        description: "How much of the theme's material texture shows behind the headline. The wash keeps its angle so the text stays readable.",
+      },
+    ),
     carousel: f.group(
       {
         label: f.text({ inline: false, label: "Carousel name (screen readers)", default: "A look at the range" }),
@@ -86,13 +99,13 @@ export const ChapterHero = defineSection({
       { label: "Slides", summary: "caption", itemLabel: "Slide", default: [{}, {}] },
     ),
   },
-  render: ({ id, heading, intro, conditionsLabel, conditions, primary, secondary, carousel, slides }, ctx) => {
+  render: ({ id, heading, intro, conditionsLabel, conditions, primary, secondary, texture, carousel, slides }, ctx) => {
     const tid = titleId(id, "title");
     const total = slides.length;
     const pad = (n: number) => String(n).padStart(2, "0");
     const position = (i: number) => textOf(carousel.slideLabel).replace("{n}", String(i + 1)).replace("{total}", String(total));
     return (
-      <div {...KIT} className="qb-ch-hero-stage">
+      <div {...KIT} className="qb-ch-hero-stage" data-ch-texture={texture}>
         <section className="qb-ch-hero qb-ch-shell" aria-labelledby={tid}>
           <div className="qb-ch-hero__copy" {...reveal("left")}>
             <h1 id={tid}>
@@ -180,10 +193,14 @@ export const ChapterHero = defineSection({
                 </div>
                 <div className="qb-ch-hero-carousel__arrows">
                   <button className="qb-ch-carousel-arrow" type="button" data-ch-carousel-prev="" aria-label={textOf(carousel.prevLabel)}>
-                    <span aria-hidden="true">←</span>
+                    <span aria-hidden="true">
+                      <ArrowIcon dir="left" />
+                    </span>
                   </button>
                   <button className="qb-ch-carousel-arrow" type="button" data-ch-carousel-next="" aria-label={textOf(carousel.nextLabel)}>
-                    <span aria-hidden="true">→</span>
+                    <span aria-hidden="true">
+                      <ArrowIcon dir="right" />
+                    </span>
                   </button>
                 </div>
               </div>
@@ -350,7 +367,7 @@ export const ChapterCatalogue = defineSection({
                     <small>{c.text}</small>
                   </span>
                   <span className="qb-ch-card-arrow" aria-hidden="true">
-                    ↗
+                    <ArrowIcon />
                   </span>
                 </span>
               </A>
@@ -490,7 +507,7 @@ export const ChapterTrades = defineSection({
                 <strong>{it.title}</strong>
                 <span className="qb-ch-trade-list__detail">{it.detail}</span>
                 <span className="qb-ch-trade-list__arrow" aria-hidden="true">
-                  ↗
+                  <ArrowIcon />
                 </span>
               </A>
             ))}
@@ -563,7 +580,7 @@ export const ChapterMaterial = defineSection({
                   <strong>{e.title}</strong>
                 </span>
                 <span className="qb-ch-material-entry__arrow" aria-hidden="true">
-                  ↗
+                  <ArrowIcon />
                 </span>
               </A>
             ))}
@@ -883,7 +900,7 @@ export const ChapterFooter = defineSection({
     }),
     copyright: f.text({ label: "Copyright", default: "© Brand" }),
     since: f.text({ label: "Since", default: "Since 2008" }),
-    top: f.text({ label: "Back to top", default: "Back to top ↑" }),
+    top: f.text({ label: "Back to top", default: "Back to top" }),
     topLink: f.link({ label: "Back to top link", default: { kind: "anchor", value: "top" } }),
   },
   render: ({ brand, home, blurb, links, legal, copyright, since, top, topLink }, ctx) => (
@@ -913,8 +930,9 @@ export const ChapterFooter = defineSection({
           </span>
         ) : null}
         <span>{since}</span>
-        <A link={topLink} ctx={ctx}>
+        <A link={topLink} ctx={ctx} className="qb-ch-site-footer__top">
           {top}
+          <ArrowIcon dir="up" />
         </A>
       </div>
     </footer>

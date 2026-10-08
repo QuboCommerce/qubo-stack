@@ -1,6 +1,6 @@
 import { Fragment, type CSSProperties, type ReactNode } from "react";
 import { defineSection, f, textOf } from "../../../core";
-import { A, Arrow, brandFields, Icon, KIT, Marked, mediaSrc, PartnerField, partnersField, Wordmark } from "./shared";
+import { A, Arrow, ArrowIcon, brandFields, Icon, KIT, Marked, mediaSrc, PartnerField, partnersField, Wordmark } from "./shared";
 
 const link = (label: string, href: string, kind: "url" | "anchor" | "collection" | "page" | "phone" = "url") => ({
   label,
@@ -117,7 +117,9 @@ export const ChapterMasthead = defineSection({
         {fam.links.map((l, i) => (
           <A key={i} link={l.link} ctx={ctx} className={cls}>
             <span>{l.label as ReactNode}</span>
-            <span aria-hidden="true">↗</span>
+            <span aria-hidden="true">
+              <ArrowIcon />
+            </span>
           </A>
         ))}
       </>

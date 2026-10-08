@@ -714,8 +714,7 @@ export const nl: Record<string, string> = {
     "© HM Froid · Anderlecht",
   "À Anderlecht depuis 2008":
     "In Anderlecht sinds 2008",
-  "Retour en haut ↑":
-    "Terug naar boven ↑",
+  "Retour en haut": "Terug naar boven",
   "HM Froid, matériel horeca neuf et d’occasion à Bruxelles":
     "HM Froid, nieuw en tweedehands horecamateriaal in Brussel",
   "Du bon\nmatériel.\n*Pour un service\n[qui tourne.]*":

@@ -17,7 +17,7 @@ async function load(params: Params) {
   const page = await sf.client.getPage(path);
   if (!page) return { sf, hit: null };
   // The page in every served locale, each under its own slug (hreflang and the language switch).
-  const paths = Object.fromEntries(Object.entries(page.slugs).map(([locale, s]) => [locale, `/${s}`]));
+  const paths = Object.fromEntries(Object.entries(page.slugs ?? {}).map(([locale, s]) => [locale, `/${s}`]));
   return { sf, hit: { sf, page, path, paths } };
 }
 
