@@ -133,7 +133,7 @@ Host <customer>
 
 ```sh
 sudo -u qubo -i
-git clone git@github.com:aliaddas/qubo-stack.git ~/qubo-stack   # deploy key: ssh-keygen -t ed25519 -C "qubo@$(hostname)"
+git clone git@github.com:QuboCommerce/qubo-stack.git ~/qubo-stack   # deploy key: ssh-keygen -t ed25519 -C "qubo@$(hostname)"
 ```
 
 ## 8. Deploy the instance next to Coolify
