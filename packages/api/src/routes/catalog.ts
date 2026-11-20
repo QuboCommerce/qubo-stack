@@ -2,6 +2,7 @@ import { Elysia, t } from "elysia";
 import { db } from "@qubo/db/client";
 import {
   category,
+  collection,
   inventoryItem,
   product,
   productCategory,
@@ -9,9 +10,24 @@ import {
   productVariant,
   productVariantImage,
 } from "@qubo/db/schema";
-import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, or, sql, type SQL } from "drizzle-orm";
+import { collectionCondition, collectionOrderBy } from "@qubo/db/collection-rules";
 import { tenancy } from "../plugins/tenancy";
 import { keyOf, resolvePrices } from "../lib/pricing";
+
+const collectionColumns = {
+  id: collection.id,
+  name: collection.name,
+  slug: collection.slug,
+  description: collection.description,
+  image: collection.image,
+  metaTitle: collection.metaTitle,
+  metaDescription: collection.metaDescription,
+  kind: collection.kind,
+  match: collection.match,
+  rules: collection.rules,
+  sort: collection.sort,
+};
 
 export const catalog = new Elysia({ prefix: "/catalog" })
   .use(tenancy)
@@ -44,11 +60,50 @@ export const catalog = new Elysia({ prefix: "/catalog" })
     { detail: { summary: "Category tree for the resolved site" } },
   )
   .get(
+    "/collections",
+    async ({ site, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
+
+      const rows = await db
+        .select(collectionColumns)
+        .from(collection)
+        .where(and(eq(collection.siteId, site.id), eq(collection.isPublished, true)))
+        .orderBy(asc(collection.position), asc(collection.name));
+
+      // One count per collection: rules differ per row, and a site has a handful of collections.
+      const counts = await Promise.all(
+        rows.map((c) =>
+          db
+            .select({ n: sql<number>`count(*)::int` })
+            .from(product)
+            .where(and(eq(product.siteId, site.id), eq(product.isArchived, false), collectionCondition(c)))
+            .then(([r]) => r?.n ?? 0),
+        ),
+      );
+
+      return {
+        site: site.slug,
+        collections: rows.map((c, i) => ({
+          id: c.id,
+          name: c.name,
+          slug: c.slug,
+          description: c.description,
+          image: c.image,
+          metaTitle: c.metaTitle,
+          metaDescription: c.metaDescription,
+          productCount: counts[i]!,
+        })),
+      };
+    },
+    { detail: { summary: "Published collections of the resolved site, with product counts" } },
+  )
+  .get(
     "/products",
     async ({ site, actor, query, status }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
 
       const limit = Math.min(Number(query.limit ?? 48), 100);
+      let order: SQL[] = [desc(product.isFeatured), desc(product.createdAt)];
       const conditions = [
         eq(product.siteId, site.id),
         eq(product.isArchived, false),
@@ -86,6 +141,17 @@ export const catalog = new Elysia({ prefix: "/catalog" })
             db.select({ id: productCategory.productId }).from(productCategory).where(inArray(productCategory.categoryId, ids)),
           ),
         );
+      } else if (query.collection) {
+        // Unpublished or unknown collections list nothing, like an unknown category.
+        const [found] = await db
+          .select(collectionColumns)
+          .from(collection)
+          .where(and(eq(collection.siteId, site.id), eq(collection.slug, query.collection), eq(collection.isPublished, true)))
+          .limit(1);
+        if (!found) return { site: site.slug, currency: site.currency, products: [] };
+        conditions.push(collectionCondition(found));
+        // A search inside a collection keeps the default order; otherwise the collection's own sort.
+        if (!query.q) order = collectionOrderBy(found);
       }
 
       const rows = await db
@@ -105,7 +171,7 @@ export const catalog = new Elysia({ prefix: "/catalog" })
           and(eq(productImage.productId, product.id), eq(productImage.position, 0)),
         )
         .where(and(...conditions))
-        .orderBy(desc(product.isFeatured), desc(product.createdAt))
+        .orderBy(...order)
         .limit(limit);
 
       const prices = await resolvePrices(
@@ -137,6 +203,8 @@ export const catalog = new Elysia({ prefix: "/catalog" })
       query: t.Object({
         q: t.Optional(t.String()),
         category: t.Optional(t.String()),
+        /** Published collection slug; ignored when `category` is set. */
+        collection: t.Optional(t.String()),
         /** "1" keeps products whose compare-at price is above the base price. */
         onSale: t.Optional(t.String()),
         limit: t.Optional(t.String()),

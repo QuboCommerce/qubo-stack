@@ -28,6 +28,10 @@ export async function GET(_req: Request, { params }: { params: Promise<{ site: s
       ? [
           { path: "/collections" },
           ...data.categories.map((c) => ({ path: `/collections/${c.slug}`, lastmod: c.updatedAt })),
+          // A category with the same slug owns that URL; it is already listed above.
+          ...(data.collections ?? [])
+            .filter((c) => !data.categories.some((k) => k.slug === c.slug))
+            .map((c) => ({ path: `/collections/${c.slug}`, lastmod: c.updatedAt })),
           ...data.products.map((p) => ({ path: `/products/${p.slug}`, lastmod: p.updatedAt })),
         ]
       : []),

@@ -131,8 +131,10 @@ export function templateStarter(kind: ResourceKind, registry: BlockRegistry = de
     case "not_found":
       content = [make("Section", { preset: "not-found" })];
       break;
-    case "product":
     case "collection":
+      content = [make("CollectionHeader"), make("ProductGrid")];
+      break;
+    case "product":
     case "collection_list":
       content = [make("ProductGrid")];
       break;

@@ -1,0 +1,109 @@
+{
+  "inventory": {
+    "title": "Stock",
+    "subtitle": "{count, plural, one {# article} other {# articles}}, {low, number} en stock faible, {out, number} en rupture",
+    "list": {
+      "searchPlaceholder": "Rechercher par produit ou SKU",
+      "tabs": {
+        "all": "Tous",
+        "low": "Stock faible",
+        "out": "Rupture de stock",
+        "untracked": "Non suivi"
+      },
+      "columns": {
+        "product": "Produit",
+        "sku": "SKU",
+        "status": "Statut",
+        "available": "Disponible",
+        "onHand": "Quantité"
+      },
+      "emptyTitle": "Aucun produit pour l'instant",
+      "emptyDescription": "Le stock s'affiche ici dès que vous ajoutez des produits.",
+      "noResultsTitle": "Aucun article trouvé",
+      "noResults": "Essayez une autre recherche ou un autre onglet.",
+      "filteredBy": "Affichage de {name}",
+      "clearFilter": "Afficher tous les produits",
+      "quantityLabel": "Quantité en stock pour {name}",
+      "decrease": "Retirer une unité",
+      "increase": "Ajouter une unité",
+      "save": "Enregistrer",
+      "saved": "Stock mis à jour",
+      "notTracked": "Non suivi"
+    },
+    "status": {
+      "inStock": "En stock",
+      "low": "Stock faible",
+      "out": "Rupture de stock",
+      "untracked": "Non suivi"
+    },
+    "sheet": {
+      "description": "Stock de cet article",
+      "loading": "Chargement…",
+      "openProduct": "Ouvrir le produit",
+      "onHand": "Quantité en stock",
+      "reserved": "Réservé",
+      "reservedHint": "Retenu par des commandes non payées.",
+      "available": "Quantité disponible",
+      "threshold": "Seuil d'alerte",
+      "thresholdHint": "Affiché en stock faible à partir de cette quantité.",
+      "tracked": "Suivre le stock",
+      "trackedHint": "Désactivé, le produit peut toujours être commandé.",
+      "supplier": "Fournisseur",
+      "storageLocation": "Emplacement",
+      "storagePlaceholder": "Étagère, allée, entrepôt",
+      "save": "Enregistrer",
+      "saved": "Stock enregistré",
+      "record": {
+        "title": "Enregistrer un mouvement",
+        "add": "Ajouter",
+        "remove": "Retirer",
+        "amount": "Quantité",
+        "reason": "Motif",
+        "note": "Note",
+        "notePlaceholder": "Facultatif, par exemple un numéro de bon de livraison",
+        "submit": "Enregistrer",
+        "recorded": "Mouvement enregistré"
+      },
+      "history": {
+        "title": "Historique",
+        "empty": "Aucun mouvement enregistré pour l'instant.",
+        "system": "Système",
+        "order": "Commande en ligne"
+      }
+    },
+    "reasons": {
+      "SALE": "Vente",
+      "RESTOCK": "Réassort",
+      "RETURN": "Retour",
+      "ADJUSTMENT": "Correction",
+      "RESERVED": "Réservé",
+      "UNRESERVED": "Libéré",
+      "DAMAGED": "Endommagé ou perdu"
+    },
+    "productCard": {
+      "title": "Stock",
+      "onHand": "Quantité en stock",
+      "tracked": "Suivre le stock",
+      "trackedHint": "Désactivé, le produit peut toujours être commandé.",
+      "threshold": "Seuil d'alerte",
+      "viewHistory": "Voir l'historique",
+      "save": "Enregistrer le stock",
+      "saved": "Stock enregistré",
+      "separate": "Enregistré séparément du produit.",
+      "variantsHint": "Chaque variante a son propre stock.",
+      "manage": "Gérer dans Stock",
+      "available": "{count, plural, one {# disponible} other {# disponibles}}"
+    },
+    "errors": {
+      "notFound": "Cet article n'existe plus.",
+      "quantity": "Saisissez un nombre entier entre 0 et {max, number}.",
+      "race": "Quelqu'un a modifié ce stock entre-temps. Il est maintenant de {quantity, number}.",
+      "amount": "Saisissez un nombre entier différent de 0.",
+      "note": "La note est trop longue.",
+      "nothingToRemove": "Il n'y a plus de stock à retirer.",
+      "threshold": "Saisissez un nombre entier supérieur ou égal à 0.",
+      "tooLong": "Maximum {max, number} caractères.",
+      "failed": "Enregistrement impossible. Veuillez réessayer."
+    }
+  }
+}
