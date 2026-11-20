@@ -65,6 +65,10 @@ export const catalog = new Elysia({ prefix: "/catalog" })
         );
       }
 
+      if (query.onSale === "1") {
+        conditions.push(sql`${product.compareAtPrice} > ${product.basePrice}`);
+      }
+
       if (query.category) {
         // A collection shows its whole subtree: imported catalogues attach
         // products to leaves, and the root ("Froid commercial") must not be empty.
@@ -133,6 +137,8 @@ export const catalog = new Elysia({ prefix: "/catalog" })
       query: t.Object({
         q: t.Optional(t.String()),
         category: t.Optional(t.String()),
+        /** "1" keeps products whose compare-at price is above the base price. */
+        onSale: t.Optional(t.String()),
         limit: t.Optional(t.String()),
       }),
       detail: { summary: "Storefront product listing with resolved pricing" },
