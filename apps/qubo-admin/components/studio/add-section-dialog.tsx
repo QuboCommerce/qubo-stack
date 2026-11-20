@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Blocks, Lock, Search, Sparkles, X } from "lucide-react";
 import { registry } from "@qubo/blocks";
 import { cn } from "@qubo/shared/utils";
@@ -36,6 +37,7 @@ export function AddSectionDialog({
   kits?: readonly string[];
   onInsert: (entry: SectionEntry) => void;
 }) {
+  const t = useTranslations("studio.addSection");
   const [tab, setTab] = useState<Tab>("library");
   const [group, setGroup] = useState<SectionGroupId | "all">("all");
   const [query, setQuery] = useState("");
@@ -59,7 +61,7 @@ export function AddSectionDialog({
         type="button"
         disabled={locked}
         onClick={() => onInsert(e)}
-        title={locked ? `Turn on ${needs} in Settings to use this section` : `Add ${e.label}${e.variant ? ` · ${e.variant}` : ""}`}
+        title={locked ? t("lockedTitle", { needs }) : t("addTitle", { label: e.variant ? `${e.label} · ${e.variant}` : e.label })}
         className={cn(
           "group flex flex-col overflow-hidden rounded-xl bg-card text-left shadow-[0_0_0_1px_var(--color-border)] transition-[box-shadow,transform] outline-none",
           locked
@@ -69,7 +71,7 @@ export function AddSectionDialog({
       >
         <BlockFrame
           src={`/canvas/${siteSlug}/${e.type}?thumb=1${e.preset ? `&preset=${e.preset}` : ""}`}
-          title={`${e.label} preview`}
+          title={t("preview", { label: e.label })}
           height={150}
           virtualWidth={e.thumbWidth}
           className="border-b"
@@ -80,7 +82,7 @@ export function AddSectionDialog({
             {e.variant && <span className="truncate font-normal text-muted-foreground">· {e.variant}</span>}
             {locked && <Lock className="ml-auto size-3 shrink-0 text-muted-foreground" aria-hidden />}
           </p>
-          <p className="line-clamp-2 text-xs text-muted-foreground">{locked ? `Needs ${needs}` : e.description}</p>
+          <p className="line-clamp-2 text-xs text-muted-foreground">{locked ? t("needs", { needs }) : e.description}</p>
         </div>
       </button>
     );
@@ -108,17 +110,17 @@ export function AddSectionDialog({
         <div className="flex shrink-0 flex-col gap-3 border-b px-4 pt-4 pb-3 sm:px-5">
           <div className="flex items-start gap-3">
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-base font-semibold">Add section</DialogTitle>
+              <DialogTitle className="text-base font-semibold">{t("title")}</DialogTitle>
               <DialogDescription className="truncate text-xs">
-                {insertAfter ? <>Goes after <span className="font-medium text-foreground">{insertAfter}</span></> : "Goes at the end of the page"}
-                {themeName && <> · previews use {themeName}</>}
+                {insertAfter ? t.rich("goesAfter", { name: insertAfter, b: (c) => <span className="font-medium text-foreground">{c}</span> }) : t("goesAtEnd")}
+                {themeName && <> · {t("previewsUse", { theme: themeName })}</>}
               </DialogDescription>
             </div>
             <button
               type="button"
               onClick={() => onOpenChange(false)}
               className="-mt-1 -mr-1 flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-              aria-label="Close"
+              aria-label={t("close")}
             >
               <X className="size-4" />
             </button>
@@ -127,8 +129,8 @@ export function AddSectionDialog({
             <div role="tablist" className="flex shrink-0 gap-0.5 rounded-lg bg-muted p-0.5">
               {(
                 [
-                  ["library", "Library", Blocks],
-                  ["generate", "Generate", Sparkles],
+                  ["library", t("tabs.library"), Blocks],
+                  ["generate", t("tabs.generate"), Sparkles],
                 ] as const
               ).map(([id, label, Icon]) => (
                 <button
@@ -153,8 +155,8 @@ export function AddSectionDialog({
                   autoFocus
                   value={query}
                   onChange={(ev) => setQuery(ev.target.value)}
-                  placeholder="Search sections"
-                  aria-label="Search sections"
+                  placeholder={t("search")}
+                  aria-label={t("search")}
                   className="h-8 w-full rounded-lg border bg-background pr-3 pl-8 text-[13px] outline-none focus:ring-2 focus:ring-ring/40"
                 />
               </label>
@@ -166,10 +168,10 @@ export function AddSectionDialog({
           <div className="flex min-h-0 flex-1 flex-col md:flex-row">
             {/* categories: chips on phones, a rail from md */}
             <nav
-              aria-label="Section categories"
+              aria-label={t("categories")}
               className="flex shrink-0 gap-1 overflow-x-auto border-b px-3 py-2 md:w-52 md:flex-col md:overflow-y-auto md:border-r md:border-b-0 md:py-3 3xl:w-60"
             >
-              {[{ id: "all" as const, label: "All sections" }, ...groups].map((g) => (
+              {[{ id: "all" as const, label: t("allSections") }, ...groups].map((g) => (
                 <button
                   key={g.id}
                   type="button"
@@ -189,8 +191,8 @@ export function AddSectionDialog({
               {sorted.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-1 py-16 text-center">
                   <Search className="mb-2 size-5 text-muted-foreground" />
-                  <p className="text-sm font-medium">No sections match “{query}”</p>
-                  <p className="text-xs text-muted-foreground">Try another word, or describe it in Generate.</p>
+                  <p className="text-sm font-medium">{t("noMatch", { query })}</p>
+                  <p className="text-xs text-muted-foreground">{t("noMatchHint")}</p>
                 </div>
               ) : grouped ? (
                 <div className="space-y-7">
@@ -214,17 +216,17 @@ export function AddSectionDialog({
               <div className="flex size-11 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Sparkles className="size-5" />
               </div>
-              <h3 className="text-base font-semibold">Generate a section</h3>
+              <h3 className="text-base font-semibold">{t("generate.title")}</h3>
               <p className="text-sm text-muted-foreground">
-                Describe what you need and the assistant composes it from this library, in your theme. You preview it before anything is added.
+                {t("generate.description")}
               </p>
               <textarea
                 disabled
                 rows={3}
-                placeholder="A three-step process explaining how a cold room is installed…"
+                placeholder={t("generate.placeholder")}
                 className="mt-1 w-full resize-none rounded-lg border bg-muted/40 p-3 text-sm outline-none"
               />
-              <p className="text-xs text-muted-foreground">Coming soon with Puck AI.</p>
+              <p className="text-xs text-muted-foreground">{t("generate.soon")}</p>
             </div>
           </div>
         )}

@@ -11,6 +11,7 @@ import {
 } from "@qubo/stylekit";
 import { cn } from "@qubo/shared/utils";
 import { ChevronLeft, ChevronRight, Lock } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Slider as SliderPrimitive } from "radix-ui";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import { Input } from "@/components/ui/input";
@@ -20,13 +21,14 @@ import { Slider } from "@/components/ui/slider";
 // ------------------------------------------------------------ panel chrome ---
 
 export function SubHeader({ title, subtitle, onBack, actions }: { title: string; subtitle?: string; onBack: () => void; actions?: ReactNode }) {
+  const t = useTranslations("studio.theme.controls");
   return (
     <div className="sticky top-0 z-10 flex h-12 shrink-0 items-center gap-1 border-b bg-background/95 px-1.5 backdrop-blur">
       <button
         type="button"
         onClick={onBack}
         className="flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-        aria-label="Back"
+        aria-label={t("back")}
       >
         <ChevronLeft className="size-4" />
       </button>
@@ -213,6 +215,7 @@ export const cssColor = (c: Oklch | null | undefined) => (c ? formatOklch(c) : u
  * OKLCH is what makes "a bit brighter" a single, predictable nudge.
  */
 export function ColorEditor({ value, onChange, disabled }: { value: string; onChange: (v: string) => void; disabled?: boolean }) {
+  const t = useTranslations("studio.theme.controls");
   const parsed = parseColor(value);
   const [text, setText] = useState(value);
   const [hex, setHex] = useState(parsed ? toHex(parsed) : "");
@@ -240,7 +243,7 @@ export function ColorEditor({ value, onChange, disabled }: { value: string; onCh
               const p = parseColor(e.target.value);
               if (p) onChange(formatOklch({ ...p, alpha: c.alpha }));
             }}
-            aria-label="Pick colour"
+            aria-label={t("pickColour")}
           />
         </label>
         <div className="grid min-w-0 flex-1 gap-1.5">
@@ -249,7 +252,7 @@ export function ColorEditor({ value, onChange, disabled }: { value: string; onCh
             disabled={disabled}
             spellCheck={false}
             className="h-7 font-mono text-xs uppercase"
-            aria-label="Hex"
+            aria-label={t("hex")}
             onChange={(e) => {
               setHex(e.target.value);
               const p = /^#?[0-9a-f]{3,8}$/i.test(e.target.value.trim()) ? parseColor(e.target.value.startsWith("#") ? e.target.value : `#${e.target.value}`) : null;
@@ -261,7 +264,7 @@ export function ColorEditor({ value, onChange, disabled }: { value: string; onCh
             disabled={disabled}
             spellCheck={false}
             className={cn("h-7 font-mono text-[11px]", !parseColor(text) && "border-destructive")}
-            aria-label="CSS colour"
+            aria-label={t("cssColour")}
             onChange={(e) => {
               setText(e.target.value);
               if (parseColor(e.target.value)) onChange(e.target.value.trim());
@@ -321,6 +324,7 @@ export function ColorEditor({ value, onChange, disabled }: { value: string; onCh
 
 /** Mix modifiers on a role reference: lightness nudge, chroma scale, opacity. */
 export function MixEditor({ mix, onChange }: { mix: ColorMix | undefined; onChange: (m: ColorMix | undefined) => void }) {
+  const t = useTranslations("studio.theme.controls");
   const m = mix ?? {};
   const patch = (p: Partial<ColorMix>) => {
     const next = { ...m, ...p };
@@ -331,9 +335,9 @@ export function MixEditor({ mix, onChange }: { mix: ColorMix | undefined; onChan
   };
   return (
     <div className="space-y-3">
-      <SliderField label="Lightness" value={m.lightness ?? 0} min={-0.3} max={0.3} step={0.01} format={(v) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}`} onChange={(v) => patch({ lightness: v })} />
-      <SliderField label="Saturation" value={m.chroma ?? 1} min={0} max={2} step={0.05} format={(v) => `×${v.toFixed(2)}`} onChange={(v) => patch({ chroma: v })} />
-      <SliderField label="Opacity" value={m.alpha ?? 1} min={0} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => patch({ alpha: v })} />
+      <SliderField label={t("lightness")} value={m.lightness ?? 0} min={-0.3} max={0.3} step={0.01} format={(v) => `${v > 0 ? "+" : ""}${Math.round(v * 100)}`} onChange={(v) => patch({ lightness: v })} />
+      <SliderField label={t("saturation")} value={m.chroma ?? 1} min={0} max={2} step={0.05} format={(v) => `×${v.toFixed(2)}`} onChange={(v) => patch({ chroma: v })} />
+      <SliderField label={t("opacity")} value={m.alpha ?? 1} min={0} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => patch({ alpha: v })} />
     </div>
   );
 }
@@ -364,8 +368,9 @@ export function TokenSelect({
   className?: string;
   ariaLabel?: string;
 }) {
-  const groups = Array.from(new Set(theme.palette.map((t) => t.group)));
-  const current = theme.palette.find((t) => t.id === value);
+  const t = useTranslations("studio.theme.controls");
+  const groups = Array.from(new Set(theme.palette.map((tk) => tk.group)));
+  const current = theme.palette.find((tk) => tk.id === value);
   return (
     <Select value={value ?? AUTO} onValueChange={(v) => onChange(v === AUTO ? undefined : v)}>
       <SelectTrigger size="sm" className={cn("h-8 w-full min-w-0 gap-2 text-xs", className)} aria-label={ariaLabel}>
@@ -376,9 +381,9 @@ export function TokenSelect({
               <span className="truncate">{current.name}</span>
             </span>
           ) : value ? (
-            <span className="truncate text-destructive">Missing “{value}”</span>
+            <span className="truncate text-destructive">{t("missing", { value })}</span>
           ) : (
-            <span className="truncate text-muted-foreground">{auto ?? "Automatic"}</span>
+            <span className="truncate text-muted-foreground">{auto ?? t("automatic")}</span>
           )}
         </SelectValue>
       </SelectTrigger>
@@ -395,17 +400,17 @@ export function TokenSelect({
           <SelectGroup key={g}>
             <SelectLabel className="text-[10px] tracking-wide uppercase">{g}</SelectLabel>
             {theme.palette
-              .filter((t) => t.group === g)
-              .map((t) => (
-                <SelectItem key={t.id} value={t.id} className="py-1.5">
+              .filter((tk) => tk.group === g)
+              .map((tk) => (
+                <SelectItem key={tk.id} value={tk.id} className="py-1.5">
                   <span className="flex min-w-0 items-center gap-2">
-                    <Swatch color={tokenColor(t)} className="size-5" />
+                    <Swatch color={tokenColor(tk)} className="size-5" />
                     <span className="min-w-0">
                       <span className="flex items-center gap-1 text-xs font-medium">
-                        {t.name}
-                        {t.locked && <Lock className="size-3 text-muted-foreground" />}
+                        {tk.name}
+                        {tk.locked && <Lock className="size-3 text-muted-foreground" />}
                       </span>
-                      {t.description && <span className="block max-w-56 truncate text-[11px] text-muted-foreground">{t.description}</span>}
+                      {tk.description && <span className="block max-w-56 truncate text-[11px] text-muted-foreground">{tk.description}</span>}
                     </span>
                   </span>
                 </SelectItem>

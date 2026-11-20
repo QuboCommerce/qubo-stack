@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { Loader2, Trash2 } from "lucide-react";
 import { deleteCategory } from "@/app/category-actions";
 import { Button } from "@/components/ui/button";
@@ -16,10 +17,11 @@ import {
 } from "@/components/ui/dialog";
 
 function Submit() {
+  const t = useTranslations("categories.delete");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" variant="destructive" size="sm" disabled={pending}>
-      {pending && <Loader2 className="animate-spin" />} Delete category
+      {pending && <Loader2 className="animate-spin" />} {t("submit")}
     </Button>
   );
 }
@@ -39,28 +41,25 @@ export function DeleteCategoryButton({
   productCount: number;
   parentName: string | null;
 }) {
+  const t = useTranslations("categories.delete");
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10 hover:text-destructive">
-          <Trash2 /> Delete
+          <Trash2 /> {t("button")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete “{name}”?</DialogTitle>
-          <DialogDescription>No product is deleted.</DialogDescription>
+          <DialogTitle>{t("title", { name })}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           {childCount > 0 && (
-            <li>
-              Its {childCount} subcategor{childCount > 1 ? "ies move" : "y moves"} up to {parentName ? `“${parentName}”` : "the top level"}.
-            </li>
+            <li>{parentName ? t("childrenToParent", { count: childCount, parent: parentName }) : t("childrenToTop", { count: childCount })}</li>
           )}
           <li>
-            {productCount > 0
-              ? `${productCount} product${productCount > 1 ? "s lose" : " loses"} this category.`
-              : "No products are in this category."}
+            {productCount > 0 ? t("products", { count: productCount }) : t("noProducts")}
           </li>
         </ul>
         <form action={deleteCategory}>
@@ -68,7 +67,7 @@ export function DeleteCategoryButton({
           <input type="hidden" name="id" value={id} />
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline" size="sm">Cancel</Button>
+              <Button type="button" variant="outline" size="sm">{t("cancel")}</Button>
             </DialogClose>
             <Submit />
           </DialogFooter>

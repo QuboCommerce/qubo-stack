@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { FieldLabel, type Field } from "@puckeditor/core";
 import type { FieldAdapters, MediaValue } from "@qubo/blocks";
 import { ImagePlus, RefreshCw, X } from "lucide-react";
@@ -41,6 +42,7 @@ function MediaField({
   onChange: (v: MediaValue | null) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations("studio.mediaField");
   const [open, setOpen] = useState(false);
   const url = value?.url;
 
@@ -54,10 +56,10 @@ function MediaField({
             </div>
             {!readOnly && (
               <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                <Button type="button" size="icon" variant="secondary" className="size-7" onClick={() => setOpen(true)} aria-label="Replace">
+                <Button type="button" size="icon" variant="secondary" className="size-7" onClick={() => setOpen(true)} aria-label={t("replace")}>
                   <RefreshCw className="size-3.5" />
                 </Button>
-                <Button type="button" size="icon" variant="secondary" className="size-7" onClick={() => onChange(null)} aria-label="Remove">
+                <Button type="button" size="icon" variant="secondary" className="size-7" onClick={() => onChange(null)} aria-label={t("remove")}>
                   <X className="size-3.5" />
                 </Button>
               </div>
@@ -71,7 +73,7 @@ function MediaField({
             className="flex aspect-video w-full flex-col items-center justify-center gap-1 rounded-md border border-dashed text-xs text-muted-foreground hover:bg-accent/40 disabled:opacity-50"
           >
             <ImagePlus className="size-5" />
-            Choose {accept === "video" ? "a video" : accept === "image" ? "an image" : "a file"}
+            {t("choose", { accept })}
           </button>
         )}
         {url && (
@@ -80,7 +82,7 @@ function MediaField({
             value={value?.alt ?? ""}
             readOnly={readOnly}
             onChange={(e) => onChange({ ...value!, alt: e.target.value })}
-            placeholder="Alt text"
+            placeholder={t("altText")}
             className="h-8 text-xs"
           />
         )}

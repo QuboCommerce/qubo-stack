@@ -1,0 +1,100 @@
+{
+  "dashboard": {
+    "greeting": {
+      "morning": "Good morning, {name}",
+      "afternoon": "Good afternoon, {name}",
+      "evening": "Good evening, {name}"
+    },
+    "viewSite": "View site",
+    "connectDomain": "Connect a domain",
+    "noDomainTitle": "This site has no verified domain yet",
+    "customize": "Customize",
+    "metrics": {
+      "sales30": "Sales · 30 days",
+      "orders30": "{count, plural, one {# order} other {# orders}}",
+      "openOrders": "Open orders",
+      "allTime": "{count} all time",
+      "products": "Products",
+      "activeProducts": "{count} active",
+      "customers": "Customers",
+      "importedRegistered": "imported & registered",
+      "inbox": "Inbox",
+      "unreadConversations": "unread conversations"
+    },
+    "sales": {
+      "title": "Sales over time",
+      "description": "Last 30 days, excluding cancelled and refunded orders.",
+      "series": "Sales",
+      "empty": "No sales in this period yet"
+    },
+    "recentOrders": {
+      "title": "Recent orders",
+      "viewAll": "View all",
+      "emptyTitle": "Your orders will show here",
+      "emptyDescription": "Once the storefront checkout is live, new orders land here in real time.",
+      "guest": "Guest"
+    },
+    "catalog": {
+      "title": "Catalog health",
+      "description": "How complete your product data is.",
+      "withImages": "With images",
+      "active": "Active",
+      "inCollection": "In a collection",
+      "withBrand": "With a brand",
+      "ofTotal": "{value, number} of {total, number}"
+    },
+    "setup": {
+      "title": "Setup guide",
+      "progress": "{done} of {total} tasks complete",
+      "theme": {
+        "label": "Publish a theme",
+        "hint": "Colors, fonts and flavor for your site."
+      },
+      "products": {
+        "label": "Add products",
+        "hint": "{count, plural, one {# product} other {# products}} in the catalog."
+      },
+      "collections": {
+        "label": "Organize collections",
+        "hint": "Group products so visitors can browse."
+      },
+      "brands": {
+        "label": "Fill in brands",
+        "hint": "{percent}% of products have a brand."
+      },
+      "translations": {
+        "label": "Publish translations",
+        "hint": "{count, plural, one {# language} other {# languages}} configured."
+      },
+      "domain": {
+        "label": "Connect a domain",
+        "hint": "Point your domain to Qubo."
+      }
+    },
+    "onlineStore": {
+      "title": "Online Store",
+      "manage": "Manage",
+      "live": "Live",
+      "health": "Health {value}",
+      "noThemeTitle": "No theme yet",
+      "noThemeDescription": "Pick a starter theme to give your site a look."
+    },
+    "languages": {
+      "title": "Languages",
+      "description": "Visitors see your site in these languages.",
+      "primary": "Primary",
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "root": {
+      "noSitesTitle": "No sites yet",
+      "noSitesDescription": "Your account isn't linked to any organisation site."
+    },
+    "comingSoon": {
+      "title": "This area is on the roadmap",
+      "description": "“{title}” is part of an upcoming Qubo milestone. The navigation is already wired so nothing moves when it lands.",
+      "back": "Back to Home"
+    },
+    "count": "{count, number}"
+  }
+}

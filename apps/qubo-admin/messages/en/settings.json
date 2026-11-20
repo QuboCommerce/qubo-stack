@@ -1,0 +1,767 @@
+{
+  "domains": {
+    "copy": "Copy {label}",
+    "cancel": "Cancel",
+    "ago": {
+      "never": "never",
+      "justNow": "just now",
+      "seconds": "{count}s ago",
+      "minutes": "{count} min ago",
+      "hours": "{count} h ago"
+    },
+    "status": {
+      "ok": "Found",
+      "missing": "Not found yet",
+      "wrong": "Points elsewhere",
+      "proxied": "Proxied",
+      "ipv6": "Extra IPv6 record",
+      "unknown": "Not checked"
+    },
+    "hint": {
+      "wrongTxt": "Found a different value: {found}. Replace it with the value above.",
+      "wrong": "Currently points to {found}. Edit the existing record (or delete it) so only the value above remains.",
+      "proxied": "Cloudflare is proxying this record. Switch it to “DNS only” (grey cloud).",
+      "ipv6": "An AAAA record ({found}) sends IPv6 visitors elsewhere. Delete it."
+    },
+    "purpose": {
+      "apex": "Opens your site at {fqdn}",
+      "www": "Sends {fqdn} to {value}",
+      "admin": "Opens Qubo at {fqdn}",
+      "proof": "Proves the domain is yours"
+    },
+    "recommended": "Recommended",
+    "cell": {
+      "name": "Name",
+      "value": "Value"
+    },
+    "setup": {
+      "connected": "{hostname} is connected",
+      "connectedHelp": "Visitors reach this site and the certificate renews on its own. Keep these records in place.",
+      "progress": "{done} of {total} required records found",
+      "autoCheck": "We check automatically. No need to stay on this page.",
+      "nameHelp": "Use the name exactly as shown: most DNS panels add <code>.{zone}</code> themselves. Changes usually show up within minutes, sometimes up to a few hours.",
+      "checkNow": "Check now",
+      "lastChecked": "Last checked {ago}",
+      "timedOut": "the DNS lookup timed out, retrying shortly"
+    },
+    "share": {
+      "title": "Someone else manages your DNS?",
+      "help": "Send them this link. It shows these steps and the live status, nothing else, and needs no account.",
+      "linkLabel": "link",
+      "pageTitle": "DNS setup",
+      "kicker": "Qubo · DNS setup",
+      "intro": "The owner of this domain asked you to add a few DNS records. Each one turns green as soon as it is visible on the internet."
+    },
+    "provider": {
+      "managedAt": "Your DNS is managed at {name}",
+      "goTo": "Sign in and go to <w>{where}</w>, then add the records below.",
+      "cloudflareNote": "Set Proxy status to “DNS only” (grey cloud) on these records, otherwise we can't see your server or issue its certificate.",
+      "addElsewhere": "Add these records where your domain's DNS is managed",
+      "usually": "That is usually the company you bought the domain from.",
+      "nameservers": "Its nameservers are {servers}.",
+      "open": "Open"
+    },
+    "summary": {
+      "connected": "Connected",
+      "notChecked": "Not checked yet",
+      "connectedFix": "Connected · {count, plural, one {# record} other {# records}} to fix",
+      "progress": "{ok} of {total} records"
+    },
+    "list": {
+      "emptyTitle": "No domain yet",
+      "emptyHelp": "Connect a domain you own. We guide you through the DNS and handle the certificate.",
+      "connect": "Connect domain",
+      "setupConnected": "Connected. These records keep it that way.",
+      "setupPending": "Add these records at your DNS provider. This page updates by itself as they appear."
+    },
+    "row": {
+      "nowPrimary": "{hostname} is now the primary domain",
+      "newLinkCreated": "New link created. The old one no longer works.",
+      "primary": "Primary",
+      "checked": "checked {ago}",
+      "dns": "DNS",
+      "setUp": "Set up",
+      "actionsFor": "Actions for {hostname}",
+      "makePrimary": "Make primary",
+      "linkCopied": "Setup link copied",
+      "copyLink": "Copy setup link",
+      "newLink": "New setup link",
+      "remove": "Remove"
+    },
+    "remove": {
+      "done": "{hostname} removed",
+      "title": "Remove {hostname}?",
+      "verified": "Visitors on this domain stop reaching the site within a minute, and the admin stops answering on it. You can connect it again later.",
+      "unverified": "The domain was never connected, so nothing changes for visitors.",
+      "primary": "Another domain becomes primary.",
+      "confirm": "Remove domain"
+    },
+    "connect": {
+      "title": "Connect a domain",
+      "description": "A domain you already own. Next you get the exact DNS records to add, and we check them for you.",
+      "domain": "Domain",
+      "hint": "Without www. A subdomain such as shop.example.be works too.",
+      "continue": "Continue"
+    },
+    "actions": {
+      "managersOnly": "Only owners and admins can manage domains.",
+      "notFound": "Domain not found.",
+      "generic": "Something went wrong.",
+      "alreadyHere": "This domain is already connected to this site.",
+      "otherSite": "This domain is connected to another site.",
+      "limit": "Your plan covers {count, plural, one {# domain} other {# domains}} per site. Remove one or upgrade.",
+      "notVerified": "Connect this domain before making it primary.",
+      "linkInvalid": "This link is no longer valid."
+    },
+    "page": {
+      "title": "Domains",
+      "description": "Web addresses that open this site.",
+      "connected": "Connected domains",
+      "connectedHelp": "The primary domain is used in links, emails and search results.",
+      "preview": "Preview",
+      "previewHelp": "The unpublished site, as it is saved right now. Only people with the PIN get past the gate.",
+      "pin": "Preview PIN",
+      "newPinHelp": "Signs every previewer out",
+      "newPin": "New PIN",
+      "server": "Server",
+      "serverHelp": "Where your DNS records point. Certificates are issued and renewed automatically once a domain is connected.",
+      "ipv6": "IPv6 address",
+      "ip": "IP address",
+      "ipLabel": "IP address",
+      "noIp": "The server address could not be determined. Set {env}.",
+      "fallbackAdmin": "Admin address until a domain is connected",
+      "adminLabel": "admin address"
+    }
+  },
+  "settings": {
+    "readOnly": "You can view these settings but not change them.",
+    "allSettings": "All settings",
+    "title": "Settings",
+    "search": "Search settings",
+    "clearSearch": "Clear search",
+    "noMatch": "No settings match \"{q}\".",
+    "groups": {
+      "site": "Site",
+      "organization": "Organization",
+      "account": "Your account",
+      "commerce": "Commerce",
+      "legal": "Legal & advanced"
+    },
+    "sections": {
+      "general": {
+        "label": "General",
+        "description": "Name, site type, features and currency."
+      },
+      "business": {
+        "label": "Business & SEO",
+        "description": "Contact details, opening hours, legal identity and how the site appears in search."
+      },
+      "brand": {
+        "label": "Brand",
+        "description": "Logo variants, favicon and social sharing image."
+      },
+      "domains": {
+        "label": "Domains",
+        "description": "Web addresses that point to this site."
+      },
+      "languages": {
+        "label": "Languages",
+        "description": "Primary language and published translations."
+      },
+      "notifications": {
+        "label": "Notifications",
+        "description": "Emails sent to customers and staff."
+      },
+      "inbox": {
+        "label": "Inbox",
+        "description": "Forms, email in and out, and who is notified of new messages."
+      },
+      "users": {
+        "label": "Users & permissions",
+        "description": "Who can access this organization and what they can do."
+      },
+      "ai": {
+        "label": "AI",
+        "description": "Your own AI provider and key for inbox triage and reply drafts."
+      },
+      "sites": {
+        "label": "Sites",
+        "description": "Every site this organization runs from one admin."
+      },
+      "portal": {
+        "label": "Qubo Portal",
+        "description": "Optional link to a Portal account: plan, licence and update notices."
+      },
+      "security": {
+        "label": "Security & sessions",
+        "description": "Devices signed in to your account and where they are."
+      },
+      "payments": {
+        "label": "Payments",
+        "description": "Payment providers, payouts and capture."
+      },
+      "checkout": {
+        "label": "Checkout",
+        "description": "Customer accounts and checkout fields."
+      },
+      "shipping": {
+        "label": "Shipping & delivery",
+        "description": "Zones, rates and local pickup."
+      },
+      "taxes": {
+        "label": "Taxes & duties",
+        "description": "VAT rates and tax-inclusive pricing."
+      },
+      "catalog": {
+        "label": "Catalog",
+        "description": "Product types, custom fields and units."
+      },
+      "policies": {
+        "label": "Policies",
+        "description": "Refund, privacy and terms of service."
+      },
+      "privacy": {
+        "label": "Privacy & access",
+        "description": "Password page, maintenance mode and cookie banner."
+      },
+      "integrations": {
+        "label": "Integrations",
+        "description": "Analytics, pixels, chat and embeds."
+      },
+      "storage": {
+        "label": "Media storage",
+        "description": "Storage bucket, usage and image delivery."
+      }
+    },
+    "capabilities": {
+      "commerce": {
+        "label": "Selling",
+        "description": "Cart, checkout, orders, payments and shipping."
+      },
+      "catalog": {
+        "label": "Catalog",
+        "description": "Products, collections, brands and inventory."
+      },
+      "booking": {
+        "label": "Bookings",
+        "description": "Services with appointments and availability."
+      },
+      "leads": {
+        "label": "Leads & forms",
+        "description": "Contact forms, quote requests and an inbox."
+      },
+      "blog": {
+        "label": "Blog",
+        "description": "Articles, authors and tags."
+      },
+      "accounts": {
+        "label": "Customer accounts",
+        "description": "Sign-in, order history and saved addresses."
+      },
+      "locales": {
+        "label": "Multiple languages",
+        "description": "Serve translated content in more than one language."
+      }
+    },
+    "siteTypes": {
+      "store": {
+        "label": "Online store",
+        "description": "Sell products with a catalog, cart and checkout."
+      },
+      "services": {
+        "label": "Services & bookings",
+        "description": "Present services and take bookings: clinics, studios, coaches."
+      },
+      "business": {
+        "label": "Business showcase",
+        "description": "Generate leads for a company that sells offline: quotes, calls, visits."
+      },
+      "editorial": {
+        "label": "Blog & editorial",
+        "description": "Publish articles and grow an audience."
+      },
+      "custom": {
+        "label": "Custom",
+        "description": "Start empty and switch on only what you need."
+      }
+    },
+    "weekdays": {
+      "mo": "Monday",
+      "tu": "Tuesday",
+      "we": "Wednesday",
+      "th": "Thursday",
+      "fr": "Friday",
+      "sa": "Saturday",
+      "su": "Sunday"
+    },
+    "hours": {
+      "closed": "Closed",
+      "to": "to",
+      "opens": "{day} opens",
+      "closes": "{day} closes",
+      "open": "{day} open"
+    },
+    "nouns": {
+      "page": "this page",
+      "product": "this product",
+      "category": "this category",
+      "code": "this code",
+      "site": "this site",
+      "settings": "these settings"
+    },
+    "merge": {
+      "someone": "Someone",
+      "title": "Merge changes",
+      "titleConflict": "Both of you changed this",
+      "upToDate": "Nothing changed on {noun} since you started editing. Saving keeps all your edits.",
+      "savedWhileEditing": "{who} saved {noun} while you were editing.",
+      "pickVersion": "Pick which version to keep for each field.",
+      "noOverlap": "None of their changes touch your edits.",
+      "keepMine": "Keep mine",
+      "useTheirs": "Use {who}'s",
+      "alsoKeeping": "Also keeping {who}'s changes to {fields}.",
+      "saveMerged": "Save merged"
+    },
+    "form": {
+      "updatedBy": "Updated by {name} just now",
+      "remoteSaved": "{name} saved changes to {noun}. Your edits are kept.",
+      "review": "Review",
+      "unsaved": "Unsaved changes",
+      "discard": "Discard"
+    },
+    "fields": {
+      "siteName": "Site name",
+      "shortDescription": "Short description",
+      "currency": "Currency",
+      "siteType": "Site type",
+      "features": "Features",
+      "none": "None",
+      "on": "On",
+      "off": "Off",
+      "localBusiness": "Local business",
+      "siteTitle": "Site title",
+      "siteDescription": "Site description",
+      "phone": "Phone",
+      "email": "Email",
+      "businessType": "Business type",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "legalName": "Legal name",
+      "legalForm": "Legal form",
+      "companyNumber": "Company number",
+      "vatNumber": "VAT number",
+      "address": "Address",
+      "addressLine2": "Address line 2",
+      "postalCode": "Postal code",
+      "city": "City",
+      "country": "Country"
+    },
+    "currencies": {
+      "EUR": "Euro (€)",
+      "USD": "US dollar ($)",
+      "GBP": "British pound (£)",
+      "CHF": "Swiss franc (CHF)"
+    },
+    "general": {
+      "title": "General",
+      "description": "How this site is named, what it does and how it formats money.",
+      "details": "Details",
+      "detailsHelp": "Shown in the admin, browser tabs and search results.",
+      "descriptionHint": "One sentence about the business. Used as the default meta description.",
+      "siteTypeHelp": "The starting point this site was built from. Switching it never deletes data.",
+      "featuresHelp": "Turning a feature off hides it from navigation and the storefront. Nothing is deleted.",
+      "formats": "Formats",
+      "formatsHelp": "Defaults for prices and dates.",
+      "primaryLanguage": "Primary language",
+      "manageLanguages": "Manage languages"
+    },
+    "business": {
+      "title": "Business & SEO",
+      "description": "Who runs this site, where to find you and how pages introduce themselves to search engines and AI assistants.",
+      "search": "Search appearance",
+      "searchHelp": "The site title ends every page title, so keep it short and say what you do and where. The home page uses it alone.",
+      "siteTitleHint": "Example: \"{example}\". Page titles become \"Page | {title}\".",
+      "siteTitleExample": "horeca equipment in Brussels",
+      "siteDescriptionHint": "Shown under the title in search results when a page has no description of its own. One or two sentences.",
+      "contact": "Contact",
+      "contactHelp": "Published on the storefront as structured data, so search engines and maps show the right number and hours. Leave a field empty to keep it private.",
+      "businessTypeHint": "The schema.org category that best describes the place. General is fine when none fits.",
+      "latitudeHint": "Decimal degrees, from the map pin of your address.",
+      "hours": "Opening hours",
+      "hoursHelp": "When the shop or office is open to visitors. Days that are off stay unlisted.",
+      "legal": "Legal entity",
+      "legalHelp": "The company behind {name}. Shared by every site this organization runs; printed on legal pages and invoices.",
+      "legalFormPlaceholder": "Ltd, LLC, SRL, BV…",
+      "companyNumberHint": "Enterprise number as registered (KBO/BCE in Belgium).",
+      "countryHint": "ISO code"
+    },
+    "businessTypes": {
+      "general": "Local business (general)",
+      "Store": "Store",
+      "WholesaleStore": "Wholesale store",
+      "HardwareStore": "Hardware store",
+      "FoodEstablishment": "Food establishment",
+      "Restaurant": "Restaurant",
+      "Bakery": "Bakery",
+      "ProfessionalService": "Professional service",
+      "HomeAndConstructionBusiness": "Home and construction",
+      "HealthAndBeautyBusiness": "Health and beauty",
+      "AutomotiveBusiness": "Automotive",
+      "LodgingBusiness": "Lodging",
+      "MedicalBusiness": "Medical",
+      "LegalService": "Legal service",
+      "FinancialService": "Financial service",
+      "RealEstateAgent": "Real estate agent",
+      "TravelAgency": "Travel agency",
+      "SportsActivityLocation": "Sports and fitness",
+      "EntertainmentBusiness": "Entertainment"
+    },
+    "overview": {
+      "siteType": "Site type",
+      "features": "Features",
+      "none": "None",
+      "currency": "Currency",
+      "domain": "Domain",
+      "notConnected": "Not connected",
+      "languages": "Languages",
+      "publishedExtra": "+ {count} published",
+      "team": "Team",
+      "teamValue": "{count, plural, one {# member} other {# members}} · you are {role}",
+      "editDetails": "Edit details",
+      "footer": "Settings apply to {name} only. Team and billing are shared across the organization."
+    },
+    "roles": {
+      "OWNER": "Owner",
+      "ADMIN": "Admin",
+      "STAFF": "Staff",
+      "VIEWER": "Viewer"
+    },
+    "roleDescriptions": {
+      "OWNER": "Everything, including billing and removing the organization.",
+      "ADMIN": "All settings, team and content. No billing.",
+      "STAFF": "Day-to-day work: orders, products, customers and content.",
+      "VIEWER": "Read-only access to the admin."
+    },
+    "comingSoon": {
+      "title": "Coming soon",
+      "description": "{name} settings are on the roadmap. Nothing to configure yet."
+    },
+    "ai": {
+      "title": "AI",
+      "description": "Triage and reply drafts for the inbox, on your own AI provider account.",
+      "upsell": {
+        "title": "AI is included from the Starter plan",
+        "description": "Bring a key from OpenAI, Anthropic, Mistral, xAI or OpenRouter, or point Qubo at your own model server. Qubo never sees your conversations or bills for tokens; your provider does.",
+        "cta": "See your plan"
+      },
+      "provider": "Provider",
+      "providerHelp": "Shared by every site in this organization. Messages are sent from this server straight to the provider you pick; nothing goes through Qubo.",
+      "model": "Model",
+      "modelExamples": "For example {models}.",
+      "modelCustom": "The model name your server expects.",
+      "serverAddress": "Server address",
+      "serverAddressHint": "Any server that speaks the OpenAI chat API: Ollama, LM Studio, vLLM, LiteLLM, Azure gateways.",
+      "apiKey": "API key",
+      "apiKeyHint": "Stored encrypted on this server and only sent to {provider}.",
+      "getKey": "Get a key",
+      "keySaved": "Saved ({hint}). Leave empty to keep it.",
+      "keyPaste": "Paste your key",
+      "keyOptional": "Optional",
+      "removeKey": "Remove the saved key",
+      "budget": "Monthly token budget",
+      "budgetHint": "Input plus output tokens per calendar month. Empty means no cap; your provider bills you either way.",
+      "noCap": "No cap",
+      "triage": "Triage new messages",
+      "triageHelp": "Summarize, categorize and flag urgent or spam conversations a few seconds after a customer writes.",
+      "drafts": "Reply drafts",
+      "draftsHelp": "Adds Draft with AI to the composer. Drafts are never sent without someone pressing Send.",
+      "saved": "Saved",
+      "saving": "Saving…",
+      "testing": "Testing…",
+      "test": "Test connection",
+      "confirmOff": "Turn AI off for this organization and forget the API key?",
+      "turnOff": "Turn off and forget key",
+      "connected": "Connected. The model said “{reply}”.",
+      "month": "This month",
+      "monthHelp": "Counted from the token figures your provider reports. Resets on the 1st (UTC).",
+      "tokens": "tokens",
+      "ofBudget": "of {budget}",
+      "calls": "{count, plural, one {# call} other {# calls}}",
+      "failed": "{count} failed",
+      "budgetUsed": "Budget used",
+      "rules": "House rules for {name}",
+      "rulesHelp": "Drafts follow these on top of the conversation, the customer's orders and matching products. Tone, opening hours, delivery and return policies.",
+      "instructionsLabel": "Instructions for reply drafts",
+      "instructionsPlaceholder": "We answer in the customer's language and use \"vous\" in French.\nOpening hours: Mon to Fri, 8:00 to 17:00.\nDelivery in Belgium takes 2 to 4 working days; installation is quoted separately.\nNever promise a delivery date; say the team will confirm it.",
+      "saveInstructions": "Save instructions"
+    },
+    "inbox": {
+      "title": "Inbox",
+      "description": "Where messages come from, how replies go out and who is notified.",
+      "email": "Email",
+      "emailHelp": "Set by whoever runs this Qubo instance, in its environment file.",
+      "outboundLabel": "Replies by email",
+      "outboundOn": "Replies and form notifications are sent through Resend.",
+      "outboundOff": "Not set up: replies are saved in the inbox but not emailed. Needs {vars}.",
+      "inboundLabel": "Email in",
+      "inboundOn": "Mail sent or forwarded to <a>{address}</a> lands in the inbox, and customers' answers to your replies thread back automatically. Forward your shop's mailbox there to keep everything in one place.",
+      "inboundOff": "Not set up: customers' email replies go to your sender address instead of the inbox. Needs {vars}.",
+      "forms": "Forms",
+      "formsHelp": "Forms appear here the first time someone submits them. Notified addresses get a copy of every submission.",
+      "noForms": "No forms yet",
+      "noFormsHelp": "Add a Contact form block to a page. It shows up here after its first submission."
+    },
+    "languages": {
+      "title": "Languages",
+      "description": "The languages this site is written in. Visitors see the primary one first.",
+      "nothingToTranslate": "Nothing to translate yet",
+      "coverageShort": "{done}/{total} translated",
+      "coverage": "{done} of {total} texts translated",
+      "toReview": "{count} to review",
+      "disabled": "<b>Multiple languages</b> is turned off, so only the primary language is served.",
+      "turnOn": "Turn it on in General",
+      "primary": "Primary language",
+      "primaryHelp": "Content is written in this language first. Every translation is compared against it.",
+      "primaryBadge": "Primary",
+      "noPrimary": "No primary language set.",
+      "others": "Other languages",
+      "othersHelp": "New languages start unpublished. Publish one when its translation is complete.",
+      "published": "Published",
+      "unpublished": "Unpublished",
+      "onlyPrimary": "Only the primary language is set up.",
+      "note": "A published language is served under its own prefix (for example {example}) with a switcher in the header and hreflang tags. Translating page content in the Studio is still in development; translations added by other means carry over.",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "actionsFor": "Actions for {label}",
+      "makePrimary": "Make primary",
+      "removeTitle": "Remove {label}?",
+      "removeHelp": "It disappears from the site. Its translations are kept and come back if you add the language again.",
+      "removeConfirm": "Remove language",
+      "primaryTitle": "Make {label} the primary language?",
+      "primaryConfirmHelp": "New content is written in this language first and other languages are compared against it. The current primary language stays as a regular language.",
+      "add": {
+        "button": "Add language",
+        "title": "Add a language",
+        "description": "It starts unpublished, so you can translate before anyone sees it.",
+        "label": "Language",
+        "confirm": "Add {label}",
+        "confirmNone": "Add language"
+      },
+      "actions": {
+        "generic": "Something went wrong.",
+        "published": "{label} published",
+        "unpublished": "{label} unpublished",
+        "removed": "{label} removed",
+        "nowPrimary": "{label} is now the primary language",
+        "added": "{label} added"
+      }
+    },
+    "actions": {
+      "noPermission": "You don't have permission to change settings.",
+      "nameMin": "Site name needs at least 2 characters.",
+      "nameMax": "Site name is limited to 80 characters.",
+      "descriptionMax": "Description is limited to 300 characters.",
+      "siteNotFound": "Site not found.",
+      "generic": "Something went wrong.",
+      "checkFields": "Check the highlighted fields.",
+      "limited": "{what} is limited to {max} characters.",
+      "coordinate": "{what} must be a number between {min} and {max}.",
+      "emailInvalid": "Enter a valid email address.",
+      "businessType": "Business type must be a schema.org type name.",
+      "country": "Country is the two-letter ISO code, e.g. {example}.",
+      "orgNotFound": "Organization not found.",
+      "bothCoordinates": "Enter both latitude and longitude, or neither.",
+      "addLanguageFirst": "Add the language before making it primary."
+    },
+    "provision": {
+      "generic": "Something went wrong.",
+      "orgLimit": "Your {plan} plan covers {count, plural, one {# organization} other {# organizations}}.",
+      "siteLimit": "Your {plan} plan covers {count, plural, one {# site} other {# sites}}. Remove one or upgrade.",
+      "chooseOrg": "Choose an organization you manage.",
+      "pickType": "Pick what the site is for.",
+      "pickLanguage": "Pick a language."
+    },
+    "ownership": {
+      "chooseOrg": "Choose an organization.",
+      "generic": "Something went wrong.",
+      "confirmPublish": "Confirm the organization to publish.",
+      "siteNotFound": "Site not found.",
+      "managersOnly": "Only owners and admins of the site's organization can do this.",
+      "cannotAddToOrg": "You can't add sites to that organization.",
+      "publishedStays": "Published sites stay in their organization. Contact support for an assisted migration.",
+      "alreadyPublished": "This site is already published.",
+      "movedMeanwhile": "This site was published or moved meanwhile. Reload and try again.",
+      "deleting": "Deleting…",
+      "publish": {
+        "done": "{name} is live",
+        "button": "Publish",
+        "title": "Publish {name}",
+        "description": "The site goes live on its domains. It will belong to the organization below for good: orders, invoices and customers are recorded under that company.",
+        "confirm": "Publish under <b>{org}</b>. I understand a published site can't be moved to another organization.",
+        "thisOrg": "this organization",
+        "publishing": "Publishing…"
+      },
+      "move": {
+        "done": "{name} transferred",
+        "button": "Transfer",
+        "title": "Transfer {name}",
+        "description": "Drafts can be transferred freely. The site's media and the organization's fonts come along.",
+        "moving": "Transferring…"
+      },
+      "trash": {
+        "done": "{name} moved to the recycle bin",
+        "label": "Delete {name}",
+        "title": "Delete {name}?",
+        "description": "It goes to the recycle bin at the bottom of this page, with its pages, theme, products and domains. You can restore it for {days} days; after that it is deleted for good.",
+        "confirm": "Delete site"
+      },
+      "restore": {
+        "done": "{name} restored",
+        "restoring": "Restoring…",
+        "button": "Restore"
+      },
+      "purge": {
+        "done": "{name} deleted for good",
+        "button": "Delete now",
+        "title": "Delete {name} for good?",
+        "description": "Everything in it is removed now: pages, theme, products, customers, orders, media and domains. There is no way back.",
+        "confirm": "I understand this can't be undone.",
+        "confirmButton": "Delete for good"
+      }
+    },
+    "sites": {
+      "create": "Create site",
+      "createFree": "Free runs one site. Link a Portal account under Settings → Qubo Portal for more.",
+      "createLimit": "Your {plan} plan covers {count, plural, one {# site} other {# sites}} across all organizations. Delete a site to free one up, or upgrade.",
+      "title": "Sites",
+      "description": "Each site has its own domain, theme, content and settings. Customers, team and media can be shared.",
+      "yours": "Your sites",
+      "yoursHelp": "Drafts can be transferred between organizations; a published site stays in its organization.",
+      "quota": "{own} in this organization · {sites} and {orgs} on this instance.",
+      "usage": {
+        "site": {
+          "unlimited": "{used, plural, one {# site} other {# sites}}",
+          "within": "{used} of {limit, plural, one {# site} other {# sites}}",
+          "over": "{used, plural, one {# site} other {# sites}} (plan covers {limit})"
+        },
+        "organisation": {
+          "unlimited": "{used, plural, one {# organization} other {# organizations}}",
+          "within": "{used} of {limit, plural, one {# organization} other {# organizations}}",
+          "over": "{used, plural, one {# organization} other {# organizations}} (plan covers {limit})"
+        }
+      },
+      "current": "(current)",
+      "live": "Live",
+      "draft": "Draft",
+      "noDomain": "No domain",
+      "bin": "Recycle bin",
+      "binHelp": "Deleted sites stay here for {days} days, then they are removed for good. Restore one to get it back exactly as it was.",
+      "binEmpty": "Nothing in the bin.",
+      "deleted": "Deleted {when}",
+      "deletedBy": "Deleted {when} by {by}",
+      "daysLeft": "{count, plural, =0 {removed today} one {# day left} other {# days left}}"
+    },
+    "users": {
+      "title": "Users & permissions",
+      "description": "People with access to every site in this organization.",
+      "invite": "Invite",
+      "inviteHelp": "Invitations arrive with transactional email",
+      "team": "Team",
+      "teamCount": "{count, plural, one {# person has access.} other {# people have access.}}",
+      "you": "(you)",
+      "since": "Since {date}",
+      "roles": "Roles",
+      "rolesHelp": "What each role can do."
+    }
+  },
+  "security": {
+    "title": "Security & sessions",
+    "description": "Devices signed in to your account. Signing in on a new device asks before ending another open session.",
+    "signOutOthers": "Sign out other devices",
+    "signedIn": "Signed in",
+    "activeSessions": "{count, plural, one {# active session.} other {# active sessions.}}",
+    "thisDevice": "This device",
+    "activeNow": "active now",
+    "lastActive": "last active {ago}",
+    "tabInFocus": "tab in focus",
+    "signOut": "Sign out",
+    "recent": "Recent activity",
+    "recentHelp": "Sessions that ended in the last 30 days.",
+    "ended": {
+      "takeover": "Replaced by a new sign-in",
+      "revoked": "Signed out remotely",
+      "signed_out": "Signed out",
+      "other": "Signed out or expired"
+    },
+    "unknownLocation": "Unknown location",
+    "locationsNote": "Locations are approximate and looked up on this server.",
+    "useSignOut": "Use Sign out to end this device's session."
+  },
+  "portal": {
+    "title": "Qubo Portal",
+    "description": "This instance works on its own. Linking a Portal account adds your plan's limits, update notices and fleet visibility; nothing here can switch the instance off.",
+    "plan": "Plan",
+    "planHelp": "What this instance is entitled to right now.",
+    "plans": {
+      "free": "Free",
+      "starter": "Starter",
+      "growth": "Growth",
+      "agency": "Agency"
+    },
+    "status": {
+      "valid": "Licence valid until {date}",
+      "grace": "Licence expired; grace until {date}",
+      "expired": "Licence expired; running on Free limits",
+      "unlinked": "Not linked; running on Free limits"
+    },
+    "limits": {
+      "orgs": "Organizations",
+      "sites": "Sites (all organizations)",
+      "seats": "Staff seats",
+      "domains": "Domains per site",
+      "apps": "Apps per site",
+      "features": "Features"
+    },
+    "unlimited": "Unlimited",
+    "upsell": "Need more than one site? Link an account on the Growth plan at <a>{host}</a>.",
+    "linked": "Linked instance",
+    "linkedHelp": "Heartbeats run every 6 hours from the API and refresh the licence.",
+    "linkedFields": {
+      "portal": "Portal",
+      "instanceId": "Instance ID",
+      "heartbeat": "Last heartbeat",
+      "fetched": "Licence fetched"
+    },
+    "never": "Never",
+    "lastError": {
+      "line": "{error}. The instance keeps running on its cached licence.",
+      "unknown_instance": "The Portal no longer recognizes this instance (it was revoked or removed there). Unlink, then link again with a new token",
+      "bad_signature": "The Portal rejected this instance's signature. Unlink and link again",
+      "clock_skew": "This server's clock is more than 5 minutes off. Fix NTP and refresh",
+      "protocol_unsupported": "This Qubo version is too old for the Portal. Update Qubo",
+      "unreachable": "Could not reach the Portal"
+    },
+    "refresh": "Refresh now",
+    "unlink": "Unlink",
+    "unlinkHelp": "Back to Free limits; the Portal keeps the instance record until you revoke it there",
+    "link": "Link this instance",
+    "linkHelp": "Create a registration token in the Portal (Instances → Add instance) and paste it here. Tokens are single-use.",
+    "form": {
+      "token": "Registration token",
+      "tokenPlaceholder": "Paste the token from Portal → Instances → Add",
+      "name": "Instance name",
+      "portal": "Portal",
+      "linking": "Linking…",
+      "link": "Link instance"
+    },
+    "errors": {
+      "tokenRequired": "Paste the registration token from the Portal.",
+      "invalidToken": "That token is invalid, expired or already used.",
+      "instancesExceeded": "This Portal organization has reached its instance limit.",
+      "alreadyLinked": "This instance is already linked.",
+      "portalReplied": "Portal replied {status} ({code}).",
+      "unreachable": "Could not reach the Portal. Check the URL and try again.",
+      "linkFailed": "Linking failed."
+    }
+  }
+}

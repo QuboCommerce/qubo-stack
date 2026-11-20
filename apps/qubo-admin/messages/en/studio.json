@@ -1,0 +1,905 @@
+{
+  "studio": {
+    "viewPicker": {
+      "unpublished": "Unpublished changes",
+      "systemPage": "System page",
+      "trigger": "Editing {label}. Change view",
+      "search": "Search templates and pages…",
+      "empty": "No matching view.",
+      "sharedSections": "Shared sections"
+    },
+    "mediaField": {
+      "replace": "Replace",
+      "remove": "Remove",
+      "choose": "{accept, select, video {Choose a video} image {Choose an image} other {Choose a file}}",
+      "altText": "Alt text"
+    },
+    "addSection": {
+      "lockedTitle": "Turn on {needs} in Settings to use this section",
+      "addTitle": "Add {label}",
+      "preview": "{label} preview",
+      "needs": "Needs {needs}",
+      "title": "Add section",
+      "goesAfter": "Goes after <b>{name}</b>",
+      "goesAtEnd": "Goes at the end of the page",
+      "previewsUse": "previews use {theme}",
+      "close": "Close",
+      "tabs": {
+        "library": "Library",
+        "generate": "Generate"
+      },
+      "search": "Search sections",
+      "categories": "Section categories",
+      "allSections": "All sections",
+      "noMatch": "No sections match “{query}”",
+      "noMatchHint": "Try another word, or describe it in Generate.",
+      "generate": {
+        "title": "Generate a section",
+        "description": "Describe what you need and the assistant builds it from this library, in your theme. You preview it before anything is added.",
+        "placeholder": "A three-step process explaining how a cold room is installed…",
+        "soon": "Coming soon with Puck AI."
+      }
+    },
+    "history": {
+      "saveFirst": "Save your changes before creating a version.",
+      "versionSaved": "Version {version} saved",
+      "confirmRollback": "Put version {version} live now? Visitors will see it immediately.",
+      "restored": "Version {version} restored to your draft",
+      "rolledBack": "Rolled back to version {version}",
+      "title": "Version history",
+      "description": "Undo and redo only cover this session. Versions are kept forever: restore one into your draft, or roll the live site back to it.",
+      "namePlaceholder": "Name this version (optional)",
+      "saveVersion": "Save version",
+      "empty": "Nothing published yet.",
+      "published": "Published",
+      "savedVersion": "Saved version",
+      "live": "Live",
+      "restore": "Restore to draft",
+      "rollback": "Roll back live"
+    },
+    "designFields": {
+      "missing": "Missing “{value}”",
+      "highlightStyle": "Highlight style",
+      "noHighlight": "No highlight",
+      "chooseWords": "Choose the words to highlight",
+      "mainLanguage": "Main language",
+      "dialogTitle": "Highlight words",
+      "dialogDescription": "Click the words to mark in each language. Neighbouring words join into one mark.",
+      "style": "Style",
+      "loadingLanguages": "Loading languages…",
+      "removeStale": "{count, plural, one {Remove # selection for old wording} other {Remove # selections for old wording}}",
+      "cancel": "Cancel",
+      "save": "Save",
+      "statusStale": "Translation is out of date",
+      "statusDraft": "Draft translation",
+      "main": "Main",
+      "matchedByPhrase": "Matched by phrase",
+      "notTranslated": "Not translated yet. Pick words once the translation exists."
+    },
+    "publishErrors": {
+      "forbidden": "Only owners and admins can publish.",
+      "generic": "Something went wrong. Your changes are still in the editor."
+    },
+    "ai": {
+      "forbidden": "Only owners and admins can change AI settings.",
+      "generic": "Something went wrong.",
+      "pickProvider": "Pick a provider.",
+      "enterModel": "Enter a model.",
+      "budgetWhole": "Budget must be a whole number of tokens.",
+      "planRequired": "AI is part of the Starter plan and up.",
+      "checkFields": "Check the fields.",
+      "enterServer": "Enter the server address, e.g. http://localhost:11434/v1.",
+      "pasteKey": "Paste your {provider} API key.",
+      "saveFirst": "Save your settings first.",
+      "emptyAnswer": "(empty answer)",
+      "instructionsTooLong": "Keep instructions under 4,000 characters.",
+      "invalidConversation": "Invalid conversation.",
+      "noCustomerMessage": "There's no customer message to read yet."
+    },
+    "editor": {
+      "leaseRequest": "{name} wants to edit {view}",
+      "giveControl": "Give control",
+      "nowEditing": "{name} is editing now",
+      "keepControl": "Keep",
+      "undoTheme": "Undo theme change",
+      "undo": "Undo",
+      "redoTheme": "Redo theme change",
+      "redo": "Redo",
+      "resolveSave": "Resolve the save problem before publishing.",
+      "themeInvalid": "The theme has an invalid value. Fix it before publishing.",
+      "publishedTheme": "theme v{version}",
+      "publishedPage": "page v{version}",
+      "newerVersion": "Someone saved a newer version. Reload before publishing.",
+      "pageLive": "{view} is live",
+      "themeLive": "Theme is live",
+      "publishedList": "Published {list}.",
+      "leaveUnsaved": "Your latest changes couldn't be saved. Leave anyway?",
+      "saved": "Saved",
+      "sectionAdded": "{label} added",
+      "tabs": {
+        "sections": "Sections",
+        "blocks": "Blocks",
+        "theme": "Theme",
+        "add": "Add",
+        "editBlock": "Edit block",
+        "settings": "Settings"
+      },
+      "blocksFollowing": "Blocks can be added once you are editing.",
+      "blocksHint": "Drag a block into any section, or onto the page.",
+      "addSection": "Add section",
+      "viewSettings": "{label} settings",
+      "settings": "Settings",
+      "exit": "Exit editor",
+      "toggleSections": "Toggle sections",
+      "noTheme": "No theme",
+      "themeEdited": "edited",
+      "previewSize": "Preview size",
+      "viewports": {
+        "fit": "Fit to window",
+        "desktop": "Desktop · 1280",
+        "tablet": "Tablet · 768",
+        "mobile": "Mobile · 390"
+      },
+      "playTransition": "Play page transition",
+      "playTransitionNamed": "Play page transition: {name}",
+      "noTransition": "This page has no overlay transition",
+      "toggleMode": "Toggle preview mode",
+      "previewDark": "Preview dark mode",
+      "previewLight": "Preview light mode",
+      "moreActions": "More actions",
+      "versionHistory": "Version history",
+      "saveNow": "Save now",
+      "discard": "Discard unpublished changes",
+      "publish": "Publish",
+      "published": "Published",
+      "publishTip": {
+        "forbidden": "Only owners and admins can publish",
+        "both": "Publish this page and the theme changes",
+        "theme": "Publish the theme changes (all pages)",
+        "page": "Make your draft live",
+        "none": "Everything is live"
+      },
+      "sheet": {
+        "fields": "Block settings",
+        "add": "Add block",
+        "theme": "Theme",
+        "sections": "Sections"
+      },
+      "discardDialog": {
+        "title": "Discard unpublished changes?",
+        "description": "Your draft of <b>{label}</b> goes back to what's live now. Saved versions stay in Version history.",
+        "keep": "Keep editing",
+        "done": "Changes discarded",
+        "confirm": "Discard changes"
+      },
+      "follow": {
+        "asked": "Asked {name} for control",
+        "unreachable": "Couldn't reach the server. Try again.",
+        "nobody": "Nobody is editing {what}.",
+        "otherTab": "You are editing {what} in another tab.",
+        "someone": "{name} is editing {what}. You see their changes live.",
+        "start": "Start editing",
+        "editHere": "Edit here",
+        "requested": "Requested…",
+        "request": "Request edit"
+      },
+      "save": {
+        "saved": "Saved",
+        "savedAgo": "Draft saved {when}",
+        "upToDate": "Draft is up to date",
+        "unsaved": "Unsaved",
+        "unsavedHint": "Saving shortly · ⌘S to save now",
+        "saving": "Saving…",
+        "savingHint": "Saving your draft",
+        "failed": "Not saved",
+        "failedHint": "Couldn't save. Click to retry.",
+        "conflict": "Conflict",
+        "conflictHint": "Someone else changed this"
+      },
+      "conflict": {
+        "titlePage": "This page was changed elsewhere",
+        "titleTheme": "The theme was changed elsewhere",
+        "someone": "Someone",
+        "description": "{name} saved a newer draft {when}, maybe in another tab. Load their version, or keep yours and replace theirs.",
+        "theirs": "Load their version",
+        "mine": "Keep mine"
+      }
+    },
+    "theme": {
+      "appearance": {
+        "darkAdded": "Dark mode added",
+        "darkAddedHint": "Each scheme's dark version starts as a copy of the light one. Open a scheme and switch to Dark to design it.",
+        "undo": "Undo",
+        "removedDark": "The dark colours were removed.",
+        "removedLight": "The light colours were removed.",
+        "modesTitle": "Colour modes",
+        "modesDescription": "Decide once. You can switch later; undo restores removed colours.",
+        "strategies": {
+          "dual": {
+            "label": "Light & dark",
+            "hint": "Follows the visitor's device. Every scheme gets a light and a dark version."
+          },
+          "light": {
+            "label": "Light only",
+            "hint": "One look, designed on a light canvas. Half the colours to maintain."
+          },
+          "dark": {
+            "label": "Dark only",
+            "hint": "One look, designed on a dark canvas."
+          }
+        },
+        "pageDefault": "Page default",
+        "mode": {
+          "light": "light",
+          "dark": "dark"
+        }
+      },
+      "motion": {
+        "title": "Motion",
+        "description": "Visitors who ask their device for reduced motion never see animations.",
+        "off": "Off",
+        "subtle": "Subtle",
+        "lively": "Lively",
+        "sectionsAppear": "Sections appear",
+        "entrance": {
+          "none": "None",
+          "fade": "Fade in",
+          "rise": "Rise",
+          "scale": "Zoom",
+          "blur": "Unblur",
+          "mask": "Reveal",
+          "slide": "Slide in"
+        },
+        "easing": "Easing",
+        "custom": "Custom",
+        "easings": {
+          "smooth": "Smooth",
+          "expressive": "Expressive",
+          "standard": "Standard",
+          "bouncy": "Bouncy",
+          "linear": "Linear"
+        },
+        "speed": "Speed",
+        "speedHint": "Hover and small transitions run at half, page entrances at double.",
+        "spacing": "Spacing",
+        "spacingDescription": "The base unit behind every gap and section padding.",
+        "unitPhone": "Unit · phone",
+        "unitDesktop": "Unit · desktop",
+        "flavorTitle": "Layout flavor",
+        "flavorDescription": "The site's structure: navigation style and page skeleton. Colours and fonts stay the same.",
+        "flavors": {
+          "fancy": {
+            "label": "Fancy",
+            "hint": "Lively header navigation, expressive sections. Storefronts and studios."
+          },
+          "grounded": {
+            "label": "Grounded",
+            "hint": "Sidebar-first, calm and dense. Catalogues and B2B."
+          }
+        }
+      },
+      "shared": {
+        "emphasis": {
+          "primary": "Primary",
+          "secondary": "Secondary",
+          "outline": "Outline",
+          "ghost": "Ghost",
+          "link": "Link"
+        },
+        "fontRoles": {
+          "display": "Display",
+          "heading": "Heading",
+          "body": "Body",
+          "accent": "Accent",
+          "mono": "Mono"
+        },
+        "weights": {
+          "100": "Thin",
+          "200": "Extra light",
+          "300": "Light",
+          "400": "Regular",
+          "500": "Medium",
+          "600": "Semibold",
+          "700": "Bold",
+          "800": "Extra bold",
+          "900": "Black"
+        }
+      },
+      "controls": {
+        "back": "Back",
+        "pickColour": "Pick colour",
+        "hex": "Hex",
+        "cssColour": "CSS colour",
+        "lightness": "Lightness",
+        "saturation": "Saturation",
+        "opacity": "Opacity",
+        "missing": "Missing “{value}”",
+        "automatic": "Automatic"
+      },
+      "brand": {
+        "title": "Brand",
+        "identity": "Identity",
+        "identityDescription": "Used by the header, page transitions, the browser tab and link previews.",
+        "voice": "Voice",
+        "voiceDescription": "How the brand sounds. Copy suggestions and the AI writer follow this.",
+        "tone": "Tone",
+        "tonePlaceholder": "Plain, warm and exact. We fix things; we don't oversell.",
+        "slots": {
+          "logo": {
+            "label": "Logo",
+            "hint": "For light backgrounds"
+          },
+          "logoInverse": {
+            "label": "Logo on dark",
+            "hint": "Falls back to the logo"
+          },
+          "mark": {
+            "label": "Mark",
+            "hint": "Square symbol for loaders and transitions"
+          },
+          "favicon": {
+            "label": "Favicon",
+            "hint": "Browser tab, at least 48 px"
+          },
+          "ogImage": {
+            "label": "Sharing image",
+            "hint": "Shown when a link is shared, 1200 × 630"
+          }
+        },
+        "replace": "Replace {label}",
+        "remove": "Remove {label}",
+        "choose": "Choose",
+        "usingLogo": "Using the logo",
+        "describeImage": "Describe the image",
+        "altText": "{label} alt text",
+        "avoid": "Words to avoid",
+        "removeWord": "Remove {word}",
+        "avoidPlaceholder": "cutting-edge, seamless, unlock"
+      },
+      "buttons": {
+        "cornersTitle": "Corners & borders",
+        "cornersDescription": "The base radius sets every rounded corner on the site: cards, images, inputs.",
+        "cornerRadius": "Corner radius",
+        "borderWidth": "Border width",
+        "stylesTitle": "Button styles",
+        "stylesDescription": "Colours come from the section's scheme, so one style works on light and dark bands. Mix styles on the same page.",
+        "newStyle": "New style",
+        "add": "Add",
+        "default": "Default",
+        "name": "Name",
+        "corners": "Corners",
+        "font": "Font",
+        "weight": "Weight",
+        "hover": "Hover",
+        "hovers": {
+          "none": "None",
+          "darken": "Darken",
+          "lift": "Lift",
+          "press": "Press",
+          "glow": "Glow"
+        },
+        "shadow": "Shadow",
+        "border": "Border",
+        "paddingSides": "Padding · sides",
+        "paddingHeight": "Padding · height",
+        "letterSpacing": "Letter spacing",
+        "allCaps": "All caps",
+        "makeDefault": "Make default",
+        "copyName": "{name} copy",
+        "duplicate": "Duplicate",
+        "deleteStyle": "Delete style",
+        "shadowsTitle": "Shadows",
+        "shadowsDescription": "Named elevations used by buttons and cards.",
+        "newShadow": "New shadow",
+        "noShadows": "No shadows. Flat is a style too.",
+        "colour": "Colour",
+        "strength": "Strength",
+        "offset": "Offset",
+        "blur": "Blur",
+        "spread": "Spread",
+        "inset": "Inset (edge)",
+        "insetShadow": "Inset shadow",
+        "usedByButton": "Used by a button style",
+        "deleteShadow": "Delete shadow"
+      },
+      "typography": {
+        "fontsTitle": "Fonts",
+        "fontsDescription": "The families this theme loads. Fewer fonts means faster pages.",
+        "sourceUploaded": "Uploaded",
+        "sourceSystem": "System",
+        "unused": "unused",
+        "usedByStyle": "Used by a text style",
+        "removeFont": "Remove font",
+        "removeFamily": "Remove {family}",
+        "stylesTitle": "Text styles",
+        "stylesDescription": "Blocks pick a style, never a font, so changing one here restyles the whole site.",
+        "roles": {
+          "display": {
+            "label": "Display",
+            "sample": "Big statements",
+            "hint": "Hero titles and huge numbers"
+          },
+          "heading": {
+            "label": "Headings",
+            "sample": "Section heading",
+            "hint": "Section and card titles"
+          },
+          "body": {
+            "label": "Body",
+            "sample": "Readable paragraphs that carry the story.",
+            "hint": "Paragraphs, lists, forms"
+          },
+          "accent": {
+            "label": "Accent",
+            "sample": "Eyebrow · Label",
+            "hint": "Eyebrows, labels, buttons (optional)"
+          },
+          "mono": {
+            "label": "Mono",
+            "sample": "SKU-2048 · 12.5 kW",
+            "hint": "Codes, specs, prices"
+          }
+        },
+        "font": "Font",
+        "weight": "Weight",
+        "lineHeight": "Line height",
+        "letterSpacing": "Letter spacing",
+        "allCaps": "All caps",
+        "scaleTitle": "Size scale",
+        "scaleDescription": "Sizes grow smoothly from phone to desktop. Each step is the previous one times the ratio.",
+        "basePhone": "Base · phone",
+        "baseDesktop": "Base · desktop",
+        "ratioPhone": "Ratio · phone",
+        "ratioDesktop": "Ratio · desktop",
+        "ratios": {
+          "minorSecond": "Minor second",
+          "majorSecond": "Major second",
+          "minorThird": "Minor third",
+          "majorThird": "Major third",
+          "perfectFourth": "Perfect fourth",
+          "augmentedFourth": "Augmented fourth",
+          "perfectFifth": "Perfect fifth",
+          "goldenRatio": "Golden ratio"
+        },
+        "add": "Add",
+        "searchFonts": "Search Google Fonts…",
+        "useFont": "Use “{name}” from Google Fonts",
+        "noFonts": "No fonts found.",
+        "categories": {
+          "sans": "Sans serif",
+          "serif": "Serif",
+          "display": "Display",
+          "mono": "Monospace",
+          "handwriting": "Handwriting"
+        }
+      },
+      "roles": {
+        "background": "Background",
+        "backgroundAlt": "Alt background",
+        "surface": "Cards",
+        "onSurface": "Card text",
+        "text": "Text",
+        "textMuted": "Muted text",
+        "heading": "Headings",
+        "primary": "Primary button",
+        "onPrimary": "Primary label",
+        "secondary": "Secondary button",
+        "onSecondary": "Secondary label",
+        "accent": "Accent",
+        "onAccent": "Text on accent",
+        "accentText": "Accent text",
+        "link": "Links",
+        "border": "Borders",
+        "focusRing": "Focus ring"
+      },
+      "designControls": {
+        "colourOf": "{label} colour",
+        "opacity": "Opacity",
+        "inMs": "{label} in milliseconds",
+        "ms": "ms",
+        "themeEasing": "Theme easing",
+        "easing": {
+          "standard": "Standard",
+          "gentle": "Gentle",
+          "snappy": "Snappy",
+          "linear": "Linear",
+          "ease-in-out": "Ease in-out",
+          "overshoot": "Overshoot"
+        },
+        "customCurve": "Custom curve…",
+        "curveOf": "{label} curve",
+        "actionsOf": "Actions for {name}",
+        "duplicate": "Duplicate",
+        "delete": "Delete",
+        "copyName": "{name} copy",
+        "presetName": "Preset name",
+        "namePlaceholder": "Name"
+      },
+      "decor": {
+        "sample": {
+          "before": "Words that",
+          "mark": "matter"
+        },
+        "editorSample": {
+          "before": "Cold that",
+          "mark": "lasts",
+          "after": "."
+        },
+        "title": "Word highlights",
+        "description": "Marks for key words in headings. Pick the words per language in the block's Highlight field.",
+        "kinds": {
+          "color": "Colour",
+          "underline": "Underline",
+          "squiggle": "Squiggle",
+          "stroke": "Brush stroke",
+          "box": "Box",
+          "circle": "Circle",
+          "marker": "Marker",
+          "gradient": "Gradient text"
+        },
+        "new": "New highlight",
+        "replay": "Replay",
+        "all": "All highlights",
+        "style": "Style",
+        "colour": "Colour",
+        "lineWeight": "Line weight",
+        "tintText": "Colour the words too",
+        "drawIn": "Draw in",
+        "drawInHint": "Animates once as the heading appears."
+      },
+      "doctor": {
+        "healthTitle": "Health {value}/100",
+        "healthy": "Healthy",
+        "needsAttention": "Needs attention",
+        "unhealthy": "Unhealthy",
+        "scoreHint": "Contrast and structure, scored out of 100.",
+        "tiers": {
+          "essential": {
+            "label": "Essential",
+            "hint": "A compact, dependable theme."
+          },
+          "complete": {
+            "label": "Complete",
+            "hint": "Covers every role with room for variety."
+          },
+          "premium": {
+            "label": "Premium",
+            "hint": "Rich: multiple schemes, styles and motion."
+          }
+        },
+        "richnessNote": "{hint} Richness is not quality: an essential theme can be perfect.",
+        "severity": {
+          "error": "Must fix · {count}",
+          "warning": "Should fix · {count}",
+          "info": "Suggestions · {count}"
+        },
+        "noFindings": "No findings. Nice work.",
+        "gridTitle": "Contrast grid",
+        "gridDescription": "Every text and background pair in every scheme. Click a cell to fix it.",
+        "light": "Light",
+        "dark": "Dark",
+        "contrastTitle": "{label}: {ratio}:1 (needs {min}:1)"
+      },
+      "palette": {
+        "groups": {
+          "brand": {
+            "label": "Brand",
+            "hint": "The colours people recognise you by."
+          },
+          "accent": {
+            "label": "Accent",
+            "hint": "Highlights, badges, illustrations."
+          },
+          "neutral": {
+            "label": "Neutrals",
+            "hint": "Backgrounds, text, borders."
+          },
+          "feedback": {
+            "label": "Feedback",
+            "hint": "Success, warning, error."
+          },
+          "custom": {
+            "label": "Other"
+          }
+        },
+        "newName": "New colour",
+        "intro": "Every colour on the site comes from this palette. Schemes point at these colours by name, so changing one here updates every place it is used.",
+        "add": "Add",
+        "empty": "No colours in this group.",
+        "lockedLabel": "Locked brand colour",
+        "noDescription": "No description",
+        "usesTitle": "Places using this colour",
+        "lockedNote": "Brand colour, locked by your site builder.",
+        "name": "Name",
+        "purpose": "What it is for",
+        "purposePlaceholder": "e.g. Primary buttons and links on light backgrounds",
+        "group": "Group",
+        "lock": "Lock",
+        "lockSwitch": "Lock brand colour",
+        "usedBy": "Used by",
+        "unused": "Not used yet. Assign it to a role in a scheme.",
+        "shadow": "Shadow",
+        "tokenId": "Token id",
+        "tokenIdHint": "Used in CSS as a variable name. Renaming updates every reference.",
+        "idInvalid": "Ids use lowercase letters, digits and dashes.",
+        "removeFirst": "Remove it from every scheme first",
+        "inUse": "{count, plural, one {In use in # place} other {In use in # places}}",
+        "delete": "Delete colour"
+      },
+      "effects": {
+        "siteWide": "Site-wide",
+        "siteWideDescription": "One effect over every page. Sections can still pick their own in Section style.",
+        "effect": "Effect",
+        "none": "None",
+        "schedule": "Only between dates",
+        "scheduleHint": "Can wrap the new year, e.g. 12-01 to 01-06 (month-day).",
+        "from": "From",
+        "to": "To",
+        "presets": "Effect presets",
+        "presetsDescription": "Ambient layers behind content. They pause off-screen and stay still for visitors who prefer reduced motion.",
+        "kinds": {
+          "snow": "Snow",
+          "particles": "Floating particles",
+          "aurora": "Aurora",
+          "grain": "Film grain"
+        },
+        "new": "New effect",
+        "dayPlaceholder": "MM-DD",
+        "sampleTitle": "Winter service",
+        "sampleBody": "The effect sits behind the content.",
+        "all": "All effects",
+        "kind": "Kind",
+        "colour": "Colour",
+        "density": "Density",
+        "speed": "Speed",
+        "size": "Size"
+      },
+      "surfaces": {
+        "title": "Gradients",
+        "description": "Section backgrounds built from scheme colours, so they recolour with every scheme and mode.",
+        "kinds": {
+          "linear": "Linear",
+          "radial": "Radial",
+          "conic": "Conic",
+          "stripes": "Stripes"
+        },
+        "stops": "{count, plural, one {# stop} other {# stops}}",
+        "new": "New gradient",
+        "sampleTitle": "Section heading",
+        "sampleBody": "Body text sits on top of the gradient.",
+        "all": "All gradients",
+        "angle": "Angle",
+        "period": "Period",
+        "centreX": "Centre X",
+        "centreY": "Centre Y",
+        "stopsTitle": "Stops",
+        "stopsDescription": "Colours come from the section's scheme. Fade to 0% opacity to blend into the page.",
+        "removeStop": "Remove stop {n}",
+        "stop": "Stop {n}",
+        "position": "Position",
+        "addStop": "Add stop"
+      },
+      "transitions": {
+        "stage": {
+          "title": "Page one",
+          "cta": "Next page"
+        },
+        "test": "Test",
+        "betweenPages": "Between pages",
+        "motionOff": "Motion is off for this theme, so pages change instantly.",
+        "betweenPagesHint": "What visitors see while the next page loads.",
+        "pageTransition": "Page transition",
+        "noneInstant": "None, swap instantly",
+        "native": "Browser crossfade (no overlay)",
+        "nativeNote": "Chrome, Edge and Safari crossfade between pages on their own. Other browsers swap instantly.",
+        "presets": "Transition presets",
+        "presetsDescription": "Built from your brand colours and mark. Duplicate one to make it yours.",
+        "backgrounds": {
+          "solid": "Solid",
+          "translucent": "Frosted",
+          "radial": "Glow"
+        },
+        "moves": {
+          "fade": "Fade",
+          "slide-up": "Slide up",
+          "slide-down": "Slide down",
+          "wipe": "Wipe",
+          "circle": "Circle"
+        },
+        "totalMs": "{ms} ms",
+        "inUse": "In use",
+        "new": "New transition",
+        "all": "All transitions",
+        "use": "Use this",
+        "cover": "Cover",
+        "colour": "Colour",
+        "blur": "Blur",
+        "movement": "Movement",
+        "icon": "Icon",
+        "iconMissing": "No mark or logo yet, so a dot stands in. Add one under Brand.",
+        "icons": {
+          "none": "None",
+          "mark": "Mark",
+          "logo": "Logo"
+        },
+        "animation": "Animation",
+        "iconMotions": {
+          "none": "Still",
+          "pulse": "Pulse",
+          "rotate": "Rotate",
+          "line": "Loading line",
+          "dots": "Dots"
+        },
+        "size": "Size",
+        "rotation": "Rotation",
+        "timing": "Timing",
+        "timingDescription": "The cover holds until the next page has painted, and never for less than the minimum.",
+        "coverIn": "Cover",
+        "coverOut": "Uncover",
+        "minHold": "Minimum hold",
+        "minHoldHint": "Prevents a flash on fast connections.",
+        "easing": "Easing",
+        "navTitle": "Menus and sheets",
+        "navDescription": "The mobile menu, side sheets and fullscreen navigation. Enter and leave can differ.",
+        "navSample": {
+          "services": "Services",
+          "projects": "Projects",
+          "contact": "Contact"
+        },
+        "enter": "Enter",
+        "leave": "Leave",
+        "navMoves": {
+          "slide": "Slide",
+          "fade": "Fade",
+          "scale": "Zoom",
+          "circle": "Circle reveal"
+        }
+      },
+      "schemes": {
+        "newName": "New scheme",
+        "intro": "Schemes are named colour recipes for sections. Name them by where they are used (\"Hero band\", \"Footer\") so they are easy to pick later.",
+        "pageDefault": "Page default",
+        "noDescription": "No description",
+        "add": "Add scheme",
+        "light": "Light",
+        "dark": "Dark",
+        "inherited": "{mode, select, light {No light colours yet, so this scheme reuses the dark ones. Any change below creates the light version.} other {No dark colours yet, so this scheme reuses the light ones. Any change below creates the dark version.}}",
+        "details": "Details",
+        "name": "Name",
+        "usedFor": "Where it is used",
+        "usedForPlaceholder": "e.g. Hero bands and the footer",
+        "makeDefault": "Make page default",
+        "actions": "Scheme actions",
+        "duplicate": "Duplicate",
+        "delete": "Delete scheme",
+        "roleGroups": {
+          "page": "Page",
+          "buttons": "Buttons",
+          "cards": "Cards",
+          "accent": "Accent and links"
+        },
+        "roleHints": {
+          "background": "Section background",
+          "backgroundAlt": "Alternating bands, image placeholders",
+          "text": "Body copy",
+          "textMuted": "Captions, secondary copy",
+          "heading": "Titles",
+          "border": "Dividers, inputs, card outlines",
+          "primary": "Main call to action",
+          "onPrimary": "Label on primary buttons",
+          "secondary": "Second call to action",
+          "onSecondary": "Label on secondary buttons",
+          "surface": "Cards, panels, inputs",
+          "onSurface": "Text on cards",
+          "accent": "Badges, chips, highlights",
+          "onAccent": "Text on accent fills",
+          "accentText": "Eyebrows, highlighted words",
+          "link": "Inline links",
+          "focusRing": "Keyboard focus outline"
+        },
+        "contrastTitle": "{ratio}:1 contrast, needs {min}:1",
+        "colourOf": "{role} colour",
+        "autoFrom": "Auto · from {role}",
+        "adjustShade": "Adjust shade",
+        "adjustShadeTitle": "Adjust shade (lightness, saturation, opacity)",
+        "pickFirst": "Pick a colour first",
+        "adjustRole": "Adjust {role}",
+        "adjustNote": "Tweaks apply only here; the palette colour stays the same."
+      },
+      "preview": {
+        "eyebrow": "Eyebrow",
+        "heading": "Heading",
+        "body": "Body text",
+        "muted": "and muted",
+        "link": "link",
+        "card": "Card text",
+        "primary": "Primary",
+        "secondary": "Secondary",
+        "accent": "Accent"
+      },
+      "nav": {
+        "titles": {
+          "home": "Theme",
+          "palette": "Palette",
+          "schemes": "Colour schemes",
+          "appearance": "Light and dark",
+          "typography": "Typography",
+          "buttons": "Buttons and shape",
+          "motion": "Motion and layout",
+          "doctor": "Palette Doctor",
+          "brand": "Brand",
+          "gradients": "Gradients",
+          "decor": "Word highlights",
+          "effects": "Effects",
+          "transitions": "Transitions"
+        },
+        "groups": {
+          "colours": "Colours",
+          "style": "Style",
+          "design": "Design language",
+          "health": "Health"
+        },
+        "modes": {
+          "dual": "Both, follows the device",
+          "light": "Light only",
+          "dark": "Dark only"
+        },
+        "coloursCount": "{count, plural, one {# colour} other {# colours}}",
+        "buttonsMeta": "{count, plural, one {# button style} other {# button styles}} · {radius}px corners",
+        "motionMeta": "Motion: {profile} · {flavor}",
+        "brand": {
+          "logo": "Logo",
+          "mark": "Mark",
+          "favicon": "Favicon",
+          "voice": "Voice",
+          "empty": "Logo, favicon, sharing image, voice"
+        },
+        "gradientsMeta": "{count, plural, one {# section background} other {# section backgrounds}}",
+        "none": "None",
+        "effectsActive": "Site-wide: {name}",
+        "effectsCount": "{count, plural, one {# preset} other {# presets}}",
+        "nativeTransition": "Browser crossfade",
+        "instantTransition": "Pages swap instantly",
+        "doctorErrors": "{errors} to fix · {warnings, plural, one {# warning} other {# warnings}}",
+        "doctorWarnings": "{count, plural, one {# warning} other {# warnings}}",
+        "doctorOk": "All checks pass"
+      },
+      "panel": {
+        "noTheme": "This site has no theme yet.",
+        "undo": "Undo theme change",
+        "redo": "Redo theme change",
+        "scheme": "Scheme",
+        "schemeSubtitle": "Colour scheme",
+        "name": "Theme name",
+        "noDescription": "No description",
+        "openDoctor": "Open Palette Doctor",
+        "actions": "Theme actions",
+        "versions": "Theme versions",
+        "discard": "Discard theme changes",
+        "notSaved": "Not saved: {field} {message}.",
+        "discardTitle": "Discard theme changes?",
+        "discardDescription": "The theme goes back to what is live now. Published versions stay in Theme versions.",
+        "keepEditing": "Keep editing",
+        "discarded": "Theme changes discarded",
+        "discardConfirm": "Discard changes",
+        "save": {
+          "draft": "Draft saved · not live yet",
+          "live": "Live",
+          "dirty": "Unsaved changes",
+          "saving": "Saving…",
+          "error": "Could not save",
+          "conflict": "Changed elsewhere"
+        },
+        "versionsDialog": {
+          "title": "Theme versions",
+          "description": "Every publish is kept. Restoring copies a version into your draft; publish to make it live.",
+          "empty": "No published versions yet.",
+          "defaultLabel": "Published version {version}",
+          "latest": "Latest",
+          "restored": "Version {version} restored to your draft",
+          "restore": "Restore"
+        }
+      }
+    }
+  }
+}

@@ -1,43 +1,49 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Building2, ChevronRight, Coins, Globe, Languages, Layers, Shapes, Users } from "lucide-react";
 import { siteTypePresets } from "@qubo/blocks/presets";
 import { SiteAvatar } from "@/components/shell/qubo-mark";
 import { Surface } from "@/components/settings/settings-group";
-import { capabilityMeta } from "@/components/settings/capabilities";
 import { requireSite } from "@/lib/admin";
-import { localeLabel } from "@/lib/format";
+import { getFormatters } from "@/lib/format-server";
 import { getLocales, getMembers } from "@/lib/queries";
 
-const roleLabel: Record<string, string> = { OWNER: "Owner", ADMIN: "Admin", STAFF: "Staff", VIEWER: "Viewer" };
+const capabilityKeys = { commerce: 1, catalog: 1, booking: 1, leads: 1, blog: 1, accounts: 1, locales: 1 } as const;
 
 /** Wide screens only: a calm summary next to the settings list. Phones see the list instead. */
 export default async function SettingsIndex({ params }: { params: Promise<{ site: string }> }) {
+  const t = await getTranslations("settings");
+  const f = await getFormatters();
   const { site: slug } = await params;
   const { site, siteId } = await requireSite(slug);
   const [locales, members] = await Promise.all([getLocales(siteId), getMembers(site.organizationId)]);
-  const preset = siteTypePresets[site.type as keyof typeof siteTypePresets];
+  const typeKey = site.type as keyof typeof siteTypePresets;
+  const preset = siteTypePresets[typeKey];
+  const typeLabel = preset ? t(`siteTypes.${typeKey}.label`) : site.type;
+  const capLabel = (c: string) => (c in capabilityKeys ? t(`capabilities.${c as keyof typeof capabilityKeys}.label`) : c);
+  const role = site.memberRole as "OWNER" | "ADMIN" | "STAFF" | "VIEWER";
   const primary = locales.find((l) => l.isPrimary);
   const published = locales.filter((l) => l.isPublished && !l.isPrimary);
   const caps = site.capabilities ?? [];
   const base = `/${site.slug}/settings`;
 
   const rows = [
-    { icon: Shapes, label: "Site type", value: preset?.label ?? site.type, href: "general" },
+    { icon: Shapes, label: t("overview.siteType"), value: typeLabel, href: "general" },
     {
       icon: Layers,
-      label: "Features",
-      value: caps.length ? caps.map((c) => capabilityMeta[c]?.label ?? c).join(", ") : "None",
+      label: t("overview.features"),
+      value: caps.length ? caps.map(capLabel).join(", ") : t("overview.none"),
       href: "general",
     },
-    { icon: Coins, label: "Currency", value: site.currency, href: "general" },
-    { icon: Globe, label: "Domain", value: site.domain ?? "Not connected", href: "domains" },
+    { icon: Coins, label: t("overview.currency"), value: site.currency, href: "general" },
+    { icon: Globe, label: t("overview.domain"), value: site.domain ?? t("overview.notConnected"), href: "domains" },
     {
       icon: Languages,
-      label: "Languages",
-      value: `${localeLabel[primary?.locale ?? site.locale] ?? site.locale}${published.length ? ` + ${published.length} published` : ""}`,
+      label: t("overview.languages"),
+      value: `${f.localeName(primary?.locale ?? site.locale)}${published.length ? ` ${t("overview.publishedExtra", { count: published.length })}` : ""}`,
       href: "languages",
     },
-    { icon: Users, label: "Team", value: `${members.length} ${members.length === 1 ? "member" : "members"} · you are ${roleLabel[site.memberRole] ?? site.memberRole}`, href: "users" },
+    { icon: Users, label: t("overview.team"), value: t("overview.teamValue", { count: members.length, role: t(`roles.${role}`) }), href: "users" },
   ];
 
   return (
@@ -47,10 +53,10 @@ export default async function SettingsIndex({ params }: { params: Promise<{ site
           <SiteAvatar name={site.name} className="size-12 rounded-xl text-base" />
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-lg font-semibold tracking-tight">{site.name}</h2>
-            <p className="truncate text-[13px] text-muted-foreground">{site.description || preset?.description}</p>
+            <p className="truncate text-[13px] text-muted-foreground">{site.description || (preset ? t(`siteTypes.${typeKey}.description`) : "")}</p>
           </div>
           <Link href={`${base}/general`} className="hidden h-8 items-center rounded-lg border px-3 text-[13px] font-medium shadow-xs hover:bg-accent @min-[60rem]:inline-flex">
-            Edit details
+            {t("overview.editDetails")}
           </Link>
         </div>
         <dl className="divide-y">
@@ -66,7 +72,7 @@ export default async function SettingsIndex({ params }: { params: Promise<{ site
       </Surface>
       <p className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
         <Building2 className="size-3.5" />
-        Settings apply to {site.name} only. Team and billing are shared across the organization.
+        {t("overview.footer", { name: site.name })}
       </p>
     </div>
   );

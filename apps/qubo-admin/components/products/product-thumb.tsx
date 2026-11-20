@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { ImageOff } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@qubo/shared/utils";
 
 /**
@@ -10,6 +11,7 @@ import { cn } from "@qubo/shared/utils";
  * React's onError never fires.
  */
 export function ProductThumb({ src, alt = "", label = false, className }: { src: string | null | undefined; alt?: string; label?: boolean; className?: string }) {
+  const t = useTranslations("products.thumb");
   const [failed, setFailed] = useState<string | null>(null);
   const check = useCallback((el: HTMLImageElement | null) => {
     if (el && src && el.complete && el.naturalWidth === 0) setFailed(src);
@@ -17,9 +19,9 @@ export function ProductThumb({ src, alt = "", label = false, className }: { src:
 
   if (!src || failed === src) {
     return (
-      <div className={cn("flex size-full flex-col items-center justify-center gap-1.5 rounded-[inherit] bg-muted/50 text-muted-foreground/70", className)} role="img" aria-label={alt || "No image"}>
+      <div className={cn("flex size-full flex-col items-center justify-center gap-1.5 rounded-[inherit] bg-muted/50 text-muted-foreground/70", className)} role="img" aria-label={alt || t("noImage")}>
         <ImageOff className={label ? "size-6" : "size-4"} strokeWidth={1.5} />
-        {label && <span className="text-[11px] font-medium">No image</span>}
+        {label && <span className="text-[11px] font-medium">{t("noImage")}</span>}
       </div>
     );
   }

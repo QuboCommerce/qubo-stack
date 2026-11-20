@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bell, ExternalLink, Menu, Search } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -29,6 +30,7 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
   counts: ShellCounts;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("shell");
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
 
@@ -40,11 +42,11 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
             type="button"
             onClick={() => setNavOpen(true)}
             className="grid size-9 place-items-center rounded-lg hover:bg-topbar-muted md:hidden"
-            aria-label="Open navigation"
+            aria-label={t("openNavigation")}
           >
             <Menu className="size-5" />
           </button>
-          <Link href={`/${site.slug}`} className="hidden items-center gap-2 rounded-lg px-1 xs:flex lg:w-[13.5rem] 3xl:w-[15rem]" aria-label="Qubo home">
+          <Link href={`/${site.slug}`} className="hidden items-center gap-2 rounded-lg px-1 xs:flex lg:w-[13.5rem] 3xl:w-[15rem]" aria-label={t("quboHome")}>
             <QuboMark className="size-7" />
             <span className="hidden text-[15px] font-semibold tracking-tight lg:inline">Qubo</span>
           </Link>
@@ -60,13 +62,13 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
               className="flex h-9 w-full items-center gap-2 rounded-lg border border-white/10 bg-topbar-muted px-3 text-[13px] text-topbar-foreground/60 transition-colors hover:border-white/20 hover:text-topbar-foreground/80"
             >
               <Search className="size-4" />
-              <span className="flex-1 text-left">Search</span>
+              <span className="flex-1 text-left">{t("search")}</span>
               <Kbd className="border-white/10 bg-white/10 text-topbar-foreground/70">⌘K</Kbd>
             </button>
           </div>
 
           <div className="ml-auto flex items-center gap-0.5 md:ml-0">
-            <button type="button" onClick={() => setSearchOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-topbar-muted md:hidden" aria-label="Search">
+            <button type="button" onClick={() => setSearchOpen(true)} className="grid size-9 place-items-center rounded-lg hover:bg-topbar-muted md:hidden" aria-label={t("search")}>
               <Search className="size-[18px]" />
             </button>
             {site.url && (
@@ -75,12 +77,12 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
                 target="_blank"
                 rel="noreferrer"
                 className="hidden size-9 place-items-center rounded-lg hover:bg-topbar-muted sm:grid"
-                aria-label="View live site"
+                aria-label={t("viewLiveSite")}
               >
                 <ExternalLink className="size-[18px]" />
               </a>
             )}
-            <button type="button" className="relative grid size-9 place-items-center rounded-lg hover:bg-topbar-muted" aria-label="Notifications">
+            <button type="button" className="relative grid size-9 place-items-center rounded-lg hover:bg-topbar-muted" aria-label={t("notifications")}>
               <Bell className="size-[18px]" />
               {counts.inbox > 0 && <span className="absolute right-2 top-2 size-2 rounded-full bg-brand-hot ring-2 ring-topbar" />}
             </button>

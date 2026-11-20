@@ -5,6 +5,7 @@ import { category, product, productCategory, productImage, productVariant, produ
 import { galleryAssetIds } from "@qubo/storage/media";
 import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireSite, requireSiteFromForm } from "@/lib/admin";
@@ -12,41 +13,42 @@ import type { ActionState } from "@/lib/action-state";
 import { emitEntity } from "@/lib/events";
 import { assetUrl } from "@/lib/format";
 import { productSpec, productValues } from "@/lib/form-specs";
-import { RACE, reconcile, unchangedSince } from "@/lib/merge-server";
+import { reconcile, unchangedSince } from "@/lib/merge-server";
 
 const uuid = /^[0-9a-f-]{36}$/i;
 
-const money = z
-  .string()
-  .trim()
-  .transform((v) => v.replace(",", "."))
-  .refine((v) => v === "" || /^\d+(\.\d{1,2})?$/.test(v), "Prices use numbers like 1299.00.");
-const optNum = z
-  .string()
-  .trim()
-  .transform((v) => v.replace(",", "."))
-  .refine((v) => v === "" || /^\d+(\.\d{1,2})?$/.test(v), "Use a positive number.");
+type Errors = Awaited<ReturnType<typeof getTranslations<"products.errors">>>;
 
-const schema = z.object({
-  name: z.string().trim().min(2, "The title needs at least 2 characters.").max(255),
-  slug: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "The handle uses lowercase letters, numbers and dashes."),
-  description: z.string().max(20000),
-  brand: z.string().trim().max(120),
-  basePrice: money.refine((v) => v !== "", "Enter a price."),
-  compareAtPrice: money,
-  weight: optNum,
-  width: optNum,
-  height: optNum,
-  depth: optNum,
-  metaTitle: z.string().trim().max(120),
-  metaDescription: z.string().trim().max(320),
-  isArchived: z.boolean(),
-  isFeatured: z.boolean(),
-});
+const buildSchema = (t: Errors) => {
+  const decimal = (message: string) =>
+    z
+      .string()
+      .trim()
+      .transform((v) => v.replace(",", "."))
+      .refine((v) => v === "" || /^\d+(\.\d{1,2})?$/.test(v), message);
+  const money = decimal(t("price"));
+  const optNum = decimal(t("positiveNumber"));
+  return z.object({
+    name: z.string().trim().min(2, t("titleLength")).max(255),
+    slug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t("handleFormat")),
+    description: z.string().max(20000),
+    brand: z.string().trim().max(120),
+    basePrice: money.refine((v) => v !== "", t("priceRequired")),
+    compareAtPrice: money,
+    weight: optNum,
+    width: optNum,
+    height: optNum,
+    depth: optNum,
+    metaTitle: z.string().trim().max(120),
+    metaDescription: z.string().trim().max(320),
+    isArchived: z.boolean(),
+    isFeatured: z.boolean(),
+  });
+};
 
 export const slugify = async (s: string) =>
   s
@@ -58,6 +60,7 @@ export const slugify = async (s: string) =>
     .slice(0, 80);
 
 export async function saveProduct(_prev: ActionState, submitted: FormData): Promise<ActionState> {
+  const t = await getTranslations("products.errors");
   let createdId: string | null = null;
   let slugForRedirect = "";
   try {
@@ -67,9 +70,9 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
     let formData = submitted;
     let seenAt: Date | null = null;
     if (!isNew) {
-      if (!uuid.test(id)) return { error: "Product not found on this site." };
+      if (!uuid.test(id)) return { error: t("notFound") };
       const [current] = await db.select().from(product).where(and(eq(product.id, id), eq(product.siteId, siteId))).limit(1);
-      if (!current) return { error: "This product was deleted by someone else." };
+      if (!current) return { error: t("deleted") };
       seenAt = current.updatedAt;
       const [links, cats] = await Promise.all([
         db.select({ id: productCategory.categoryId }).from(productCategory).where(eq(productCategory.productId, id)),
@@ -86,7 +89,7 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
     }
     const str = (k: string) => String(formData.get(k) ?? "");
     const rawSlug = str("slug") || (await slugify(str("name")));
-    const parsed = schema.safeParse({
+    const parsed = buildSchema(t).safeParse({
       name: str("name"),
       slug: rawSlug,
       description: str("description"),
@@ -102,7 +105,7 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
       isArchived: str("status") === "archived",
       isFeatured: formData.get("isFeatured") === "on",
     });
-    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the highlighted fields." };
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t("checkFields") };
     const d = parsed.data;
     const nul = (v: string) => (v === "" ? null : v);
 
@@ -111,13 +114,13 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
       .from(product)
       .where(and(eq(product.siteId, siteId), eq(product.slug, d.slug), id && id !== "new" ? ne(product.id, id) : undefined))
       .limit(1);
-    if (clash.length) return { error: "Another product already uses this handle." };
+    if (clash.length) return { error: t("handleTaken") };
 
     const requested = [...new Set(formData.getAll("categoryIds").map(String).filter((v) => uuid.test(v)))];
     const categoryIds = requested.length
       ? (await db.select({ id: category.id }).from(category).where(and(eq(category.siteId, siteId), inArray(category.id, requested)))).map((r) => r.id)
       : [];
-    if (categoryIds.length !== requested.length) return { error: "One of the categories no longer exists. Reload the page and try again." };
+    if (categoryIds.length !== requested.length) return { error: t("categoryGone") };
 
     const values = {
       name: d.name,
@@ -149,7 +152,7 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
       if (categoryIds.length) await tx.insert(productCategory).values(categoryIds.map((categoryId) => ({ productId: row.id, categoryId })));
       return row.id;
     });
-    if (!savedId) return { error: RACE };
+    if (!savedId) return { error: t("race") };
     await emitEntity(siteId, "product", savedId, isNew ? "created" : "updated");
     if (isNew) {
       createdId = savedId;
@@ -160,7 +163,7 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
     revalidatePath(`/${site.slug}/products`);
     revalidatePath(`/${site.slug}/products/categories`);
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Something went wrong." };
+    return { error: e instanceof Error ? e.message : t("generic") };
   }
   if (createdId) redirect(`/${slugForRedirect}/products/${createdId}`);
   return { ok: true, at: Date.now() };
@@ -187,9 +190,10 @@ const imagesSchema = z.object({
 
 /** Replaces the product's gallery (order = position; the first is the main image). */
 export async function setProductImagesAction(input: { site: string; productId: string; images: { url: string; alt: string }[] }): Promise<ActionState> {
+  const t = await getTranslations("products.errors");
   const { site, siteId } = await requireSite(input.site);
   const parsed = imagesSchema.safeParse(input);
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid images." };
+  if (!parsed.success) return { error: t("invalidImages") };
   const { productId, images } = parsed.data;
   const assetIds = await galleryAssetIds(site.organizationId, images.map((i) => i.url));
   const ok = await db.transaction(async (tx) => {
@@ -211,7 +215,7 @@ export async function setProductImagesAction(input: { site: string; productId: s
     if (gone.length) await tx.delete(productImage).where(inArray(productImage.id, gone));
     return true;
   });
-  if (!ok) return { error: "Product not found." };
+  if (!ok) return { error: t("productMissing") };
   await emitEntity(siteId, "product", productId, "updated");
   revalidatePath(`/${site.slug}/products/${productId}`);
   revalidatePath(`/${site.slug}/products`);
@@ -220,14 +224,15 @@ export async function setProductImagesAction(input: { site: string; productId: s
 
 /** Sets which gallery photos belong to a variant. Ids outside the product's gallery are ignored. */
 export async function setVariantImagesAction(input: { site: string; variantId: string; imageIds: string[] }): Promise<ActionState> {
+  const t = await getTranslations("products.errors");
   const { site, siteId } = await requireSite(input.site);
   const p = z.object({ variantId: z.uuid(), imageIds: z.array(z.uuid()).max(50) }).safeParse(input);
-  if (!p.success) return { error: "Invalid images." };
+  if (!p.success) return { error: t("invalidImages") };
   const [variant] = await db
     .select({ productId: productVariant.productId })
     .from(productVariant)
     .where(and(eq(productVariant.id, p.data.variantId), eq(productVariant.siteId, siteId)));
-  if (!variant) return { error: "Variant not found." };
+  if (!variant) return { error: t("variantMissing") };
   const valid = p.data.imageIds.length
     ? (await db.select({ id: productImage.id }).from(productImage).where(and(eq(productImage.productId, variant.productId), inArray(productImage.id, p.data.imageIds)))).map((r) => r.id)
     : [];

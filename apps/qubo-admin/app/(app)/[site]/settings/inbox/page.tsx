@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { db } from "@qubo/db/client";
 import { form, formSubmission } from "@qubo/db/schema";
 import { siteInboundAddress } from "@qubo/inbox";
@@ -25,6 +26,7 @@ function Row({ label, ok, children }: { label: string; ok: boolean; children: Re
 }
 
 export default async function InboxSettings({ params }: { params: Promise<{ site: string }> }) {
+  const t = await getTranslations("settings.inbox");
   const { site: slug } = await params;
   const { site, siteId } = await requireSite(slug);
   if (!(site.capabilities ?? []).includes("leads")) notFound();
@@ -40,33 +42,30 @@ export default async function InboxSettings({ params }: { params: Promise<{ site
   const inbound = inboundDomain();
 
   return (
-    <SettingsPage site={site.slug} title="Inbox" description="How messages reach this site's inbox, and who hears about them.">
+    <SettingsPage site={site.slug} title={t("title")} description={t("description")}>
       {readOnly && <ReadOnlyNote />}
       <div className="space-y-6 @min-[72rem]:space-y-10">
-        <SettingsGroup title="E-mail" description="Set by whoever runs this Qubo instance, in its environment file.">
+        <SettingsGroup title={t("email")} description={t("emailHelp")}>
           <Surface flush className="divide-y">
-            <Row label="Replies by e-mail" ok={outbound}>
-              {outbound ? "Replies and form notifications are sent through Resend." : "Not set up: replies are saved in the inbox but not e-mailed. Needs RESEND_API_KEY and EMAIL_FROM."}
+            <Row label={t("outboundLabel")} ok={outbound}>
+              {outbound ? t("outboundOn") : t("outboundOff", { vars: "RESEND_API_KEY, EMAIL_FROM" })}
             </Row>
-            <Row label="E-mail in" ok={Boolean(inbound)}>
+            <Row label={t("inboundLabel")} ok={Boolean(inbound)}>
               {inbound ? (
-                <>
-                  Mail sent or forwarded to <span className="select-all font-mono text-foreground">{siteInboundAddress(site.slug, inbound)}</span> lands in the inbox,
-                  and customers' answers to your replies thread back automatically. Forward your shop's mailbox there to keep everything in one place.
-                </>
+                t.rich("inboundOn", { address: siteInboundAddress(site.slug, inbound), a: (c) => <span className="select-all font-mono text-foreground">{c}</span> })
               ) : (
-                "Not set up: customers' e-mail replies go to your sender address instead of the inbox. Needs EMAIL_INBOUND_DOMAIN and RESEND_WEBHOOK_SECRET."
+                t("inboundOff", { vars: "EMAIL_INBOUND_DOMAIN, RESEND_WEBHOOK_SECRET" })
               )}
             </Row>
           </Surface>
         </SettingsGroup>
 
-        <SettingsGroup title="Forms" description="Forms appear here the first time someone submits them. Notified addresses get a copy of every submission.">
+        <SettingsGroup title={t("forms")} description={t("formsHelp")}>
           <Surface flush className="divide-y">
             {forms.map((f) => (
               <FormSettingsRow key={f.id} site={site.slug} form={f} readOnly={readOnly} />
             ))}
-            {forms.length === 0 && <EmptyState icon={FileText} title="No forms yet" description="Add a Contact form block to a page. It shows up here after its first submission." />}
+            {forms.length === 0 && <EmptyState icon={FileText} title={t("noForms")} description={t("noFormsHelp")} />}
           </Surface>
         </SettingsGroup>
       </div>

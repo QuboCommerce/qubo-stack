@@ -5,9 +5,10 @@ import { user } from "@qubo/db/schema";
 import * as studio from "@qubo/studio";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireSite } from "@/lib/admin";
 import { emitDocumentPublished } from "@/lib/events";
-import { localeLabel } from "@/lib/format";
+import { getFormatters } from "@/lib/format-server";
 import { getLocales } from "@/lib/queries";
 
 /**
@@ -41,7 +42,7 @@ const canPublish = (role: string) => role === "OWNER" || role === "ADMIN";
 
 async function context(slug: string, needsPublish = false) {
   const { user, site } = await requireSite(slug);
-  if (needsPublish && !canPublish(site.memberRole)) throw new studio.StudioError("forbidden", "Only owners and admins can publish.");
+  if (needsPublish && !canPublish(site.memberRole)) throw new studio.StudioError("forbidden", (await getTranslations("studio.publishErrors"))("forbidden"));
   return { scope: { siteId: site.id, userId: user.id } satisfies studio.Scope, site };
 }
 
@@ -54,10 +55,11 @@ async function conflictOf(e: studio.ConflictError): Promise<StudioConflict> {
   return { version: e.current.version, updatedAt: e.current.updatedAt.toISOString(), updatedByName };
 }
 
-function message(e: unknown) {
+// StudioError messages come from @qubo/studio and are not translated yet.
+async function message(e: unknown) {
   if (e instanceof studio.StudioError) return e.message;
   console.error("[studio-action]", e);
-  return "Something went wrong. Your changes are still in the editor.";
+  return (await getTranslations("studio.publishErrors"))("generic");
 }
 
 export async function saveDraftAction(
@@ -78,7 +80,7 @@ export async function saveDraftAction(
     };
   } catch (e) {
     if (e instanceof studio.ConflictError) return { ok: false, conflict: await conflictOf(e) };
-    return { ok: false, error: message(e) };
+    return { ok: false, error: await message(e) };
   }
 }
 
@@ -92,7 +94,7 @@ export async function publishAction(slug: string, input: { documentId: string; b
     return { ok: true, version: res.version, publishedAt: res.publishedAt.toISOString() };
   } catch (e) {
     if (e instanceof studio.ConflictError) return { ok: false, conflict: await conflictOf(e) };
-    return { ok: false, error: message(e) };
+    return { ok: false, error: await message(e) };
   }
 }
 
@@ -103,7 +105,7 @@ export async function loadDraftAction(slug: string, documentId: string) {
     const doc = await studio.getDocument(scope, documentId);
     return { ok: true as const, data: doc.draft, version: doc.draftVersion, hasUnpublishedChanges: doc.hasUnpublishedChanges };
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -113,7 +115,7 @@ export async function discardDraftAction(slug: string, documentId: string) {
     await studio.discardDraft(scope, documentId);
     return loadDraftAction(slug, documentId);
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -126,7 +128,7 @@ export async function listRevisionsAction(slug: string, documentId: string): Pro
       revisions: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
     };
   } catch (e) {
-    return { ok: false, error: message(e) };
+    return { ok: false, error: await message(e) };
   }
 }
 
@@ -136,7 +138,7 @@ export async function checkpointAction(slug: string, input: { documentId: string
     const res = await studio.createCheckpoint(scope, { id: input.documentId, label: input.label });
     return { ok: true as const, version: res.version };
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -146,7 +148,7 @@ export async function restoreRevisionAction(slug: string, input: { documentId: s
     await studio.restoreRevision(scope, { id: input.documentId, revisionId: input.revisionId });
     return loadDraftAction(slug, input.documentId);
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -157,7 +159,7 @@ export async function rollbackAction(slug: string, input: { documentId: string; 
     await studio.notifyRevalidate(site.slug, [studio.documentTag(input.documentId)]);
     return loadDraftAction(slug, input.documentId);
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -175,10 +177,11 @@ export async function localeTextsAction(
   try {
     const { scope, site } = await context(slug);
     const rows = await getLocales(site.id);
+    const { localeName } = await getFormatters();
     const multilingual = (site.capabilities ?? []).includes("locales");
     const locales: LocaleText[] = [];
     for (const l of rows) {
-      const label = localeLabel[l.locale] ?? l.locale;
+      const label = localeName(l.locale);
       if (l.isPrimary) {
         locales.unshift({ locale: l.locale, label, primary: true, text: null, status: "source" });
         continue;
@@ -190,6 +193,6 @@ export async function localeTextsAction(
     }
     return { ok: true, locales };
   } catch (e) {
-    return { ok: false, error: message(e) };
+    return { ok: false, error: await message(e) };
   }
 }

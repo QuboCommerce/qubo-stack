@@ -1,0 +1,100 @@
+{
+  "dashboard": {
+    "greeting": {
+      "morning": "Bonjour, {name}",
+      "afternoon": "Bon après-midi, {name}",
+      "evening": "Bonsoir, {name}"
+    },
+    "viewSite": "Voir le site",
+    "connectDomain": "Connecter un domaine",
+    "noDomainTitle": "Ce site n'a pas encore de domaine vérifié",
+    "customize": "Personnaliser",
+    "metrics": {
+      "sales30": "Ventes · 30 jours",
+      "orders30": "{count, plural, one {# commande} other {# commandes}}",
+      "openOrders": "Commandes en cours",
+      "allTime": "{count} au total",
+      "products": "Produits",
+      "activeProducts": "{count} actifs",
+      "customers": "Clients",
+      "importedRegistered": "importés et inscrits",
+      "inbox": "Messagerie",
+      "unreadConversations": "conversations non lues"
+    },
+    "sales": {
+      "title": "Ventes dans le temps",
+      "description": "30 derniers jours, hors commandes annulées et remboursées.",
+      "series": "Ventes",
+      "empty": "Aucune vente sur cette période"
+    },
+    "recentOrders": {
+      "title": "Commandes récentes",
+      "viewAll": "Tout voir",
+      "emptyTitle": "Vos commandes apparaîtront ici",
+      "emptyDescription": "Dès que le paiement de la boutique est actif, les nouvelles commandes arrivent ici en temps réel.",
+      "guest": "Invité"
+    },
+    "catalog": {
+      "title": "Qualité du catalogue",
+      "description": "Niveau de complétude de vos données produit.",
+      "withImages": "Avec images",
+      "active": "Actifs",
+      "inCollection": "Dans une collection",
+      "withBrand": "Avec une marque",
+      "ofTotal": "{value, number} sur {total, number}"
+    },
+    "setup": {
+      "title": "Guide de démarrage",
+      "progress": "{done} tâches sur {total} terminées",
+      "theme": {
+        "label": "Publier un thème",
+        "hint": "Couleurs, polices et ambiance de votre site."
+      },
+      "products": {
+        "label": "Ajouter des produits",
+        "hint": "{count, plural, one {# produit} other {# produits}} dans le catalogue."
+      },
+      "collections": {
+        "label": "Organiser les collections",
+        "hint": "Regroupez vos produits pour faciliter la navigation."
+      },
+      "brands": {
+        "label": "Renseigner les marques",
+        "hint": "{percent} % des produits ont une marque."
+      },
+      "translations": {
+        "label": "Publier les traductions",
+        "hint": "{count, plural, one {# langue configurée} other {# langues configurées}}."
+      },
+      "domain": {
+        "label": "Connecter un domaine",
+        "hint": "Faites pointer votre domaine vers Qubo."
+      }
+    },
+    "onlineStore": {
+      "title": "Boutique en ligne",
+      "manage": "Gérer",
+      "live": "En ligne",
+      "health": "Santé {value}",
+      "noThemeTitle": "Aucun thème pour l'instant",
+      "noThemeDescription": "Choisissez un thème de départ pour donner un style à votre site."
+    },
+    "languages": {
+      "title": "Langues",
+      "description": "Vos visiteurs voient votre site dans ces langues.",
+      "primary": "Principale",
+      "published": "Publiée",
+      "draft": "Brouillon"
+    },
+    "root": {
+      "noSitesTitle": "Aucun site pour l'instant",
+      "noSitesDescription": "Votre compte n'est lié à aucun site d'organisation."
+    },
+    "comingSoon": {
+      "title": "Cette section est prévue prochainement",
+      "description": "« {title} » fait partie d'une prochaine étape de Qubo. La navigation est déjà en place, rien ne bougera à son arrivée.",
+      "back": "Retour à l'accueil"
+    },
+    "count": "{count, number}"
+  }
+}

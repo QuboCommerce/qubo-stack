@@ -2,8 +2,6 @@ import { weekdays, type OpeningHoursRule, type Weekday } from "@qubo/db/schema";
 
 export { weekdays, type OpeningHoursRule, type Weekday };
 
-export const weekdayLabel: Record<Weekday, string> = { mo: "Monday", tu: "Tuesday", we: "Wednesday", th: "Thursday", fr: "Friday", sa: "Saturday", su: "Sunday" };
-
 export type DayHours = { open: boolean; opens: string; closes: string };
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -36,25 +34,25 @@ export function hoursFromForm(get: (name: string) => string): OpeningHoursRule[]
   return collapseHours(days);
 }
 
-/** schema.org LocalBusiness subtypes worth offering; anything else is a plain LocalBusiness. */
-export const businessTypes: { value: string; label: string }[] = [
-  { value: "", label: "Local business (general)" },
-  { value: "Store", label: "Store" },
-  { value: "WholesaleStore", label: "Wholesale store" },
-  { value: "HardwareStore", label: "Hardware store" },
-  { value: "FoodEstablishment", label: "Food establishment" },
-  { value: "Restaurant", label: "Restaurant" },
-  { value: "Bakery", label: "Bakery" },
-  { value: "ProfessionalService", label: "Professional service" },
-  { value: "HomeAndConstructionBusiness", label: "Home and construction" },
-  { value: "HealthAndBeautyBusiness", label: "Health and beauty" },
-  { value: "AutomotiveBusiness", label: "Automotive" },
-  { value: "LodgingBusiness", label: "Lodging" },
-  { value: "MedicalBusiness", label: "Medical" },
-  { value: "LegalService", label: "Legal service" },
-  { value: "FinancialService", label: "Financial service" },
-  { value: "RealEstateAgent", label: "Real estate agent" },
-  { value: "TravelAgency", label: "Travel agency" },
-  { value: "SportsActivityLocation", label: "Sports and fitness" },
-  { value: "EntertainmentBusiness", label: "Entertainment" },
-];
+/** schema.org LocalBusiness subtypes worth offering; anything else is a plain LocalBusiness. `key` indexes `settings.businessTypes` messages. */
+export const businessTypes = [
+  { value: "", key: "general" },
+  { value: "Store", key: "Store" },
+  { value: "WholesaleStore", key: "WholesaleStore" },
+  { value: "HardwareStore", key: "HardwareStore" },
+  { value: "FoodEstablishment", key: "FoodEstablishment" },
+  { value: "Restaurant", key: "Restaurant" },
+  { value: "Bakery", key: "Bakery" },
+  { value: "ProfessionalService", key: "ProfessionalService" },
+  { value: "HomeAndConstructionBusiness", key: "HomeAndConstructionBusiness" },
+  { value: "HealthAndBeautyBusiness", key: "HealthAndBeautyBusiness" },
+  { value: "AutomotiveBusiness", key: "AutomotiveBusiness" },
+  { value: "LodgingBusiness", key: "LodgingBusiness" },
+  { value: "MedicalBusiness", key: "MedicalBusiness" },
+  { value: "LegalService", key: "LegalService" },
+  { value: "FinancialService", key: "FinancialService" },
+  { value: "RealEstateAgent", key: "RealEstateAgent" },
+  { value: "TravelAgency", key: "TravelAgency" },
+  { value: "SportsActivityLocation", key: "SportsActivityLocation" },
+  { value: "EntertainmentBusiness", key: "EntertainmentBusiness" },
+] as const;

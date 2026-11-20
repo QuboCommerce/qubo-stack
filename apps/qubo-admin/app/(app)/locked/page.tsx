@@ -4,13 +4,16 @@ import { ArrowRight, Lock } from "lucide-react";
 import { db } from "@qubo/db/client";
 import { organization } from "@qubo/db/schema";
 import { inArray } from "drizzle-orm";
+import { getTranslations } from "next-intl/server";
 import { QuboMark, SiteAvatar } from "@/components/shell/qubo-mark";
 import { Button } from "@/components/ui/button";
+import { planKey } from "@/components/shell/labels";
 import { getAccess, getUserSites } from "@/lib/admin";
 
-export const metadata = { title: "Not covered by your plan" };
-
-const PLAN_LABEL: Record<string, string> = { free: "Free", starter: "Starter", growth: "Growth", agency: "Agency" };
+export async function generateMetadata() {
+  const t = await getTranslations("auth.locked");
+  return { title: t("metaTitle") };
+}
 
 /**
  * Where requireSite sends sites outside the instance's plan. Loads nothing from
@@ -18,6 +21,7 @@ const PLAN_LABEL: Record<string, string> = { free: "Free", starter: "Starter", g
  */
 export default async function Locked({ searchParams }: { searchParams: Promise<{ site?: string }> }) {
   const { site: slug } = await searchParams;
+  const [t, tShell] = await Promise.all([getTranslations("auth.locked"), getTranslations("shell")]);
   const [sites, licence] = await Promise.all([getUserSites(), getAccess()]);
   const locked = sites.find((s) => s.slug === slug);
   if (!locked) notFound();
@@ -25,10 +29,10 @@ export default async function Locked({ searchParams }: { searchParams: Promise<{
 
   const open = sites.filter((s) => !s.locked);
   const orgs = await db.select({ id: organization.id, name: organization.name }).from(organization).where(inArray(organization.id, [...new Set(sites.map((s) => s.organizationId))]));
-  const orgName = (id: string) => orgs.find((o) => o.id === id)?.name ?? "Organisation";
+  const orgName = (id: string) => orgs.find((o) => o.id === id)?.name ?? t("orgFallback");
   const orgLocked = licence.lockedOrgIds.has(locked.organizationId);
-  const plan = PLAN_LABEL[licence.entitlements.plan] ?? licence.entitlements.plan;
-  const fmt = (q: { used: number; limit: number | null }, noun: string) => `${q.used} ${noun}${q.used === 1 ? "" : "s"}${q.limit === null ? "" : ` · plan covers ${q.limit}`}`;
+  const key = planKey(licence.entitlements.plan);
+  const plan = key ? tShell(`plans.${key}`) : licence.entitlements.plan;
   const portalHref = open[0] ? `/${open[0].slug}/settings/portal` : null;
 
   return (
@@ -50,22 +54,21 @@ export default async function Locked({ searchParams }: { searchParams: Promise<{
           </div>
 
           <h1 className="mt-5 text-lg font-semibold tracking-tight">
-            {orgLocked ? "This organisation isn't covered by your plan" : "This site isn't covered by your plan"}
+            {orgLocked ? t("orgTitle") : t("siteTitle")}
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            This instance runs on <span className="font-medium text-foreground">{plan}</span>. {locked.name} stays online for visitors and nothing is deleted;
-            editing opens again once your plan covers it.
+            {t.rich("body", { plan, site: locked.name, b: (chunks) => <span className="font-medium text-foreground">{chunks}</span> })}
           </p>
 
           <dl className="mt-4 grid grid-cols-2 gap-3 rounded-xl bg-muted/50 p-3 text-[13px]">
-            <div><dt className="text-muted-foreground">Organisations</dt><dd className="font-medium">{fmt(licence.orgs, "org")}</dd></div>
-            <div><dt className="text-muted-foreground">Sites</dt><dd className="font-medium">{fmt(licence.sites, "site")}</dd></div>
+            <div><dt className="text-muted-foreground">{t("organisations")}</dt><dd className="font-medium">{licence.orgs.limit === null ? t("orgsUnlimited", { used: licence.orgs.used }) : t("orgsLimited", { used: licence.orgs.used, limit: licence.orgs.limit })}</dd></div>
+            <div><dt className="text-muted-foreground">{t("sites")}</dt><dd className="font-medium">{licence.sites.limit === null ? t("sitesUnlimited", { used: licence.sites.used }) : t("sitesLimited", { used: licence.sites.used, limit: licence.sites.limit })}</dd></div>
           </dl>
 
           {portalHref && (
             <Button asChild className="mt-5 w-full">
               <Link href={portalHref}>
-                {licence.entitlements.source === "unlinked" ? "Link a Qubo Portal account" : "Upgrade in Qubo Portal"} <ArrowRight />
+                {licence.entitlements.source === "unlinked" ? t("linkPortal") : t("upgrade")} <ArrowRight />
               </Link>
             </Button>
           )}
@@ -73,7 +76,7 @@ export default async function Locked({ searchParams }: { searchParams: Promise<{
 
         {open.length > 0 && (
           <section className="space-y-2">
-            <p className="px-1 text-[13px] text-muted-foreground">Continue with a site on your plan</p>
+            <p className="px-1 text-[13px] text-muted-foreground">{t("continueWith")}</p>
             <div className="divide-y rounded-2xl border bg-background">
               {open.map((s) => (
                 <Link key={s.id} href={`/${s.slug}`} className="flex items-center gap-3 px-4 py-3 transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-accent/40">
