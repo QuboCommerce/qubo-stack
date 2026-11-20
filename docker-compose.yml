@@ -105,6 +105,8 @@ services:
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EMAIL_FROM=${EMAIL_FROM:-}
       - EMAIL_INBOUND_DOMAIN=${EMAIL_INBOUND_DOMAIN:-}
+      # Product photos from the old shop, same folder the storefront serves.
+      - LEGACY_ASSET_ROOT=/data/legacy-products
       # Media library: local volume, or an S3-compatible bucket when STORAGE_ENDPOINT is set.
       - STORAGE_DIR=/data/media
       - STORAGE_ENDPOINT=${STORAGE_ENDPOINT:-}
@@ -113,6 +115,7 @@ services:
       - STORAGE_SECRET_KEY=${STORAGE_SECRET_KEY:-}
       - STORAGE_REGION=${STORAGE_REGION:-auto}
     volumes:
+      - ${LEGACY_ASSET_HOST_PATH:-./.private/legacy-archive/2026-09-18/assets/products}:/data/legacy-products:ro
       - media:/data/media
     depends_on:
       qubo-postgres:
