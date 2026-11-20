@@ -12,6 +12,7 @@ import {
   primaryKey,
   foreignKey,
 } from "drizzle-orm/pg-core";
+import { asset } from "./studio";
 import { site } from "./site";
 
 export const category = pgTable(
@@ -85,15 +86,24 @@ export const product = pgTable(
   ],
 );
 
-export const productImage = pgTable("product_image", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  productId: uuid("product_id")
-    .notNull()
-    .references(() => product.id, { onDelete: "cascade" }),
-  url: text("url").notNull(),
-  alt: text("alt"),
-  position: integer("position").notNull().default(0),
-});
+export const productImage = pgTable(
+  "product_image",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    productId: uuid("product_id")
+      .notNull()
+      .references(() => product.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    /** Library file behind `url`; null for images that are not in the library yet (legacy imports). */
+    assetId: uuid("asset_id").references(() => asset.id, { onDelete: "cascade" }),
+    alt: text("alt"),
+    position: integer("position").notNull().default(0),
+  },
+  (table) => [
+    index("product_image_product_idx").on(table.productId, table.position),
+    index("product_image_asset_idx").on(table.assetId),
+  ],
+);
 
 export const productCategory = pgTable(
   "product_category",

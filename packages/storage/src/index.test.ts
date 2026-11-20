@@ -1,11 +1,19 @@
 import { describe, expect, test } from "bun:test";
-import { checkFile, cleanFilename, extOf, formatBytes, mediaKeyFromPath, mediaUrl } from "./index";
+import { assetIdFromUrl, checkFile, cleanFilename, extOf, formatBytes, mediaKeyFromPath, mediaUrl } from "./index";
 
 const bytes = (...b: (number | string)[]) => new Uint8Array(b.flatMap((x) => (typeof x === "string" ? [...x].map((c) => c.charCodeAt(0)) : [x])));
 const png = bytes(0x89, "PNG", 0x0d, 0x0a, 0x1a, 0x0a);
 const jpg = bytes(0xff, 0xd8, 0xff, 0xe0);
 
 describe("checkFile", () => {
+  test("media takes plain documents but not office files or scripts", () => {
+    expect(checkFile("media", "notes.md", bytes("# Hi")).ok).toBe(true);
+    expect(checkFile("media", "data.json", bytes('{"a":1}')).ok).toBe(true);
+    expect(checkFile("media", "data.json", bytes("{nope")).ok).toBe(false);
+    expect(checkFile("media", "list.csv", bytes("a,b")).ok).toBe(true);
+    expect(checkFile("media", "doc.docx", bytes(0x50, 0x4b, 0x03, 0x04)).ok).toBe(false);
+    expect(checkFile("media", "run.sh", bytes("#!/bin/sh")).ok).toBe(false);
+  });
   test("accepts matching content", () => {
     expect(checkFile("media", "Logo.PNG", png)).toEqual({ ok: true, file: { ext: "png", mime: "image/png", kind: "image" } });
     expect(checkFile("media", "photo.jpeg", jpg).ok).toBe(true);
@@ -36,6 +44,14 @@ describe("names and keys", () => {
     expect(mediaKeyFromPath(`${org}/${id}.png`)).toEqual({ key: `media/${org}/${id}.png`, ext: "png", assetId: id });
     expect(mediaKeyFromPath(`../inbox/${id}.png`)).toBeNull();
     expect(mediaKeyFromPath(`${org}/${id}.exe`)).toBeNull();
+  });
+  test("asset ids come from relative or absolute media URLs only", () => {
+    const org = "0b6a1c3e-8f1d-4a52-9d3e-2b7c9f0a1e44";
+    const id = "1c6a1c3e-8f1d-4a52-9d3e-2b7c9f0a1e45";
+    expect(assetIdFromUrl(`/api/media/${org}/${id}.jpg`)).toBe(id);
+    expect(assetIdFromUrl(`https://shop.be/api/media/${org}/${id.toUpperCase()}.JPG?v=2`)).toBe(id);
+    expect(assetIdFromUrl("/api/legacy-assets/A77006.JPG")).toBeNull();
+    expect(assetIdFromUrl(`/api/media/${org}/${id}.exe`)).toBeNull();
   });
 });
 
