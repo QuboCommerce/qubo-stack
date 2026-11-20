@@ -1,7 +1,8 @@
 import { db } from "@qubo/db/client";
+import { createHash } from "node:crypto";
 import { asset, assetUsage, document, page, product, productImage } from "@qubo/db/schema";
 import { and, count, desc, eq, ilike, inArray, isNull, like, lt, or, sql, type SQL } from "drizzle-orm";
-import { checkFile, cleanFilename, mediaKey, mediaUrl, problemMessage, type FileKind } from "./index";
+import { assetIdFromUrl, checkFile, cleanFilename, mediaKey, mediaUrl, problemMessage, type FileKind } from "./index";
 import { dimensions, storage } from "./server";
 
 /**
@@ -65,6 +66,7 @@ export async function uploadAsset(input: { orgId: string; siteId: string | null;
       width: dims?.width ?? null,
       height: dims?.height ?? null,
       alt: input.alt?.trim().slice(0, 300) ?? "",
+      sha256: createHash("sha256").update(input.bytes).digest("hex"),
       createdById: input.userId,
     })
     .returning();
@@ -119,25 +121,27 @@ export async function updateAsset(orgId: string, id: string, patch: { alt?: stri
   return row ? toMediaItem(row) : null;
 }
 
-/** Where an asset is used: page documents and products. */
+/** Where an asset is used: page documents (usage rows) and product galleries (`product_image.asset_id`). */
 export async function assetUsages(ids: string[]) {
-  if (!ids.length) return new Map<string, { documents: { id: string; title: string | null }[]; products: { id: string; name: string }[] }>();
-  const rows = await db
-    .select({ assetId: assetUsage.assetId, documentId: assetUsage.documentId, ownerRef: assetUsage.ownerRef, title: page.title, kind: document.kind })
-    .from(assetUsage)
-    .leftJoin(document, eq(document.id, assetUsage.documentId))
-    .leftJoin(page, eq(page.documentId, assetUsage.documentId))
-    .where(inArray(assetUsage.assetId, ids));
-  const productIds = [...new Set(rows.flatMap((r) => (r.ownerRef?.startsWith("product:") ? [r.ownerRef.slice(8)] : [])))];
-  const products = productIds.length ? await db.select({ id: product.id, name: product.name }).from(product).where(inArray(product.id, productIds)) : [];
-  const names = new Map(products.map((p) => [p.id, p.name]));
-  const out = new Map<string, { documents: { id: string; title: string | null }[]; products: { id: string; name: string }[] }>();
-  for (const r of rows) {
-    const u = out.get(r.assetId) ?? { documents: [], products: [] };
-    if (r.documentId) u.documents.push({ id: r.documentId, title: r.title ?? (r.kind ? String(r.kind) : null) });
-    else if (r.ownerRef?.startsWith("product:") && names.has(r.ownerRef.slice(8))) u.products.push({ id: r.ownerRef.slice(8), name: names.get(r.ownerRef.slice(8))! });
-    out.set(r.assetId, u);
-  }
+  type Usage = { documents: { id: string; title: string | null }[]; products: { id: string; name: string }[] };
+  const out = new Map<string, Usage>();
+  if (!ids.length) return out;
+  const [docs, products] = await Promise.all([
+    db
+      .select({ assetId: assetUsage.assetId, documentId: assetUsage.documentId, title: page.title, kind: document.kind })
+      .from(assetUsage)
+      .innerJoin(document, eq(document.id, assetUsage.documentId))
+      .leftJoin(page, eq(page.documentId, assetUsage.documentId))
+      .where(inArray(assetUsage.assetId, ids)),
+    db
+      .selectDistinct({ assetId: productImage.assetId, id: product.id, name: product.name })
+      .from(productImage)
+      .innerJoin(product, eq(product.id, productImage.productId))
+      .where(inArray(productImage.assetId, ids)),
+  ]);
+  const get = (id: string) => out.get(id) ?? (out.set(id, { documents: [], products: [] }), out.get(id)!);
+  for (const r of docs) get(r.assetId).documents.push({ id: r.documentId!, title: r.title ?? String(r.kind) });
+  for (const r of products) get(r.assetId!).products.push({ id: r.id, name: r.name });
   return out;
 }
 
@@ -146,24 +150,21 @@ export async function assetUsages(ids: string[]) {
  * that still point at it lose the image; callers warn with the usage first.
  */
 export async function deleteAsset(orgId: string, id: string) {
-  const row = await db.transaction(async (tx) => {
-    const [a] = await tx.delete(asset).where(and(eq(asset.id, id), eq(asset.organizationId, orgId))).returning({ key: asset.key });
-    if (a) await tx.delete(productImage).where(eq(productImage.url, mediaUrl(orgId, id, extOfKey(a.key))));
-    return a;
-  });
+  // product_image rows go with it (asset_id cascades).
+  const [row] = await db.delete(asset).where(and(eq(asset.id, id), eq(asset.organizationId, orgId))).returning({ key: asset.key });
   if (row) await storage().delete(row.key).catch((e) => console.error("[media] file delete failed", row.key, e));
   return Boolean(row);
 }
 
-/** Replaces `product:<id>` usage rows with the assets now on that product. */
-export async function syncProductUsage(productId: string, urls: string[]) {
-  const ids = urls.flatMap((u) => u.match(/\/api\/media\/[0-9a-f-]{36}\/([0-9a-f-]{36})\./i)?.[1] ?? []);
-  const ownerRef = `product:${productId}`;
-  await db.delete(assetUsage).where(eq(assetUsage.ownerRef, ownerRef));
-  if (ids.length) {
-    const known = await db.select({ id: asset.id }).from(asset).where(inArray(asset.id, ids));
-    if (known.length) await db.insert(assetUsage).values(known.map((a) => ({ assetId: a.id, ownerRef })));
-  }
+/** Library asset id for each gallery URL, only for files that belong to this organisation. */
+export async function galleryAssetIds(orgId: string, urls: string[]) {
+  const ids = [...new Set(urls.flatMap((u) => assetIdFromUrl(u) ?? []))];
+  const known = ids.length ? await db.select({ id: asset.id }).from(asset).where(and(inArray(asset.id, ids), eq(asset.organizationId, orgId))) : [];
+  const ok = new Set(known.map((a) => a.id));
+  return urls.map((u) => {
+    const id = assetIdFromUrl(u);
+    return id && ok.has(id) ? id : null;
+  });
 }
 
 export async function libraryStats(orgId: string) {

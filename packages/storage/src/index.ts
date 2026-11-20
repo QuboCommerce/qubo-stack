@@ -94,6 +94,12 @@ export function mediaKeyFromPath(path: string): { key: string; ext: string; asse
   return { key: `media/${m[1]}/${m[2]}.${m[3]}`, ext: m[3]!, assetId: m[2]! };
 }
 
+/** Library asset id in a media URL (relative or absolute), or null for anything else. */
+export function assetIdFromUrl(url: string): string | null {
+  const i = url.indexOf("/api/media/");
+  return i < 0 ? null : (mediaKeyFromPath(url.slice(i + 11).split(/[?#]/)[0]!)?.assetId ?? null);
+}
+
 /** Private inbox files: never public, read through a signed short-lived URL. */
 export const inboxKey = (siteId: string, conversationId: string, fileId: string, ext: string) => `inbox/${siteId}/${conversationId}/${fileId}.${ext}`;
 
