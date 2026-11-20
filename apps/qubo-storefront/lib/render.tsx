@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { pageSettings, registry, walkNodes, type DocumentData, type RenderMetadata, type SiteType, type Capability } from "@qubo/blocks";
 import type { CollectionHeaderData, ProductCard, ProductDetailData, SiteTreeGroup, SiteTreeItem } from "@qubo/blocks";
 import { QuboRender } from "@qubo/blocks/render";
 import { runtimeTheme } from "@qubo/blocks/runtime";
-import type { ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
+import type { CategoryNode, CollectionSummary, ProductDetail, ProductListItem, RenderDocument } from "@qubo/storefront";
 import { localeLinks, logicalPath, requestPath, type Storefront } from "./site";
 import { tidyName } from "./names";
 export { tidyName };
@@ -15,7 +16,7 @@ import { SiteRuntime } from "@/components/site-runtime";
 
 /** What the current route is about; dynamic blocks default to it. */
 export type ViewContext = {
-  /** Collection (category) handle on /collections/<handle>. */
+  /** Handle on /collections/<handle>: `all`, a category, a collection or the sale page. */
   collection?: string;
   /** Product on /products/<slug>; feeds ProductDetail and is excluded from its own grids. */
   product?: ProductDetail;
@@ -70,6 +71,33 @@ export function saleTitle(locale: string): string {
   return lang === "fr" ? "Promotions" : lang === "nl" ? "Promoties" : "On sale";
 }
 
+/** What `/collections/<handle>` shows. */
+export type CollectionHit =
+  | { kind: "all"; categories: CategoryNode[] }
+  | { kind: "category"; category: CategoryNode; categories: CategoryNode[] }
+  | { kind: "collection"; collection: CollectionSummary; categories: CategoryNode[] }
+  | { kind: "sale"; categories: CategoryNode[] };
+
+/**
+ * Resolves a collection handle: `all`, then a category slug, then a published collection,
+ * then the virtual sale page. Collections are only fetched when no category matched.
+ * Memoised per request, so the page, its metadata and every block share one lookup.
+ */
+export const resolveCollection = cache(async (sf: Storefront, handle: string): Promise<CollectionHit | null> => {
+  const categories = await sf.client.getCategories();
+  if (handle === "all") return { kind: "all", categories };
+  const category = categories.find((c) => c.slug === handle);
+  if (category) return { kind: "category", category, categories };
+  const collections = await sf.client.getCollections().catch((error) => {
+    // A collections outage must not take the sale page down with it.
+    console.warn("[storefront] collections failed", error);
+    return [] as CollectionSummary[];
+  });
+  const collection = collections.find((c) => c.slug === handle);
+  if (collection) return { kind: "collection", collection, categories };
+  return handle === SALE_HANDLE ? { kind: "sale", categories } : null;
+});
+
 /** Whole-percent saving when the compare-at price is above the price, else null. */
 export function salePercent(price: string | null, compareAt: string | null): number | null {
   const now = Number(price);
@@ -114,19 +142,23 @@ async function siteTree(sf: Storefront, labels: { pages: string; collections: st
   ];
 }
 
-/** Name, breadcrumb, description, subtree product count and children of the viewed collection. */
+/** Name, breadcrumb, description, product count and children of the viewed collection. */
 async function collectionHeader(sf: Storefront, handle: string, allTitle: string): Promise<CollectionHeaderData | null> {
-  const categories = await sf.client.getCategories();
+  const hit = await resolveCollection(sf, handle);
+  if (!hit) return null;
+  const { categories } = hit;
   const byId = new Map(categories.map((c) => [c.id, c]));
-  const current = handle === "all" ? null : categories.find((c) => c.slug === handle);
   const home = { label: homeLabel(sf.locale), href: at(sf, "/") };
-  if (!current) {
-    const roots = categories.filter((c) => !c.parentId);
-    if (handle === SALE_HANDLE) return { name: saleTitle(sf.locale), description: null, count: null, crumbs: [home], children: [] };
-    return handle === "all"
-      ? { name: allTitle, description: null, count: null, crumbs: [home], children: roots.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })) }
-      : null;
+  if (hit.kind === "sale") return { name: saleTitle(sf.locale), description: null, count: null, crumbs: [home], children: [] };
+  if (hit.kind === "collection") {
+    const c = hit.collection;
+    return { name: c.name, description: c.description, count: c.productCount, crumbs: [home], children: [] };
   }
+  if (hit.kind === "all") {
+    const roots = categories.filter((c) => !c.parentId);
+    return { name: allTitle, description: null, count: null, crumbs: [home], children: roots.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })) };
+  }
+  const current = hit.category;
   const crumbs = [home];
   const chain: typeof categories = [];
   for (let p = current.parentId ? byId.get(current.parentId) : undefined; p; p = p.parentId ? byId.get(p.parentId) : undefined) chain.unshift(p);
@@ -215,9 +247,12 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
         } else {
           // On a product page an unset collection means "the same shelf as this product".
           const handle = props.source === "collection" ? props.collection?.trim() || view.collection || view.product?.categories[0]?.slug : undefined;
-          const sale = handle === SALE_HANDLE && !(await sf.client.getCategories()).some((c) => c.slug === SALE_HANDLE);
-          const category = handle && handle !== "all" && !sale ? handle : undefined;
-          items = (await sf.client.getProducts({ category, onSale: sale, limit: limit + 1 })).products;
+          const hit = handle && handle !== "all" ? await resolveCollection(sf, handle) : null;
+          const sale = hit?.kind === "sale";
+          const collection = hit?.kind === "collection" ? handle : undefined;
+          // An unknown handle still goes out as a category, which lists nothing.
+          const category = handle && handle !== "all" && !sale && !collection ? handle : undefined;
+          items = (await sf.client.getProducts({ category, collection, onSale: sale, limit: limit + 1 })).products;
         }
         return [props.id, items.filter((p) => p.slug !== view.product?.slug).slice(0, limit).map((p) => toCard(sf, p))];
       })().catch((error) => {
@@ -283,7 +318,15 @@ export async function RenderView({ sf, body, view = {}, documentId }: { sf: Stor
  */
 export async function viewMetadata(
   sf: Storefront | null,
-  opts: { title?: string | null; description?: string | null; body?: RenderDocument | null; home?: boolean; paths?: Record<string, string> } = {},
+  opts: {
+    title?: string | null;
+    description?: string | null;
+    body?: RenderDocument | null;
+    home?: boolean;
+    paths?: Record<string, string>;
+    /** Share image URL for this page; replaces the brand's default OG image. */
+    image?: string | null;
+  } = {},
 ): Promise<Metadata> {
   if (!sf) return { title: "No site on this host", robots: { index: false, follow: false } };
   // Canonical drops the query: filters/sorting/tracking params are the same page.
@@ -300,7 +343,11 @@ export async function viewMetadata(
   const description = plainText(opts.description, 300) ?? plainText(sf.seo.description, 300);
   const brand = sf.theme?.brand;
   const icon = brand?.favicon?.url || brand?.mark?.url;
-  const og = brand?.ogImage?.url ? [{ url: brand.ogImage.url, alt: brand.ogImage.alt || sf.site.name, width: brand.ogImage.width, height: brand.ogImage.height }] : undefined;
+  const og = opts.image
+    ? [{ url: opts.image, alt: own || sf.site.name }]
+    : brand?.ogImage?.url
+      ? [{ url: brand.ogImage.url, alt: brand.ogImage.alt || sf.site.name, width: brand.ogImage.width, height: brand.ogImage.height }]
+      : undefined;
   return {
     title: { absolute: title },
     icons: icon ? { icon, apple: brand?.mark?.url || icon } : undefined,

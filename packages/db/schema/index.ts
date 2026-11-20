@@ -17,6 +17,9 @@ export * from "./variants";
 // Inventory
 export * from "./inventory";
 
+// Collections
+export * from "./collections";
+
 // Cart
 export * from "./cart";
 

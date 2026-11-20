@@ -55,7 +55,6 @@ const groups: NavGroup[] = [
           { key: "categories", href: "/products/categories" },
           { key: "collections", href: "/products/collections" },
           { key: "inventory", href: "/products/inventory", requires: ["commerce"] },
-          { key: "giftCards", href: "/products/gift-cards", requires: ["commerce"] },
         ],
       },
       {
