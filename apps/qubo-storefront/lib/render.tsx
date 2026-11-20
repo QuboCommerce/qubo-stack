@@ -62,13 +62,32 @@ function money(sf: Storefront, amount: string | null) {
   return new Intl.NumberFormat(sf.locale, { style: "currency", currency: sf.site.currency }).format(value);
 }
 
+/** Virtual collection of discounted products, unless a real category already uses the slug. */
+export const SALE_HANDLE = "promotions";
+
+export function saleTitle(locale: string): string {
+  const lang = locale.slice(0, 2);
+  return lang === "fr" ? "Promotions" : lang === "nl" ? "Promoties" : "On sale";
+}
+
+/** Whole-percent saving when the compare-at price is above the price, else null. */
+export function salePercent(price: string | null, compareAt: string | null): number | null {
+  const now = Number(price);
+  const was = Number(compareAt);
+  if (!compareAt || !Number.isFinite(now) || !Number.isFinite(was) || was <= now || was <= 0) return null;
+  const pct = Math.round((1 - now / was) * 100);
+  return pct > 0 ? pct : null;
+}
+
 function toCard(sf: Storefront, p: ProductListItem): ProductCard {
+  const pct = salePercent(p.price, p.compareAtPrice);
   return {
     title: tidyName(p.name),
     href: at(sf, `/products/${p.slug}`),
     image: p.image ? { src: p.image, alt: tidyName(p.name) } : undefined,
     price: money(sf, p.price),
-    compareAt: p.compareAtPrice ? money(sf, p.compareAtPrice) : undefined,
+    compareAt: pct ? money(sf, p.compareAtPrice) : undefined,
+    badge: pct ? `−${pct}%` : undefined,
   };
 }
 
@@ -103,6 +122,7 @@ async function collectionHeader(sf: Storefront, handle: string, allTitle: string
   const home = { label: homeLabel(sf.locale), href: at(sf, "/") };
   if (!current) {
     const roots = categories.filter((c) => !c.parentId);
+    if (handle === SALE_HANDLE) return { name: saleTitle(sf.locale), description: null, count: null, crumbs: [home], children: [] };
     return handle === "all"
       ? { name: allTitle, description: null, count: null, crumbs: [home], children: roots.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })) }
       : null;
@@ -195,8 +215,9 @@ async function loadBlockData(sf: Storefront, data: DocumentData, view: ViewConte
         } else {
           // On a product page an unset collection means "the same shelf as this product".
           const handle = props.source === "collection" ? props.collection?.trim() || view.collection || view.product?.categories[0]?.slug : undefined;
-          const category = handle && handle !== "all" ? handle : undefined;
-          items = (await sf.client.getProducts({ category, limit: limit + 1 })).products;
+          const sale = handle === SALE_HANDLE && !(await sf.client.getCategories()).some((c) => c.slug === SALE_HANDLE);
+          const category = handle && handle !== "all" && !sale ? handle : undefined;
+          items = (await sf.client.getProducts({ category, onSale: sale, limit: limit + 1 })).products;
         }
         return [props.id, items.filter((p) => p.slug !== view.product?.slug).slice(0, limit).map((p) => toCard(sf, p))];
       })().catch((error) => {

@@ -1,4 +1,5 @@
 import {
+  BadgePercent,
   BarChart3,
   CalendarCheck,
   FileText,
@@ -6,7 +7,6 @@ import {
   Image,
   Inbox,
   type LucideIcon,
-  Megaphone,
   Paintbrush,
   Settings,
   ShoppingBag,
@@ -82,7 +82,13 @@ const groups: NavGroup[] = [
         ],
       },
       { label: "Media", href: "/media", icon: Image },
-      { label: "Marketing", href: "/marketing", icon: Megaphone, children: [{ label: "Discounts", href: "/marketing/discounts", requires: ["commerce"] }] },
+      {
+        label: "Promotions",
+        href: "/promotions",
+        icon: BadgePercent,
+        requires: ["commerce"],
+        children: [{ label: "Discount codes", href: "/promotions/codes" }],
+      },
       { label: "Analytics", href: "/analytics", icon: BarChart3, children: [{ label: "Reports", href: "/analytics/reports" }] },
     ],
   },
