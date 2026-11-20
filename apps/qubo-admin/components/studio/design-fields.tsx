@@ -6,6 +6,7 @@ import { formatOklch, resolveRoleColor, type Gradient, type Mode, type Theme } f
 import { cn } from "@qubo/shared/utils";
 import { AlertTriangle, Highlighter, Loader2 } from "lucide-react";
 import { Fragment, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { localeTextsAction, type LocaleText } from "@/app/studio-actions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -57,6 +58,11 @@ function gradientPreview(theme: Theme, g: Gradient): string {
   return `linear-gradient(${g.angle}deg, ${stops})`;
 }
 
+function MissingLabel({ value }: { value: string }) {
+  const t = useTranslations("studio.designFields");
+  return <>{t("missing", { value })}</>;
+}
+
 export const presetFieldAdapter: NonNullable<FieldAdapters["preset"]> = (def, ctx) =>
   ({
     type: "custom",
@@ -74,7 +80,7 @@ export const presetFieldAdapter: NonNullable<FieldAdapters["preset"]> = (def, ct
               {leading.map((o) => (
                 <SelectItem key={o.value || NONE} value={o.value || NONE} className="text-xs">{o.label}</SelectItem>
               ))}
-              {missing && <SelectItem value={current} className="text-xs text-destructive">Missing “{current}”</SelectItem>}
+              {missing && <SelectItem value={current} className="text-xs text-destructive"><MissingLabel value={current} /></SelectItem>}
               {items.map((p) => (
                 <SelectItem key={p.id} value={p.id} className="text-xs">
                   <span className="flex items-center gap-2">
@@ -185,6 +191,7 @@ function DecorField({
   onChange: (v: DecorValue) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations("studio.designFields");
   const [open, setOpen] = useState(false);
   const path = textPathFor(name, of);
   const nodeId = usePuck((s) => (s.selectedItem?.props as { id?: string } | undefined)?.id ?? "");
@@ -201,9 +208,9 @@ function DecorField({
     <FieldLabel label={label} el="div" readOnly={readOnly}>
       <div className="space-y-2">
         <Select value={value.preset || NONE} onValueChange={(v) => onChange({ ...value, preset: v === NONE ? "" : v })} disabled={readOnly}>
-          <SelectTrigger size="sm" className="h-8 w-full text-xs" aria-label="Highlight style"><SelectValue /></SelectTrigger>
+          <SelectTrigger size="sm" className="h-8 w-full text-xs" aria-label={t("highlightStyle")}><SelectValue /></SelectTrigger>
           <SelectContent position="popper" className="max-h-80">
-            <SelectItem value={NONE} className="text-xs">No highlight</SelectItem>
+            <SelectItem value={NONE} className="text-xs">{t("noHighlight")}</SelectItem>
             {presets.map((d) => <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>)}
           </SelectContent>
         </Select>
@@ -216,7 +223,7 @@ function DecorField({
           >
             <Highlighter className="size-3.5 shrink-0 text-muted-foreground" />
             <span className="min-w-0 flex-1 truncate">
-              {picked.length ? picked.map((p) => `“${p}”`).join(", ") : <span className="text-muted-foreground">Choose the words to highlight</span>}
+              {picked.length ? picked.map((p) => `“${p}”`).join(", ") : <span className="text-muted-foreground">{t("chooseWords")}</span>}
             </span>
             {otherLanguages > 0 && <span className="shrink-0 rounded bg-muted px-1.5 py-px text-[10px] text-muted-foreground">+{otherLanguages}</span>}
           </button>
@@ -257,6 +264,7 @@ function DecorDialog({
   onClose: () => void;
   onSave: (v: DecorValue) => void;
 }) {
+  const t = useTranslations("studio.designFields");
   const [locales, setLocales] = useState<LocaleText[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<DecorValue>(value);
@@ -268,7 +276,7 @@ function DecorDialog({
       if (res.ok) setLocales(res.locales.map((l) => (l.primary ? { ...l, text: primaryText } : l)));
       else {
         setError(res.error);
-        setLocales([{ locale: "en", label: "Main language", primary: true, text: primaryText, status: "source" }]);
+        setLocales([{ locale: "en", label: t("mainLanguage"), primary: true, text: primaryText, status: "source" }]);
       }
     });
     return () => {
@@ -291,22 +299,22 @@ function DecorDialog({
       <DialogContent className="sm:max-w-2xl">
         <ThemeStyles theme={theme} />
         <DialogHeader>
-          <DialogTitle>Highlight words</DialogTitle>
-          <DialogDescription>Click the words to mark in each language. Neighbouring words join into one mark.</DialogDescription>
+          <DialogTitle>{t("dialogTitle")}</DialogTitle>
+          <DialogDescription>{t("dialogDescription")}</DialogDescription>
         </DialogHeader>
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-medium">Style</span>
+          <span className="text-[13px] font-medium">{t("style")}</span>
           <Select value={draft.preset || NONE} onValueChange={(v) => setDraft({ ...draft, preset: v === NONE ? "" : v })}>
             <SelectTrigger size="sm" className="h-8 w-48 text-xs"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value={NONE} className="text-xs">No highlight</SelectItem>
+              <SelectItem value={NONE} className="text-xs">{t("noHighlight")}</SelectItem>
               {theme.decor.map((d) => <SelectItem key={d.id} value={d.id} className="text-xs">{d.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
         <div className="-mx-1 max-h-[60dvh] space-y-3 overflow-y-auto px-1">
           {!locales ? (
-            <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading languages…</div>
+            <div className="flex items-center gap-2 py-8 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> {t("loadingLanguages")}</div>
           ) : (
             locales.map((l) => <LocaleRow key={l.locale} theme={theme} entry={l} value={draft} onPick={(text, at) => setRangesFor(text, at)} />)
           )}
@@ -316,13 +324,13 @@ function DecorDialog({
           <span className="text-xs text-muted-foreground">
             {stale > 0 && (
               <button type="button" className="underline-offset-2 hover:underline" onClick={() => setDraft({ ...draft, ranges: draft.ranges.filter((r) => current.has(r.hash)) })}>
-                Remove {stale} selection{stale === 1 ? "" : "s"} for old wording
+                {t("removeStale", { count: stale })}
               </button>
             )}
           </span>
           <span className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
-            <Button onClick={() => onSave({ ...draft, match: draft.ranges.some((r) => r.hash === hashText(primaryText)) ? "" : draft.match })}>Save</Button>
+            <Button variant="outline" onClick={onClose}>{t("cancel")}</Button>
+            <Button onClick={() => onSave({ ...draft, match: draft.ranges.some((r) => r.hash === hashText(primaryText)) ? "" : draft.match })}>{t("save")}</Button>
           </span>
         </DialogFooter>
       </DialogContent>
@@ -330,12 +338,12 @@ function DecorDialog({
   );
 }
 
-const statusNote: Partial<Record<LocaleText["status"], string>> = {
-  stale: "Translation is out of date",
-  draft: "Draft translation",
-};
-
 function LocaleRow({ theme, entry, value, onPick }: { theme: Theme; entry: LocaleText; value: DecorValue; onPick: (text: string, at: [number, number][]) => void }) {
+  const t = useTranslations("studio.designFields");
+  const statusNote: Partial<Record<LocaleText["status"], string>> = {
+    stale: t("statusStale"),
+    draft: t("statusDraft"),
+  };
   const text = entry.text ?? "";
   const words = useMemo(() => wordsOf(text, entry.locale), [text, entry.locale]);
   const own = value.ranges.find((r) => r.hash === hashText(text));
@@ -376,14 +384,14 @@ function LocaleRow({ theme, entry, value, onPick }: { theme: Theme; entry: Local
       <header className="mb-2 flex items-center gap-2">
         <span className="text-[13px] font-medium">{entry.label}</span>
         <span className="font-mono text-[11px] text-muted-foreground">{entry.locale}</span>
-        {entry.primary && <span className="rounded bg-muted px-1.5 py-px text-[10px] text-muted-foreground">Main</span>}
+        {entry.primary && <span className="rounded bg-muted px-1.5 py-px text-[10px] text-muted-foreground">{t("main")}</span>}
         {statusNote[entry.status] && (
           <span className="flex items-center gap-1 text-[11px] text-amber-600"><AlertTriangle className="size-3" />{statusNote[entry.status]}</span>
         )}
-        {!own && at.length > 0 && <span className="text-[11px] text-muted-foreground">Matched by phrase</span>}
+        {!own && at.length > 0 && <span className="text-[11px] text-muted-foreground">{t("matchedByPhrase")}</span>}
       </header>
       {entry.text === null ? (
-        <p className="text-xs text-muted-foreground">Not translated yet. Pick words once the translation exists.</p>
+        <p className="text-xs text-muted-foreground">{t("notTranslated")}</p>
       ) : (
         <>
           <p className="text-[15px] leading-relaxed">{pieces}</p>

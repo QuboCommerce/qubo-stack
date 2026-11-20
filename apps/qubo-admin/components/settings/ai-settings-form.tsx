@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Check, ExternalLink, PlugZap } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { PROVIDERS, providerById } from "@qubo/ai";
 import { removeAiSettingsAction, saveAiInstructionsAction, saveAiSettingsAction, testAiAction } from "@/app/ai-actions";
 import { Field, Select, SwitchRow, TextArea, TextInput } from "@/components/settings/controls";
@@ -10,19 +11,22 @@ import { Button } from "@/components/ui/button";
 
 type Saved = { provider: string; model: string; baseUrl: string | null; apiKeyHint: string | null; triage: boolean; drafts: boolean; monthlyTokens: number | null } | null;
 
-function Status({ state, pending, okText = "Saved" }: { state: { ok?: boolean; error?: string } | null; pending: boolean; okText?: string }) {
+function Status({ state, pending }: { state: { ok?: boolean; error?: string } | null; pending: boolean }) {
+  const t = useTranslations("common");
   if (pending) return null;
   if (state?.error) return <p className="text-sm text-destructive">{state.error}</p>;
   if (state?.ok)
     return (
       <p className="flex items-center gap-1 text-sm text-muted-foreground">
-        <Check className="size-4" /> {okText}
+        <Check className="size-4" /> {t("saved")}
       </p>
     );
   return null;
 }
 
 export function AiSettingsForm({ site, saved, readOnly }: { site: string; saved: Saved; readOnly: boolean }) {
+  const t = useTranslations("settings.ai");
+  const tCommon = useTranslations("common");
   const [state, action, pending] = useActionState(saveAiSettingsAction, null);
   const [testState, test, testing] = useActionState(testAiAction, null);
   const [, remove, removing] = useActionState(removeAiSettingsAction, null);
@@ -36,7 +40,7 @@ export function AiSettingsForm({ site, saved, readOnly }: { site: string; saved:
         <form action={action}>
           <input type="hidden" name="site" value={site} />
           <fieldset disabled={readOnly} className="grid gap-4 p-4 sm:grid-cols-2 sm:p-5">
-            <Field label="Provider" htmlFor="ai-provider">
+            <Field label={t("provider")} htmlFor="ai-provider">
               <Select id="ai-provider" name="provider" value={providerId} onChange={(e) => setProviderId(e.target.value)}>
                 {PROVIDERS.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -45,7 +49,7 @@ export function AiSettingsForm({ site, saved, readOnly }: { site: string; saved:
                 ))}
               </Select>
             </Field>
-            <Field label="Model" htmlFor="ai-model" hint={provider.models.length ? `For example ${provider.models.join(", ")}.` : "The model name your server expects."}>
+            <Field label={t("model")} htmlFor="ai-model" hint={provider.models.length ? t("modelExamples", { models: provider.models.join(", ") }) : t("modelCustom")}>
               <TextInput id="ai-model" name="model" key={providerId} defaultValue={sameProvider ? saved?.model : provider.models[0]} list="ai-models" required maxLength={120} autoComplete="off" />
               <datalist id="ai-models">
                 {provider.models.map((m) => (
@@ -54,20 +58,20 @@ export function AiSettingsForm({ site, saved, readOnly }: { site: string; saved:
               </datalist>
             </Field>
             {!provider.baseUrl && (
-              <Field label="Server address" htmlFor="ai-base" className="sm:col-span-2" hint="Any server that speaks the OpenAI chat API: Ollama, LM Studio, vLLM, LiteLLM, Azure gateways.">
+              <Field label={t("serverAddress")} htmlFor="ai-base" className="sm:col-span-2" hint={t("serverAddressHint")}>
                 <TextInput id="ai-base" name="baseUrl" defaultValue={saved?.baseUrl ?? ""} placeholder="http://localhost:11434/v1" required inputMode="url" autoComplete="off" />
               </Field>
             )}
             <Field
-              label="API key"
+              label={t("apiKey")}
               htmlFor="ai-key"
               className="sm:col-span-2"
               hint={
                 <>
-                  Stored encrypted on this server and only sent to {provider.label}.{" "}
+                  {t("apiKeyHint", { provider: provider.label })}{" "}
                   {provider.keyUrl && (
                     <a href={provider.keyUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-0.5 underline underline-offset-2">
-                      Get a key <ExternalLink className="size-3" />
+                      {t("getKey")} <ExternalLink className="size-3" />
                     </a>
                   )}
                 </>
@@ -78,28 +82,28 @@ export function AiSettingsForm({ site, saved, readOnly }: { site: string; saved:
                 name="apiKey"
                 type="password"
                 key={`key-${providerId}`}
-                placeholder={sameProvider && saved?.apiKeyHint ? `Saved (${saved.apiKeyHint}). Leave empty to keep it.` : provider.keyRequired ? "Paste your key" : "Optional"}
+                placeholder={sameProvider && saved?.apiKeyHint ? t("keySaved", { hint: saved.apiKeyHint }) : provider.keyRequired ? t("keyPaste") : t("keyOptional")}
                 autoComplete="off"
                 spellCheck={false}
               />
               {sameProvider && saved?.apiKeyHint && !provider.keyRequired && (
                 <label className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground">
-                  <input type="checkbox" name="clearKey" /> Remove the saved key
+                  <input type="checkbox" name="clearKey" /> {t("removeKey")}
                 </label>
               )}
             </Field>
-            <Field label="Monthly token budget" htmlFor="ai-budget" hint="Input plus output tokens per calendar month. Empty means no cap; your provider bills you either way.">
-              <TextInput id="ai-budget" name="monthlyTokens" inputMode="numeric" defaultValue={saved ? (saved.monthlyTokens ?? "") : 2_000_000} placeholder="No cap" />
+            <Field label={t("budget")} htmlFor="ai-budget" hint={t("budgetHint")}>
+              <TextInput id="ai-budget" name="monthlyTokens" inputMode="numeric" defaultValue={saved ? (saved.monthlyTokens ?? "") : 2_000_000} placeholder={t("noCap")} />
             </Field>
           </fieldset>
           <fieldset disabled={readOnly} className="divide-y border-t">
-            <SwitchRow name="triage" defaultChecked={saved?.triage ?? true} label="Triage new messages" description="Summarise, categorise and flag urgent or spam conversations a few seconds after a customer writes." />
-            <SwitchRow name="drafts" defaultChecked={saved?.drafts ?? true} label="Reply drafts" description="Adds Draft with AI to the composer. Drafts are never sent without someone pressing Send." />
+            <SwitchRow name="triage" defaultChecked={saved?.triage ?? true} label={t("triage")} description={t("triageHelp")} />
+            <SwitchRow name="drafts" defaultChecked={saved?.drafts ?? true} label={t("drafts")} description={t("draftsHelp")} />
           </fieldset>
           {!readOnly && (
             <div className="flex flex-wrap items-center gap-3 border-t px-4 py-3 sm:px-5">
               <Button type="submit" size="sm" disabled={pending}>
-                {pending ? "Saving…" : "Save"}
+                {pending ? t("saving") : tCommon("save")}
               </Button>
               <Status state={state} pending={pending} />
             </div>
@@ -112,24 +116,24 @@ export function AiSettingsForm({ site, saved, readOnly }: { site: string; saved:
             <input type="hidden" name="site" value={site} />
             <Button type="submit" size="sm" variant="outline" disabled={testing}>
               <PlugZap className="size-4" />
-              {testing ? "Testing…" : "Test connection"}
+              {testing ? t("testing") : t("test")}
             </Button>
           </form>
           <form
             action={remove}
             onSubmit={(e) => {
-              if (!confirm("Turn AI off for this organisation and forget the API key?")) e.preventDefault();
+              if (!confirm(t("confirmOff"))) e.preventDefault();
             }}
           >
             <input type="hidden" name="site" value={site} />
             <Button type="submit" size="sm" variant="ghost" disabled={removing} className="text-muted-foreground">
-              Turn off and forget key
+              {t("turnOff")}
             </Button>
           </form>
           {!testing && testState?.error && <p className="text-sm text-destructive">{testState.error}</p>}
           {!testing && testState?.ok && (
             <p className="flex items-center gap-1 text-sm text-muted-foreground">
-              <Check className="size-4" /> Connected. The model said “{testState.reply}”.
+              <Check className="size-4" /> {t("connected", { reply: testState.reply ?? "" })}
             </p>
           )}
         </div>
@@ -139,6 +143,7 @@ export function AiSettingsForm({ site, saved, readOnly }: { site: string; saved:
 }
 
 export function AiInstructionsForm({ site, value, readOnly }: { site: string; value: string; readOnly: boolean }) {
+  const t = useTranslations("settings.ai");
   const [state, action, pending] = useActionState(saveAiInstructionsAction, null);
   return (
     <Surface flush>
@@ -151,14 +156,14 @@ export function AiInstructionsForm({ site, value, readOnly }: { site: string; va
             disabled={readOnly}
             maxLength={4000}
             rows={7}
-            aria-label="Instructions for reply drafts"
-            placeholder={"We answer in the customer's language and use \"vous\" in French.\nOpening hours: Mon to Fri, 8:00 to 17:00.\nDelivery in Belgium takes 2 to 4 working days; installation is quoted separately.\nNever promise a delivery date; say the team will confirm it."}
+            aria-label={t("instructionsLabel")}
+            placeholder={t("instructionsPlaceholder")}
           />
         </div>
         {!readOnly && (
           <div className="flex items-center gap-3 border-t px-4 py-3 sm:px-5">
             <Button type="submit" size="sm" variant="outline" disabled={pending}>
-              {pending ? "Saving…" : "Save instructions"}
+              {pending ? t("saving") : t("saveInstructions")}
             </Button>
             <Status state={state} pending={pending} />
           </div>

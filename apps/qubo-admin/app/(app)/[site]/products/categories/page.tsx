@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { ArrowDown, ArrowUp, FolderTree, ImageOff, Plus } from "lucide-react";
 import { db } from "@qubo/db/client";
 import { category, product, productCategory, productImage } from "@qubo/db/schema";
@@ -14,12 +15,12 @@ import { Button } from "@/components/ui/button";
 import { requireSite } from "@/lib/admin";
 import { getCategoryTree, subtreeIds } from "@/lib/categories";
 import { categoryValues } from "@/lib/form-specs";
-import { assetUrl, money, number } from "@/lib/format";
+import { assetUrl } from "@/lib/format";
 import { getCatalogHealth } from "@/lib/queries";
 
 const uuid = /^[0-9a-f-]{36}$/i;
 
-function AddButton({ site, parentId, label, variant = "outline" }: { site: string; parentId?: string; label: string; variant?: "outline" | "default" }) {
+async function AddButton({ site, parentId, label, variant = "outline" }: { site: string; parentId?: string; label: string; variant?: "outline" | "default" }) {
   return (
     <form action={createCategory}>
       <input type="hidden" name="site" value={site} />
@@ -29,9 +30,10 @@ function AddButton({ site, parentId, label, variant = "outline" }: { site: strin
   );
 }
 
-function MoveButton({ site, id, direction, disabled }: { site: string; id: string; direction: "up" | "down"; disabled: boolean }) {
+async function MoveButton({ site, id, direction, disabled }: { site: string; id: string; direction: "up" | "down"; disabled: boolean }) {
+  const t = await getTranslations("categories");
   const Icon = direction === "up" ? ArrowUp : ArrowDown;
-  const label = direction === "up" ? "Move up" : "Move down";
+  const label = direction === "up" ? t("moveUp") : t("moveDown");
   return (
     <form action={moveCategory}>
       <input type="hidden" name="site" value={site} />
@@ -47,6 +49,9 @@ function MoveButton({ site, id, direction, disabled }: { site: string; id: strin
 export default async function CategoriesPage({ params, searchParams }: { params: Promise<{ site: string }>; searchParams: Promise<{ id?: string }> }) {
   const [{ site: slug }, sp] = await Promise.all([params, searchParams]);
   const { site, siteId } = await requireSite(slug);
+  const [t, format] = await Promise.all([getTranslations("categories"), getFormatter()]);
+  const currency = site.currency ?? "EUR";
+  const money = (v: number | string) => format.number(Number(v), { style: "currency", currency });
   const [tree, health] = await Promise.all([getCategoryTree(siteId), getCatalogHealth(siteId)]);
   const base = `/${site.slug}/products/categories`;
   const selected = sp.id && uuid.test(sp.id) ? tree.find((n) => n.id === sp.id) : undefined;
@@ -79,19 +84,18 @@ export default async function CategoriesPage({ params, searchParams }: { params:
   const blocked = selected ? subtreeIds(tree, selected.id) : new Set<string>();
   const crumbs: { id: string; name: string }[] = [];
   for (let n = parent; n; n = n.parentId ? byId.get(n.parentId) : undefined) crumbs.unshift(n);
-  const currency = site.currency ?? "EUR";
 
   return (
     <Page
-      title="Categories"
-      subtitle={tree.length ? `${number(tree.length)} categories · ${number(uncategorised)} products without one` : undefined}
+      title={t("title")}
+      subtitle={tree.length ? t("subtitle", { count: tree.length, uncategorised }) : undefined}
       backHref={`/${site.slug}/products`}
       width="wide"
-      actions={<AddButton site={site.slug} label="Add category" variant="default" />}
+      actions={<AddButton site={site.slug} label={t("add")} variant="default" />}
     >
       {tree.length === 0 ? (
         <Panel>
-          <EmptyState icon={FolderTree} title="Organise your catalogue" description="Categories group products on your storefront and in navigation menus." />
+          <EmptyState icon={FolderTree} title={t("emptyTitle")} description={t("emptyDescription")} />
         </Panel>
       ) : (
         <div className="@container">
@@ -104,16 +108,14 @@ export default async function CategoriesPage({ params, searchParams }: { params:
               <Panel>
                 <EmptyState
                   icon={FolderTree}
-                  title="Pick a category to edit it"
+                  title={t("pickTitle")}
                   description={
-                    uncategorised > 0
-                      ? `${number(uncategorised)} products don't have a category yet. Open one and tick a category under Organisation.`
-                      : "Rename, move or reorder categories, and see the products inside each one."
+                    uncategorised > 0 ? t("pickUncategorised", { count: uncategorised }) : t("pickDescription")
                   }
                   action={
                     uncategorised > 0 ? (
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/${site.slug}/products?category=none`}>Show uncategorised products</Link>
+                        <Link href={`/${site.slug}/products?category=none`}>{t("showUncategorised")}</Link>
                       </Button>
                     ) : undefined
                   }
@@ -121,8 +123,8 @@ export default async function CategoriesPage({ params, searchParams }: { params:
               </Panel>
             ) : (
               <div className="min-w-0 space-y-4">
-                <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 px-4 text-xs text-muted-foreground sm:px-1">
-                  <Link href={base} className="hover:text-foreground">All categories</Link>
+                <nav aria-label={t("breadcrumb")} className="flex flex-wrap items-center gap-1 px-4 text-xs text-muted-foreground sm:px-1">
+                  <Link href={base} className="hover:text-foreground">{t("all")}</Link>
                   {crumbs.map((c) => (
                     <span key={c.id} className="flex items-center gap-1">
                       <span aria-hidden>›</span>
@@ -143,16 +145,16 @@ export default async function CategoriesPage({ params, searchParams }: { params:
                   <input type="hidden" name="site" value={site.slug} />
                   <input type="hidden" name="id" value={selected.id} />
                   <Surface className="space-y-4">
-                    <Field label="Name" htmlFor="name">
+                    <Field label={t("fields.name")} htmlFor="name">
                       <TextInput id="name" name="name" defaultValue={selected.name} required maxLength={120} />
                     </Field>
-                    <Field label="Description" htmlFor="description" hint="Shown at the top of the category page on the storefront.">
+                    <Field label={t("fields.description")} htmlFor="description" hint={t("fields.descriptionHint")}>
                       <TextArea id="description" name="description" defaultValue={detail?.description ?? ""} rows={4} />
                     </Field>
                     <div className="grid gap-4 @min-[40rem]:grid-cols-2">
-                      <Field label="Parent category" htmlFor="parentId">
+                      <Field label={t("fields.parent")} htmlFor="parentId">
                         <Select id="parentId" name="parentId" defaultValue={selected.parentId ?? ""}>
-                          <option value="">None (top level)</option>
+                          <option value="">{t("fields.parentNone")}</option>
                           {tree.map((n) => (
                             <option key={n.id} value={n.id} disabled={blocked.has(n.id)}>
                               {"\u00a0\u00a0\u00a0".repeat(n.depth)}{n.name}
@@ -160,7 +162,7 @@ export default async function CategoriesPage({ params, searchParams }: { params:
                           ))}
                         </Select>
                       </Field>
-                      <Field label="Handle" htmlFor="slug" hint={`/collections/${selected.slug}`}>
+                      <Field label={t("fields.handle")} htmlFor="slug" hint={`/collections/${selected.slug}`}>
                         <TextInput id="slug" name="slug" defaultValue={selected.slug} className="font-mono" />
                       </Field>
                     </div>
@@ -168,13 +170,13 @@ export default async function CategoriesPage({ params, searchParams }: { params:
                 </SettingsForm>
 
                 <Surface className="flex flex-wrap items-center gap-2">
-                  <AddButton site={site.slug} parentId={selected.id} label="Add subcategory" />
+                  <AddButton site={site.slug} parentId={selected.id} label={t("addSub")} />
                   <div className="flex items-center rounded-lg border">
                     <MoveButton site={site.slug} id={selected.id} direction="up" disabled={index <= 0} />
                     <MoveButton site={site.slug} id={selected.id} direction="down" disabled={index < 0 || index >= siblings.length - 1} />
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {index + 1} of {siblings.length} in {parent ? `“${parent.name}”` : "the top level"}
+                    {parent ? t("positionInParent", { index: index + 1, total: siblings.length, parent: parent.name }) : t("positionTop", { index: index + 1, total: siblings.length })}
                   </span>
                   <div className="ml-auto">
                     <DeleteCategoryButton
@@ -190,23 +192,23 @@ export default async function CategoriesPage({ params, searchParams }: { params:
 
                 <Panel
                   flush
-                  title="Products"
+                  title={t("products.title")}
                   description={
                     selected.total === selected.direct
-                      ? `${number(selected.direct)} in this category`
-                      : `${number(selected.direct)} directly here · ${number(selected.total)} including subcategories`
+                      ? t("products.countDirect", { count: selected.direct })
+                      : t("products.countBoth", { direct: selected.direct, total: selected.total })
                   }
                   action={
                     selected.total > 0 ? (
                       <Button variant="outline" size="sm" asChild>
-                        <Link href={`/${site.slug}/products?category=${selected.id}`}>View all</Link>
+                        <Link href={`/${site.slug}/products?category=${selected.id}`}>{t("products.viewAll")}</Link>
                       </Button>
                     ) : undefined
                   }
                 >
                   {products.length === 0 ? (
                     <p className="px-4 pb-5 text-[13px] text-muted-foreground sm:px-5">
-                      {selected.total > 0 ? "Products are in its subcategories." : "No products yet. Add them from a product's Organisation card."}
+                      {selected.total > 0 ? t("products.inSubcategories") : t("products.none")}
                     </p>
                   ) : (
                     <ul className="divide-y border-t">
@@ -224,8 +226,8 @@ export default async function CategoriesPage({ params, searchParams }: { params:
                                 )}
                               </span>
                               <span className="min-w-0 flex-1 truncate font-medium">{p.name}</span>
-                              {p.isArchived && <span className="text-xs text-muted-foreground">Archived</span>}
-                              <span className="tabular-nums text-muted-foreground">{money(p.basePrice, currency)}</span>
+                              {p.isArchived && <span className="text-xs text-muted-foreground">{t("products.archived")}</span>}
+                              <span className="tabular-nums text-muted-foreground">{money(p.basePrice)}</span>
                             </Link>
                           </li>
                         );
@@ -233,7 +235,7 @@ export default async function CategoriesPage({ params, searchParams }: { params:
                     </ul>
                   )}
                 </Panel>
-                {detail?.legacyPath && <p className="px-4 text-xs text-muted-foreground sm:px-1">Imported from ShopApplication #{detail.legacyPath.split("/").at(-1)}</p>}
+                {detail?.legacyPath && <p className="px-4 text-xs text-muted-foreground sm:px-1">{t("imported", { id: detail.legacyPath.split("/").at(-1) ?? "" })}</p>}
               </div>
             )}
           </div>

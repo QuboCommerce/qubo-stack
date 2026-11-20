@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Construction } from "lucide-react";
 import { EmptyState, Page, Panel } from "@/components/page";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { requireSite } from "@/lib/admin";
 export default async function ComingSoon({ params }: { params: Promise<{ site: string; rest: string[] }> }) {
   const { site: slug, rest } = await params;
   const { site } = await requireSite(slug);
+  const t = await getTranslations("dashboard.comingSoon");
   const title = rest
     .at(-1)!
     .split("-")
@@ -18,9 +20,9 @@ export default async function ComingSoon({ params }: { params: Promise<{ site: s
       <Panel>
         <EmptyState
           icon={Construction}
-          title="This area is on the roadmap"
-          description={`“${title}” is part of an upcoming Qubo milestone. The navigation is already wired so nothing moves when it lands.`}
-          action={<Button variant="outline" size="sm" asChild><Link href={`/${site.slug}`}>Back to Home</Link></Button>}
+          title={t("title")}
+          description={t("description", { title })}
+          action={<Button variant="outline" size="sm" asChild><Link href={`/${site.slug}`}>{t("back")}</Link></Button>}
         />
       </Panel>
     </Page>

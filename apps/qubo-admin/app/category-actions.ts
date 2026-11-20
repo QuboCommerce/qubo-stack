@@ -4,6 +4,7 @@ import { db } from "@qubo/db/client";
 import { category } from "@qubo/db/schema";
 import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { slugify } from "@/app/product-actions";
@@ -12,19 +13,22 @@ import type { ActionState } from "@/lib/action-state";
 import { getCategoryTree, subtreeIds } from "@/lib/categories";
 import { emitEntity } from "@/lib/events";
 import { categorySpec, categoryValues } from "@/lib/form-specs";
-import { RACE, reconcile, unchangedSince } from "@/lib/merge-server";
+import { reconcile, unchangedSince } from "@/lib/merge-server";
 
 const idSchema = z.uuid();
-const schema = z.object({
-  name: z.string().trim().min(1, "Give the category a name.").max(120),
-  slug: z
-    .string()
-    .trim()
-    .toLowerCase()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "The handle uses lowercase letters, numbers and dashes."),
-  description: z.string().max(5000),
-  parentId: z.union([z.literal(""), z.uuid()]),
-});
+type Errors = Awaited<ReturnType<typeof getTranslations<"categories.errors">>>;
+
+const buildSchema = (t: Errors) =>
+  z.object({
+    name: z.string().trim().min(1, t("nameRequired")).max(120),
+    slug: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, t("handleFormat")),
+    description: z.string().max(5000),
+    parentId: z.union([z.literal(""), z.uuid()]),
+  });
 
 const siblingsOf = (siteId: string, parentId: string | null) =>
   and(eq(category.siteId, siteId), parentId ? eq(category.parentId, parentId) : isNull(category.parentId));
@@ -55,32 +59,33 @@ const revalidate = (slug: string) => {
 };
 
 export async function saveCategory(_prev: ActionState, submitted: FormData): Promise<ActionState> {
+  const t = await getTranslations("categories.errors");
   try {
     const { siteId, site } = await requireSiteFromForm(submitted);
     const id = idSchema.parse(submitted.get("id"));
     const [row] = await db.select().from(category).where(and(eq(category.id, id), eq(category.siteId, siteId))).limit(1);
-    if (!row) return { error: "This category was deleted by someone else." };
+    if (!row) return { error: t("deleted") };
     const names = await db.select({ id: category.id, name: category.name }).from(category).where(eq(category.siteId, siteId));
     const r = await reconcile(submitted, categorySpec(new Map(names.map((c) => [c.id, c.name]))), categoryValues(row), { siteId, table: "category", id });
     if ("conflict" in r) return { conflict: r.conflict };
     const formData = r.formData;
     const str = (k: string) => String(formData.get(k) ?? "");
-    const parsed = schema.safeParse({
+    const parsed = buildSchema(t).safeParse({
       name: str("name"),
       slug: str("slug") || (await slugify(str("name"))),
       description: str("description"),
       parentId: str("parentId"),
     });
-    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the highlighted fields." };
+    if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t("checkFields") };
     const d = parsed.data;
 
     const tree = await getCategoryTree(siteId);
     const current = tree.find((n) => n.id === id);
-    if (!current) return { error: "Category not found on this site." };
+    if (!current) return { error: t("notFound") };
     const parentId = d.parentId || null;
     if (parentId) {
-      if (!tree.some((n) => n.id === parentId)) return { error: "The parent category no longer exists." };
-      if (subtreeIds(tree, id).has(parentId)) return { error: "A category can't be moved inside itself." };
+      if (!tree.some((n) => n.id === parentId)) return { error: t("parentGone") };
+      if (subtreeIds(tree, id).has(parentId)) return { error: t("moveInside") };
     }
 
     const [clash] = await db
@@ -88,7 +93,7 @@ export async function saveCategory(_prev: ActionState, submitted: FormData): Pro
       .from(category)
       .where(and(eq(category.siteId, siteId), eq(category.slug, d.slug), ne(category.id, id)))
       .limit(1);
-    if (clash) return { error: "Another category already uses this handle." };
+    if (clash) return { error: t("handleTaken") };
 
     const moved = (current.parentId ?? null) !== parentId;
     const saved = await db
@@ -103,16 +108,17 @@ export async function saveCategory(_prev: ActionState, submitted: FormData): Pro
       })
       .where(and(eq(category.id, id), eq(category.siteId, siteId), unchangedSince(category.updatedAt, row.updatedAt)))
       .returning({ id: category.id });
-    if (!saved.length) return { error: RACE };
+    if (!saved.length) return { error: t("race") };
     await emitEntity(siteId, "category", id);
     revalidate(site.slug);
   } catch (e) {
-    return { error: e instanceof Error ? e.message : "Something went wrong." };
+    return { error: e instanceof Error ? e.message : t("generic") };
   }
   return { ok: true, at: Date.now() };
 }
 
 export async function createCategory(formData: FormData) {
+  const t = await getTranslations("categories");
   const { siteId, site } = await requireSiteFromForm(formData);
   const rawParent = String(formData.get("parentId") ?? "");
   const parentId = rawParent ? idSchema.parse(rawParent) : null;
@@ -122,9 +128,9 @@ export async function createCategory(formData: FormData) {
       .from(category)
       .where(and(eq(category.id, parentId), eq(category.siteId, siteId)))
       .limit(1);
-    if (!parent) throw new Error("Parent category not found on this site.");
+    if (!parent) throw new Error(t("errors.parentNotFound"));
   }
-  const name = parentId ? "New subcategory" : "New category";
+  const name = parentId ? t("defaults.newSubcategory") : t("defaults.newCategory");
   const [row] = await db
     .insert(category)
     .values({
@@ -142,6 +148,7 @@ export async function createCategory(formData: FormData) {
 
 /** Swaps the category with its previous or next sibling. */
 export async function moveCategory(formData: FormData) {
+  const t = await getTranslations("categories.errors");
   const { siteId, site } = await requireSiteFromForm(formData);
   const id = idSchema.parse(formData.get("id"));
   const direction = formData.get("direction") === "up" ? -1 : 1;
@@ -150,7 +157,7 @@ export async function moveCategory(formData: FormData) {
     .from(category)
     .where(and(eq(category.id, id), eq(category.siteId, siteId)))
     .limit(1);
-  if (!current) throw new Error("Category not found on this site.");
+  if (!current) throw new Error(t("notFound"));
 
   await db.transaction(async (tx) => {
     const siblings = await tx
@@ -173,6 +180,7 @@ export async function moveCategory(formData: FormData) {
 
 /** Deletes the category. Its subcategories move up one level; product links to it are removed. */
 export async function deleteCategory(formData: FormData) {
+  const t = await getTranslations("categories.errors");
   const { siteId, site } = await requireSiteFromForm(formData);
   const id = idSchema.parse(formData.get("id"));
   const [current] = await db
@@ -180,7 +188,7 @@ export async function deleteCategory(formData: FormData) {
     .from(category)
     .where(and(eq(category.id, id), eq(category.siteId, siteId)))
     .limit(1);
-  if (!current) throw new Error("Category not found on this site.");
+  if (!current) throw new Error(t("notFound"));
 
   await db.transaction(async (tx) => {
     const [row] = await tx

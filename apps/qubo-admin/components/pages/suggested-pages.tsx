@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Lock, Plus } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/page";
 import { blueprintIcon } from "./blueprint-icon";
@@ -14,6 +15,9 @@ const categoryOrder = ["company", "legal", "commerce", "utility"];
  * category. Owns the Create page dialog so a card can open it preselected.
  */
 export function SuggestedPages({ site, suggestions, settingsHref, children }: { site: string; suggestions: PageSuggestion[]; settingsHref: string; children?: React.ReactNode }) {
+  const t = useTranslations("onlineStore.pages.suggested");
+  const locale = useLocale();
+  const list = new Intl.ListFormat(locale, { type: "conjunction" });
   const [open, setOpen] = useState(false);
   const [initial, setInitial] = useState<string>("");
   const show = (id: string) => {
@@ -27,10 +31,10 @@ export function SuggestedPages({ site, suggestions, settingsHref, children }: { 
   return (
     <>
       <div className="flex items-center justify-end">
-        <Button size="sm" onClick={() => show("")}><Plus /> New page</Button>
+        <Button size="sm" onClick={() => show("")}><Plus /> {t("newPage")}</Button>
       </div>
       {children}
-      <Panel title="Suggested pages" description="Pages a site like yours usually has. Nothing is forced: add the ones you want, skip the rest." flush>
+      <Panel title={t("title")} description={t("description")} flush>
         <div className="mt-1 border-t">
           {groups.map((g) => (
             <div key={g.id}>
@@ -50,13 +54,13 @@ export function SuggestedPages({ site, suggestions, settingsHref, children }: { 
                         <p className="line-clamp-2 text-xs text-muted-foreground">{s.description}</p>
                       </div>
                       {s.exists ? (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground"><Check className="size-3.5" /> Added</span>
+                        <span className="flex items-center gap-1 text-xs text-muted-foreground"><Check className="size-3.5" /> {t("added")}</span>
                       ) : locked ? (
                         <Button variant="outline" size="sm" asChild>
-                          <a href={settingsHref} title={`Needs the ${s.missing.join(" and ")} module`}><Lock /> Needs {s.missing.join(" and ")}</a>
+                          <a href={settingsHref} title={t("needsTitle", { modules: list.format(s.missing) })}><Lock /> {t("needs", { modules: list.format(s.missing) })}</a>
                         </Button>
                       ) : (
-                        <Button variant="outline" size="sm" onClick={() => show(s.id)}><Plus /> Add</Button>
+                        <Button variant="outline" size="sm" onClick={() => show(s.id)}><Plus /> {t("add")}</Button>
                       )}
                     </li>
                   );

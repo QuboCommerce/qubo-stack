@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useFormatter, useTranslations } from "next-intl";
 import { Check, FileText, LayoutGrid, LayoutTemplate, Loader2, Newspaper, Package, Palette, Search, Shapes, Share2, Tag, Trash2, Upload, X, type LucideIcon } from "lucide-react";
 import { formatBytes } from "@qubo/storage";
 import type { MediaItem, MediaLens, MediaScope } from "@qubo/storage/media";
@@ -14,32 +15,22 @@ import { fileIcon, Segments, Thumb } from "./thumb";
 
 type Kind = MediaItem["kind"];
 
-const SCOPES: { value: MediaScope; label: string; hint: string }[] = [
-  { value: "here", label: "Available here", hint: "This site's files and the shared ones" },
-  { value: "site", label: "This site", hint: "Uploaded on this site only" },
-  { value: "shared", label: "Shared", hint: "Usable by every site of the organisation" },
-  { value: "all", label: "All sites", hint: "Everything in the organisation" },
+const SCOPES: MediaScope[] = ["here", "site", "shared", "all"];
+
+const KINDS: { value: Kind | undefined; key: "all" | "image" | "video" }[] = [
+  { value: undefined, key: "all" },
+  { value: "image", key: "image" },
+  { value: "video", key: "video" },
 ];
 
-const KINDS: { value: Kind | undefined; label: string }[] = [
-  { value: undefined, label: "All" },
-  { value: "image", label: "Images" },
-  { value: "video", label: "Videos" },
-];
-
-export const LENSES: Record<MediaLens, { label: string; icon: LucideIcon; hint: string; empty: string }> = {
-  all: { label: "All files", icon: LayoutGrid, hint: "Everything, newest first", empty: "No files yet. Drop, paste or click to upload." },
-  scratch: {
-    label: "Scratch",
-    icon: Shapes,
-    hint: "Files nothing uses and nobody tagged. Anything goes here.",
-    empty: "Scratch is empty. Uploads that aren't used or tagged yet land here.",
-  },
-  products: { label: "Products", icon: Package, hint: "Photos in product galleries", empty: "No product photo comes from the library yet." },
-  pages: { label: "Pages", icon: LayoutTemplate, hint: "Files used on pages", empty: "No page uses a library file yet." },
-  design: { label: "Theme & layout", icon: Palette, hint: "Logos, favicon, share image, headers, footers and templates", empty: "No logo or layout file yet." },
-  blog: { label: "Blog", icon: Newspaper, hint: "Blog post covers", empty: "No blog cover comes from the library yet." },
-  documents: { label: "Documents", icon: FileText, hint: "PDF, text, Markdown, CSV and JSON files", empty: "No documents yet. PDF, TXT, MD, CSV and JSON files go here." },
+export const LENS_ICONS: Record<MediaLens, LucideIcon> = {
+  all: LayoutGrid,
+  scratch: Shapes,
+  products: Package,
+  pages: LayoutTemplate,
+  design: Palette,
+  blog: Newspaper,
+  documents: FileText,
 };
 
 const ACCEPT = ".jpg,.jpeg,.png,.gif,.webp,.avif,.svg,.mp4,.webm,.pdf,.txt,.md,.csv,.json";
@@ -76,6 +67,7 @@ export function MediaBrowser({
   onCancel,
   className,
 }: QuickPickOptions & { onPick?: (items: MediaItem[]) => void; onCancel?: () => void; className?: string }) {
+  const t = useTranslations("media.browser");
   const picking = Boolean(onPick);
   const [facets, setFacets] = useState<MediaFacets | null>(null);
   const [lens, setLens] = useState<MediaLens>(picking && contextLens ? contextLens : "all");
@@ -159,7 +151,7 @@ export function MediaBrowser({
       try {
         const res = await fetch("/api/media-library", { method: "POST", body });
         const json = (await res.json().catch(() => null)) as { items?: MediaItem[]; errors?: string[]; notes?: string[]; error?: string } | null;
-        if (!json) throw new Error(`Upload failed (${res.status}).`);
+        if (!json) throw new Error(t("uploadFailed", { status: res.status }));
         let added = json.items ?? [];
         const notes = json.notes ?? [];
         // Uploading while a tag is selected files the uploads under it.
@@ -170,7 +162,7 @@ export function MediaBrowser({
         }
         setErrors([...(json.errors ?? []), ...(json.error ? [json.error] : [])]);
         if (!picking && LINKED_LENSES.has(lens) && added.length) {
-          setNotes([...notes, `Uploaded to ${tag ? `the “${tag}” tag` : "Scratch"}. Add the files to a product or a page to file them there.`]);
+          setNotes([...notes, tag ? t("uploadedToTag", { tag }) : t("uploadedToScratch")]);
           setLens(tag ? "all" : "scratch");
         } else {
           setNotes(notes);
@@ -181,12 +173,12 @@ export function MediaBrowser({
           if (picking) setSelected((s) => (multiple ? [...new Set([...s, ...added.map((a) => a.id)])] : [added[0]!.id]));
         }
       } catch (e) {
-        setErrors([e instanceof Error ? e.message : "Upload failed."]);
+        setErrors([e instanceof Error ? e.message : t("uploadFailedGeneric")]);
       } finally {
         setPending((p) => p.filter((x) => !batch.some((b) => b.id === x.id)));
       }
     },
-    [site, scope, picking, multiple, tag, lens, loadFacets],
+    [site, scope, picking, multiple, tag, lens, loadFacets, t],
   );
 
   // Paste images from the clipboard anywhere in the browser.
@@ -247,24 +239,24 @@ export function MediaBrowser({
         void upload([...e.dataTransfer.files]);
       }}
     >
-      <div className="flex gap-1 overflow-x-auto border-b px-3 pt-2" role="tablist" aria-label="Lenses">
+      <div className="flex gap-1 overflow-x-auto border-b px-3 pt-2" role="tablist" aria-label={t("lensesLabel")}>
         {tabs.map((l) => {
-          const L = LENSES[l];
-          const label = picking && l === "all" ? "Recent" : L.label;
+          const Icon = LENS_ICONS[l];
+          const label = picking && l === "all" ? t("recent") : t(`lenses.${l}.label`);
           return (
             <button
               key={l}
               type="button"
               role="tab"
               aria-selected={lens === l}
-              title={L.hint}
+              title={t(`lenses.${l}.hint`)}
               onClick={() => switchLens(l)}
               className={cn(
                 "-mb-px flex shrink-0 items-center gap-1.5 border-b-2 px-2.5 pt-1 pb-2 text-sm whitespace-nowrap",
                 lens === l ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
-              <L.icon className="size-4" /> {label}
+              <Icon className="size-4" /> {label}
             </button>
           );
         })}
@@ -276,29 +268,29 @@ export function MediaBrowser({
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder={cards ? "Search by name or reference, e.g. JBM-" : "Search names, alt text and tags"}
+            placeholder={cards ? t("searchProductsPlaceholder") : t("searchFilesPlaceholder")}
             className="h-8 pl-8"
-            aria-label={cards ? "Search products" : "Search files"}
+            aria-label={cards ? t("searchProducts") : t("searchFiles")}
           />
         </div>
         {cards ? (
           <Segments
-            label="Photos"
+            label={t("photos")}
             value={missing ? "missing" : "all"}
             onChange={(v) => setMissing(v === "missing")}
             options={[
-              { value: "all", label: "All products" },
-              { value: "missing", label: "Without photos", title: "Products that still need a photo" },
+              { value: "all", label: t("allProducts") },
+              { value: "missing", label: t("withoutPhotos"), title: t("withoutPhotosHint") },
             ]}
           />
         ) : (
           <>
-            <Segments label="Sites" value={scope} onChange={setScope} options={SCOPES.map((s) => ({ value: s.value, label: s.label, title: s.hint }))} />
-            {!fixedKind && lens !== "documents" && <Segments label="Kind" value={kind} onChange={setKind} options={KINDS.map((k) => ({ value: k.value, label: k.label }))} />}
+            <Segments label={t("sites")} value={scope} onChange={setScope} options={SCOPES.map((s) => ({ value: s, label: t(`scopes.${s}.label`), title: t(`scopes.${s}.hint`) }))} />
+            {!fixedKind && lens !== "documents" && <Segments label={t("kind")} value={kind} onChange={setKind} options={KINDS.map((k) => ({ value: k.value, label: t(`kinds.${k.key}`) }))} />}
           </>
         )}
         <Button type="button" size="sm" onClick={() => fileInput.current?.click()}>
-          <Upload className="size-4" /> Upload
+          <Upload className="size-4" /> {t("upload")}
         </Button>
         <input
           ref={fileInput}
@@ -315,7 +307,7 @@ export function MediaBrowser({
       </div>
 
       {!cards && tagNames.length > 0 && (
-        <div className="flex items-center gap-1.5 overflow-x-auto border-b px-3 py-2" aria-label="Tags">
+        <div className="flex items-center gap-1.5 overflow-x-auto border-b px-3 py-2" aria-label={t("tags")}>
           <Tag className="size-3.5 shrink-0 text-muted-foreground" />
           {facets!.tags.map((t) => (
             <button
@@ -366,7 +358,7 @@ export function MediaBrowser({
               setErrors([]);
               setNotes([]);
             }}
-            aria-label="Dismiss"
+            aria-label={t("dismiss")}
           >
             <X className="size-4" />
           </button>
@@ -385,12 +377,12 @@ export function MediaBrowser({
             >
               <span>
                 <Upload className="mx-auto mb-2 size-6" />
-                {query || tag ? "Nothing matches that search." : LENSES[lens].empty}
-                <span className="mt-1 block text-xs">Images up to 20 MB (JPG, PNG, WebP, AVIF, GIF, SVG), MP4/WebM up to 100 MB, PDF, TXT, MD, CSV and JSON.</span>
+                {query || tag ? t("noMatch") : t(`lenses.${lens}.empty`)}
+                <span className="mt-1 block text-xs">{t("limits")}</span>
               </span>
             </button>
           ) : list ? (
-            <ul className="divide-y rounded-lg border" aria-label="Files">
+            <ul className="divide-y rounded-lg border" aria-label={t("files")}>
               {pending.map((p) => (
                 <li key={p.id} className="flex items-center gap-3 px-3 py-2 text-sm text-muted-foreground">
                   <Loader2 className="size-4 animate-spin" /> {p.name}
@@ -410,7 +402,7 @@ export function MediaBrowser({
               ))}
             </ul>
           ) : (
-            <ul className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2.5" aria-label="Files">
+            <ul className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2.5" aria-label={t("files")}>
               {pending.map((p) => (
                 <li key={p.id} className="flex aspect-square flex-col items-center justify-center gap-2 rounded-lg border bg-muted/40 p-2 text-center">
                   <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -438,12 +430,12 @@ export function MediaBrowser({
                         {item.filename}
                       </span>
                       {item.siteId === null && scope !== "shared" && (
-                        <span className="absolute top-1.5 left-1.5 rounded bg-background/90 px-1 text-[10px] font-medium">Shared</span>
+                        <span className="absolute top-1.5 left-1.5 rounded bg-background/90 px-1 text-[10px] font-medium">{t("shared")}</span>
                       )}
                     </button>
                     <SelectDot
                       selected={isSelected}
-                      label={`Select ${item.filename}`}
+                      label={t("select", { name: item.filename })}
                       onClick={() => select(item.id)}
                       className={cn("absolute top-1.5 right-1.5", !isSelected && !(selected.length && !picking) && "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100")}
                     />
@@ -456,7 +448,7 @@ export function MediaBrowser({
           {!cards && more && !loading && (
             <div className="mt-3 text-center">
               <Button type="button" variant="outline" size="sm" onClick={() => void load(true, items.at(-1)?.createdAt)}>
-                Load more
+                {t("loadMore")}
               </Button>
             </div>
           )}
@@ -485,13 +477,13 @@ export function MediaBrowser({
 
       {picking && (
         <div className="flex items-center justify-between gap-2 border-t p-3">
-          <span className="text-sm text-muted-foreground">{selected.length ? `${selected.length} selected` : "Click to select, double-click to insert"}</span>
+          <span className="text-sm text-muted-foreground">{selected.length ? t("selectedCount", { count: selected.length }) : t("pickHint")}</span>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="button" size="sm" disabled={!selected.length} onClick={confirm}>
-              Insert
+              {t("insert")}
             </Button>
           </div>
         </div>
@@ -499,7 +491,7 @@ export function MediaBrowser({
 
       {dragging && (
         <div className="pointer-events-none absolute inset-0 z-10 grid place-items-center rounded-lg border-2 border-dashed border-primary bg-primary/5 text-sm font-medium text-primary">
-          Drop to upload
+          {t("dropToUpload")}
         </div>
       )}
     </div>
@@ -541,10 +533,12 @@ function FileRow({
   onPick: () => void;
   onSelect: () => void;
 }) {
+  const t = useTranslations("media.browser");
+  const format = useFormatter();
   const Icon = item.kind === "image" ? null : fileIcon(item);
   return (
     <li className={cn("flex items-center gap-3 px-3 py-2", focused && "bg-accent/40", selected && "bg-primary/5")}>
-      <SelectDot selected={selected} label={`Select ${item.filename}`} onClick={onSelect} />
+      <SelectDot selected={selected} label={t("select", { name: item.filename })} onClick={onSelect} />
       <button type="button" onClick={onOpen} onDoubleClick={onPick} aria-pressed={picking ? selected : undefined} className="flex min-w-0 flex-1 items-center gap-3 text-left">
         <span className="grid size-9 shrink-0 place-items-center overflow-hidden rounded border bg-muted/40 text-muted-foreground">
           {Icon ? <Icon className="size-4" /> : <Thumb item={item} />}
@@ -552,7 +546,7 @@ function FileRow({
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-medium">{item.filename}</span>
           <span className="block text-xs text-muted-foreground">
-            {item.mimeType.split(";")[0]} · {formatBytes(item.size)} · {new Date(item.createdAt).toLocaleDateString()}
+            {item.mimeType.split(";")[0]} · {formatBytes(item.size)} · {format.dateTime(new Date(item.createdAt), { dateStyle: "short" })}
           </span>
         </span>
         <span className="hidden flex-wrap justify-end gap-1 sm:flex">
@@ -580,23 +574,24 @@ function BulkBar({
   onDeleted: (ids: string[], error?: string) => void;
   onClear: () => void;
 }) {
+  const t = useTranslations("media.bulk");
   const [busy, start] = useTransition();
   const [confirming, setConfirming] = useState(false);
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b bg-primary/5 px-3 py-2 text-sm" role="toolbar" aria-label="Selected files">
-      <span className="font-medium">{ids.length} selected</span>
+    <div className="flex flex-wrap items-center gap-2 border-b bg-primary/5 px-3 py-2 text-sm" role="toolbar" aria-label={t("label")}>
+      <span className="font-medium">{t("selected", { count: ids.length })}</span>
       <div className="w-48">
-        <TagInput suggestions={tagSuggestions} placeholder="Tag selected files" onAdd={(t) => start(async () => onChanged(await tagMediaAction({ site, ids, add: [t] })))} />
+        <TagInput suggestions={tagSuggestions} placeholder={t("tagPlaceholder")} onAdd={(t) => start(async () => onChanged(await tagMediaAction({ site, ids, add: [t] })))} />
       </div>
       <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => start(async () => onChanged(await shareMediaAction({ site, ids, shared: true })))}>
-        <Share2 className="size-4" /> Share with all sites
+        <Share2 className="size-4" /> {t("share")}
       </Button>
       <Button type="button" size="sm" variant="outline" disabled={busy} onClick={() => start(async () => onChanged(await shareMediaAction({ site, ids, shared: false })))}>
-        Keep to this site
+        {t("keep")}
       </Button>
       {confirming ? (
         <span className="flex items-center gap-1.5">
-          <span className="text-xs">Delete {ids.length} file{ids.length === 1 ? "" : "s"} for good?</span>
+          <span className="text-xs">{t("confirmDelete", { count: ids.length })}</span>
           <Button
             type="button"
             size="sm"
@@ -610,20 +605,20 @@ function BulkBar({
               })
             }
           >
-            Delete
+            {t("delete")}
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={() => setConfirming(false)}>
-            Keep
+            {t("keepFiles")}
           </Button>
         </span>
       ) : (
         <Button type="button" size="sm" variant="ghost" className="text-destructive" onClick={() => setConfirming(true)}>
-          <Trash2 className="size-4" /> Delete
+          <Trash2 className="size-4" /> {t("delete")}
         </Button>
       )}
       {busy && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
       <button type="button" onClick={onClear} className="ml-auto text-xs text-muted-foreground hover:text-foreground">
-        Clear selection
+        {t("clear")}
       </button>
     </div>
   );

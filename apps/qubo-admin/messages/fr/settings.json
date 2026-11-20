@@ -1,0 +1,767 @@
+{
+  "domains": {
+    "copy": "Copier {label}",
+    "cancel": "Annuler",
+    "ago": {
+      "never": "jamais",
+      "justNow": "à l'instant",
+      "seconds": "il y a {count} s",
+      "minutes": "il y a {count} min",
+      "hours": "il y a {count} h"
+    },
+    "status": {
+      "ok": "Trouvé",
+      "missing": "Pas encore trouvé",
+      "wrong": "Pointe ailleurs",
+      "proxied": "Via proxy",
+      "ipv6": "Enregistrement IPv6 en trop",
+      "unknown": "Non vérifié"
+    },
+    "hint": {
+      "wrongTxt": "Une autre valeur a été trouvée : {found}. Remplacez-la par la valeur ci-dessus.",
+      "wrong": "Pointe actuellement vers {found}. Modifiez l'enregistrement existant (ou supprimez-le) pour ne garder que la valeur ci-dessus.",
+      "proxied": "Cloudflare fait transiter cet enregistrement par son proxy. Passez-le en « DNS uniquement » (nuage gris).",
+      "ipv6": "Un enregistrement AAAA ({found}) envoie les visiteurs en IPv6 ailleurs. Supprimez-le."
+    },
+    "purpose": {
+      "apex": "Ouvre votre site sur {fqdn}",
+      "www": "Redirige {fqdn} vers {value}",
+      "admin": "Ouvre Qubo sur {fqdn}",
+      "proof": "Prouve que le domaine vous appartient"
+    },
+    "recommended": "Recommandé",
+    "cell": {
+      "name": "Nom",
+      "value": "Valeur"
+    },
+    "setup": {
+      "connected": "{hostname} est connecté",
+      "connectedHelp": "Les visiteurs accèdent à ce site et le certificat se renouvelle tout seul. Conservez ces enregistrements.",
+      "progress": "{done} enregistrements requis sur {total} trouvés",
+      "autoCheck": "Nous vérifions automatiquement. Inutile de rester sur cette page.",
+      "nameHelp": "Utilisez le nom exactement comme indiqué : la plupart des interfaces DNS ajoutent elles-mêmes <code>.{zone}</code>. Les changements apparaissent généralement en quelques minutes, parfois après quelques heures.",
+      "checkNow": "Vérifier maintenant",
+      "lastChecked": "Dernière vérification {ago}",
+      "timedOut": "la recherche DNS a expiré, nouvel essai dans un instant"
+    },
+    "share": {
+      "title": "Quelqu'un d'autre gère votre DNS ?",
+      "help": "Envoyez-lui ce lien. Il affiche ces étapes et l'état en direct, rien d'autre, et ne demande aucun compte.",
+      "linkLabel": "le lien",
+      "pageTitle": "Configuration DNS",
+      "kicker": "Qubo · Configuration DNS",
+      "intro": "Le propriétaire de ce domaine vous demande d'ajouter quelques enregistrements DNS. Chacun passe au vert dès qu'il est visible sur Internet."
+    },
+    "provider": {
+      "managedAt": "Votre DNS est géré chez {name}",
+      "goTo": "Connectez-vous et rendez-vous dans <w>{where}</w>, puis ajoutez les enregistrements ci-dessous.",
+      "cloudflareNote": "Réglez l'état du proxy sur « DNS uniquement » (nuage gris) pour ces enregistrements, sinon nous ne pouvons pas voir votre serveur ni émettre son certificat.",
+      "addElsewhere": "Ajoutez ces enregistrements là où le DNS de votre domaine est géré",
+      "usually": "C'est généralement l'entreprise chez qui vous avez acheté le domaine.",
+      "nameservers": "Ses serveurs de noms sont {servers}.",
+      "open": "Ouvrir"
+    },
+    "summary": {
+      "connected": "Connecté",
+      "notChecked": "Pas encore vérifié",
+      "connectedFix": "Connecté · {count, plural, one {# enregistrement} other {# enregistrements}} à corriger",
+      "progress": "{ok} enregistrements sur {total}"
+    },
+    "list": {
+      "emptyTitle": "Aucun domaine pour l'instant",
+      "emptyHelp": "Connectez un domaine qui vous appartient. Nous vous guidons pour le DNS et nous nous occupons du certificat.",
+      "connect": "Connecter un domaine",
+      "setupConnected": "Connecté. Ces enregistrements le maintiennent ainsi.",
+      "setupPending": "Ajoutez ces enregistrements chez votre hébergeur DNS. Cette page se met à jour toute seule dès qu'ils apparaissent."
+    },
+    "row": {
+      "nowPrimary": "{hostname} est maintenant le domaine principal",
+      "newLinkCreated": "Nouveau lien créé. L'ancien ne fonctionne plus.",
+      "primary": "Principal",
+      "checked": "vérifié {ago}",
+      "dns": "DNS",
+      "setUp": "Configurer",
+      "actionsFor": "Actions pour {hostname}",
+      "makePrimary": "Définir comme principal",
+      "linkCopied": "Lien de configuration copié",
+      "copyLink": "Copier le lien de configuration",
+      "newLink": "Nouveau lien de configuration",
+      "remove": "Retirer"
+    },
+    "remove": {
+      "done": "{hostname} retiré",
+      "title": "Retirer {hostname} ?",
+      "verified": "Les visiteurs de ce domaine n'accèderont plus au site d'ici une minute, et l'administration ne répondra plus sur ce domaine. Vous pourrez le reconnecter plus tard.",
+      "unverified": "Ce domaine n'a jamais été connecté, rien ne change donc pour les visiteurs.",
+      "primary": "Un autre domaine devient principal.",
+      "confirm": "Retirer le domaine"
+    },
+    "connect": {
+      "title": "Connecter un domaine",
+      "description": "Un domaine que vous possédez déjà. Vous obtenez ensuite les enregistrements DNS exacts à ajouter, et nous les vérifions pour vous.",
+      "domain": "Domaine",
+      "hint": "Sans www. Un sous-domaine comme boutique.exemple.be fonctionne aussi.",
+      "continue": "Continuer"
+    },
+    "actions": {
+      "managersOnly": "Seuls les propriétaires et les administrateurs peuvent gérer les domaines.",
+      "notFound": "Domaine introuvable.",
+      "generic": "Une erreur est survenue.",
+      "alreadyHere": "Ce domaine est déjà connecté à ce site.",
+      "otherSite": "Ce domaine est connecté à un autre site.",
+      "limit": "Votre offre inclut {count, plural, one {# domaine} other {# domaines}} par site. Retirez-en un ou passez à une offre supérieure.",
+      "notVerified": "Connectez ce domaine avant de le définir comme principal.",
+      "linkInvalid": "Ce lien n'est plus valide."
+    },
+    "page": {
+      "title": "Domaines",
+      "description": "Les adresses web qui ouvrent ce site.",
+      "connected": "Domaines connectés",
+      "connectedHelp": "Le domaine principal est utilisé dans les liens, les e-mails et les résultats de recherche.",
+      "preview": "Aperçu",
+      "previewHelp": "Le site non publié, tel qu'il est enregistré en ce moment. Seules les personnes disposant du code PIN passent la barrière.",
+      "pin": "Code PIN de l'aperçu",
+      "newPinHelp": "Déconnecte tous les relecteurs",
+      "newPin": "Nouveau code PIN",
+      "server": "Serveur",
+      "serverHelp": "L'adresse vers laquelle pointent vos enregistrements DNS. Les certificats sont émis et renouvelés automatiquement dès qu'un domaine est connecté.",
+      "ipv6": "Adresse IPv6",
+      "ip": "Adresse IP",
+      "ipLabel": "l'adresse IP",
+      "noIp": "L'adresse du serveur n'a pas pu être déterminée. Définissez {env}.",
+      "fallbackAdmin": "Adresse de l'administration tant qu'aucun domaine n'est connecté",
+      "adminLabel": "l'adresse de l'administration"
+    }
+  },
+  "settings": {
+    "readOnly": "Vous pouvez consulter ces paramètres, mais pas les modifier.",
+    "allSettings": "Tous les paramètres",
+    "title": "Paramètres",
+    "search": "Chercher un paramètre",
+    "clearSearch": "Effacer la recherche",
+    "noMatch": "Aucun paramètre ne correspond à « {q} ».",
+    "groups": {
+      "site": "Site",
+      "organization": "Organisation",
+      "account": "Votre compte",
+      "commerce": "Commerce",
+      "legal": "Juridique et avancé"
+    },
+    "sections": {
+      "general": {
+        "label": "Général",
+        "description": "Nom, type de site, fonctionnalités et devise."
+      },
+      "business": {
+        "label": "Entreprise et SEO",
+        "description": "Coordonnées, horaires, identité légale et présentation du site dans les moteurs de recherche."
+      },
+      "brand": {
+        "label": "Marque",
+        "description": "Variantes du logo, favicon et image de partage sur les réseaux sociaux."
+      },
+      "domains": {
+        "label": "Domaines",
+        "description": "Adresses web qui pointent vers ce site."
+      },
+      "languages": {
+        "label": "Langues",
+        "description": "Langue principale et traductions publiées."
+      },
+      "notifications": {
+        "label": "Notifications",
+        "description": "E-mails envoyés aux clients et à l'équipe."
+      },
+      "inbox": {
+        "label": "Boîte de réception",
+        "description": "Formulaires, e-mails entrants et sortants, et destinataires des nouveaux messages."
+      },
+      "users": {
+        "label": "Utilisateurs et permissions",
+        "description": "Qui a accès à cette organisation et ce que chacun peut faire."
+      },
+      "ai": {
+        "label": "IA",
+        "description": "Votre propre fournisseur d'IA et votre clé pour le tri de la boîte de réception et les brouillons de réponse."
+      },
+      "sites": {
+        "label": "Sites",
+        "description": "Tous les sites que cette organisation gère depuis une seule administration."
+      },
+      "portal": {
+        "label": "Qubo Portal",
+        "description": "Lien facultatif vers un compte Portal : formule, licence et avis de mise à jour."
+      },
+      "security": {
+        "label": "Sécurité et sessions",
+        "description": "Appareils connectés à votre compte et leur localisation."
+      },
+      "payments": {
+        "label": "Paiements",
+        "description": "Prestataires de paiement, versements et encaissement."
+      },
+      "checkout": {
+        "label": "Paiement en ligne",
+        "description": "Comptes clients et champs de la commande."
+      },
+      "shipping": {
+        "label": "Expédition et livraison",
+        "description": "Zones, tarifs et retrait local."
+      },
+      "taxes": {
+        "label": "Taxes et droits",
+        "description": "Taux de TVA et prix TTC."
+      },
+      "catalog": {
+        "label": "Catalogue",
+        "description": "Types de produits, champs personnalisés et unités."
+      },
+      "policies": {
+        "label": "Politiques",
+        "description": "Remboursement, confidentialité et conditions d'utilisation."
+      },
+      "privacy": {
+        "label": "Confidentialité et accès",
+        "description": "Page protégée par mot de passe, mode maintenance et bandeau de cookies."
+      },
+      "integrations": {
+        "label": "Intégrations",
+        "description": "Statistiques, pixels, chat et contenus intégrés."
+      },
+      "storage": {
+        "label": "Stockage des médias",
+        "description": "Espace de stockage, utilisation et diffusion des images."
+      }
+    },
+    "capabilities": {
+      "commerce": {
+        "label": "Vente",
+        "description": "Panier, commande, paiements et expédition."
+      },
+      "catalog": {
+        "label": "Catalogue",
+        "description": "Produits, collections, marques et stock."
+      },
+      "booking": {
+        "label": "Réservations",
+        "description": "Services avec rendez-vous et disponibilités."
+      },
+      "leads": {
+        "label": "Prospects et formulaires",
+        "description": "Formulaires de contact, demandes de devis et boîte de réception."
+      },
+      "blog": {
+        "label": "Blog",
+        "description": "Articles, auteurs et étiquettes."
+      },
+      "accounts": {
+        "label": "Comptes clients",
+        "description": "Connexion, historique des commandes et adresses enregistrées."
+      },
+      "locales": {
+        "label": "Plusieurs langues",
+        "description": "Proposer le contenu traduit dans plus d'une langue."
+      }
+    },
+    "siteTypes": {
+      "store": {
+        "label": "Boutique en ligne",
+        "description": "Vendez des produits avec un catalogue, un panier et un paiement en ligne."
+      },
+      "services": {
+        "label": "Services et réservations",
+        "description": "Présentez vos services et prenez des réservations : cabinets, studios, coachs."
+      },
+      "business": {
+        "label": "Site vitrine",
+        "description": "Générez des contacts pour une entreprise qui vend hors ligne : devis, appels, visites."
+      },
+      "editorial": {
+        "label": "Blog et éditorial",
+        "description": "Publiez des articles et fidélisez un public."
+      },
+      "custom": {
+        "label": "Sur mesure",
+        "description": "Partez de zéro et activez seulement ce dont vous avez besoin."
+      }
+    },
+    "weekdays": {
+      "mo": "Lundi",
+      "tu": "Mardi",
+      "we": "Mercredi",
+      "th": "Jeudi",
+      "fr": "Vendredi",
+      "sa": "Samedi",
+      "su": "Dimanche"
+    },
+    "hours": {
+      "closed": "Fermé",
+      "to": "à",
+      "opens": "{day} : ouverture",
+      "closes": "{day} : fermeture",
+      "open": "{day} : ouvert"
+    },
+    "nouns": {
+      "page": "cette page",
+      "product": "ce produit",
+      "category": "cette catégorie",
+      "code": "ce code",
+      "site": "ce site",
+      "settings": "ces paramètres"
+    },
+    "merge": {
+      "someone": "Quelqu'un",
+      "title": "Fusionner les modifications",
+      "titleConflict": "Vous avez modifié la même chose",
+      "upToDate": "Rien n'a changé sur {noun} depuis que vous avez commencé à modifier. L'enregistrement conserve toutes vos modifications.",
+      "savedWhileEditing": "{who} a enregistré {noun} pendant que vous le modifiiez.",
+      "pickVersion": "Choisissez la version à conserver pour chaque champ.",
+      "noOverlap": "Aucune de ses modifications ne touche les vôtres.",
+      "keepMine": "Garder la mienne",
+      "useTheirs": "Prendre celle de {who}",
+      "alsoKeeping": "Les modifications de {who} sont aussi conservées pour : {fields}.",
+      "saveMerged": "Enregistrer la fusion"
+    },
+    "form": {
+      "updatedBy": "Mis à jour à l'instant par {name}",
+      "remoteSaved": "{name} a enregistré des modifications sur {noun}. Les vôtres sont conservées.",
+      "review": "Vérifier",
+      "unsaved": "Modifications non enregistrées",
+      "discard": "Annuler"
+    },
+    "fields": {
+      "siteName": "Nom du site",
+      "shortDescription": "Description courte",
+      "currency": "Devise",
+      "siteType": "Type de site",
+      "features": "Fonctionnalités",
+      "none": "Aucune",
+      "on": "Activé",
+      "off": "Désactivé",
+      "localBusiness": "Commerce local",
+      "siteTitle": "Titre du site",
+      "siteDescription": "Description du site",
+      "phone": "Téléphone",
+      "email": "E-mail",
+      "businessType": "Type d'activité",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "legalName": "Dénomination sociale",
+      "legalForm": "Forme juridique",
+      "companyNumber": "Numéro d'entreprise",
+      "vatNumber": "Numéro de TVA",
+      "address": "Adresse",
+      "addressLine2": "Complément d'adresse",
+      "postalCode": "Code postal",
+      "city": "Ville",
+      "country": "Pays"
+    },
+    "currencies": {
+      "EUR": "Euro (€)",
+      "USD": "Dollar américain ($)",
+      "GBP": "Livre sterling (£)",
+      "CHF": "Franc suisse (CHF)"
+    },
+    "general": {
+      "title": "Général",
+      "description": "Le nom de ce site, ce qu'il fait et la façon dont il formate les montants.",
+      "details": "Détails",
+      "detailsHelp": "Affichés dans l'administration, les onglets du navigateur et les résultats de recherche.",
+      "descriptionHint": "Une phrase sur l'activité. Utilisée comme méta-description par défaut.",
+      "siteTypeHelp": "Le point de départ à partir duquel ce site a été créé. Le modifier ne supprime jamais de données.",
+      "featuresHelp": "Désactiver une fonctionnalité la masque dans la navigation et sur la boutique. Rien n'est supprimé.",
+      "formats": "Formats",
+      "formatsHelp": "Valeurs par défaut des prix et des dates.",
+      "primaryLanguage": "Langue principale",
+      "manageLanguages": "Gérer les langues"
+    },
+    "business": {
+      "title": "Entreprise et SEO",
+      "description": "Qui gère ce site, comment vous trouver et comment les pages se présentent aux moteurs de recherche et aux assistants IA.",
+      "search": "Apparence dans les recherches",
+      "searchHelp": "Le titre du site termine chaque titre de page : gardez-le court et indiquez ce que vous faites et où. La page d'accueil l'utilise seul.",
+      "siteTitleHint": "Exemple : « {example} ». Les titres de page deviennent « Page | {title} ».",
+      "siteTitleExample": "matériel horeca à Bruxelles",
+      "siteDescriptionHint": "Affichée sous le titre dans les résultats de recherche lorsqu'une page n'a pas de description propre. Une ou deux phrases.",
+      "contact": "Contact",
+      "contactHelp": "Publiés sur la boutique sous forme de données structurées, pour que les moteurs de recherche et les cartes affichent le bon numéro et les bons horaires. Laissez un champ vide pour le garder privé.",
+      "businessTypeHint": "La catégorie schema.org qui décrit le mieux le lieu. « Général » convient si aucune ne correspond.",
+      "latitudeHint": "Degrés décimaux, d'après le repère de votre adresse sur la carte.",
+      "hours": "Horaires d'ouverture",
+      "hoursHelp": "Quand le magasin ou le bureau est ouvert au public. Les jours désactivés ne sont pas listés.",
+      "legal": "Entité juridique",
+      "legalHelp": "La société derrière {name}. Partagée par tous les sites de cette organisation ; imprimée sur les pages légales et les factures.",
+      "legalFormPlaceholder": "SRL, SA, SC…",
+      "companyNumberHint": "Numéro d'entreprise tel qu'enregistré (BCE/KBO en Belgique).",
+      "countryHint": "Code ISO"
+    },
+    "businessTypes": {
+      "general": "Commerce local (général)",
+      "Store": "Magasin",
+      "WholesaleStore": "Commerce de gros",
+      "HardwareStore": "Quincaillerie",
+      "FoodEstablishment": "Établissement alimentaire",
+      "Restaurant": "Restaurant",
+      "Bakery": "Boulangerie",
+      "ProfessionalService": "Service professionnel",
+      "HomeAndConstructionBusiness": "Maison et construction",
+      "HealthAndBeautyBusiness": "Santé et beauté",
+      "AutomotiveBusiness": "Automobile",
+      "LodgingBusiness": "Hébergement",
+      "MedicalBusiness": "Médical",
+      "LegalService": "Service juridique",
+      "FinancialService": "Service financier",
+      "RealEstateAgent": "Agent immobilier",
+      "TravelAgency": "Agence de voyages",
+      "SportsActivityLocation": "Sport et remise en forme",
+      "EntertainmentBusiness": "Divertissement"
+    },
+    "overview": {
+      "siteType": "Type de site",
+      "features": "Fonctionnalités",
+      "none": "Aucune",
+      "currency": "Devise",
+      "domain": "Domaine",
+      "notConnected": "Non connecté",
+      "languages": "Langues",
+      "publishedExtra": "+ {count} publiée(s)",
+      "team": "Équipe",
+      "teamValue": "{count, plural, one {# membre} other {# membres}} · vous êtes {role}",
+      "editDetails": "Modifier les détails",
+      "footer": "Les paramètres s'appliquent uniquement à {name}. L'équipe et la facturation sont partagées dans toute l'organisation."
+    },
+    "roles": {
+      "OWNER": "Propriétaire",
+      "ADMIN": "Administrateur",
+      "STAFF": "Équipe",
+      "VIEWER": "Lecteur"
+    },
+    "roleDescriptions": {
+      "OWNER": "Tout, y compris la facturation et la suppression de l'organisation.",
+      "ADMIN": "Tous les paramètres, l'équipe et le contenu. Pas de facturation.",
+      "STAFF": "Le travail au quotidien : commandes, produits, clients et contenu.",
+      "VIEWER": "Accès en lecture seule à l'administration."
+    },
+    "comingSoon": {
+      "title": "Bientôt disponible",
+      "description": "Les paramètres de {name} sont prévus. Rien à configurer pour l'instant."
+    },
+    "ai": {
+      "title": "IA",
+      "description": "Tri et brouillons de réponse pour la boîte de réception, avec votre propre compte chez un fournisseur d'IA.",
+      "upsell": {
+        "title": "L'IA est incluse à partir de la formule Starter",
+        "description": "Apportez une clé OpenAI, Anthropic, Mistral, xAI ou OpenRouter, ou faites pointer Qubo vers votre propre serveur de modèles. Qubo ne voit jamais vos conversations et ne facture pas les jetons : c'est votre fournisseur qui le fait.",
+        "cta": "Voir votre formule"
+      },
+      "provider": "Fournisseur",
+      "providerHelp": "Partagé par tous les sites de cette organisation. Les messages partent de ce serveur directement vers le fournisseur choisi ; rien ne transite par Qubo.",
+      "model": "Modèle",
+      "modelExamples": "Par exemple {models}.",
+      "modelCustom": "Le nom de modèle attendu par votre serveur.",
+      "serverAddress": "Adresse du serveur",
+      "serverAddressHint": "Tout serveur compatible avec l'API de chat OpenAI : Ollama, LM Studio, vLLM, LiteLLM, passerelles Azure.",
+      "apiKey": "Clé API",
+      "apiKeyHint": "Stockée chiffrée sur ce serveur et envoyée uniquement à {provider}.",
+      "getKey": "Obtenir une clé",
+      "keySaved": "Enregistrée ({hint}). Laissez vide pour la conserver.",
+      "keyPaste": "Collez votre clé",
+      "keyOptional": "Facultatif",
+      "removeKey": "Supprimer la clé enregistrée",
+      "budget": "Budget mensuel de jetons",
+      "budgetHint": "Jetons d'entrée et de sortie par mois civil. Vide signifie sans plafond ; votre fournisseur vous facture dans les deux cas.",
+      "noCap": "Sans plafond",
+      "triage": "Trier les nouveaux messages",
+      "triageHelp": "Résume, classe et signale les conversations urgentes ou indésirables quelques secondes après qu'un client a écrit.",
+      "drafts": "Brouillons de réponse",
+      "draftsHelp": "Ajoute « Rédiger avec l'IA » à l'éditeur de réponse. Aucun brouillon n'est envoyé sans que quelqu'un clique sur Envoyer.",
+      "saved": "Enregistré",
+      "saving": "Enregistrement…",
+      "testing": "Test en cours…",
+      "test": "Tester la connexion",
+      "confirmOff": "Désactiver l'IA pour cette organisation et supprimer la clé API ?",
+      "turnOff": "Désactiver et supprimer la clé",
+      "connected": "Connecté. Le modèle a répondu : « {reply} ».",
+      "month": "Ce mois-ci",
+      "monthHelp": "Calculé à partir des jetons déclarés par votre fournisseur. Remis à zéro le 1er du mois (UTC).",
+      "tokens": "jetons",
+      "ofBudget": "sur {budget}",
+      "calls": "{count, plural, one {# appel} other {# appels}}",
+      "failed": "{count, plural, one {# échoué} other {# échoués}}",
+      "budgetUsed": "Budget utilisé",
+      "rules": "Règles de la maison pour {name}",
+      "rulesHelp": "Les brouillons les suivent en plus de la conversation, des commandes du client et des produits correspondants. Ton, horaires, politiques de livraison et de retour.",
+      "instructionsLabel": "Instructions pour les brouillons de réponse",
+      "instructionsPlaceholder": "Nous répondons dans la langue du client et vouvoyons en français.\nHoraires : du lundi au vendredi, de 8 h à 17 h.\nLa livraison en Belgique prend 2 à 4 jours ouvrables ; l'installation fait l'objet d'un devis séparé.\nNe jamais promettre une date de livraison ; indiquer que l'équipe la confirmera.",
+      "saveInstructions": "Enregistrer les instructions"
+    },
+    "inbox": {
+      "title": "Boîte de réception",
+      "description": "D'où viennent les messages, comment partent les réponses et qui est prévenu.",
+      "email": "E-mail",
+      "emailHelp": "Défini par la personne qui gère cette instance Qubo, dans son fichier d'environnement.",
+      "outboundLabel": "Réponses par e-mail",
+      "outboundOn": "Les réponses et les notifications de formulaire sont envoyées via Resend.",
+      "outboundOff": "Non configuré : les réponses sont enregistrées dans la boîte de réception mais pas envoyées par e-mail. Nécessite {vars}.",
+      "inboundLabel": "E-mails entrants",
+      "inboundOn": "Les e-mails envoyés ou transférés à <a>{address}</a> arrivent dans la boîte de réception, et les réponses des clients à vos messages s'y rattachent automatiquement. Transférez-y la boîte mail de votre boutique pour tout garder au même endroit.",
+      "inboundOff": "Non configuré : les réponses des clients par e-mail vont à votre adresse d'expédition au lieu de la boîte de réception. Nécessite {vars}.",
+      "forms": "Formulaires",
+      "formsHelp": "Les formulaires apparaissent ici dès qu'on en soumet un pour la première fois. Les adresses notifiées reçoivent une copie de chaque envoi.",
+      "noForms": "Aucun formulaire pour l'instant",
+      "noFormsHelp": "Ajoutez un bloc Formulaire de contact à une page. Il apparaît ici après son premier envoi."
+    },
+    "languages": {
+      "title": "Langues",
+      "description": "Les langues dans lesquelles ce site est rédigé. Les visiteurs voient d'abord la langue principale.",
+      "nothingToTranslate": "Rien à traduire pour l'instant",
+      "coverageShort": "{done}/{total} traduits",
+      "coverage": "{done} textes sur {total} traduits",
+      "toReview": "{count} à relire",
+      "disabled": "<b>Plusieurs langues</b> est désactivé : seule la langue principale est proposée.",
+      "turnOn": "Activez-le dans Général",
+      "primary": "Langue principale",
+      "primaryHelp": "Le contenu est d'abord rédigé dans cette langue. Chaque traduction est comparée à celle-ci.",
+      "primaryBadge": "Principale",
+      "noPrimary": "Aucune langue principale définie.",
+      "others": "Autres langues",
+      "othersHelp": "Les nouvelles langues démarrent non publiées. Publiez-en une lorsque sa traduction est terminée.",
+      "published": "Publiée",
+      "unpublished": "Non publiée",
+      "onlyPrimary": "Seule la langue principale est configurée.",
+      "note": "Une langue publiée est servie sous son propre préfixe (par exemple {example}) avec un sélecteur dans l'en-tête et des balises hreflang. La traduction du contenu des pages dans le Studio est encore en développement ; les traductions ajoutées par d'autres moyens sont conservées.",
+      "publish": "Publier",
+      "unpublish": "Dépublier",
+      "actionsFor": "Actions pour {label}",
+      "makePrimary": "Définir comme principale",
+      "removeTitle": "Supprimer {label} ?",
+      "removeHelp": "La langue disparaît du site. Ses traductions sont conservées et reviennent si vous la rajoutez.",
+      "removeConfirm": "Supprimer la langue",
+      "primaryTitle": "Définir {label} comme langue principale ?",
+      "primaryConfirmHelp": "Le nouveau contenu sera d'abord rédigé dans cette langue et les autres langues seront comparées à celle-ci. La langue principale actuelle devient une langue ordinaire.",
+      "add": {
+        "button": "Ajouter une langue",
+        "title": "Ajouter une langue",
+        "description": "Elle démarre non publiée, ce qui vous permet de traduire avant que quiconque la voie.",
+        "label": "Langue",
+        "confirm": "Ajouter {label}",
+        "confirmNone": "Ajouter la langue"
+      },
+      "actions": {
+        "generic": "Une erreur est survenue.",
+        "published": "{label} publiée",
+        "unpublished": "{label} dépubliée",
+        "removed": "{label} supprimée",
+        "nowPrimary": "{label} est maintenant la langue principale",
+        "added": "{label} ajoutée"
+      }
+    },
+    "actions": {
+      "noPermission": "Vous n'avez pas la permission de modifier les paramètres.",
+      "nameMin": "Le nom du site doit comporter au moins 2 caractères.",
+      "nameMax": "Le nom du site est limité à 80 caractères.",
+      "descriptionMax": "La description est limitée à 300 caractères.",
+      "siteNotFound": "Site introuvable.",
+      "generic": "Une erreur est survenue.",
+      "checkFields": "Vérifiez les champs en surbrillance.",
+      "limited": "{what} est limité à {max} caractères.",
+      "coordinate": "{what} doit être un nombre compris entre {min} et {max}.",
+      "emailInvalid": "Saisissez une adresse e-mail valide.",
+      "businessType": "Le type d'activité doit être un nom de type schema.org.",
+      "country": "Le pays est le code ISO à deux lettres, par exemple {example}.",
+      "orgNotFound": "Organisation introuvable.",
+      "bothCoordinates": "Saisissez la latitude et la longitude, ou aucune des deux.",
+      "addLanguageFirst": "Ajoutez la langue avant de la définir comme principale."
+    },
+    "provision": {
+      "generic": "Une erreur est survenue.",
+      "orgLimit": "Votre formule {plan} inclut {count, plural, one {# organisation} other {# organisations}}.",
+      "siteLimit": "Votre formule {plan} inclut {count, plural, one {# site} other {# sites}}. Supprimez-en un ou passez à une formule supérieure.",
+      "chooseOrg": "Choisissez une organisation que vous gérez.",
+      "pickType": "Choisissez à quoi sert le site.",
+      "pickLanguage": "Choisissez une langue."
+    },
+    "ownership": {
+      "chooseOrg": "Choisissez une organisation.",
+      "generic": "Une erreur est survenue.",
+      "confirmPublish": "Confirmez l'organisation sous laquelle publier.",
+      "siteNotFound": "Site introuvable.",
+      "managersOnly": "Seuls les propriétaires et les administrateurs de l'organisation du site peuvent faire cela.",
+      "cannotAddToOrg": "Vous ne pouvez pas ajouter de sites à cette organisation.",
+      "publishedStays": "Les sites publiés restent dans leur organisation. Contactez le support pour une migration assistée.",
+      "alreadyPublished": "Ce site est déjà publié.",
+      "movedMeanwhile": "Ce site a été publié ou déplacé entre-temps. Rechargez la page et réessayez.",
+      "deleting": "Suppression…",
+      "publish": {
+        "done": "{name} est en ligne",
+        "button": "Publier",
+        "title": "Publier {name}",
+        "description": "Le site passe en ligne sur ses domaines. Il appartiendra définitivement à l'organisation ci-dessous : les commandes, factures et clients sont enregistrés au nom de cette société.",
+        "confirm": "Publier sous <b>{org}</b>. Je comprends qu'un site publié ne peut pas être déplacé vers une autre organisation.",
+        "thisOrg": "cette organisation",
+        "publishing": "Publication…"
+      },
+      "move": {
+        "done": "{name} transféré",
+        "button": "Transférer",
+        "title": "Transférer {name}",
+        "description": "Les brouillons peuvent être transférés librement. Les médias du site et les polices de l'organisation suivent.",
+        "moving": "Transfert…"
+      },
+      "trash": {
+        "done": "{name} déplacé dans la corbeille",
+        "label": "Supprimer {name}",
+        "title": "Supprimer {name} ?",
+        "description": "Le site va dans la corbeille, en bas de cette page, avec ses pages, son thème, ses produits et ses domaines. Vous pouvez le restaurer pendant {days} jours ; ensuite, il est supprimé définitivement.",
+        "confirm": "Supprimer le site"
+      },
+      "restore": {
+        "done": "{name} restauré",
+        "restoring": "Restauration…",
+        "button": "Restaurer"
+      },
+      "purge": {
+        "done": "{name} supprimé définitivement",
+        "button": "Supprimer maintenant",
+        "title": "Supprimer {name} définitivement ?",
+        "description": "Tout son contenu est supprimé immédiatement : pages, thème, produits, clients, commandes, médias et domaines. Il n'y a pas de retour en arrière possible.",
+        "confirm": "Je comprends que cette action est irréversible.",
+        "confirmButton": "Supprimer définitivement"
+      }
+    },
+    "sites": {
+      "create": "Créer un site",
+      "createFree": "La formule Free permet un seul site. Reliez un compte Portal dans Paramètres → Qubo Portal pour en avoir plus.",
+      "createLimit": "Votre formule {plan} inclut {count, plural, one {# site} other {# sites}} pour toutes les organisations. Supprimez un site pour libérer une place, ou passez à une formule supérieure.",
+      "title": "Sites",
+      "description": "Chaque site a son propre domaine, son thème, son contenu et ses paramètres. Les clients, l'équipe et les médias peuvent être partagés.",
+      "yours": "Vos sites",
+      "yoursHelp": "Les brouillons peuvent être transférés entre organisations ; un site publié reste dans son organisation.",
+      "quota": "{own} dans cette organisation · {sites} et {orgs} sur cette instance.",
+      "usage": {
+        "site": {
+          "unlimited": "{used, plural, one {# site} other {# sites}}",
+          "within": "{used} sur {limit, plural, one {# site} other {# sites}}",
+          "over": "{used, plural, one {# site} other {# sites}} (la formule en inclut {limit})"
+        },
+        "organisation": {
+          "unlimited": "{used, plural, one {# organisation} other {# organisations}}",
+          "within": "{used} sur {limit, plural, one {# organisation} other {# organisations}}",
+          "over": "{used, plural, one {# organisation} other {# organisations}} (la formule en inclut {limit})"
+        }
+      },
+      "current": "(actuel)",
+      "live": "En ligne",
+      "draft": "Brouillon",
+      "noDomain": "Aucun domaine",
+      "bin": "Corbeille",
+      "binHelp": "Les sites supprimés restent ici {days} jours, puis sont supprimés définitivement. Restaurez-en un pour le retrouver exactement tel qu'il était.",
+      "binEmpty": "La corbeille est vide.",
+      "deleted": "Supprimé {when}",
+      "deletedBy": "Supprimé {when} par {by}",
+      "daysLeft": "{count, plural, =0 {supprimé aujourd'hui} one {# jour restant} other {# jours restants}}"
+    },
+    "users": {
+      "title": "Utilisateurs et permissions",
+      "description": "Les personnes ayant accès à tous les sites de cette organisation.",
+      "invite": "Inviter",
+      "inviteHelp": "Les invitations arriveront avec les e-mails transactionnels",
+      "team": "Équipe",
+      "teamCount": "{count, plural, one {# personne a accès.} other {# personnes ont accès.}}",
+      "you": "(vous)",
+      "since": "Depuis le {date}",
+      "roles": "Rôles",
+      "rolesHelp": "Ce que chaque rôle peut faire."
+    }
+  },
+  "security": {
+    "title": "Sécurité et sessions",
+    "description": "Appareils connectés à votre compte. Vous connecter sur un nouvel appareil vous demande confirmation avant de fermer une autre session ouverte.",
+    "signOutOthers": "Déconnecter les autres appareils",
+    "signedIn": "Connectés",
+    "activeSessions": "{count, plural, one {# session active.} other {# sessions actives.}}",
+    "thisDevice": "Cet appareil",
+    "activeNow": "actif maintenant",
+    "lastActive": "dernière activité {ago}",
+    "tabInFocus": "onglet au premier plan",
+    "signOut": "Se déconnecter",
+    "recent": "Activité récente",
+    "recentHelp": "Sessions terminées au cours des 30 derniers jours.",
+    "ended": {
+      "takeover": "Remplacée par une nouvelle connexion",
+      "revoked": "Déconnectée à distance",
+      "signed_out": "Déconnectée",
+      "other": "Déconnectée ou expirée"
+    },
+    "unknownLocation": "Lieu inconnu",
+    "locationsNote": "Les lieux sont approximatifs et déterminés sur ce serveur.",
+    "useSignOut": "Utilisez « Se déconnecter » pour terminer la session de cet appareil."
+  },
+  "portal": {
+    "title": "Qubo Portal",
+    "description": "Cette instance fonctionne de façon autonome. Relier un compte Portal ajoute les limites de votre formule, les avis de mise à jour et la visibilité sur votre parc ; rien ici ne peut désactiver l'instance.",
+    "plan": "Formule",
+    "planHelp": "Ce à quoi cette instance a droit actuellement.",
+    "plans": {
+      "free": "Free",
+      "starter": "Starter",
+      "growth": "Growth",
+      "agency": "Agency"
+    },
+    "status": {
+      "valid": "Licence valide jusqu'au {date}",
+      "grace": "Licence expirée ; période de grâce jusqu'au {date}",
+      "expired": "Licence expirée ; limites de la formule Free appliquées",
+      "unlinked": "Non reliée ; limites de la formule Free appliquées"
+    },
+    "limits": {
+      "orgs": "Organisations",
+      "sites": "Sites (toutes organisations)",
+      "seats": "Places d'équipe",
+      "domains": "Domaines par site",
+      "apps": "Applications par site",
+      "features": "Fonctionnalités"
+    },
+    "unlimited": "Illimité",
+    "upsell": "Besoin de plus d'un site ? Reliez un compte de formule Growth sur <a>{host}</a>.",
+    "linked": "Instance reliée",
+    "linkedHelp": "Un signal de présence est envoyé toutes les 6 heures par l'API et actualise la licence.",
+    "linkedFields": {
+      "portal": "Portal",
+      "instanceId": "ID de l'instance",
+      "heartbeat": "Dernier signal de présence",
+      "fetched": "Licence récupérée"
+    },
+    "never": "Jamais",
+    "lastError": {
+      "line": "{error}. L'instance continue de fonctionner avec sa licence en cache.",
+      "unknown_instance": "Le Portal ne reconnaît plus cette instance (elle y a été révoquée ou supprimée). Déliez-la, puis reliez-la à nouveau avec un nouveau jeton",
+      "bad_signature": "Le Portal a rejeté la signature de cette instance. Déliez-la et reliez-la à nouveau",
+      "clock_skew": "L'horloge de ce serveur a plus de 5 minutes d'écart. Corrigez le NTP et actualisez",
+      "protocol_unsupported": "Cette version de Qubo est trop ancienne pour le Portal. Mettez Qubo à jour",
+      "unreachable": "Impossible de joindre le Portal"
+    },
+    "refresh": "Actualiser maintenant",
+    "unlink": "Délier",
+    "unlinkHelp": "Retour aux limites de la formule Free ; le Portal conserve l'enregistrement de l'instance jusqu'à ce que vous la révoquiez là-bas",
+    "link": "Relier cette instance",
+    "linkHelp": "Créez un jeton d'enregistrement dans le Portal (Instances → Ajouter une instance) et collez-le ici. Les jetons sont à usage unique.",
+    "form": {
+      "token": "Jeton d'enregistrement",
+      "tokenPlaceholder": "Collez le jeton depuis Portal → Instances → Ajouter",
+      "name": "Nom de l'instance",
+      "portal": "Portal",
+      "linking": "Liaison…",
+      "link": "Relier l'instance"
+    },
+    "errors": {
+      "tokenRequired": "Collez le jeton d'enregistrement du Portal.",
+      "invalidToken": "Ce jeton est invalide, expiré ou déjà utilisé.",
+      "instancesExceeded": "Cette organisation Portal a atteint sa limite d'instances.",
+      "alreadyLinked": "Cette instance est déjà reliée.",
+      "portalReplied": "Le Portal a répondu {status} ({code}).",
+      "unreachable": "Impossible de joindre le Portal. Vérifiez l'URL et réessayez.",
+      "linkFailed": "La liaison a échoué."
+    }
+  }
+}

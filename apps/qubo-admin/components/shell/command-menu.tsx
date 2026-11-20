@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { ExternalLink, Monitor, Moon, Paintbrush, Plus, Sun } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTheme } from "next-themes";
 import {
   CommandDialog,
@@ -26,6 +27,8 @@ export function CommandMenu({ open, onOpenChange, site, sites }: {
 }) {
   const router = useRouter();
   const { setTheme } = useTheme();
+  const t = useTranslations("commandMenu");
+  const nav = useTranslations("nav");
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -46,52 +49,52 @@ export function CommandMenu({ open, onOpenChange, site, sites }: {
   const go = (href: string) => run(() => router.push(`/${site.slug}${href}`));
 
   return (
-    <CommandDialog open={open} onOpenChange={onOpenChange} title="Search" description="Jump anywhere in Qubo">
-      <CommandInput placeholder={`Search ${site.name}…`} />
+    <CommandDialog open={open} onOpenChange={onOpenChange} title={t("title")} description={t("description")}>
+      <CommandInput placeholder={t("searchPlaceholder", { site: site.name })} />
       <CommandList className="max-h-[min(28rem,70dvh)]">
-        <CommandEmpty>No results.</CommandEmpty>
-        <CommandGroup heading="Actions">
+        <CommandEmpty>{t("empty")}</CommandEmpty>
+        <CommandGroup heading={t("actions")}>
           <CommandItem onSelect={() => go("/online-store")}>
-            <Paintbrush /> Customize theme
+            <Paintbrush /> {t("customizeTheme")}
           </CommandItem>
           <CommandItem onSelect={() => go("/online-store/pages")}>
-            <Plus /> Create page
+            <Plus /> {t("createPage")}
           </CommandItem>
           {site.url && (
             <CommandItem onSelect={() => run(() => window.open(site.url!, "_blank"))}>
-              <ExternalLink /> View live site
+              <ExternalLink /> {t("viewLiveSite")}
             </CommandItem>
           )}
         </CommandGroup>
         <CommandSeparator />
-        <CommandGroup heading="Go to">
+        <CommandGroup heading={t("goTo")}>
           {flatNavigation(site.capabilities).map((item) => (
-            <CommandItem key={item.href} value={`${item.parent ?? ""} ${item.label}`} onSelect={() => go(item.href)}>
+            <CommandItem key={item.href} value={`${item.parent ? nav(item.parent) : ""} ${nav(item.key)}`} onSelect={() => go(item.href)}>
               <item.icon />
-              {item.parent && <span className="text-muted-foreground">{item.parent} ›</span>}
-              {item.label}
+              {item.parent && <span className="text-muted-foreground">{nav(item.parent)} ›</span>}
+              {nav(item.key)}
             </CommandItem>
           ))}
         </CommandGroup>
         {sites.length > 1 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Switch site">
+            <CommandGroup heading={t("switchSite")}>
               {sites.map((s) => (
                 <CommandItem key={s.slug} value={`site ${s.name}`} onSelect={() => run(() => router.push(`/${s.slug}`))}>
                   <SiteAvatar name={s.name} className="size-5 rounded text-[9px]" />
                   {s.name}
-                  {s.slug === site.slug && <CommandShortcut>Current</CommandShortcut>}
+                  {s.slug === site.slug && <CommandShortcut>{t("current")}</CommandShortcut>}
                 </CommandItem>
               ))}
             </CommandGroup>
           </>
         )}
         <CommandSeparator />
-        <CommandGroup heading="Appearance">
-          <CommandItem onSelect={() => run(() => setTheme("light"))}><Sun /> Light mode</CommandItem>
-          <CommandItem onSelect={() => run(() => setTheme("dark"))}><Moon /> Dark mode</CommandItem>
-          <CommandItem onSelect={() => run(() => setTheme("system"))}><Monitor /> System appearance</CommandItem>
+        <CommandGroup heading={t("appearance")}>
+          <CommandItem onSelect={() => run(() => setTheme("light"))}><Sun /> {t("lightMode")}</CommandItem>
+          <CommandItem onSelect={() => run(() => setTheme("dark"))}><Moon /> {t("darkMode")}</CommandItem>
+          <CommandItem onSelect={() => run(() => setTheme("system"))}><Monitor /> {t("systemAppearance")}</CommandItem>
         </CommandGroup>
       </CommandList>
     </CommandDialog>

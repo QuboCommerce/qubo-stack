@@ -1,0 +1,33 @@
+{
+  "ui": {
+    "close": "Fermer",
+    "search": "Rechercher"
+  },
+  "pagination": {
+    "range": "{from}–{to} sur {total, number}",
+    "page": "{page} / {pages}",
+    "previous": "Page précédente",
+    "next": "Page suivante"
+  },
+  "presence": {
+    "home": "Accueil",
+    "studio": "Studio",
+    "new": "Nouveau",
+    "editing": "Modification",
+    "stopWatching": "arrêter de suivre",
+    "clickToWatch": "cliquer pour suivre",
+    "peerTitle": "{name} · {where} · {action}",
+    "peerTitleAway": "{name} · {where} (absent) · {action}"
+  },
+  "spectate": {
+    "watching": "Vous suivez {name}",
+    "waiting": "en attente…",
+    "stop": "Arrêter"
+  },
+  "sessionEnded": {
+    "takeover": "Vous avez été connecté ailleurs",
+    "revoked": "Cet appareil a été déconnecté",
+    "body": "Les modifications non enregistrées dans cet onglet ne peuvent plus l'être. Reconnectez-vous pour continuer.",
+    "signIn": "Se reconnecter"
+  }
+}
