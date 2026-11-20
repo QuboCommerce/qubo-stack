@@ -19,6 +19,9 @@ every skill: load the one that matches the job.
 - Gates before a merge: `tsc --noEmit` in every touched app, `bun test` in touched packages,
   and a real request against the running dev service.
 - Prose: no em-dashes in docs, comments or changesets.
+- Plans an agent writes for a task go in `.plans/<name>.md` at the repo root (gitignored).
+  Never write a plan to `.cursor/plans/`, `~/.cursor/plans/` or any editor or agent home
+  folder, even when the tool defaults there. Long-lived roadmaps stay in `docs/plans/`.
 - Scratch files (ad hoc scripts, screenshots, dumps, logs) go in `.scratch/` at the repo root
   (gitignored), never in `/tmp` or anywhere else outside the repo. The editor adds every outside
   file an agent opens as a project folder, and it rescans them, which runs the box out of memory.
@@ -58,7 +61,7 @@ Vendored general skills (MIT, upstream noted in each folder):
 | `prototype` | a throwaway prototype to answer a design question |
 
 Customer VPS setup (users, SSH, firewall, Coolify): `docs/VPS.md`.
-Plans: `docs/plans/`.
+Plans: task plans in `.plans/` (gitignored), roadmaps in `docs/plans/`.
 
 ## Agent skills
 

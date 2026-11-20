@@ -111,8 +111,15 @@ async function collectionHeader(sf: Storefront, handle: string, allTitle: string
   const chain: typeof categories = [];
   for (let p = current.parentId ? byId.get(current.parentId) : undefined; p; p = p.parentId ? byId.get(p.parentId) : undefined) chain.unshift(p);
   crumbs.push(...chain.map((c) => ({ label: tidyName(c.name), href: at(sf, `/collections/${c.slug}`) })));
-  const subtree = (id: string): number =>
-    (byId.get(id)?.productCount ?? 0) + categories.filter((c) => c.parentId === id).reduce((n, c) => n + subtree(c.id), 0);
+  // null when the API sent no counts at all, so the block hides the line instead of printing 0
+  const subtree = (id: string): number | null => {
+    const own = byId.get(id)?.productCount;
+    const total = categories.filter((c) => c.parentId === id).reduce<number | null>((n, c) => {
+      const sub = subtree(c.id);
+      return sub === null ? n : (n ?? 0) + sub;
+    }, null);
+    return own === undefined ? total : own + (total ?? 0);
+  };
   return {
     name: tidyName(current.name),
     description: current.description ?? null,
