@@ -67,6 +67,7 @@ export function BrandPage({ theme, update, site, mode }: { theme: Theme; update:
         site={site.slug}
         siteId={site.id}
         kind="image"
+        lens="design"
         title={label ?? "Brand"}
         onPick={([item]) => {
           if (!item || !picking) return;

@@ -232,12 +232,15 @@ export const asset = pgTable(
     /** Tiny blurred placeholder (data URI) for progressive loading. */
     blurhash: text("blurhash"),
     folder: text("folder"),
+    /** Hex SHA-256 of the file, to spot duplicate uploads. Null for files stored before it existed. */
+    sha256: text("sha256"),
     createdById: text("created_by_id").references(() => user.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex("asset_bucket_key_idx").on(t.bucket, t.key),
     index("asset_org_site_idx").on(t.organizationId, t.siteId),
+    index("asset_org_sha256_idx").on(t.organizationId, t.sha256),
   ],
 );
 
