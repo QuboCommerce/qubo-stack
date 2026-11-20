@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { RenderView, tidyName, viewMetadata } from "@/lib/render";
+import { RenderView, SALE_HANDLE, saleTitle, tidyName, viewMetadata } from "@/lib/render";
 import { JsonLd, breadcrumbLd, categoryCrumbs } from "@/lib/seo";
 import { getStorefront, hostFromParam, notFoundOrRedirect } from "@/lib/site";
 
@@ -11,7 +11,10 @@ async function load(params: Params) {
   if (!sf) return { sf, hit: null };
   const slug = decodeURIComponent(handle);
   const [categories, tpl] = await Promise.all([sf.client.getCategories(), sf.client.getTemplate("collection")]);
-  const category = slug === "all" ? { name: null, slug } : categories.find((c) => c.slug === slug);
+  const category =
+    slug === "all"
+      ? { name: null, slug }
+      : (categories.find((c) => c.slug === slug) ?? (slug === SALE_HANDLE ? { name: saleTitle(sf.locale), slug } : undefined));
   return { sf, hit: category && tpl ? { sf, tpl, category, categories } : null };
 }
 
@@ -26,7 +29,7 @@ export default async function CollectionPage({ params }: { params: Params }) {
   return (
     <>
       <RenderView sf={hit.sf} body={hit.tpl.data} view={{ collection: hit.category.slug }} documentId={hit.tpl.documentId} />
-      {hit.category.name ? <JsonLd data={breadcrumbLd(hit.sf, categoryCrumbs(hit.categories, hit.category.slug))} /> : null}
+      {hit.category.name && hit.categories.some((c) => c.slug === hit.category.slug) ? <JsonLd data={breadcrumbLd(hit.sf, categoryCrumbs(hit.categories, hit.category.slug))} /> : null}
     </>
   );
 }
