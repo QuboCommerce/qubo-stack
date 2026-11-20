@@ -151,9 +151,17 @@ export type CheckoutRequest = {
   items: { variantId: string; quantity: number }[];
   /** Origin Stripe returns to; must be a host that serves this site. */
   returnOrigin: string;
+  /** Discount code; refused codes fail the checkout with `discount_refused`. */
+  code?: string;
 };
 
 export type CheckoutResponse = { url: string };
+
+export type DiscountCheckRequest = { code: string; items: { variantId: string; quantity: number }[] };
+
+export type DiscountCheckResponse =
+  | { ok: true; code: string; type: "PERCENTAGE" | "FIXED_AMOUNT" | "FREE_SHIPPING"; amount: string; freeShipping: boolean; subtotal: string }
+  | { ok: false; reason: string };
 
 export type TemplateResponse = { documentId: string; data: RenderDocument };
 

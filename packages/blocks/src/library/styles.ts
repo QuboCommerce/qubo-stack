@@ -735,6 +735,11 @@ html:has(.qb-site-menu-panel:popover-open:is([data-menu="sheet"], [data-menu="fu
 .qb-cart-subtotal { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--qb-step-1); }
 .qb-cart-subtotal strong { color: var(--qb-heading); }
 .qb-cart-error { color: var(--qb-danger, #b91c1c); font-size: var(--qb-step-n1); }
+.qb-cart-discount { display: flex; gap: var(--qb-gap-2xs); }
+.qb-cart-discount .qb-input { flex: 1; min-width: 0; text-transform: uppercase; }
+.qb-cart-subtotal[data-kind="discount"] { font-size: var(--qb-step-0); color: var(--qb-success, #15803d); }
+.qb-cart-subtotal[data-kind="discount"] strong { color: inherit; }
+.qb-cart-subtotal[data-kind="discount"] code { font-family: inherit; font-weight: 600; }
 .qb-cart-empty { display: flex; flex-direction: column; align-items: center; gap: var(--qb-gap-sm); text-align: center; padding: var(--qb-gap-xl) 0; }
 
 /* account */

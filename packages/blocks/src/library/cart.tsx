@@ -203,6 +203,15 @@ export type CartLabels = {
   remove: string;
   quantity: string;
   error: string;
+  /** Hides the discount code field when false. */
+  showDiscount?: boolean;
+  discount?: string;
+  apply?: string;
+  discountApplied?: string;
+  discountRefused?: string;
+  discountSignIn?: string;
+  freeShipping?: string;
+  total?: string;
   /** Locale prefix for product links (`/nl`). */
   basePath?: string;
 };
@@ -214,6 +223,42 @@ export function CartView({ siteId, locale, currency, labels, preview }: { siteId
   const [error, setError] = useState<string | null>(null);
   const fmt = formatter(locale, currency);
   const subtotal = lines.reduce((s, l) => s + Number(l.unitPrice) * l.quantity, 0);
+  const [code, setCode] = useState("");
+  const [applied, setApplied] = useState<{ code: string; amount: number; freeShipping: boolean } | null>(null);
+  const [refusal, setRefusal] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const items = lines.map(({ variantId, quantity }) => ({ variantId, quantity }));
+  const cartKey = JSON.stringify(items);
+
+  async function checkCode(value: string) {
+    if (preview || !value.trim()) return;
+    setChecking(true);
+    setRefusal(null);
+    try {
+      const res = await fetch("/api/discounts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ code: value.trim(), items }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as { ok?: boolean; code?: string; amount?: string; freeShipping?: boolean; reason?: string };
+      if (res.ok && payload.ok && payload.code) {
+        setApplied({ code: payload.code, amount: Number(payload.amount ?? 0), freeShipping: Boolean(payload.freeShipping) });
+      } else {
+        setApplied(null);
+        setRefusal(payload.reason === "sign_in_required" ? labels.discountSignIn ?? labels.discountRefused ?? "" : labels.discountRefused ?? "");
+      }
+    } catch {
+      setApplied(null);
+      setRefusal(labels.discountRefused ?? "");
+    } finally {
+      setChecking(false);
+    }
+  }
+
+  // The saving depends on the lines, so a changed cart re-checks the applied code.
+  useEffect(() => {
+    if (applied) void checkCode(applied.code);
+  }, [cartKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function checkout() {
     if (preview) return;
@@ -223,9 +268,15 @@ export function CartView({ siteId, locale, currency, labels, preview }: { siteId
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ items: lines.map(({ variantId, quantity }) => ({ variantId, quantity })) }),
+        body: JSON.stringify({ items, code: applied?.code }),
       });
       const payload = (await res.json().catch(() => ({}))) as { url?: string; error?: string };
+      if (payload.error === "discount_refused") {
+        setApplied(null);
+        setRefusal(labels.discountRefused ?? "");
+        setBusy(false);
+        return;
+      }
       if (!res.ok || !payload.url) throw new Error(payload.error ?? "error");
       window.location.assign(payload.url);
     } catch {
@@ -283,6 +334,51 @@ export function CartView({ siteId, locale, currency, labels, preview }: { siteId
           <span>{labels.subtotal}</span>
           <strong>{fmt.format(subtotal)}</strong>
         </p>
+        {labels.showDiscount === false ? null : (
+          <form
+            className="qb-cart-discount"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void checkCode(code);
+            }}
+          >
+            <label className="qb-sr-only" htmlFor="qb-cart-code">{labels.discount ?? "Discount code"}</label>
+            <input
+              id="qb-cart-code"
+              className="qb-input"
+              value={code}
+              placeholder={labels.discount ?? "Discount code"}
+              autoComplete="off"
+              maxLength={60}
+              onChange={(e) => setCode(e.target.value)}
+            />
+            <button type="submit" className="qb-button" data-emphasis="outline" disabled={checking || !code.trim()}>
+              {labels.apply ?? "Apply"}
+            </button>
+          </form>
+        )}
+        {applied ? (
+          <p className="qb-cart-subtotal" data-kind="discount">
+            <span>
+              {labels.discountApplied ?? "Discount"} <code>{applied.code}</code>{" "}
+              <button type="button" className="qb-cart-remove" onClick={() => setApplied(null)}>
+                {labels.remove}
+              </button>
+            </span>
+            <strong>{applied.freeShipping ? labels.freeShipping ?? "Free delivery" : `−${fmt.format(applied.amount)}`}</strong>
+          </p>
+        ) : null}
+        {applied && applied.amount > 0 ? (
+          <p className="qb-cart-subtotal" data-kind="total">
+            <span>{labels.total ?? "Total"}</span>
+            <strong>{fmt.format(Math.max(0, subtotal - applied.amount))}</strong>
+          </p>
+        ) : null}
+        {refusal ? (
+          <p className="qb-cart-error" role="alert">
+            {refusal}
+          </p>
+        ) : null}
         {labels.note ? <p className="qb-muted qb-small">{labels.note}</p> : null}
         <button type="button" className="qb-button" data-emphasis="primary" disabled={busy} onClick={checkout}>
           {busy ? labels.redirecting : labels.checkout}
