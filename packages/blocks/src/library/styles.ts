@@ -464,7 +464,7 @@ a.qb-chat-file:hover { text-decoration: underline; }
 .qb-announcement-item { display: inline-flex; align-items: center; gap: 0.5em; }
 .qb-products { list-style: none; padding: 0; }
 .qb-product-card a { display: flex; flex-direction: column; gap: var(--qb-gap-3xs); color: inherit; text-decoration: none; position: relative; }
-.qb-product-card img, .qb-product-card .qb-media-placeholder { width: 100%; aspect-ratio: var(--qb-media-aspect, 1/1); object-fit: cover; border-radius: var(--qb-radius-md); margin-bottom: var(--qb-gap-2xs); }
+.qb-product-card img, .qb-product-card .qb-media-placeholder { width: 100%; aspect-ratio: var(--qb-media-aspect, 1/1); object-fit: contain; padding: 6%; background: var(--qb-surface); border-radius: var(--qb-radius-md); margin-bottom: var(--qb-gap-2xs); }
 .qb-product-card .qb-badge { position: absolute; top: 0.6rem; left: 0.6rem; }
 .qb-product-title { font-weight: 600; }
 .qb-product-card a:hover img { transform: scale(1.02); }
@@ -681,7 +681,7 @@ html:has(.qb-site-menu-panel:popover-open:is([data-menu="sheet"], [data-menu="fu
 .qb-pdp-gallery { display: grid; gap: var(--qb-gap-xs); }
 .qb-pdp-main { display: block; width: 100%; aspect-ratio: var(--qb-media-aspect, 1/1); object-fit: contain; background: var(--qb-surface); border-radius: var(--qb-radius-lg); }
 .qb-pdp-thumbs { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(5rem, 1fr)); gap: var(--qb-gap-xs); }
-.qb-pdp-thumbs img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--qb-radius-md); background: var(--qb-surface); }
+.qb-pdp-thumbs img { display: block; width: 100%; aspect-ratio: 1; object-fit: contain; padding: 6%; border-radius: var(--qb-radius-md); background: var(--qb-surface); }
 .qb-pdp-info { display: flex; flex-direction: column; align-items: flex-start; gap: var(--qb-gap-sm); }
 .qb-pdp-info > .qb-eyebrow { margin: 0; }
 .qb-pdp-title { font-size: var(--qb-step-4); }
@@ -691,6 +691,7 @@ html:has(.qb-site-menu-panel:popover-open:is([data-menu="sheet"], [data-menu="fu
 .qb-pdp-notes li { display: flex; align-items: center; gap: 0.6em; }
 .qb-pdp-notes svg { color: var(--qb-primary); flex: none; }
 .qb-pdp-description { padding-top: var(--qb-gap-sm); border-top: var(--qb-border-width) solid var(--qb-border); width: 100%; }
+.qb-pdp-description p { white-space: pre-line; }
 .qb-buybox { display: grid; gap: var(--qb-gap-sm); width: 100%; }
 .qb-buybox .qb-field { grid-column: auto; }
 .qb-buybox-row { display: flex; gap: var(--qb-gap-xs); flex-wrap: wrap; }
