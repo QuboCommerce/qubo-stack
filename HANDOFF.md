@@ -780,7 +780,10 @@ vertical…", "Armoire réfrigérée…"), slugs and categories untouched, a
 before list in the session scratch. Open: `AN40/60`, `ANS40/60` (positives)
 and `GUF140` may be misfiled and need Mostapha's confirmation. Category text
 has one description field and no NL translation, so intros are French only
-for now (known gap). Prod is the source of truth (decision 44); a fresh
+for now (known gap). The intros for Vitrine, Froid commercial, Cuisson,
+Inox-neutre and Préparation went in by SQL because no admin session was
+available, so the admin category form is still untested for Mostapha's use;
+catalogue edits show on the storefront after the 5 minute cache TTL. Prod is the source of truth (decision 44); a fresh
 import would bring the old titles back.
 
 ## Roadmap
