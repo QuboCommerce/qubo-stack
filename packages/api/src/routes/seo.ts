@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia";
 import { db } from "@qubo/db/client";
-import { category, page, product, redirect, siteDomain, translation } from "@qubo/db/schema";
+import { category, collection, page, product, redirect, siteDomain, translation } from "@qubo/db/schema";
 import { and, asc, eq, inArray, isNotNull, like } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
 
@@ -21,7 +21,7 @@ export const seo = new Elysia({ prefix: "/render" })
   })
   .get("/sitemap", async ({ site, status }) => {
     if (!site) return status(400, { error: "site_not_resolved" });
-    const [products, categories, pages, pageSlugs] = await Promise.all([
+    const [products, categories, collections, pages, pageSlugs] = await Promise.all([
       db
         .select({ slug: product.slug, updatedAt: product.updatedAt })
         .from(product)
@@ -32,6 +32,11 @@ export const seo = new Elysia({ prefix: "/render" })
         .from(category)
         .where(eq(category.siteId, site.id))
         .orderBy(asc(category.position)),
+      db
+        .select({ slug: collection.slug, updatedAt: collection.updatedAt })
+        .from(collection)
+        .where(and(eq(collection.siteId, site.id), eq(collection.isPublished, true)))
+        .orderBy(asc(collection.position), asc(collection.name)),
       db
         .select({ id: page.id, slug: page.slug, title: page.title, updatedAt: page.updatedAt, isHomepage: page.isHomepage })
         .from(page)
@@ -53,6 +58,7 @@ export const seo = new Elysia({ prefix: "/render" })
     return {
       products,
       categories,
+      collections,
       pages: pages.filter((p) => !p.isHomepage).map(({ id, slug, title, updatedAt }) => ({ slug, title, updatedAt, locales: perPage.get(id) ?? {} })),
     };
   })
