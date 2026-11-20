@@ -148,6 +148,15 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
             .where(and(eq(product.id, id), eq(product.siteId, siteId), seenAt ? unchangedSince(product.updatedAt, seenAt) : undefined))
             .returning({ id: product.id });
       if (!row) return null;
+      // A lone variant mirrors the product price: its own price would otherwise outrank this edit.
+      if (!isNew) {
+        const variants = await tx.select({ id: productVariant.id }).from(productVariant).where(eq(productVariant.productId, row.id)).limit(2);
+        if (variants.length === 1)
+          await tx
+            .update(productVariant)
+            .set({ price: values.basePrice, compareAtPrice: values.compareAtPrice, updatedAt: new Date() })
+            .where(eq(productVariant.id, variants[0]!.id));
+      }
       await tx.delete(productCategory).where(eq(productCategory.productId, row.id));
       if (categoryIds.length) await tx.insert(productCategory).values(categoryIds.map((categoryId) => ({ productId: row.id, categoryId })));
       return row.id;
