@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, X } from "lucide-react";
 import { cn } from "@qubo/shared/utils";
 import { setProductImagesAction } from "@/app/product-actions";
+import { ProductThumb } from "@/components/products/product-thumb";
 import { QuickPick } from "@/components/media/quick-pick";
 import { Button } from "@/components/ui/button";
 
@@ -41,8 +42,9 @@ export function ProductMedia({ site, siteId, productId, initial }: { site: strin
       <ul className="grid grid-cols-3 gap-2 @min-[40rem]:grid-cols-5 @min-[80rem]:grid-cols-7">
         {images.map((img, i) => (
           <li key={`${img.url}-${i}`} className={cn("group relative", i === 0 && "col-span-2 row-span-2")}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={img.src} alt={img.alt} className="aspect-square size-full rounded-lg border bg-white object-contain p-1" />
+            <div className="aspect-square overflow-hidden rounded-lg border bg-white p-1">
+              <ProductThumb src={img.src} alt={img.alt} label={i === 0} className="rounded-md" />
+            </div>
             <div className="absolute inset-x-1 bottom-1 flex justify-between opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
               <span className="flex gap-1">
                 {i > 0 && (
