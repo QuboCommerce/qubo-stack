@@ -148,6 +148,13 @@
       "when": 1795177531555,
       "tag": "0020_media_asset_links",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1795178241715,
+      "tag": "0021_variant_images",
+      "breakpoints": true
     }
   ]
 }

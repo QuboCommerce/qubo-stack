@@ -9,6 +9,14 @@ const isSvg = (b: Uint8Array) => {
   const head = new TextDecoder().decode(b.subarray(0, 2048)).replace(/^\uFEFF/, "").trimStart().toLowerCase();
   return (head.startsWith("<svg") || head.startsWith("<?xml") || head.startsWith("<!--")) && head.includes("<svg");
 };
+const isJson = (b: Uint8Array) => {
+  try {
+    JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(b));
+    return true;
+  } catch {
+    return false;
+  }
+};
 const isZip = (b: Uint8Array) => b[0] === 0x50 && b[1] === 0x4b && b[2] === 0x03 && b[3] === 0x04;
 
 /** Extension → rule. Content is sniffed, so a renamed file can't pass as another type. */
@@ -26,13 +34,15 @@ export const FILE_TYPES: Record<string, TypeRule> = {
   xlsx: { mime: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", kind: "document", sniff: isZip },
   txt: { mime: "text/plain; charset=utf-8", kind: "document", sniff: textLike },
   csv: { mime: "text/csv; charset=utf-8", kind: "document", sniff: textLike },
+  md: { mime: "text/markdown; charset=utf-8", kind: "document", sniff: textLike },
+  json: { mime: "application/json; charset=utf-8", kind: "document", sniff: isJson },
 };
 const ALIASES: Record<string, string> = { jpeg: "jpg", jpe: "jpg" };
 
 /** Where a file is going decides what it may be. */
 export const UPLOAD_PROFILES = {
-  /** Site media library: images and short videos, public. */
-  media: { types: ["jpg", "png", "gif", "webp", "avif", "svg", "mp4", "webm", "pdf"], maxBytes: { image: 20e6, video: 100e6, document: 20e6 } },
+  /** Site media library: images, short videos and plain documents, public. Office files stay out until they have a story. */
+  media: { types: ["jpg", "png", "gif", "webp", "avif", "svg", "mp4", "webm", "pdf", "txt", "md", "csv", "json"], maxBytes: { image: 20e6, video: 100e6, document: 20e6 } },
   /** Files a visitor sends in chat: small, private, temporary. */
   chat: { types: ["jpg", "png", "gif", "webp", "pdf"], maxBytes: { image: 10e6, video: 0, document: 10e6 } },
   /** Files that arrive with e-mail or a form: private. */

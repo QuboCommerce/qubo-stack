@@ -7,8 +7,10 @@ import {
   decimal,
   jsonb,
   uniqueIndex,
+  primaryKey,
+  index,
 } from "drizzle-orm/pg-core";
-import { product } from "./catalog";
+import { product, productImage } from "./catalog";
 import { site } from "./site";
 
 export const productOption = pgTable("product_option", {
@@ -71,3 +73,20 @@ export const variantOptionValue = pgTable("variant_option_value", {
     .notNull()
     .references(() => productOptionValue.id, { onDelete: "cascade" }),
 });
+
+/**
+ * Photos of a variant, picked from its product's gallery. The gallery is the
+ * only place images are attached; removing one there drops it here (cascade).
+ */
+export const productVariantImage = pgTable(
+  "product_variant_image",
+  {
+    variantId: uuid("variant_id")
+      .notNull()
+      .references(() => productVariant.id, { onDelete: "cascade" }),
+    productImageId: uuid("product_image_id")
+      .notNull()
+      .references(() => productImage.id, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.variantId, t.productImageId] }), index("product_variant_image_image_idx").on(t.productImageId)],
+);

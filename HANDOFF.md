@@ -818,6 +818,28 @@ disk. The admin legacy route still serves from the folder and 301s to the librar
 the folder is not configured; the storefront route is unchanged because it has no DB access.
 Byte-identical legacy files keep only the first filename, so the 301 for the others is a 404.
 
+### 49. Media lenses, tags, product cards and variant photos (ml3 to ml8, 2026-11-20)
+
+One pool, many lenses (`MEDIA_LENSES` in `packages/storage/src/media.ts`). A lens is a SQL
+filter over the links, never a stored field, so a file shows up wherever it is used:
+Products (a `product_image.asset_id` row), Pages (`asset_usage` on a `page` document),
+Design (theme `brand.*.assetId` in draft or published, or usage on non-page documents),
+Blog (`post.cover_image` URL, until `post.cover_asset_id` exists), Documents (mime not
+image or video). **Scratch** is derived: no link and no tag. Uploading never asks where a
+file goes; in a linked lens the upload lands in Scratch with a note. Tags (`asset_tag`,
+lowercase, 40 chars) are free-form and searched with the filename. Lenses are gated by
+capability in `mediaFacetsAction`. The Products lens shows one card per product (ref badge
+on the "forehead", first photos, "+N"), searched by name anywhere and by `legacy_id` or
+variant SKU prefix; the card opens a sheet that reuses `ProductMedia`, so the editor and the
+library write the same gallery. QuickPick takes a `lens` (product media `products`, studio
+fields `pages`, brand `design`) and falls back to All when that lens is empty. Duplicate
+uploads (same sha256 in the org) return the existing file with `duplicate: true`. md and
+json join the allowlist (sniffed; served with nosniff and a sandbox CSP). Migration 0021
+adds `product_variant_image(variant_id, product_image_id)`; variants pick from the gallery
+only, and `setProductImagesAction` now diffs by URL so row ids, and with them variant
+links, survive a reorder. The catalogue API returns `variants[].images` (empty means use the
+product photos); the storefront does not switch photos per variant yet.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub
