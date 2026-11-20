@@ -805,6 +805,19 @@ HM Froid's 3,946 legacy gallery URLs stay unlinked until the ml2 import.
 `post.cover_asset_id` comes with the blog lens, since nothing writes `post.cover_image`
 yet.
 
+### 48. Legacy product photo import (ml2, 2026-11-20)
+
+`scripts/media/import-legacy-photos.ts --site <slug> [--dry-run|--apply] [--limit N]` copies
+the files behind `/api/legacy-assets/<file>` gallery rows into the media library, tags them
+`import:shopapplication` and rewrites `product_image.url` and `asset_id`. It is idempotent: a
+file whose sha256 already exists in the organisation reuses that asset, and a new asset's id
+is derived from (org, sha256), so a failed run recovers on the next one. On prod it runs in a
+one-off `qubo-elysia` container (the admin image has no sources); the exact command is in the
+script header. Not run on prod yet: it needs Ali's go, a backup first, and about 339 MB of
+disk. The admin legacy route still serves from the folder and 301s to the library file when
+the folder is not configured; the storefront route is unchanged because it has no DB access.
+Byte-identical legacy files keep only the first filename, so the 301 for the others is a 404.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub
