@@ -7,6 +7,7 @@ import type { LucideProps } from "lucide-react";
  * Names start with `line-`; they take the same props as lucide icons.
  */
 const paths: Record<string, string> = {
+  "line-tag": "<path d=\"M3 3h8l10 10-8 8L3 11V3Z\"/><circle cx=\"7.5\" cy=\"7.5\" r=\"1.5\"/>",
   "line-pin": "<path d=\"M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z\"/><circle cx=\"12\" cy=\"10\" r=\"2.5\"/>",
   "line-catalogue": "<path d=\"M3 21V3h18v18M3 9h18M3 15h18M7 3v6M15 9v6M9 15v6\"/>",
   "line-cycle": "<path d=\"M20 7v5h-5M4 17v-5h5M6 8a7 7 0 0 1 12-1l2 5M4 12l2 5a7 7 0 0 0 12-1\"/>",
