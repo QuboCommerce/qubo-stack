@@ -889,8 +889,34 @@ translated on purpose.
 Not translated yet (phase 2): block, field, preset and theme names from `packages/blocks`,
 `packages/stylekit` and `@qubo/studio` errors (Puck labels in the Studio), and `formatBytes`
 units from `@qubo/storage`. Known cosmetic gaps: inbox filter tabs clip in French, one
-promotions form label wraps. Storefront copy stays content driven. Migration 0023 is not yet
-applied on prod (manual, see the promotions deploy notes).
+promotions form label wraps. Storefront copy stays content driven. Migration 0023 is applied on
+prod (2026-11-20).
+
+### 53. Collections and inventory (2026-11-20)
+
+`/products/collections`, `/products/inventory` and `/products/gift-cards` used to 404 because
+`products/[id]` caught them. Collections and Inventory are now real pages; Gift cards is out of
+the nav (the route still 404s if typed).
+
+Collections (migration 0024: `collection`, `collection_product`) are smart (rules, match all or
+any) or hand-picked (ordered `collection_product`). Rules live in `@qubo/db/collection-rules`,
+shared by admin preview and API: category (with subtree), SKU (variant sku, `Référence` from
+`source_snapshot`, or `legacy_id`), name, brand, price, on sale, in stock, created within N
+days. Conditions reference `"product"` by name, so select from `product` unaliased. An empty
+smart collection matches nothing. Storefront `/collections/<handle>` resolves `all`, then a
+category, then a published collection, then `promotions`, then 404: a category with the same
+slug wins and the editor warns about it. API: `GET /catalog/collections`,
+`/catalog/products?collection=`; the sitemap lists collections. New sites get a collection
+template of CollectionHeader plus ProductGrid; existing sites keep theirs.
+
+Inventory: the Inventory page (search, low/out/untracked tabs, inline quantity, item sheet
+with threshold, tracking, supplier, location, adjustments and history) and a Stock card on
+the product page (editable for one variant, read-only list for several). Quantity writes are
+compare-and-set on the previous value; adjustments never go below 0. History reasons: SALE
+(written by the Stripe webhook, reference_type `order`), ADJUSTMENT (reference_type `damaged`
+or `note`). Untested with live Stripe. Known gaps: the collection list block and SiteTree show
+categories only; CollectionHeader's count wording is the block default (English) until edited.
+Migration 0024 is not yet applied on prod.
 
 ## Roadmap
 
