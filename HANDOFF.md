@@ -840,6 +840,18 @@ only, and `setProductImagesAction` now diffs by URL so row ids, and with them va
 links, survive a reorder. The catalogue API returns `variants[].images` (empty means use the
 product photos); the storefront does not switch photos per variant yet.
 
+### 50. Even product tiles, descriptions kept as typed (2026-11-20)
+
+Product card images and PDP thumbnails use `object-fit: contain` on a `--qb-surface` tile
+with 6% padding (`packages/blocks/src/library/styles.ts`). Cropping with `cover` cut tall
+photos and left white-background JPGs looking larger than transparent ones. PDP description
+paragraphs use `white-space: pre-line`, so a single newline (a typed bullet list) shows as a
+line break. HM Froid descriptions: the shop export behind the 3,949 products had no
+description column, so every product came in empty. The older site export
+(`.private/legacy-archive/2026-09-18/exports/products.txt`, tab separated) has HTML
+descriptions for 760 of them, matched on `source_snapshot->>'Référence'`; the backfill
+converts them to plain text and only fills empty descriptions.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub
