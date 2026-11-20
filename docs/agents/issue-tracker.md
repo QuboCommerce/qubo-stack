@@ -1,6 +1,8 @@
 # Issue tracker: local plans
 
-Qubo has no external issue tracker. Work is tracked in three places:
+Qubo has no external issue tracker. Task-sized build plans (one fix, one client request) live in
+`.plans/<name>.md` at the repo root, gitignored, never in `.cursor/plans/`. Larger bodies of
+work are tracked in three places:
 
 - `docs/plans/<plan>.md`: the plan for a body of work, with a phase table whose `id` column
   names each ticket (for example `ds1-schema`).
