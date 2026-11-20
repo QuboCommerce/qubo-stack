@@ -1,6 +1,8 @@
 import { Elysia, t } from "elysia";
 import { db } from "@qubo/db/client";
 import {
+  discount,
+  discountUsage,
   inventoryItem,
   order as orderTable,
   orderItem,
@@ -18,6 +20,7 @@ import { keyOf, resolvePrices } from "../lib/pricing";
 import { StripeConfigError, stripeRequest, verifyStripeSignature } from "../lib/stripe";
 import { sendOrderConfirmation } from "../lib/order-email";
 import { allowedSiteOrigin } from "../lib/origins";
+import { categoriesOf, evaluateDiscount, loadDiscount, shopperFor, type DiscountRule } from "../lib/discounts";
 
 const MAX_LINES = 10;
 const MAX_QTY = 20;
@@ -52,6 +55,75 @@ function orderPrefix(slug: string) {
   return initials.slice(0, 4);
 }
 
+type CartItem = { variantId: string; quantity: number };
+type PricedLine = { variantId: string; productId: string; quantity: number; cents: number; name: string };
+
+/** Re-prices a cart from the database: availability, stock and the shopper's price list. */
+async function priceCart(
+  siteId: string,
+  userId: string | null,
+  items: CartItem[],
+): Promise<{ lines: PricedLine[] } | { error: string; status: 400 | 409; variantId?: string }> {
+  const ids = items.map((i) => i.variantId);
+  if (new Set(ids).size !== ids.length) return { error: "duplicate_variants", status: 400 };
+  const variants = await db
+    .select({
+      id: productVariant.id,
+      name: productVariant.name,
+      productId: product.id,
+      productName: product.name,
+      basePrice: product.basePrice,
+      variantPrice: productVariant.price,
+      available: sql<number | null>`case
+        when ${inventoryItem.tracked} then greatest(${inventoryItem.quantity} - ${inventoryItem.reservedQuantity}, 0)
+        else null end`,
+    })
+    .from(productVariant)
+    .innerJoin(product, eq(product.id, productVariant.productId))
+    .leftJoin(inventoryItem, eq(inventoryItem.variantId, productVariant.id))
+    .where(and(eq(productVariant.siteId, siteId), eq(product.isArchived, false), inArray(productVariant.id, ids)));
+  if (variants.length !== ids.length) return { error: "unavailable", status: 409 };
+
+  const prices = await resolvePrices(
+    siteId,
+    userId,
+    variants.map((v) => ({ productId: v.productId, variantId: v.id, basePrice: v.basePrice, variantPrice: v.variantPrice })),
+  );
+  const quantities = new Map(items.map((i) => [i.variantId, i.quantity]));
+  const lines: PricedLine[] = [];
+  for (const v of variants) {
+    const quantity = quantities.get(v.id)!;
+    if (v.available !== null && v.available < quantity) return { error: "insufficient_stock", status: 409, variantId: v.id };
+    const cents = Math.round(Number(prices.get(keyOf({ productId: v.productId, variantId: v.id }))!.amount) * 100);
+    if (!Number.isSafeInteger(cents) || cents < 50) return { error: "invalid_price", status: 409, variantId: v.id };
+    lines.push({
+      variantId: v.id,
+      productId: v.productId,
+      quantity,
+      cents,
+      name: !v.name || v.name === "Default" ? v.productName : `${v.productName} — ${v.name}`,
+    });
+  }
+  return { lines };
+}
+
+async function checkCode(siteId: string, userId: string | null, code: string, lines: PricedLine[]) {
+  const rule = await loadDiscount(siteId, code);
+  if (!rule) return { ok: false as const, reason: "unknown" as const };
+  const [categories, shopper] = await Promise.all([categoriesOf([...new Set(lines.map((l) => l.productId))]), shopperFor(rule.id, userId)]);
+  const result = evaluateDiscount(
+    rule,
+    lines.map((l) => ({ productId: l.productId, categoryIds: categories.get(l.productId) ?? [], quantity: l.quantity, cents: l.cents })),
+    shopper,
+  );
+  return result.ok ? { ...result, rule } : result;
+}
+
+const cartItems = t.Array(t.Object({ variantId: t.String({ format: "uuid" }), quantity: t.Integer({ minimum: 1, maximum: MAX_QTY }) }), {
+  minItems: 1,
+  maxItems: MAX_LINES,
+});
+
 type CheckoutSession = { id: string; url: string | null };
 
 export const commerce = new Elysia()
@@ -61,42 +133,17 @@ export const commerce = new Elysia()
     async ({ site, actor, body, status }) => {
       if (!site) return status(400, { error: "site_not_resolved" });
       if (!site.capabilities.includes("commerce")) return status(404, { error: "not_found" });
-      const ids = body.items.map((i) => i.variantId);
-      if (new Set(ids).size !== ids.length) return status(400, { error: "duplicate_variants" });
       const origin = await allowedSiteOrigin(site, body.returnOrigin);
       if (!origin) return status(400, { error: "invalid_return_origin" });
+      const priced = await priceCart(site.id, actor?.id ?? null, body.items);
+      if ("error" in priced) return status(priced.status, { error: priced.error, variantId: priced.variantId });
+      const { lines } = priced;
 
-      const variants = await db
-        .select({
-          id: productVariant.id,
-          name: productVariant.name,
-          productId: product.id,
-          productName: product.name,
-          basePrice: product.basePrice,
-          variantPrice: productVariant.price,
-          available: sql<number | null>`case
-            when ${inventoryItem.tracked} then greatest(${inventoryItem.quantity} - ${inventoryItem.reservedQuantity}, 0)
-            else null end`,
-        })
-        .from(productVariant)
-        .innerJoin(product, eq(product.id, productVariant.productId))
-        .leftJoin(inventoryItem, eq(inventoryItem.variantId, productVariant.id))
-        .where(and(eq(productVariant.siteId, site.id), eq(product.isArchived, false), inArray(productVariant.id, ids)));
-      if (variants.length !== ids.length) return status(409, { error: "unavailable" });
-
-      const prices = await resolvePrices(
-        site.id,
-        actor?.id ?? null,
-        variants.map((v) => ({ productId: v.productId, variantId: v.id, basePrice: v.basePrice, variantPrice: v.variantPrice })),
-      );
-      const quantities = new Map(body.items.map((i) => [i.variantId, i.quantity]));
-      const lines = [];
-      for (const v of variants) {
-        const quantity = quantities.get(v.id)!;
-        if (v.available !== null && v.available < quantity) return status(409, { error: "insufficient_stock", variantId: v.id });
-        const cents = Math.round(Number(prices.get(keyOf({ productId: v.productId, variantId: v.id }))!.amount) * 100);
-        if (!Number.isSafeInteger(cents) || cents < 50) return status(409, { error: "invalid_price", variantId: v.id });
-        lines.push({ variantId: v.id, quantity, cents, name: !v.name || v.name === "Default" ? v.productName : `${v.productName} — ${v.name}` });
+      let applied: { rule: DiscountRule; amountCents: number; freeShipping: boolean } | null = null;
+      if (body.code?.trim()) {
+        const checked = await checkCode(site.id, actor?.id ?? null, body.code, lines);
+        if (!checked.ok) return status(409, { error: "discount_refused", reason: checked.reason });
+        applied = checked;
       }
 
       const currency = site.currency.toLowerCase();
@@ -111,9 +158,10 @@ export const commerce = new Elysia()
       if (process.env.CHECKOUT_AUTOMATIC_TAX !== "0") form.set("automatic_tax[enabled]", "true");
       const shippingCents = Number.parseInt(process.env.CHECKOUT_SHIPPING_CENTS ?? "", 10);
       if (Number.isSafeInteger(shippingCents) && shippingCents >= 0) {
+        const free = applied?.freeShipping ?? false;
         form.set("shipping_options[0][shipping_rate_data][display_name]", process.env.CHECKOUT_SHIPPING_LABEL?.trim() || "Delivery");
         form.set("shipping_options[0][shipping_rate_data][type]", "fixed_amount");
-        form.set("shipping_options[0][shipping_rate_data][fixed_amount][amount]", String(shippingCents));
+        form.set("shipping_options[0][shipping_rate_data][fixed_amount][amount]", String(free ? 0 : shippingCents));
         form.set("shipping_options[0][shipping_rate_data][fixed_amount][currency]", currency);
       }
       form.set("metadata[site_id]", site.id);
@@ -131,6 +179,21 @@ export const commerce = new Elysia()
       });
 
       try {
+        if (applied) {
+          form.set("metadata[discount_id]", applied.rule.id);
+          if (applied.amountCents > 0) {
+            // A one-off coupon for exactly this saving: Stripe then shows it and reports it in total_details.
+            const coupon = new URLSearchParams({
+              amount_off: String(applied.amountCents),
+              currency,
+              duration: "once",
+              max_redemptions: "1",
+              name: applied.rule.code.slice(0, 40),
+            });
+            const { id } = await stripeRequest<{ id: string }>("/coupons", { method: "POST", body: coupon });
+            form.set("discounts[0][coupon]", id);
+          }
+        }
         const session = await stripeRequest<CheckoutSession>("/checkout/sessions", { method: "POST", body: form });
         if (!session.url) throw new Error("Stripe returned no checkout URL");
         return { url: session.url };
@@ -141,14 +204,32 @@ export const commerce = new Elysia()
       }
     },
     {
-      body: t.Object({
-        items: t.Array(t.Object({ variantId: t.String({ format: "uuid" }), quantity: t.Integer({ minimum: 1, maximum: MAX_QTY }) }), {
-          minItems: 1,
-          maxItems: MAX_LINES,
-        }),
-        returnOrigin: t.String({ maxLength: 300 }),
-      }),
+      body: t.Object({ items: cartItems, returnOrigin: t.String({ maxLength: 300 }), code: t.Optional(t.String({ maxLength: 60 })) }),
       detail: { summary: "Creates a Stripe Checkout session for the resolved site's cart" },
+    },
+  )
+  .post(
+    "/discounts/check",
+    async ({ site, actor, body, status }) => {
+      if (!site) return status(400, { error: "site_not_resolved" });
+      if (!site.capabilities.includes("commerce")) return status(404, { error: "not_found" });
+      const priced = await priceCart(site.id, actor?.id ?? null, body.items);
+      if ("error" in priced) return status(priced.status, { error: priced.error, variantId: priced.variantId });
+      const checked = await checkCode(site.id, actor?.id ?? null, body.code, priced.lines);
+      if (!checked.ok) return { ok: false as const, reason: checked.reason };
+      const subtotal = priced.lines.reduce((sum, l) => sum + l.cents * l.quantity, 0);
+      return {
+        ok: true as const,
+        code: checked.rule.code,
+        type: checked.rule.type,
+        amount: decimal(checked.amountCents),
+        freeShipping: checked.freeShipping,
+        subtotal: decimal(subtotal),
+      };
+    },
+    {
+      body: t.Object({ items: cartItems, code: t.String({ minLength: 1, maxLength: 60 }) }),
+      detail: { summary: "Checks a discount code against a cart and returns the saving" },
     },
   );
 
@@ -194,7 +275,7 @@ type StripeSession = {
   collected_information?: { shipping_details?: { name?: string | null; address?: StripeAddress } | null } | null;
   payment_method_types?: string[];
   client_reference_id?: string | null;
-  metadata?: { site_id?: string; store_id?: string; cart?: string };
+  metadata?: { site_id?: string; store_id?: string; cart?: string; discount_id?: string };
 };
 
 async function recordOrder(eventId: string, session: StripeSession) {
@@ -306,6 +387,15 @@ async function recordOrder(eventId: string, session: StripeSession) {
       amount: decimal(session.amount_total),
       currency,
     });
+    const discountId = session.metadata?.discount_id;
+    if (discountId && /^[0-9a-f-]{36}$/i.test(discountId)) {
+      const [used] = await tx
+        .insert(discountUsage)
+        .values({ discountId, orderId: row.id, customerId })
+        .onConflictDoNothing()
+        .returning({ id: discountUsage.id });
+      if (used) await tx.update(discount).set({ usedCount: sql`${discount.usedCount} + 1` }).where(eq(discount.id, discountId));
+    }
     created = true;
   });
 

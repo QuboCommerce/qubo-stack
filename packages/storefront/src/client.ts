@@ -11,6 +11,8 @@ import type {
   ProductListResponse,
   SiteSummary,
   CheckoutRequest,
+  DiscountCheckRequest,
+  DiscountCheckResponse,
   CheckoutResponse,
 } from "./types";
 
@@ -123,11 +125,13 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     getProducts: (params: {
       query?: string;
       category?: string;
+      onSale?: boolean;
       limit?: number;
     } = {}) => {
       const search = new URLSearchParams();
       if (params.query) search.set("q", params.query);
       if (params.category) search.set("category", params.category);
+      if (params.onSale) search.set("onSale", "1");
       if (params.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
       return request<ProductListResponse>(
@@ -161,6 +165,14 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     /** `cookie`: the visitor's session cookie, so the order is linked to their account. */
     checkout: (body: CheckoutRequest, cookie?: string | null) =>
       request<CheckoutResponse>("/checkout", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) },
+        body: JSON.stringify(body),
+      }),
+
+    /** Checks a discount code against a cart (same pricing as checkout). */
+    checkDiscount: (body: DiscountCheckRequest, cookie?: string | null) =>
+      request<DiscountCheckResponse>("/discounts/check", {
         method: "POST",
         headers: { "content-type": "application/json", ...(cookie ? { cookie } : {}) },
         body: JSON.stringify(body),

@@ -852,6 +852,30 @@ description column, so every product came in empty. The older site export
 descriptions for 760 of them, matched on `source_snapshot->>'Référence'`; the backfill
 converts them to plain text and only fills empty descriptions.
 
+### 51. Promotions: sale prices and discount codes (pr1 to pr7, 2026-11-20)
+
+Admin: **Promotions** (`apps/qubo-admin/app/(app)/[site]/promotions/`, actions in
+`app/promotion-actions.ts`). A sale is product level: `base_price` drops and
+`compare_at_price` keeps the regular price; ending it moves the regular price back. Bulk
+sales pick a category subtree and/or a reference or name prefix and never compound (they
+re-price from the regular price). Variant price overrides are not touched. Sale changes call
+`notifyRevalidate`, so storefront prices update at once instead of after the 5 minute TTL.
+
+Codes live in `discount` / `discount_condition` (migration 0022). Rules are pure in
+`packages/api/src/lib/discount-rules.ts` (tested); `lib/discounts.ts` loads a code and its
+categories, including ancestors, so a code on a parent category covers its leaves.
+`POST /v1/discounts/check` returns the saving or a reason (`expired`, `used_up`,
+`min_purchase`, `not_eligible`, `sign_in_required`, `unknown`). Checkout re-checks the code,
+answers 409 `discount_refused` if it no longer applies, and sends Stripe a one-off coupon;
+the webhook records `discount_total` from `total_details.amount_discount` and bumps
+`used_count` once per session. Real Stripe coupons are untested locally (no key); verify
+the first live order. Datetime fields use the site timezone (`site_settings.timezone`).
+
+Storefront: cards show a "−N%" badge when compare-at is above price.
+`/collections/promotions` is a virtual collection of products on sale unless a real
+category has that slug. The Cart block has a code field (`showDiscount`), a discount line
+and a total; HM Froid's French labels are in `seed-hm-froid-commerce.ts`.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   const sf = await getStorefront(requestHost(req.headers));
   if (!sf || !sf.site.capabilities.includes("commerce")) return Response.json({ error: "not_found" }, { status: 404 });
 
-  const body = (await req.json().catch(() => null)) as { items?: unknown } | null;
+  const body = (await req.json().catch(() => null)) as { items?: unknown; code?: unknown } | null;
   if (!body || !Array.isArray(body.items)) return Response.json({ error: "invalid_cart" }, { status: 400 });
 
   // Same origin the visitor is on, so the success page sees (and clears) the same localStorage cart.
@@ -23,6 +23,7 @@ export async function POST(req: Request) {
     const { url } = await sf.client.checkout({
       items: body.items as { variantId: string; quantity: number }[],
       returnOrigin: `${proto}://${rawHost}`,
+      code: typeof body.code === "string" && body.code.trim() ? body.code.trim().slice(0, 60) : undefined,
     }, req.headers.get("cookie"));
     return Response.json({ url });
   } catch (error) {
