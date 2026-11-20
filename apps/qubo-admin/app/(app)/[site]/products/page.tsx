@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Archive, ArchiveRestore, ImageOff, LayoutGrid, List, Package, Plus, Upload } from "lucide-react";
+import { Archive, ArchiveRestore, LayoutGrid, List, Package, Plus, Upload } from "lucide-react";
 import { toggleProductArchive } from "@/app/actions";
 import { IndexToolbar, Pagination, td, th } from "@/components/index-table";
+import { ProductThumb } from "@/components/products/product-thumb";
 import { CategoryFilter } from "@/components/categories/category-filter";
 import { EmptyState, Page, Panel } from "@/components/page";
 import { Badge } from "@/components/ui/badge";
@@ -106,12 +107,7 @@ export default async function ProductsPage({ params, searchParams }: { params: P
                   <li key={p.id}>
                     <Link href={`${base}/${p.id}`} className="group flex h-full flex-col overflow-hidden rounded-xl border bg-card transition hover:border-foreground/20 hover:shadow-md">
                       <div className="relative grid aspect-square place-items-center bg-white p-3">
-                        {img ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={img} alt="" loading="lazy" className="size-full object-contain transition-transform group-hover:scale-[1.03]" />
-                        ) : (
-                          <ImageOff className="size-6 text-muted-foreground" />
-                        )}
+                        <ProductThumb src={img} label className="rounded-lg transition-transform group-hover:scale-[1.03]" />
                         {p.isArchived && <Badge variant="secondary" className="absolute left-2 top-2">Archived</Badge>}
                         <RowPresence path={`${base}/${p.id}`} className="absolute bottom-2 right-2" />
                       </div>
@@ -150,12 +146,7 @@ export default async function ProductsPage({ params, searchParams }: { params: P
                         <td className={cn(td, "w-full max-w-0")}>
                           <div className="flex min-w-0 items-center gap-3">
                             <div className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-lg border bg-white @min-[90rem]:size-11">
-                              {img ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img src={img} alt="" loading="lazy" className="size-full object-contain" />
-                              ) : (
-                                <ImageOff className="size-4 text-muted-foreground" />
-                              )}
+                              <ProductThumb src={img} />
                             </div>
                             <div className="min-w-0">
                               <Link href={`${base}/${p.id}`} className="line-clamp-2 font-medium hover:underline @min-[56rem]:line-clamp-1">{p.name}</Link>
