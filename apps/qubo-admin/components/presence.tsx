@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { usePeers, type Peer } from "@qubo/realtime/client";
 import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@qubo/shared/utils";
@@ -23,17 +24,22 @@ const initials = (name: string) =>
     .join("") || "?";
 
 /** "Products › Edit" style hint of where a peer is, from their route. */
-function where(p: Peer) {
+function where(p: Peer, t: ReturnType<typeof useTranslations<"presence">>, nav: ReturnType<typeof useTranslations<"nav">>) {
   const parts = p.route.split("/").filter(Boolean).slice(1);
-  if (!parts.length) return "Home";
-  if (parts[0] === "studio") return "Studio";
-  const label = parts[0]!.replace(/-/g, " ");
-  return `${label[0]!.toUpperCase()}${label.slice(1)}${parts.length > 1 ? (parts[1] === "new" ? " › New" : " › Editing") : ""}`;
+  if (!parts.length) return t("home");
+  if (parts[0] === "studio") return t("studio");
+  const raw = parts[0]!.replace(/-/g, " ");
+  const key = parts[0]!.replace(/-(\w)/g, (_, c: string) => c.toUpperCase());
+  const label = nav.has(key as never) ? nav(key as never) : `${raw[0]!.toUpperCase()}${raw.slice(1)}`;
+  return `${label}${parts.length > 1 ? (parts[1] === "new" ? ` › ${t("new")}` : ` › ${t("editing")}`) : ""}`;
 }
 
 function PeerAvatar({ peer, size = "sm", className }: { peer: Peer; size?: "sm" | "default"; className?: string }) {
   const { target, watch } = useSpectate();
+  const t = useTranslations("presence");
+  const nav = useTranslations("nav");
   const watching = target === peer.userId;
+  const params = { name: peer.name, where: where(peer, t, nav), action: watching ? t("stopWatching") : t("clickToWatch") };
   const toggle = () => watch(watching ? null : peer.userId);
   return (
     <Avatar
@@ -43,7 +49,7 @@ function PeerAvatar({ peer, size = "sm", className }: { peer: Peer; size?: "sm" 
       aria-pressed={watching}
       onClick={toggle}
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggle())}
-      title={`${peer.name} · ${where(peer)}${peer.focused ? "" : " (away)"} — ${watching ? "stop watching" : "click to watch"}`}
+      title={peer.focused ? t("peerTitle", params) : t("peerTitleAway", params)}
       className={cn("cursor-pointer ring-2 outline-none focus-visible:ring-4", !peer.focused && "opacity-50", watching && "ring-4", className)}
       style={{ ["--tw-ring-color" as string]: peerColor(peer.userId) }}
     >

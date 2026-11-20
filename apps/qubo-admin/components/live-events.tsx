@@ -1,5 +1,7 @@
 "use client";
 import { usePathname, useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { ago } from "@/lib/relative";
 import { createContext, useContext, useRef, useState } from "react";
 import { EventsProvider, PresenceProvider, useEvent } from "@qubo/realtime/client";
 import { FieldPresenceOverlay } from "@/components/presence";
@@ -51,6 +53,8 @@ type Ended = { reason: "takeover" | "revoked"; deviceLabel: string | null; city:
 
 /** Blocking modal when this tab's session is ended from another device. */
 function SessionEnded({ sessionId }: { sessionId: string }) {
+  const t = useTranslations("sessionEnded");
+  const locale = useLocale();
   const [ended, setEnded] = useState<Ended | null>(null);
   useEvent("session.revoked", (e) => {
     if (e.payload.sessionId === sessionId) setEnded({ reason: e.payload.reason, ...e.payload.by });
@@ -60,12 +64,12 @@ function SessionEnded({ sessionId }: { sessionId: string }) {
     <Dialog open onOpenChange={() => {}}>
       <DialogContent showCloseButton={false} onEscapeKeyDown={(e) => e.preventDefault()} onPointerDownOutside={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>{ended.reason === "takeover" ? "You have been logged in elsewhere" : "This device was signed out"}</DialogTitle>
-          <DialogDescription>{[ended.deviceLabel, ended.city, "just now"].filter(Boolean).join(" · ")}</DialogDescription>
+          <DialogTitle>{t(ended.reason)}</DialogTitle>
+          <DialogDescription>{[ended.deviceLabel, ended.city, ago(new Date(), locale)].filter(Boolean).join(" · ")}</DialogDescription>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground">Unsaved changes in this tab can no longer be saved. Sign in again to continue.</p>
+        <p className="text-sm text-muted-foreground">{t("body")}</p>
         <DialogFooter>
-          <a href="/sign-in" className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">Sign in again</a>
+          <a href="/sign-in" className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">{t("signIn")}</a>
         </DialogFooter>
       </DialogContent>
     </Dialog>

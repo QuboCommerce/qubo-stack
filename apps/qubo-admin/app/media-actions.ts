@@ -17,6 +17,7 @@ import {
   type MediaScope,
   type ProductCard,
 } from "@qubo/storage/media";
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { requireSite } from "@/lib/admin";
 import { assetUrl } from "@/lib/format";
@@ -86,7 +87,7 @@ export async function updateMediaAction(input: { site: string; id: string; alt?:
     // Only "share with every site" or "keep to this site": never hand a file to a site you aren't on.
     siteId: p.shared === undefined ? undefined : p.shared ? null : site.id,
   });
-  return item ?? { error: "File not found." };
+  return item ?? { error: (await getTranslations("media.errors"))("notFound") };
 }
 
 export async function tagMediaAction(input: { site: string; ids: string[]; add?: string[]; remove?: string[] }): Promise<MediaItem[]> {
@@ -112,7 +113,7 @@ export async function shareMediaAction(input: { site: string; ids: string[]; sha
 
 export async function deleteMediaAction(input: { site: string; id: string }): Promise<{ ok: true } | { error: string }> {
   const res = await deleteManyMediaAction({ site: input.site, ids: [input.id] });
-  return res.deleted.length ? { ok: true } : { error: res.error ?? "File not found." };
+  return res.deleted.length ? { ok: true } : { error: res.error ?? (await getTranslations("media.errors"))("notFound") };
 }
 
 /** Deletes what the user may delete: an admin anything, others only their own uploads. */
@@ -124,8 +125,9 @@ export async function deleteManyMediaAction(input: { site: string; ids: string[]
   const allowed = rows.filter((r) => manager || r.by === user.id);
   for (const r of allowed) await deleteAsset(site.organizationId, r.id);
   const skipped = rows.length - allowed.length;
+  const t = await getTranslations("media.errors");
   return {
     deleted: allowed.map((r) => r.id),
-    error: skipped ? `${skipped} file${skipped === 1 ? " was" : "s were"} kept: only the uploader or an organisation admin can delete ${skipped === 1 ? "it" : "them"}.` : rows.length ? undefined : "File not found.",
+    error: skipped ? t("someKept", { count: skipped }) : rows.length ? undefined : t("notFound"),
   };
 }

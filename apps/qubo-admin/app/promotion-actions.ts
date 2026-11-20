@@ -5,6 +5,7 @@ import { discount, discountCondition, product, productCategory, siteSettings } f
 import { and, eq, inArray, isNotNull, or, sql, type SQL } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { notifyRevalidate } from "@qubo/studio";
 import { requireSiteFromForm } from "@/lib/admin";
@@ -14,11 +15,15 @@ import { emitEntity } from "@/lib/events";
 import { DEFAULT_ZONE, fromLocalInput } from "@/lib/zoned";
 
 const str = (f: FormData, k: string) => String(f.get(k) ?? "").trim();
-const amount = z
-  .string()
-  .trim()
-  .transform((v) => v.replace(",", "."))
-  .pipe(z.string().regex(/^\d+(\.\d{1,2})?$/, "Use an amount like 49.90."));
+type T = Awaited<ReturnType<typeof getTranslations<"promotions.errors">>>;
+const errors = () => getTranslations("promotions.errors");
+
+const amountSchema = (t: T) =>
+  z
+    .string()
+    .trim()
+    .transform((v) => v.replace(",", "."))
+    .pipe(z.string().regex(/^\d+(\.\d{1,2})?$/, t("amount")));
 
 const revalidate = (slug: string) => {
   revalidatePath(`/${slug}/promotions`);
@@ -40,14 +45,15 @@ const pricesChanged = async (slug: string) => {
  */
 export async function setSalePrice(_prev: ActionState, form: FormData): Promise<ActionState> {
   const { site, siteId } = await requireSiteFromForm(form);
+  const t = await errors();
   const id = z.guid().safeParse(str(form, "productId"));
-  if (!id.success) return { error: "Pick a product." };
+  if (!id.success) return { error: t("pickProduct") };
   const [row] = await db
     .select({ basePrice: product.basePrice, compareAtPrice: product.compareAtPrice })
     .from(product)
     .where(and(eq(product.id, id.data), eq(product.siteId, siteId)))
     .limit(1);
-  if (!row) return { error: "This product no longer exists." };
+  if (!row) return { error: t("productGone") };
   const onSale = row.compareAtPrice !== null && Number(row.compareAtPrice) > Number(row.basePrice);
   const regular = onSale ? row.compareAtPrice! : row.basePrice;
 
@@ -56,9 +62,9 @@ export async function setSalePrice(_prev: ActionState, form: FormData): Promise<
     if (!onSale) return { ok: true, at: Date.now() };
     await db.update(product).set({ basePrice: regular, compareAtPrice: null, updatedAt: new Date() }).where(eq(product.id, id.data));
   } else {
-    const sale = amount.safeParse(raw);
+    const sale = amountSchema(t).safeParse(raw);
     if (!sale.success) return { error: sale.error.issues[0]?.message };
-    if (Number(sale.data) <= 0 || Number(sale.data) >= Number(regular)) return { error: `The sale price must be below the regular price (${regular}).` };
+    if (Number(sale.data) <= 0 || Number(sale.data) >= Number(regular)) return { error: t("salePriceTooHigh", { regular }) };
     await db
       .update(product)
       .set({ basePrice: Number(sale.data).toFixed(2), compareAtPrice: regular, updatedAt: new Date() })
@@ -70,15 +76,15 @@ export async function setSalePrice(_prev: ActionState, form: FormData): Promise<
 }
 
 /** Products a bulk action targets: a category subtree and/or a reference or name prefix. */
-async function scope(siteId: string, form: FormData): Promise<SQL | { error: string }> {
+async function scope(siteId: string, form: FormData, t: T): Promise<SQL | { error: string }> {
   const categoryId = str(form, "categoryId");
   const prefix = str(form, "prefix");
-  if (!categoryId && !prefix) return { error: "Pick a category or type a reference prefix." };
+  if (!categoryId && !prefix) return { error: t("pickScope") };
   const parts: SQL[] = [eq(product.siteId, siteId), eq(product.isArchived, false)];
   if (categoryId) {
-    if (!z.guid().safeParse(categoryId).success) return { error: "Unknown category." };
+    if (!z.guid().safeParse(categoryId).success) return { error: t("unknownCategory") };
     const tree = await getCategoryTree(siteId);
-    if (!tree.some((c) => c.id === categoryId)) return { error: "Unknown category." };
+    if (!tree.some((c) => c.id === categoryId)) return { error: t("unknownCategory") };
     const ids = [...subtreeIds(tree, categoryId)];
     parts.push(inArray(product.id, db.select({ id: productCategory.productId }).from(productCategory).where(inArray(productCategory.categoryId, ids))));
   }
@@ -97,7 +103,8 @@ async function scope(siteId: string, form: FormData): Promise<SQL | { error: str
 
 export async function bulkSale(_prev: ActionState, form: FormData): Promise<ActionState> {
   const { site, siteId } = await requireSiteFromForm(form);
-  const where = await scope(siteId, form);
+  const t = await errors();
+  const where = await scope(siteId, form, t);
   if ("error" in where) return where;
   const mode = str(form, "mode");
 
@@ -108,11 +115,11 @@ export async function bulkSale(_prev: ActionState, form: FormData): Promise<Acti
       .where(and(where, isNotNull(product.compareAtPrice), sql`${product.compareAtPrice} > ${product.basePrice}`))
       .returning({ id: product.id });
     if (rows.length) await pricesChanged(site.slug);
-    return rows.length ? { ok: true, at: Date.now() } : { error: "No product in that selection is on sale." };
+    return rows.length ? { ok: true, at: Date.now() } : { error: t("nothingOnSale") };
   }
 
   const pct = Number(str(form, "percent").replace(",", "."));
-  if (!Number.isFinite(pct) || pct < 1 || pct > 90) return { error: "Use a discount between 1 and 90 percent." };
+  if (!Number.isFinite(pct) || pct < 1 || pct > 90) return { error: t("percentRange") };
   // Products already on sale keep their regular price as the reference, so a second run re-prices, not compounds.
   const regular = sql`case when ${product.compareAtPrice} > ${product.basePrice} then ${product.compareAtPrice} else ${product.basePrice} end`;
   const rows = await db
@@ -125,18 +132,18 @@ export async function bulkSale(_prev: ActionState, form: FormData): Promise<Acti
     .where(and(where, sql`${product.basePrice} > 0`))
     .returning({ id: product.id });
   if (rows.length) await pricesChanged(site.slug);
-  return rows.length ? { ok: true, at: Date.now() } : { error: "No product matches that selection." };
+  return rows.length ? { ok: true, at: Date.now() } : { error: t("noProductMatches") };
 }
 
 // ---------------------------------------------------------------------- codes
 
-const codeSchema = z
+const codeSchema = (t: T) => z
   .object({
     code: z
       .string()
       .trim()
       .toUpperCase()
-      .regex(/^[A-Z0-9][A-Z0-9_-]{1,39}$/, "Codes use 2 to 40 letters, numbers, dashes or underscores."),
+      .regex(/^[A-Z0-9][A-Z0-9_-]{1,39}$/, t("codeFormat")),
     name: z.string().trim().max(120),
     type: z.enum(["PERCENTAGE", "FIXED_AMOUNT", "FREE_SHIPPING"]),
     value: z.string(),
@@ -151,19 +158,19 @@ const codeSchema = z
   .superRefine((d, ctx) => {
     if (d.type !== "FREE_SHIPPING") {
       const v = Number(d.value.replace(",", "."));
-      if (!Number.isFinite(v) || v <= 0) ctx.addIssue({ code: "custom", message: "Give the discount a value above 0." });
-      if (d.type === "PERCENTAGE" && v > 100) ctx.addIssue({ code: "custom", message: "A percentage can't be above 100." });
+      if (!Number.isFinite(v) || v <= 0) ctx.addIssue({ code: "custom", message: t("valueRequired") });
+      if (d.type === "PERCENTAGE" && v > 100) ctx.addIssue({ code: "custom", message: t("percentMax") });
     }
-    for (const [k, label] of [
-      ["minPurchase", "minimum order"],
-      ["maxUsesTotal", "total uses"],
-      ["maxUsesPerCustomer", "uses per customer"],
-      ["minQuantity", "minimum quantity"],
+    for (const [k, message] of [
+      ["minPurchase", t("checkMinPurchase")],
+      ["maxUsesTotal", t("checkMaxUsesTotal")],
+      ["maxUsesPerCustomer", t("checkMaxUsesPerCustomer")],
+      ["minQuantity", t("checkMinQuantity")],
     ] as const) {
       const v = d[k].replace(",", ".");
-      if (v && !(Number(v) >= 0)) ctx.addIssue({ code: "custom", message: `Check the ${label}.` });
+      if (v && !(Number(v) >= 0)) ctx.addIssue({ code: "custom", message });
     }
-    if (d.startsAt && d.endsAt && d.endsAt <= d.startsAt) ctx.addIssue({ code: "custom", message: "The end date must be after the start date." });
+    if (d.startsAt && d.endsAt && d.endsAt <= d.startsAt) ctx.addIssue({ code: "custom", message: t("endBeforeStart") });
   });
 
 const num = (v: string) => (v ? v.replace(",", ".") : null);
@@ -188,10 +195,11 @@ async function productIdsFor(siteId: string, refs: string): Promise<{ ids: strin
 
 export async function saveDiscount(_prev: ActionState, form: FormData): Promise<ActionState> {
   const { site, siteId, user } = await requireSiteFromForm(form);
+  const t = await errors();
   const idRaw = str(form, "id");
   const id = idRaw ? z.guid().safeParse(idRaw) : null;
-  if (id && !id.success) return { error: "Unknown code." };
-  const parsed = codeSchema.safeParse({
+  if (id && !id.success) return { error: t("unknownCode") };
+  const parsed = codeSchema(t).safeParse({
     code: str(form, "code"),
     name: str(form, "name"),
     type: str(form, "type"),
@@ -204,11 +212,11 @@ export async function saveDiscount(_prev: ActionState, form: FormData): Promise<
     endsAt: str(form, "endsAt"),
     isActive: form.get("isActive") === "on",
   });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Check the highlighted fields." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t("checkFields") };
   const d = parsed.data;
 
   const products = await productIdsFor(siteId, str(form, "products"));
-  if (products.missing.length) return { error: `No product found for ${products.missing.slice(0, 5).join(", ")}.` };
+  if (products.missing.length) return { error: t("noProductFor", { references: products.missing.slice(0, 5).join(", ") }) };
   const tree = await getCategoryTree(siteId);
   const known = new Set(tree.map((c) => c.id));
   const categoryIds = form.getAll("categoryIds").map(String).filter((c) => known.has(c));
@@ -218,7 +226,7 @@ export async function saveDiscount(_prev: ActionState, form: FormData): Promise<
     .from(discount)
     .where(and(eq(discount.siteId, siteId), sql`upper(${discount.code}) = ${d.code}`, id?.data ? sql`${discount.id} <> ${id.data}` : undefined))
     .limit(1);
-  if (clash) return { error: `The code ${d.code} already exists.` };
+  if (clash) return { error: t("codeExists", { code: d.code }) };
 
   const [settings] = await db.select({ timezone: siteSettings.timezone }).from(siteSettings).where(eq(siteSettings.siteId, siteId)).limit(1);
   const zone = settings?.timezone ?? DEFAULT_ZONE;
@@ -256,7 +264,7 @@ export async function saveDiscount(_prev: ActionState, form: FormData): Promise<
     if (conditions.length) await tx.insert(discountCondition).values(conditions);
     return discountId;
   });
-  if (!saved) return { error: "This code was deleted by someone else." };
+  if (!saved) return { error: t("codeDeleted") };
   await emitEntity(siteId, "discount", saved, id?.data ? "updated" : "created");
   revalidate(site.slug);
   if (!id?.data) redirect(`/${site.slug}/promotions/codes?id=${saved}`);

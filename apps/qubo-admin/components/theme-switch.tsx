@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { builtInThemes } from "@qubo/stylekit";
 import { cn } from "@qubo/shared/utils";
 
 /** Chips that swap the preview theme via `?theme=` (server-rendered, no JS). */
-export function ThemeSwitch({ href, active }: { href: (theme?: string) => string; active?: string }) {
-  const chips = [{ id: undefined as string | undefined, name: "Site theme" }, ...Object.values(builtInThemes).map((t) => ({ id: t.id, name: t.name }))];
+export async function ThemeSwitch({ href, active }: { href: (theme?: string) => string; active?: string }) {
+  const t = await getTranslations("onlineStore.themes.switch");
+  const chips = [{ id: undefined as string | undefined, name: t("siteTheme") }, ...Object.values(builtInThemes).map((t) => ({ id: t.id, name: t.name }))];
   return (
     <div className="flex gap-1 overflow-x-auto">
       {chips.map((c) => (

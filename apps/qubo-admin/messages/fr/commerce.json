@@ -1,0 +1,244 @@
+{
+  "inbox": {
+    "title": "Messagerie",
+    "subtitle": "Les messages de vos formulaires, de vos e-mails et du chat, au même endroit.",
+    "views": {
+      "open": "Ouverts",
+      "mine": "Les miens",
+      "pending": "En attente",
+      "snoozed": "Reportés",
+      "resolved": "Résolus",
+      "all": "Tous"
+    },
+    "statuses": {
+      "open": "Ouvert",
+      "pending": "En attente",
+      "resolved": "Résolu",
+      "snoozed": "Reporté"
+    },
+    "priorities": {
+      "low": "Basse",
+      "normal": "Normale",
+      "high": "Haute",
+      "urgent": "Urgente"
+    },
+    "channels": {
+      "form": "formulaire",
+      "email": "e-mail",
+      "chat": "chat",
+      "portal": "portail",
+      "system": "système"
+    },
+    "list": {
+      "searchPlaceholder": "Rechercher un sujet, un nom, un e-mail",
+      "noMatches": "Aucun résultat.",
+      "empty": "Rien ici.",
+      "inboundAddress": "E-mails reçus à : <code>{address}</code>",
+      "inboundAddressHint": "Les e-mails envoyés ou transférés à cette adresse arrivent dans cette messagerie",
+      "unread": "Non lu",
+      "anonymous": "Anonyme",
+      "spam": "spam",
+      "waiting": "attend depuis {time}",
+      "waitingHint": "Le client attend une réponse",
+      "wakes": "reprend {time}",
+      "you": "Vous : ",
+      "waitMinutes": "{count} min",
+      "waitHours": "{count} h",
+      "waitDays": "{count} j"
+    },
+    "empty": {
+      "notFoundTitle": "Conversation introuvable",
+      "notFoundDescription": "Elle a peut-être été supprimée, ou elle appartient à un autre site.",
+      "pickTitle": "Choisissez une conversation",
+      "pickDescription": "Sélectionnez une conversation à gauche pour la lire et y répondre.",
+      "noneTitle": "Aucune conversation pour l'instant",
+      "noneDescription": "Les envois de formulaire et les chats apparaissent ici. Ajoutez un bloc Formulaire de contact ou Chat en direct à une page.",
+      "noneDescriptionForward": "Les envois de formulaire et les chats apparaissent ici. Ajoutez un bloc Formulaire de contact ou Chat en direct à une page, ou transférez votre boîte mail vers {address}."
+    },
+    "thread": {
+      "back": "Retour à la liste",
+      "meta": "{name} · via {channel} · {date}",
+      "metaEmail": "{name} · {email} · via {channel} · {date}",
+      "staff": "Équipe",
+      "customer": "Client",
+      "internalNote": "Note interne",
+      "deliveryErrorChat": "Affiché dans le chat, mais non envoyé par e-mail : {error}",
+      "deliveryError": "Non envoyé par e-mail : {error}",
+      "emailedTo": "Envoyé par e-mail à {email}",
+      "sentInChat": "Envoyé dans le chat"
+    },
+    "context": {
+      "contact": "Contact",
+      "customerSince": "Client depuis le {date}",
+      "order": "Commande",
+      "formTitle": "Formulaire {name}",
+      "sentFrom": "Envoyé depuis {path}",
+      "earlier": "Conversations précédentes"
+    },
+    "controls": {
+      "status": "Statut",
+      "snooze": "Reporter",
+      "wakes": "Reprend {time}",
+      "priority": "Priorité",
+      "assignee": "Responsable",
+      "unassigned": "Non assigné",
+      "snoozeOptions": {
+        "1h": "1 heure",
+        "4h": "4 heures",
+        "1d": "Demain",
+        "3d": "3 jours",
+        "7d": "Semaine prochaine"
+      }
+    },
+    "ai": {
+      "title": "Résumé IA",
+      "rerun": "Relire la conversation",
+      "runNow": "Résumer maintenant",
+      "rerunLabel": "Relancer le tri par l'IA",
+      "runLabel": "Lancer le tri par l'IA",
+      "spam": "Semble être du spam",
+      "mentions": "Mentionne : {products}",
+      "disclaimer": "{model}. Peut se tromper : vérifiez avant d'agir.",
+      "triageOn": "Lu quelques secondes après le dernier message du client.",
+      "triageOff": "Le tri est désactivé. Utilisez le bouton pour résumer celle-ci.",
+      "facts": {
+        "category": "Catégorie",
+        "mood": "Ton",
+        "urgency": "Urgence",
+        "language": "Langue",
+        "order": "Commande",
+        "phone": "Téléphone"
+      },
+      "categories": {
+        "order": "Commande",
+        "quote": "Devis",
+        "product": "Produit",
+        "shipping": "Livraison",
+        "returns": "Retours",
+        "billing": "Facturation",
+        "technical": "Technique",
+        "feedback": "Avis",
+        "other": "Autre"
+      },
+      "sentiments": {
+        "positive": "Positif",
+        "neutral": "Neutre",
+        "negative": "Négatif"
+      },
+      "urgencies": {
+        "low": "Basse",
+        "normal": "Normale",
+        "high": "Haute",
+        "urgent": "Urgente"
+      }
+    },
+    "composer": {
+      "confirmReplace": "Remplacer votre texte par un brouillon de l'IA ?",
+      "hintInternal": "Note interne : visible uniquement par votre équipe.",
+      "hintChatOnline": "Le visiteur est dans le chat : il verra ce message immédiatement.",
+      "hintChatAwayEmail": "Le visiteur a quitté le chat : message affiché à son retour et envoyé par e-mail à {email}.",
+      "hintChatAwayNoMail": "Le visiteur a quitté le chat : message affiché à son retour (l'envoi d'e-mails n'est pas configuré sur cette instance).",
+      "hintChatAwayNoAddress": "Le visiteur a quitté le chat : message affiché à son retour. Il n'a laissé aucune adresse e-mail.",
+      "hintEmail": "Envoyé par e-mail à {email}.",
+      "hintEmailOff": "Enregistré dans la conversation. L'envoi d'e-mails n'est pas configuré sur cette instance, {email} ne le recevra donc pas.",
+      "notePlaceholder": "Ajouter une note pour votre équipe…",
+      "replyPlaceholder": "Écrire une réponse…",
+      "reply": "Répondre",
+      "note": "Note",
+      "attach": "Joindre des fichiers",
+      "attachHint": "Joindre des fichiers (ou les coller ou déposer ici)",
+      "draftHint": "Rédige une réponse à partir de la conversation, des commandes du client et de vos règles internes. Rien n'est envoyé tant que vous n'appuyez pas sur Envoyer.",
+      "drafting": "Rédaction…",
+      "draft": "Rédiger avec l'IA",
+      "sending": "Envoi…",
+      "addNote": "Ajouter la note",
+      "send": "Envoyer"
+    },
+    "files": {
+      "expiredHint": "Les fichiers du chat sont supprimés après 30 jours, sauf s'ils sont conservés.",
+      "expired": "{name} · expiré",
+      "daysLeft": "{count} j restants",
+      "kept": "Conservé",
+      "actionsFor": "Actions pour {name}",
+      "download": "Télécharger",
+      "saveToMedia": "Enregistrer dans la médiathèque",
+      "keep": "Conserver (sans expiration)",
+      "letExpire": "Laisser expirer",
+      "savedToMedia": "{name} a été ajouté à la médiathèque.",
+      "kept30": "{name} sera conservé.",
+      "expires30": "{name} expire 30 jours après son envoi.",
+      "genericError": "Une erreur est survenue.",
+      "tooMany": "{count, plural, one {# fichier maximum par réponse.} other {# fichiers maximum par réponse.}}",
+      "uploadFailed": "Échec de l'envoi.",
+      "remove": "Retirer {name}",
+      "uploading": "Envoi de {count}…"
+    },
+    "formSettings": {
+      "submissions": "{count, plural, one {# envoi} other {# envois}}",
+      "name": "Nom",
+      "notify": "Notifier par e-mail",
+      "notifyPlaceholder": "ventes@exemple.com, direction@exemple.com",
+      "saving": "Enregistrement…",
+      "save": "Enregistrer",
+      "saved": "Enregistré"
+    },
+    "errors": {
+      "invalidReply": "Réponse invalide.",
+      "writeFirst": "Écrivez d'abord un message.",
+      "emailFailed": "Enregistré, mais l'e-mail n'a pas été envoyé : {error}",
+      "notMember": "Cette personne n'est pas membre de cette organisation.",
+      "formNameRequired": "Donnez un nom au formulaire.",
+      "formNameLong": "Le nom d'un formulaire est limité à 80 caractères.",
+      "tooManyAddresses": "10 adresses maximum par formulaire.",
+      "badAddress": "Une des adresses n'est pas un e-mail valide.",
+      "noPermission": "Vous n'avez pas la permission de modifier les paramètres.",
+      "invalidForm": "Paramètres du formulaire invalides.",
+      "formGone": "Ce formulaire n'existe plus.",
+      "onlyChat": "Seuls les fichiers envoyés par les visiteurs dans le chat expirent.",
+      "fileExpired": "Ce fichier a expiré."
+    }
+  },
+  "customers": {
+    "title": "Clients",
+    "count": "{count, plural, one {# client} other {# clients}}",
+    "add": "Ajouter un client",
+    "searchPlaceholder": "Rechercher par nom, e-mail ou société",
+    "emptyTitle": "Aucun client trouvé",
+    "emptyDescription": "Les clients qui créent un compte ou passent une commande apparaissent ici.",
+    "columns": {
+      "customer": "Client",
+      "company": "Société",
+      "phone": "Téléphone",
+      "subscription": "Abonnement e-mail",
+      "since": "Client depuis"
+    },
+    "subscribed": "Abonné",
+    "notSubscribed": "Non abonné"
+  },
+  "orders": {
+    "title": "Commandes",
+    "export": "Exporter",
+    "emptyTitle": "Vos commandes apparaîtront ici",
+    "emptyDescription": "Les commandes passées sur la boutique, et les brouillons de commande que vous créez pour vos clients, se gèrent depuis cette page.",
+    "createDraft": "Créer un brouillon de commande",
+    "columns": {
+      "order": "Commande",
+      "date": "Date",
+      "customer": "Client",
+      "total": "Total",
+      "status": "Statut"
+    },
+    "guest": "Invité",
+    "save": "Enregistrer",
+    "statuses": {
+      "PENDING": "En attente",
+      "CONFIRMED": "Confirmée",
+      "PROCESSING": "En préparation",
+      "SHIPPED": "Expédiée",
+      "DELIVERED": "Livrée",
+      "COMPLETED": "Terminée",
+      "CANCELLED": "Annulée",
+      "REFUNDED": "Remboursée"
+    }
+  }
+}

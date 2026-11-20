@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@qubo/shared/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { navigationFor, settingsItem, type NavItem } from "@/lib/navigation";
@@ -22,6 +23,7 @@ function Item({ item, base, pathname, mode, counts, onNavigate }: {
   counts: ShellCounts;
   onNavigate?: () => void;
 }) {
+  const t = useTranslations("nav");
   const href = `${base}${item.href}`;
   const active = isActive(pathname, href, item.href === "");
   const Icon = item.icon;
@@ -40,7 +42,7 @@ function Item({ item, base, pathname, mode, counts, onNavigate }: {
       )}
     >
       <Icon className={cn("size-4 shrink-0", active ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/80")} strokeWidth={active ? 2.3 : 2} />
-      {mode === "full" && <span className="truncate">{item.label}</span>}
+      {mode === "full" && <span className="truncate">{t(item.key)}</span>}
       {badge > 0 &&
         (mode === "full" ? (
           <span className="ml-auto rounded-md bg-sidebar-accent px-1.5 text-[11px] font-semibold tabular-nums text-sidebar-accent-foreground group-aria-[current=page]/nav:bg-sidebar-accent">
@@ -56,7 +58,7 @@ function Item({ item, base, pathname, mode, counts, onNavigate }: {
     return (
       <Tooltip>
         <TooltipTrigger asChild>{link}</TooltipTrigger>
-        <TooltipContent side="right">{item.label}</TooltipContent>
+        <TooltipContent side="right">{t(item.key)}</TooltipContent>
       </Tooltip>
     );
   }
@@ -81,7 +83,7 @@ function Item({ item, base, pathname, mode, counts, onNavigate }: {
                   childActive && "font-semibold text-sidebar-accent-foreground",
                 )}
               >
-                {child.label}
+                {t(child.key)}
               </Link>
             );
           })}
@@ -98,17 +100,19 @@ export function SidebarNav({ site, counts, mode, onNavigate }: {
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+  const shell = useTranslations("shell");
   const base = `/${site.slug}`;
   const groups = navigationFor(site.capabilities);
 
   return (
-    <nav aria-label="Main" className={cn("flex h-full flex-col", mode === "rail" ? "items-center px-2 py-3" : "px-3 py-3")}>
+    <nav aria-label={shell("mainNavigation")} className={cn("flex h-full flex-col", mode === "rail" ? "items-center px-2 py-3" : "px-3 py-3")}>
       <div className="flex-1 space-y-5 overflow-y-auto">
         {groups.map((group, i) => (
-          <div key={group.label ?? i} className="space-y-0.5">
-            {group.label &&
+          <div key={group.key ?? i} className="space-y-0.5">
+            {group.key &&
               (mode === "full" ? (
-                <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/55">{group.label}</p>
+                <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/55">{t(group.key)}</p>
               ) : (
                 <div className="mx-auto mb-2 h-px w-6 bg-sidebar-border" />
               ))}

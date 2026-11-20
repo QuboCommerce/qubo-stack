@@ -26,6 +26,7 @@ import {
   Clapperboard,
 } from "lucide-react";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { toast } from "sonner";
 import {
   discardThemeDraftAction,
@@ -83,22 +84,6 @@ export type ThemeNav = {
   token: (id: string) => void;
 };
 
-const titles: Record<SimplePage, string> = {
-  home: "Theme",
-  palette: "Palette",
-  schemes: "Colour schemes",
-  appearance: "Light & dark",
-  typography: "Typography",
-  buttons: "Buttons & shape",
-  motion: "Motion & layout",
-  doctor: "Palette Doctor",
-  brand: "Brand",
-  gradients: "Gradients",
-  decor: "Word highlights",
-  effects: "Effects",
-  transitions: "Transitions",
-};
-
 export function ThemePanel({
   site,
   siteId,
@@ -114,6 +99,9 @@ export function ThemePanel({
   mode: Mode;
   setMode: (m: Mode) => void;
 }) {
+  const t = useTranslations("studio.theme.panel");
+  const tm = useTranslations("studio.theme.motion");
+  const tn = useTranslations("studio.theme.nav");
   const [page, setPage] = useState<Page>({ id: "home" });
   const [versionsOpen, setVersionsOpen] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
@@ -140,7 +128,7 @@ export function ThemePanel({
   }, [draft, page]);
 
   if (!draft || !theme || !report) {
-    return <p className="p-4 text-[13px] text-muted-foreground">This site has no theme yet.</p>;
+    return <p className="p-4 text-[13px] text-muted-foreground">{t("noTheme")}</p>;
   }
 
   const counts = { error: 0, warning: 0 };
@@ -153,15 +141,15 @@ export function ThemePanel({
     <div className="flex items-center">
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-7" disabled={!editor.canUndo} onClick={editor.undo} aria-label="Undo theme change"><Undo2 className="size-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="size-7" disabled={!editor.canUndo} onClick={editor.undo} aria-label={t("undo")}><Undo2 className="size-3.5" /></Button>
         </TooltipTrigger>
-        <TooltipContent>Undo theme change</TooltipContent>
+        <TooltipContent>{t("undo")}</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-7" disabled={!editor.canRedo} onClick={editor.redo} aria-label="Redo theme change"><Redo2 className="size-3.5" /></Button>
+          <Button variant="ghost" size="icon" className="size-7" disabled={!editor.canRedo} onClick={editor.redo} aria-label={t("redo")}><Redo2 className="size-3.5" /></Button>
         </TooltipTrigger>
-        <TooltipContent>Redo theme change</TooltipContent>
+        <TooltipContent>{t("redo")}</TooltipContent>
       </Tooltip>
     </div>
   );
@@ -173,8 +161,8 @@ export function ThemePanel({
 
       {page.id !== "home" && (
         <SubHeader
-          title={page.id === "scheme" ? currentScheme?.name || "Scheme" : titles[page.id]}
-          subtitle={page.id === "scheme" ? "Colour scheme" : undefined}
+          title={page.id === "scheme" ? currentScheme?.name || t("scheme") : tn(`titles.${page.id}`)}
+          subtitle={page.id === "scheme" ? t("schemeSubtitle") : undefined}
           onBack={back}
           actions={undoRedo}
         />
@@ -188,13 +176,13 @@ export function ThemePanel({
                 <div className="min-w-0 flex-1">
                   <input
                     value={draft.name}
-                    onChange={(e) => update((t) => ({ ...t, name: e.target.value }), "theme-name")}
+                    onChange={(e) => update((th) => ({ ...th, name: e.target.value }), "theme-name")}
                     className="-mx-1 w-full rounded-md bg-transparent px-1 py-0.5 text-[15px] font-semibold outline-none hover:bg-muted focus:bg-muted focus:ring-2 focus:ring-ring/30"
-                    aria-label="Theme name"
+                    aria-label={t("name")}
                   />
-                  <p className="line-clamp-2 text-xs text-muted-foreground">{draft.description || "No description"}</p>
+                  <p className="line-clamp-2 text-xs text-muted-foreground">{draft.description || t("noDescription")}</p>
                 </div>
-                <button type="button" onClick={() => nav.go("doctor")} className="rounded-full transition-transform hover:scale-105" aria-label="Open Palette Doctor">
+                <button type="button" onClick={() => nav.go("doctor")} className="rounded-full transition-transform hover:scale-105" aria-label={t("openDoctor")}>
                   <HealthRing value={report.health} size={46} />
                 </button>
               </div>
@@ -204,13 +192,13 @@ export function ThemePanel({
                   {undoRedo}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="size-7" aria-label="Theme actions"><MoreHorizontal className="size-3.5" /></Button>
+                      <Button variant="ghost" size="icon" className="size-7" aria-label={t("actions")}><MoreHorizontal className="size-3.5" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56">
-                      <DropdownMenuItem onSelect={() => setVersionsOpen(true)}><History /> Theme versions</DropdownMenuItem>
+                      <DropdownMenuItem onSelect={() => setVersionsOpen(true)}><History /> {t("versions")}</DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem variant="destructive" disabled={!editor.sync.hasUnpublishedChanges} onSelect={() => setConfirmDiscard(true)}>
-                        <Trash2 /> Discard theme changes
+                        <Trash2 /> {t("discard")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -219,76 +207,76 @@ export function ThemePanel({
               {editor.issues.length > 0 && (
                 <p className="mt-2 flex items-start gap-1.5 rounded-md bg-destructive/10 px-2 py-1.5 text-xs text-destructive">
                   <AlertTriangle className="mt-px size-3.5 shrink-0" />
-                  Not saved: {editor.issues[0]!.path.split(".").pop()} {editor.issues[0]!.message.toLowerCase()}.
+                  {t("notSaved", { field: editor.issues[0]!.path.split(".").pop() ?? "", message: editor.issues[0]!.message.toLowerCase() })}
                 </p>
               )}
             </div>
 
-            <Group title="Colours" className="px-2 [&>div:first-child]:px-2">
+            <Group title={tn("groups.colours")} className="px-2 [&>div:first-child]:px-2">
               <div className="space-y-0.5">
                 <NavRow
                   icon={<Palette />}
-                  label="Palette"
+                  label={tn("titles.palette")}
                   meta={
                     <span className="flex items-center gap-1.5">
                       <span className="flex -space-x-1">
-                        {draft.palette.slice(0, 8).map((t) => <Swatch key={t.id} color={tokenColor(t)} className="size-3.5 rounded-full ring-2 ring-background" />)}
+                        {draft.palette.slice(0, 8).map((tk) => <Swatch key={tk.id} color={tokenColor(tk)} className="size-3.5 rounded-full ring-2 ring-background" />)}
                       </span>
-                      {draft.palette.length} colours
+                      {tn("coloursCount", { count: draft.palette.length })}
                     </span>
                   }
                   onClick={() => nav.go("palette")}
                 />
-                <NavRow icon={<SwatchBook />} label="Colour schemes" meta={draft.schemes.map((s) => s.name).join(" · ")} onClick={() => nav.go("schemes")} />
+                <NavRow icon={<SwatchBook />} label={tn("titles.schemes")} meta={draft.schemes.map((s) => s.name).join(" · ")} onClick={() => nav.go("schemes")} />
                 <NavRow
                   icon={<SunMoon />}
-                  label="Light & dark"
-                  meta={draft.modeStrategy === "dual" ? "Both, follows the device" : draft.modeStrategy === "light" ? "Light only" : "Dark only"}
+                  label={tn("titles.appearance")}
+                  meta={tn(`modes.${draft.modeStrategy}`)}
                   onClick={() => nav.go("appearance")}
                 />
               </div>
             </Group>
-            <Group title="Style" className="px-2 [&>div:first-child]:px-2">
+            <Group title={tn("groups.style")} className="px-2 [&>div:first-child]:px-2">
               <div className="space-y-0.5">
                 <NavRow
                   icon={<Type />}
-                  label="Typography"
+                  label={tn("titles.typography")}
                   meta={Array.from(new Set(draft.typeset.fonts.map((f) => f.family))).join(" · ")}
                   onClick={() => nav.go("typography")}
                 />
-                <NavRow icon={<RectangleHorizontal />} label="Buttons & shape" meta={`${draft.buttons.length} button style${draft.buttons.length === 1 ? "" : "s"} · ${draft.shape.radius}px corners`} onClick={() => nav.go("buttons")} />
-                <NavRow icon={<Move3d />} label="Motion & layout" meta={`${cap(draft.motion.profile)} motion · ${cap(draft.flavor.id)}`} onClick={() => nav.go("motion")} />
+                <NavRow icon={<RectangleHorizontal />} label={tn("titles.buttons")} meta={tn("buttonsMeta", { count: draft.buttons.length, radius: draft.shape.radius })} onClick={() => nav.go("buttons")} />
+                <NavRow icon={<Move3d />} label={tn("titles.motion")} meta={tn("motionMeta", { profile: tm(draft.motion.profile === "none" ? "off" : draft.motion.profile), flavor: tm(`flavors.${draft.flavor.id}.label` as "flavors.fancy.label") })} onClick={() => nav.go("motion")} />
               </div>
             </Group>
-            <Group title="Design language" className="px-2 [&>div:first-child]:px-2">
+            <Group title={tn("groups.design")} className="px-2 [&>div:first-child]:px-2">
               <div className="space-y-0.5">
                 <NavRow
                   icon={<Stamp />}
-                  label="Brand"
-                  meta={[draft.brand.logo?.url && "Logo", draft.brand.mark?.url && "Mark", draft.brand.favicon?.url && "Favicon", draft.brand.voice.tone && "Voice"].filter(Boolean).join(" · ") || "Logo, favicon, sharing image, voice"}
+                  label={tn("titles.brand")}
+                  meta={[draft.brand.logo?.url && tn("brand.logo"), draft.brand.mark?.url && tn("brand.mark"), draft.brand.favicon?.url && tn("brand.favicon"), draft.brand.voice.tone && tn("brand.voice")].filter(Boolean).join(" · ") || tn("brand.empty")}
                   onClick={() => nav.go("brand")}
                 />
-                <NavRow icon={<Blend />} label="Gradients" meta={`${draft.surfaces.gradients.length} section backgrounds`} onClick={() => nav.go("gradients")} />
-                <NavRow icon={<Highlighter />} label="Word highlights" meta={draft.decor.map((d) => d.name).slice(0, 3).join(" · ") || "None"} onClick={() => nav.go("decor")} />
+                <NavRow icon={<Blend />} label={tn("titles.gradients")} meta={tn("gradientsMeta", { count: draft.surfaces.gradients.length })} onClick={() => nav.go("gradients")} />
+                <NavRow icon={<Highlighter />} label={tn("titles.decor")} meta={draft.decor.map((d) => d.name).slice(0, 3).join(" · ") || tn("none")} onClick={() => nav.go("decor")} />
                 <NavRow
                   icon={<Snowflake />}
-                  label="Effects"
-                  meta={draft.effects.active ? `Site-wide: ${draft.effects.presets.find((e) => e.id === draft.effects.active)?.name ?? draft.effects.active}` : `${draft.effects.presets.length} presets`}
+                  label={tn("titles.effects")}
+                  meta={draft.effects.active ? tn("effectsActive", { name: draft.effects.presets.find((e) => e.id === draft.effects.active)?.name ?? draft.effects.active }) : tn("effectsCount", { count: draft.effects.presets.length })}
                   onClick={() => nav.go("effects")}
                 />
                 <NavRow
                   icon={<Clapperboard />}
-                  label="Transitions"
-                  meta={draft.motion.transition === "native" ? "Browser crossfade" : draft.motion.transitions.find((t) => t.id === draft.motion.transition)?.name ?? "Pages swap instantly"}
+                  label={tn("titles.transitions")}
+                  meta={draft.motion.transition === "native" ? tn("nativeTransition") : draft.motion.transitions.find((x) => x.id === draft.motion.transition)?.name ?? tn("instantTransition")}
                   onClick={() => nav.go("transitions")}
                 />
               </div>
             </Group>
-            <Group title="Health" className="px-2 [&>div:first-child]:px-2">
+            <Group title={tn("groups.health")} className="px-2 [&>div:first-child]:px-2">
               <NavRow
                 icon={<HealthRing value={report.health} size={22} className="[&_span]:text-[0px]" />}
-                label="Palette Doctor"
-                meta={counts.error ? `${counts.error} to fix · ${counts.warning} warnings` : counts.warning ? `${counts.warning} warning${counts.warning === 1 ? "" : "s"}` : "All checks pass"}
+                label={tn("titles.doctor")}
+                meta={counts.error ? tn("doctorErrors", { errors: counts.error, warnings: counts.warning }) : counts.warning ? tn("doctorWarnings", { count: counts.warning }) : tn("doctorOk")}
                 tone={counts.error ? "error" : counts.warning ? "warning" : undefined}
                 onClick={() => nav.go("doctor")}
               />
@@ -318,11 +306,11 @@ export function ThemePanel({
       <Dialog open={confirmDiscard} onOpenChange={setConfirmDiscard}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Discard theme changes?</DialogTitle>
-            <DialogDescription>The theme goes back to what’s live now. Published versions stay in Theme versions.</DialogDescription>
+            <DialogTitle>{t("discardTitle")}</DialogTitle>
+            <DialogDescription>{t("discardDescription")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDiscard(false)}>Keep editing</Button>
+            <Button variant="outline" onClick={() => setConfirmDiscard(false)}>{t("keepEditing")}</Button>
             <Button
               variant="destructive"
               onClick={async () => {
@@ -331,10 +319,10 @@ export function ThemePanel({
                 setConfirmDiscard(false);
                 if (!res.ok) return toast.error(res.error);
                 editor.replace(res);
-                toast.success("Theme changes discarded");
+                toast.success(t("discarded"));
               }}
             >
-              Discard changes
+              {t("discardConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -343,16 +331,15 @@ export function ThemePanel({
   );
 }
 
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
 function ThemeSaveState({ editor }: { editor: ThemeEditor }) {
+  const t = useTranslations("studio.theme.panel.save");
   const s = editor.sync;
   const map = {
-    saved: { icon: <Check className="size-3 text-emerald-600" />, text: s.hasUnpublishedChanges ? "Draft saved · not live yet" : "Live" },
-    dirty: { icon: <span className="size-1.5 rounded-full bg-amber-500" />, text: "Unsaved changes" },
-    saving: { icon: <Loader2 className="size-3 animate-spin" />, text: "Saving…" },
-    error: { icon: <CloudOff className="size-3 text-destructive" />, text: s.error ?? "Couldn’t save" },
-    conflict: { icon: <AlertTriangle className="size-3 text-amber-600" />, text: "Changed elsewhere" },
+    saved: { icon: <Check className="size-3 text-emerald-600" />, text: s.hasUnpublishedChanges ? t("draft") : t("live") },
+    dirty: { icon: <span className="size-1.5 rounded-full bg-amber-500" />, text: t("dirty") },
+    saving: { icon: <Loader2 className="size-3 animate-spin" />, text: t("saving") },
+    error: { icon: <CloudOff className="size-3 text-destructive" />, text: s.error ?? t("error") },
+    conflict: { icon: <AlertTriangle className="size-3 text-amber-600" />, text: t("conflict") },
   }[s.status];
   return (
     <span className={cn("flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground", s.status === "error" && "text-destructive")} aria-live="polite">
@@ -363,6 +350,8 @@ function ThemeSaveState({ editor }: { editor: ThemeEditor }) {
 }
 
 function ThemeVersions({ open, onOpenChange, site, editor }: { open: boolean; onOpenChange: (o: boolean) => void; site: string; editor: ThemeEditor }) {
+  const t = useTranslations("studio.theme.panel.versionsDialog");
+  const locale = useLocale();
   const [items, setItems] = useState<ThemeRevisionItem[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -381,14 +370,14 @@ function ThemeVersions({ open, onOpenChange, site, editor }: { open: boolean; on
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Theme versions</DialogTitle>
-          <DialogDescription>Every publish is kept. Restoring copies a version into your draft; publish to make it live.</DialogDescription>
+          <DialogTitle>{t("title")}</DialogTitle>
+          <DialogDescription>{t("description")}</DialogDescription>
         </DialogHeader>
         <div className="-mx-2 max-h-[55dvh] overflow-y-auto">
           {items === null ? (
             <div className="space-y-2 px-2">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-12" />)}</div>
           ) : items.length === 0 ? (
-            <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">No published versions yet.</p>
+            <p className="px-2 py-6 text-center text-[13px] text-muted-foreground">{t("empty")}</p>
           ) : (
             <ul className="space-y-0.5">
               {items.map((r, i) => (
@@ -396,10 +385,10 @@ function ThemeVersions({ open, onOpenChange, site, editor }: { open: boolean; on
                   <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-xs">v{r.version}</span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium">
-                      {r.label || `Published version ${r.version}`}
-                      {i === 0 && <span className="ml-1.5 rounded bg-emerald-500/10 px-1.5 py-px text-[10px] font-medium text-emerald-700">Latest</span>}
+                      {r.label || t("defaultLabel", { version: r.version })}
+                      {i === 0 && <span className="ml-1.5 rounded bg-emerald-500/10 px-1.5 py-px text-[10px] font-medium text-emerald-700">{t("latest")}</span>}
                     </p>
-                    <p className="truncate text-xs text-muted-foreground">{relativeTime(r.createdAt)}{r.createdByName ? ` · ${r.createdByName}` : ""}</p>
+                    <p className="truncate text-xs text-muted-foreground">{relativeTime(r.createdAt, locale)}{r.createdByName ? ` · ${r.createdByName}` : ""}</p>
                   </div>
                   <Button
                     variant="outline"
@@ -414,10 +403,10 @@ function ThemeVersions({ open, onOpenChange, site, editor }: { open: boolean; on
                       if (!res.ok) return toast.error(res.error);
                       editor.replace(res);
                       onOpenChange(false);
-                      toast.success(`Version ${r.version} restored to your draft`);
+                      toast.success(t("restored", { version: r.version }));
                     }}
                   >
-                    {busy === r.id && <Loader2 className="animate-spin" />} Restore
+                    {busy === r.id && <Loader2 className="animate-spin" />} {t("restore")}
                   </Button>
                 </li>
               ))}

@@ -1,0 +1,143 @@
+{
+  "promotions": {
+    "title": "Promotions",
+    "tabs": {
+      "sales": "Prix promo",
+      "codes": "Codes promo"
+    },
+    "actionForm": {
+      "defaultDone": "Enregistré"
+    },
+    "sales": {
+      "subtitle": "{count, plural, one {# produit en promo} other {# produits en promo}}",
+      "bulk": {
+        "title": "Mettre une sélection en promo",
+        "description": "Baisse le prix d'un pourcentage. Le prix actuel devient le prix barré : terminer la promo le rétablit.",
+        "done": "Prix mis à jour",
+        "category": "Catégorie",
+        "anyCategory": "Toutes les catégories",
+        "prefix": "La référence ou le nom commence par",
+        "discount": "Remise",
+        "apply": "Appliquer la remise",
+        "end": "Terminer la promo"
+      },
+      "tabs": {
+        "sale": "En promo",
+        "all": "Tous les produits"
+      },
+      "searchPlaceholder": "Rechercher un nom ou une référence",
+      "empty": {
+        "saleTitle": "Aucun produit en promo",
+        "saleDescription": "Utilisez le formulaire ci-dessus, ou ouvrez Tous les produits et saisissez un prix promo à côté d'un produit.",
+        "searchTitle": "Aucun produit trouvé",
+        "searchDescription": "Essayez un autre nom ou une autre référence."
+      },
+      "table": {
+        "product": "Produit",
+        "regularPrice": "Prix normal",
+        "salePrice": "Prix promo"
+      },
+      "notOnSale": "Pas en promo",
+      "salePriceFor": "Prix promo de {name}",
+      "percentOff": "−{percent}\u00a0%",
+      "ended": "Terminée",
+      "endSale": "Terminer la promo"
+    },
+    "codes": {
+      "subtitle": "{count, plural, one {# code promo} other {# codes promo}}",
+      "new": "Nouveau code",
+      "empty": {
+        "title": "Aucun code promo pour l'instant",
+        "description": "Les clients saisissent un code dans le panier. Un code peut accorder un pourcentage ou un montant de remise, ou offrir la livraison, avec des dates, une commande minimale et des limites d'utilisation.",
+        "action": "Créer un code"
+      },
+      "table": {
+        "code": "Code",
+        "discount": "Remise",
+        "used": "Utilisations",
+        "dates": "Dates",
+        "status": "Statut"
+      },
+      "status": {
+        "paused": "En pause",
+        "expired": "Expiré",
+        "usedUp": "Épuisé",
+        "scheduled": "Programmé",
+        "active": "Actif"
+      },
+      "describe": {
+        "freeDelivery": "Livraison offerte",
+        "percentOff": "{value}\u00a0% de remise",
+        "amountOff": "{amount} de remise",
+        "from": "dès {amount}"
+      },
+      "dates": {
+        "always": "Toujours",
+        "range": "Du {start} au {end}",
+        "now": "maintenant",
+        "noEnd": "sans fin"
+      },
+      "editor": {
+        "newTitle": "Nouveau code promo",
+        "newDescription": "Les codes ne sont pas sensibles à la casse. Les clients voient l'économie dans le panier et sur la page de paiement Stripe.",
+        "usedTimes": "{count, plural, one {Utilisé # fois} other {Utilisé # fois}}"
+      },
+      "fields": {
+        "code": "Code",
+        "name": "Nom interne",
+        "nameHint": "Visible uniquement par vous.",
+        "namePlaceholder": "Campagne d'hiver",
+        "type": "Type",
+        "typePercentage": "Remise en pourcentage",
+        "typeFixed": "Remise en montant ({currency})",
+        "typeFreeShipping": "Livraison offerte",
+        "value": "Valeur",
+        "valueHint": "Pourcentage ou montant. Ignoré pour la livraison offerte.",
+        "startsAt": "Début",
+        "endsAt": "Fin",
+        "minPurchase": "Commande minimale ({currency})",
+        "minQuantity": "Quantité minimale",
+        "minQuantityHint": "Compte uniquement les articles éligibles.",
+        "none": "Aucune",
+        "maxUsesTotal": "Utilisations au total",
+        "maxUsesPerCustomer": "Utilisations par client",
+        "maxUsesPerCustomerHint": "Nécessite un client connecté.",
+        "unlimited": "Illimitées",
+        "products": "Uniquement ces produits",
+        "productsHint": "Références ou identifiants, un par ligne. Laissez vide pour tout le panier.",
+        "categories": "Uniquement ces catégories",
+        "categoriesHint": "Une catégorie inclut ses sous-catégories.",
+        "active": "Actif",
+        "activeDescription": "Les codes en pause sont refusés dans le panier."
+      },
+      "pause": "Mettre en pause",
+      "resume": "Réactiver",
+      "delete": "Supprimer",
+      "usedCannotDelete": "Un code déjà utilisé peut être mis en pause, mais pas supprimé."
+    },
+    "errors": {
+      "amount": "Utilisez un montant comme 49,90.",
+      "pickProduct": "Choisissez un produit.",
+      "productGone": "Ce produit n'existe plus.",
+      "salePriceTooHigh": "Le prix promo doit être inférieur au prix normal ({regular}).",
+      "pickScope": "Choisissez une catégorie ou saisissez un début de référence.",
+      "unknownCategory": "Catégorie inconnue.",
+      "nothingOnSale": "Aucun produit de cette sélection n'est en promo.",
+      "percentRange": "Saisissez une remise comprise entre 1 et 90 %.",
+      "noProductMatches": "Aucun produit ne correspond à cette sélection.",
+      "codeFormat": "Un code compte de 2 à 40 lettres, chiffres, tirets ou tirets bas.",
+      "valueRequired": "Indiquez une valeur de remise supérieure à 0.",
+      "percentMax": "Un pourcentage ne peut pas dépasser 100.",
+      "checkMinPurchase": "Vérifiez la commande minimale.",
+      "checkMaxUsesTotal": "Vérifiez le nombre total d'utilisations.",
+      "checkMaxUsesPerCustomer": "Vérifiez le nombre d'utilisations par client.",
+      "checkMinQuantity": "Vérifiez la quantité minimale.",
+      "endBeforeStart": "La date de fin doit être postérieure à la date de début.",
+      "unknownCode": "Code inconnu.",
+      "checkFields": "Vérifiez les champs signalés.",
+      "noProductFor": "Aucun produit trouvé pour {references}.",
+      "codeExists": "Le code {code} existe déjà.",
+      "codeDeleted": "Ce code a été supprimé par quelqu'un d'autre."
+    }
+  }
+}

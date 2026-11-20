@@ -1,5 +1,9 @@
 import { BookOpen, CalendarCheck, Languages, MessageSquareText, Package, ShoppingCart, UserRound, type LucideIcon } from "lucide-react";
 
+/**
+ * Icons per capability. `label` and `description` are the English fallback;
+ * translated text lives in `settings.capabilities.<id>` (label, description).
+ */
 export const capabilityMeta: Record<string, { label: string; description: string; icon: LucideIcon }> = {
   commerce: { label: "Selling", description: "Cart, checkout, orders, payments and shipping.", icon: ShoppingCart },
   catalog: { label: "Catalog", description: "Products, collections, brands and inventory.", icon: Package },

@@ -3,17 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Building2, Check, ChevronsUpDown, ExternalLink, Inbox, Lock, Plus, Search, Sparkles, Store } from "lucide-react";
 import { cn } from "@qubo/shared/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { siteTypeIcon } from "@/lib/site-type-icons";
-import { siteTypeLabel } from "@/lib/navigation";
 import { CreateOrganizationDialog, CreateSiteDialog } from "./create-dialogs";
+import { planKey, siteTypeKey } from "./labels";
 import { SiteAvatar } from "./qubo-mark";
 import type { ShellAccess, ShellOrg, ShellSite } from "./types";
-
-const PLAN_LABEL: Record<string, string> = { free: "Free", starter: "Starter", growth: "Growth", agency: "Agency" };
 
 /** Keeps the current section when switching sites (/hm-froid/products → /tailg/products). */
 function switchHref(pathname: string, from: string, to: string) {
@@ -30,6 +29,17 @@ function columnsFor(n: number) {
  * landing page behind browser chrome. No screenshots needed, and a brand
  * new site already looks like itself.
  */
+/** Site type labels are keys of shell.siteTypes; unknown types fall back to the raw value. */
+function typeLabel(t: Tr, type: string) {
+  const key = siteTypeKey(type);
+  return key ? t(`siteTypes.${key}`) : type;
+}
+
+function planName(t: Tr, plan: string) {
+  const key = planKey(plan);
+  return key ? t(`plans.${key}`) : plan;
+}
+
 function Thumbnail({ site, compact }: { site: ShellSite; compact: boolean }) {
   const { background, primary, text } = site.swatch;
   return (
@@ -60,7 +70,10 @@ function Thumbnail({ site, compact }: { site: ShellSite; compact: boolean }) {
   );
 }
 
+type Tr = ReturnType<typeof useTranslations<"shell">>;
+
 function SiteCard({ site, current, compact, pathname, currentSlug, onNavigate }: { site: ShellSite; current: boolean; compact: boolean; pathname: string; currentSlug: string; onNavigate: () => void }) {
+  const t = useTranslations("shell");
   const Icon = siteTypeIcon[site.type] ?? Store;
   const href = site.locked ? `/locked?site=${encodeURIComponent(site.slug)}` : switchHref(pathname, currentSlug, site.slug);
   return (
@@ -82,9 +95,9 @@ function SiteCard({ site, current, compact, pathname, currentSlug, onNavigate }:
             </p>
             <p className="mt-0.5 flex items-center gap-1 truncate text-[11px] text-muted-foreground">
               <Icon className="size-3 shrink-0" />
-              {siteTypeLabel[site.type] ?? site.type}
+              {typeLabel(t, site.type)}
               <span aria-hidden>·</span>
-              {site.locked ? "Not in your plan" : site.published ? (site.domain ?? "Published") : "Draft"}
+              {site.locked ? t("siteSwitcher.notInPlan") : site.published ? (site.domain ?? t("siteSwitcher.published")) : t("siteSwitcher.draft")}
             </p>
           </div>
         </div>
@@ -92,7 +105,7 @@ function SiteCard({ site, current, compact, pathname, currentSlug, onNavigate }:
       {site.locked ? (
         <div className="pointer-events-none absolute inset-0 grid place-items-center rounded-xl bg-background/55 backdrop-blur-[2px]">
           <div className="flex items-center gap-1.5 rounded-full border bg-background px-2.5 py-1 text-[11px] font-medium shadow-sm">
-            <Lock className="size-3" /> Upgrade to open
+            <Lock className="size-3" /> {t("siteSwitcher.upgradeToOpen")}
           </div>
         </div>
       ) : (
@@ -100,11 +113,11 @@ function SiteCard({ site, current, compact, pathname, currentSlug, onNavigate }:
           {site.url && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <a href={site.url} target="_blank" rel="noreferrer" className="grid size-6 place-items-center rounded-md bg-background/90 shadow-sm ring-1 ring-black/10 hover:bg-background" aria-label="View site">
+                <a href={site.url} target="_blank" rel="noreferrer" className="grid size-6 place-items-center rounded-md bg-background/90 shadow-sm ring-1 ring-black/10 hover:bg-background" aria-label={t("siteSwitcher.viewSite")}>
                   <ExternalLink className="size-3" />
                 </a>
               </TooltipTrigger>
-              <TooltipContent side="bottom">View site</TooltipContent>
+              <TooltipContent side="bottom">{t("siteSwitcher.viewSite")}</TooltipContent>
             </Tooltip>
           )}
         </div>
@@ -114,7 +127,7 @@ function SiteCard({ site, current, compact, pathname, currentSlug, onNavigate }:
           href={`/${site.slug}/inbox`}
           onClick={onNavigate}
           className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-semibold text-background shadow-sm hover:bg-foreground/90"
-          aria-label={`${site.unread} unread in ${site.name}`}
+          aria-label={t("siteSwitcher.unreadIn", { count: site.unread, name: site.name })}
         >
           <Inbox className="size-3" /> {site.unread}
         </Link>
@@ -124,6 +137,7 @@ function SiteCard({ site, current, compact, pathname, currentSlug, onNavigate }:
 }
 
 export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; sites: ShellSite[]; orgs: ShellOrg[]; access: ShellAccess }) {
+  const t = useTranslations("shell");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -137,8 +151,9 @@ export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; s
   const compact = columns > 1;
   const groups = orgs.map((org) => ({ org, sites: visible.filter((s) => s.organization.id === org.id) })).filter((g) => !q || g.sites.length);
   const canManage = (org: ShellOrg) => !org.locked && (org.role === "OWNER" || org.role === "ADMIN");
-  const planLabel = PLAN_LABEL[access.plan] ?? access.plan;
-  const quota = (used: number, limit: number | null, noun: string) => `${used}${limit === null ? "" : ` of ${limit}`} ${noun}${used === 1 && limit === null ? "" : "s"}`;
+  const planLabel = planName(t, access.plan);
+  const sitesQuota = access.sites.limit === null ? t("siteSwitcher.sitesUnlimited", { used: access.sites.used }) : t("siteSwitcher.sitesLimited", { used: access.sites.used, limit: access.sites.limit });
+  const orgsQuota = access.orgs.limit === null ? t("siteSwitcher.orgsUnlimited", { used: access.orgs.used }) : t("siteSwitcher.orgsLimited", { used: access.orgs.used, limit: access.orgs.limit });
 
   const openCreateSite = (orgId?: string) => {
     setOpen(false);
@@ -162,7 +177,7 @@ export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; s
           <span className="min-w-0">
             <span className="block truncate text-[13px] font-semibold leading-tight">{site.name}</span>
             <span className="hidden items-center gap-1 text-[11px] leading-tight text-topbar-foreground/60 sm:flex">
-              <TypeIcon className="size-3" /> {siteTypeLabel[site.type] ?? site.type}
+              <TypeIcon className="size-3" /> {typeLabel(t, site.type)}
             </span>
           </span>
           <ChevronsUpDown className="size-3.5 shrink-0 text-topbar-foreground/50" />
@@ -185,13 +200,13 @@ export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; s
                 autoFocus
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Find a site or organisation"
+                placeholder={t("siteSwitcher.findPlaceholder")}
                 className="h-7 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
           )}
           <div className="flex-1 space-y-4 overflow-y-auto p-3">
-            {groups.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">Nothing matches &ldquo;{query}&rdquo;.</p>}
+            {groups.length === 0 && <p className="py-8 text-center text-sm text-muted-foreground">{t("siteSwitcher.noMatch", { query })}</p>}
             {groups.map(({ org, sites: orgSites }, gi) => (
               <section key={org.id} className="animate-in fade-in-0 slide-in-from-top-1 fill-mode-both duration-300" style={{ animationDelay: `${gi * 40}ms` }}>
                 <header className="mb-2 flex items-center gap-2 px-0.5">
@@ -200,7 +215,7 @@ export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; s
                   {org.companyNumber && <span className="truncate text-[11px] tabular-nums text-muted-foreground">{org.companyNumber}</span>}
                   {org.locked && <Lock className="size-3 text-muted-foreground" />}
                   <span className="ml-auto shrink-0 text-[11px] text-muted-foreground">
-                    {orgSites.length} site{orgSites.length === 1 ? "" : "s"}
+                    {t("siteSwitcher.siteCount", { count: orgSites.length })}
                   </span>
                 </header>
                 {orgSites.length ? (
@@ -220,8 +235,8 @@ export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; s
                   >
                     <span className="grid size-8 place-items-center rounded-lg bg-muted"><Sparkles className="size-4" /></span>
                     <span>
-                      <span className="block font-medium text-foreground">No sites yet</span>
-                      {org.locked ? "Outside your plan" : access.sites.canCreate ? "Create the first site in this organisation" : "Your plan's sites are all in use"}
+                      <span className="block font-medium text-foreground">{t("siteSwitcher.noSitesYet")}</span>
+                      {org.locked ? t("siteSwitcher.outsidePlan") : access.sites.canCreate ? t("siteSwitcher.createFirst") : t("siteSwitcher.plansSitesUsed")}
                     </span>
                   </button>
                 )}
@@ -230,22 +245,22 @@ export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; s
           </div>
           <footer className="flex flex-wrap items-center gap-2 border-t bg-muted/40 px-3 py-2.5">
             <p className="mr-auto text-[11px] text-muted-foreground">
-              <span className="font-medium text-foreground">{planLabel}</span> · {quota(access.sites.used, access.sites.limit, "site")} · {quota(access.orgs.used, access.orgs.limit, "organisation")}
+              <span className="font-medium text-foreground">{planLabel}</span> · {sitesQuota} · {orgsQuota}
             </p>
             <QuotaButton
-              label="New organisation"
+              label={t("siteSwitcher.newOrganisation")}
               icon={<Building2 className="size-3.5" />}
               disabled={!access.orgs.canCreate}
-              reason={`Your ${planLabel} plan covers ${access.orgs.limit} organisation${access.orgs.limit === 1 ? "" : "s"}.`}
+              reason={t("siteSwitcher.orgLimitReason", { plan: planLabel, limit: access.orgs.limit ?? 0 })}
               upgradeHref={`/${site.slug}/settings/portal`}
               onClick={openCreateOrg}
               variant="ghost"
             />
             <QuotaButton
-              label="New site"
+              label={t("siteSwitcher.newSite")}
               icon={<Plus className="size-3.5" />}
               disabled={!access.sites.canCreate || !orgs.some(canManage)}
-              reason={access.sites.canCreate ? "You don't manage an organisation to put it in." : `Your ${planLabel} plan covers ${access.sites.limit} site${access.sites.limit === 1 ? "" : "s"}.`}
+              reason={access.sites.canCreate ? t("siteSwitcher.noOrgToManage") : t("siteSwitcher.siteLimitReason", { plan: planLabel, limit: access.sites.limit ?? 0 })}
               upgradeHref={`/${site.slug}/settings/portal`}
               onClick={() => openCreateSite(site.organization.id)}
               variant="solid"
@@ -260,6 +275,7 @@ export function SiteSwitcher({ site, sites, orgs, access }: { site: ShellSite; s
 }
 
 function QuotaButton({ label, icon, disabled, reason, upgradeHref, onClick, variant }: { label: string; icon: React.ReactNode; disabled: boolean; reason: string; upgradeHref: string; onClick: () => void; variant: "ghost" | "solid" }) {
+  const t = useTranslations("shell");
   const base = cn(
     "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-[12px] font-medium transition-colors",
     variant === "solid" ? "bg-foreground text-background hover:bg-foreground/90" : "border bg-background hover:bg-muted",
@@ -278,7 +294,7 @@ function QuotaButton({ label, icon, disabled, reason, upgradeHref, onClick, vari
           <Lock className="size-3.5" /> {label}
         </Link>
       </TooltipTrigger>
-      <TooltipContent side="top" className="max-w-56 text-center">{reason} Open the portal to upgrade.</TooltipContent>
+      <TooltipContent side="top" className="max-w-56 text-center">{t("siteSwitcher.upgradeHint", { reason })}</TooltipContent>
     </Tooltip>
   );
 }

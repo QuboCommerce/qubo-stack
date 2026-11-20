@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { Lock, Paperclip, Send, Sparkles } from "lucide-react";
 import { LIMITS } from "@qubo/inbox";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { draftReplyAction } from "@/app/ai-actions";
 import { replyAction } from "@/app/inbox-actions";
@@ -27,6 +28,7 @@ export function Composer({
   /** AI is set up with drafts on for this organisation. */
   aiDrafts?: boolean;
 }) {
+  const t = useTranslations("inbox.composer");
   const [state, action, pending] = useActionState(replyAction, null);
   const canReply = Boolean(contactEmail) || Boolean(chat);
   const [internal, setInternal] = useState(!canReply);
@@ -37,7 +39,7 @@ export function Composer({
 
   const draft = () => {
     const el = body.current;
-    if (el?.value.trim() && !confirm("Replace what you've written with an AI draft?")) return;
+    if (el?.value.trim() && !confirm(t("confirmReplace"))) return;
     const fd = new FormData();
     fd.set("site", site);
     fd.set("id", conversationId);
@@ -62,19 +64,20 @@ export function Composer({
     }
   }, [state?.at]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const email = contactEmail ?? "";
   const hint = internal
-    ? "Internal note: only your team sees this."
+    ? t("hintInternal")
     : chat
       ? chat.online
-        ? "Visitor is in the chat now: they'll see this instantly."
+        ? t("hintChatOnline")
         : contactEmail
           ? emailReady
-            ? `Visitor left the chat: shown when they return and e-mailed to ${contactEmail}.`
-            : `Visitor left the chat: shown when they return (e-mail isn't configured on this instance).`
-          : "Visitor left the chat: shown when they return. They left no e-mail address."
+            ? t("hintChatAwayEmail", { email })
+            : t("hintChatAwayNoMail")
+          : t("hintChatAwayNoAddress")
       : emailReady
-      ? `Sent by e-mail to ${contactEmail}.`
-      : `Saved to the thread. E-mail isn't configured on this instance, so ${contactEmail} won't receive it.`;
+        ? t("hintEmail", { email })
+        : t("hintEmailOff", { email });
 
   return (
     <form
@@ -98,7 +101,7 @@ export function Composer({
         aria-busy={drafting}
         required={!files.drafts.length}
         rows={4}
-        placeholder={internal ? "Add a note for your team…" : "Write a reply…"}
+        placeholder={internal ? t("notePlaceholder") : t("replyPlaceholder")}
         className="w-full resize-y rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
         onKeyDown={(e) => {
           if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) form.current?.requestSubmit();
@@ -116,23 +119,23 @@ export function Composer({
       <div className="mt-2 flex flex-wrap items-center gap-2">
         <div className="flex rounded-lg border p-0.5 text-[13px]">
           <button type="button" disabled={!canReply} onClick={() => setInternal(false)} className={cn("rounded-md px-2.5 py-1 disabled:opacity-40", !internal && "bg-accent font-medium")}>
-            Reply
+            {t("reply")}
           </button>
           <button type="button" onClick={() => setInternal(true)} className={cn("flex items-center gap-1 rounded-md px-2.5 py-1", internal && "bg-accent font-medium")}>
-            <Lock className="size-3" /> Note
+            <Lock className="size-3" /> {t("note")}
           </button>
         </div>
-        <Button type="button" variant="ghost" size="icon-sm" onClick={files.open} disabled={files.drafts.length >= LIMITS.replyFiles} aria-label="Attach files" title="Attach files (or paste / drop them)">
+        <Button type="button" variant="ghost" size="icon-sm" onClick={files.open} disabled={files.drafts.length >= LIMITS.replyFiles} aria-label={t("attach")} title={t("attachHint")}>
           <Paperclip />
         </Button>
         {aiDrafts && canReply && (
-          <Button type="button" variant="ghost" size="sm" onClick={draft} disabled={drafting} title="Draft a reply from the conversation, the customer's orders and your house rules. Nothing is sent until you press Send.">
-            <Sparkles className={cn(drafting && "animate-pulse")} /> {drafting ? "Drafting…" : "Draft with AI"}
+          <Button type="button" variant="ghost" size="sm" onClick={draft} disabled={drafting} title={t("draftHint")}>
+            <Sparkles className={cn(drafting && "animate-pulse")} /> {drafting ? t("drafting") : t("draft")}
           </Button>
         )}
         <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{hint}</p>
         <Button type="submit" size="sm" disabled={pending || files.uploading > 0}>
-          <Send /> {pending ? "Sending…" : internal ? "Add note" : "Send"}
+          <Send /> {pending ? t("sending") : internal ? t("addNote") : t("send")}
         </Button>
       </div>
     </form>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ArrowLeft, type LucideIcon } from "lucide-react";
 import { cn } from "@qubo/shared/utils";
 
@@ -37,11 +38,12 @@ export function Page({
   children: React.ReactNode;
   className?: string;
 }) {
+  const t = useTranslations("common");
   return (
     <div className={cn("mx-auto w-full px-0 pb-16 pt-4 xs:px-3 sm:px-5 sm:pt-6 lg:px-8 lg:pt-8 3xl:px-10 4xl:px-14", widths[width], className)}>
       <header className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 xs:px-0 sm:mb-6">
         {backHref && (
-          <Link href={backHref} className="grid size-8 place-items-center rounded-lg hover:bg-accent" aria-label="Back">
+          <Link href={backHref} className="grid size-8 place-items-center rounded-lg hover:bg-accent" aria-label={t("back")}>
             <ArrowLeft className="size-4" />
           </Link>
         )}

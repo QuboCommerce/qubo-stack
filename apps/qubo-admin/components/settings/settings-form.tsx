@@ -3,12 +3,13 @@
 import { Fragment, startTransition, useActionState, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { AlertCircle, CheckCircle2, GitMerge, Loader2 } from "lucide-react";
 import { useEvent } from "@qubo/realtime/client";
 import type { ActionState } from "@/lib/action-state";
 import { applyValues, type Conflict, type FormValues } from "@/lib/merge";
 import { useViewer } from "@/components/live-events";
-import { MergeSheet } from "@/components/settings/merge-sheet";
+import { MergeSheet, type MergeNoun } from "@/components/settings/merge-sheet";
 import { cn } from "@qubo/shared/utils";
 
 /**
@@ -34,8 +35,11 @@ export function SettingsForm({
   className?: string;
   base?: FormValues;
   watch?: { table: string; id: string };
-  noun?: string;
+  noun?: MergeNoun;
 }) {
+  const t = useTranslations("settings.form");
+  const tCommon = useTranslations("common");
+  const tNouns = useTranslations("settings.nouns");
   const id = useId();
   const ref = useRef<HTMLFormElement>(null);
   const router = useRouter();
@@ -70,7 +74,7 @@ export function SettingsForm({
     setError(null);
     setRemote(null);
     setDirty(false);
-    flash("Saved");
+    flash(tCommon("saved"));
   }, [state]);
 
   useEvent("entity.updated", (e) => {
@@ -78,7 +82,7 @@ export function SettingsForm({
     const mine = e.payload.by.id === viewer?.userId;
     if (!dirtyRef.current) {
       router.refresh();
-      if (!mine) flash(`Updated by ${e.payload.by.name} just now`);
+      if (!mine) flash(t("updatedBy", { name: e.payload.by.name }));
     } else if (!mine) setRemote(e.payload.by.name);
   });
 
@@ -140,9 +144,9 @@ export function SettingsForm({
       {remote && !conflict && (
         <div role="status" className="mb-4 flex items-center gap-2 rounded-xl border border-warning/40 bg-warning/10 px-4 py-2.5 text-sm">
           <GitMerge className="size-4 shrink-0 text-warning" />
-          <span className="flex-1">{remote} saved changes to this {noun}. Your edits are kept.</span>
+          <span className="flex-1">{t("remoteSaved", { name: remote, noun: tNouns(noun) })}</span>
           <button type="button" onClick={review} disabled={pending} className="h-7 rounded-md px-2.5 text-[13px] font-medium hover:bg-warning/15">
-            Review
+            {t("review")}
           </button>
         </div>
       )}
@@ -178,7 +182,7 @@ export function SettingsForm({
         createPortal(
           <div className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-3 bg-topbar px-3 text-topbar-foreground shadow-lg animate-in fade-in slide-in-from-top-2 sm:px-5">
             <AlertCircle className="size-4 shrink-0 text-warning" />
-            <span className="flex-1 truncate text-sm font-medium">Unsaved changes</span>
+            <span className="flex-1 truncate text-sm font-medium">{t("unsaved")}</span>
             <button
               type="button"
               onClick={() => {
@@ -189,7 +193,7 @@ export function SettingsForm({
               disabled={pending}
               className="h-8 rounded-lg px-3 text-[13px] font-medium text-topbar-foreground/80 hover:bg-topbar-muted hover:text-topbar-foreground"
             >
-              Discard
+              {t("discard")}
             </button>
             <button
               type="submit"
@@ -198,7 +202,7 @@ export function SettingsForm({
               className="flex h-8 items-center gap-1.5 rounded-lg bg-white px-3.5 text-[13px] font-semibold text-neutral-900 shadow-sm hover:bg-white/90 disabled:opacity-70"
             >
               {pending && <Loader2 className="size-3.5 animate-spin" />}
-              Save
+              {tCommon("save")}
             </button>
           </div>,
           document.body,

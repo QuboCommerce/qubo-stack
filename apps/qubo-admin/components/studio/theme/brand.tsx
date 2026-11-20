@@ -4,6 +4,7 @@ import type { BrandAsset, Mode, Theme } from "@qubo/stylekit";
 import { cn } from "@qubo/shared/utils";
 import { ImagePlus, RefreshCw, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { QuickPick } from "@/components/media/quick-pick";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,23 +15,24 @@ import { ThemeScope } from "./preview";
 
 type Slot = "logo" | "logoInverse" | "mark" | "favicon" | "ogImage";
 
-const slots: { id: Slot; label: string; hint: string; dark?: boolean; wide?: boolean; square?: boolean }[] = [
-  { id: "logo", label: "Logo", hint: "For light backgrounds" },
-  { id: "logoInverse", label: "Logo on dark", hint: "Falls back to the logo", dark: true },
-  { id: "mark", label: "Mark", hint: "Square symbol for loaders and transitions", square: true },
-  { id: "favicon", label: "Favicon", hint: "Browser tab, at least 48 px", square: true },
-  { id: "ogImage", label: "Sharing image", hint: "Shown when a link is shared, 1200 × 630", wide: true },
+const slots: { id: Slot; dark?: boolean; wide?: boolean; square?: boolean }[] = [
+  { id: "logo" },
+  { id: "logoInverse", dark: true },
+  { id: "mark", square: true },
+  { id: "favicon", square: true },
+  { id: "ogImage", wide: true },
 ];
 
 export function BrandPage({ theme, update, site, mode }: { theme: Theme; update: ThemeUpdate; site: { slug: string; id: string }; mode: Mode }) {
+  const t = useTranslations("studio.theme.brand");
   const brand = theme.brand;
   const [picking, setPicking] = useState<Slot | null>(null);
-  const setBrand = (patch: Partial<Theme["brand"]>, key?: string) => update((t) => ({ ...t, brand: { ...t.brand, ...patch } }), key);
-  const label = slots.find((s) => s.id === picking)?.label;
+  const setBrand = (patch: Partial<Theme["brand"]>, key?: string) => update((th) => ({ ...th, brand: { ...th.brand, ...patch } }), key);
+  const label = picking ? t(`slots.${picking}.label`) : undefined;
 
   return (
     <div>
-      <Group title="Identity" description="Used by the header, page transitions, the browser tab and link previews.">
+      <Group title={t("identity")} description={t("identityDescription")}>
         <div className="grid grid-cols-2 gap-2">
           {slots.map((s) => (
             <AssetTile
@@ -47,14 +49,14 @@ export function BrandPage({ theme, update, site, mode }: { theme: Theme; update:
         </div>
       </Group>
 
-      <Group title="Voice" description="How the brand sounds. Copy suggestions and the AI writer follow this.">
+      <Group title={t("voice")} description={t("voiceDescription")}>
         <div className="space-y-1.5">
-          <label htmlFor="brand-tone" className="text-[13px] font-medium">Tone</label>
+          <label htmlFor="brand-tone" className="text-[13px] font-medium">{t("tone")}</label>
           <Textarea
             id="brand-tone"
             value={brand.voice.tone}
             onChange={(e) => setBrand({ voice: { ...brand.voice, tone: e.target.value } }, "tone")}
-            placeholder="Plain, warm and exact. We fix things; we don't oversell."
+            placeholder={t("tonePlaceholder")}
             className="min-h-20 text-[13px]"
           />
         </div>
@@ -68,7 +70,7 @@ export function BrandPage({ theme, update, site, mode }: { theme: Theme; update:
         siteId={site.id}
         kind="image"
         lens="design"
-        title={label ?? "Brand"}
+        title={label ?? t("title")}
         onPick={([item]) => {
           if (!item || !picking) return;
           const asset: BrandAsset = {
@@ -102,6 +104,7 @@ function AssetTile({
   onClear: () => void;
   onAlt: (alt: string) => void;
 }) {
+  const t = useTranslations("studio.theme.brand");
   const fallback = slot.id === "logoInverse" ? theme.brand.logo : null;
   const shown = value?.url ? value : fallback?.url ? fallback : null;
   return (
@@ -123,11 +126,11 @@ function AssetTile({
                 className={cn("size-full", slot.wide ? "object-cover" : "object-contain p-4", !value?.url && "opacity-50")}
               />
               <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                <Button type="button" size="icon" variant="secondary" className="size-7" onClick={onPick} aria-label={`Replace ${slot.label}`}>
+                <Button type="button" size="icon" variant="secondary" className="size-7" onClick={onPick} aria-label={t("replace", { label: t(`slots.${slot.id}.label`) })}>
                   <RefreshCw className="size-3.5" />
                 </Button>
                 {value?.url && (
-                  <Button type="button" size="icon" variant="secondary" className="size-7" onClick={onClear} aria-label={`Remove ${slot.label}`}>
+                  <Button type="button" size="icon" variant="secondary" className="size-7" onClick={onClear} aria-label={t("remove", { label: t(`slots.${slot.id}.label`) })}>
                     <X className="size-3.5" />
                   </Button>
                 )}
@@ -143,23 +146,24 @@ function AssetTile({
               )}
             >
               <ImagePlus className="size-5" />
-              Choose
+              {t("choose")}
             </button>
           )}
         </div>
       </ThemeScope>
       <div className="px-0.5">
-        <p className="text-[12px] font-medium leading-tight">{slot.label}</p>
-        <p className="text-[11px] leading-snug text-muted-foreground">{value?.url || !fallback?.url ? slot.hint : "Using the logo"}</p>
+        <p className="text-[12px] font-medium leading-tight">{t(`slots.${slot.id}.label`)}</p>
+        <p className="text-[11px] leading-snug text-muted-foreground">{value?.url || !fallback?.url ? t(`slots.${slot.id}.hint`) : t("usingLogo")}</p>
       </div>
       {value?.url && slot.wide && (
-        <Input value={value.alt} onChange={(e) => onAlt(e.target.value)} placeholder="Describe the image" className="h-8 text-xs" aria-label={`${slot.label} alt text`} />
+        <Input value={value.alt} onChange={(e) => onAlt(e.target.value)} placeholder={t("describeImage")} className="h-8 text-xs" aria-label={t("altText", { label: t(`slots.${slot.id}.label`) })} />
       )}
     </div>
   );
 }
 
 function AvoidList({ value, onChange }: { value: string[]; onChange: (v: string[]) => void }) {
+  const t = useTranslations("studio.theme.brand");
   const [draft, setDraft] = useState("");
   const add = () => {
     const words = draft.split(",").map((w) => w.trim()).filter(Boolean);
@@ -169,13 +173,13 @@ function AvoidList({ value, onChange }: { value: string[]; onChange: (v: string[
   };
   return (
     <div className="space-y-1.5">
-      <label htmlFor="brand-avoid" className="text-[13px] font-medium">Words to avoid</label>
+      <label htmlFor="brand-avoid" className="text-[13px] font-medium">{t("avoid")}</label>
       {value.length > 0 && (
         <ul className="flex flex-wrap gap-1">
           {value.map((w) => (
             <li key={w} className="flex items-center gap-1 rounded-full bg-muted py-0.5 pr-1 pl-2 text-xs">
               {w}
-              <button type="button" onClick={() => onChange(value.filter((x) => x !== w))} className="rounded-full p-0.5 text-muted-foreground hover:bg-background hover:text-foreground" aria-label={`Remove ${w}`}>
+              <button type="button" onClick={() => onChange(value.filter((x) => x !== w))} className="rounded-full p-0.5 text-muted-foreground hover:bg-background hover:text-foreground" aria-label={t("removeWord", { word: w })}>
                 <X className="size-3" />
               </button>
             </li>
@@ -193,7 +197,7 @@ function AvoidList({ value, onChange }: { value: string[]; onChange: (v: string[
           }
         }}
         onBlur={add}
-        placeholder="cutting-edge, seamless, unlock"
+        placeholder={t("avoidPlaceholder")}
         className="h-8 text-xs"
       />
     </div>

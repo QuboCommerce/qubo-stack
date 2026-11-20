@@ -4,13 +4,14 @@ import { easingPresets, formatOklch, resolveRoleColor, roles, type Mode, type Pa
 import { cn } from "@qubo/shared/utils";
 import { Copy, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { SliderField, Swatch, uniqueSlug } from "./controls";
-import { describeRole } from "./palette";
+import { useRoleLabel } from "./use-labels";
 
 export type ThemeUpdate = (fn: (t: Theme) => Theme, key?: string) => void;
 
@@ -38,16 +39,18 @@ export function PaintField({
   onChange: (p: Paint) => void;
   alpha?: boolean;
 }) {
+  const t = useTranslations("studio.theme.designControls");
+  const roleLabel = useRoleLabel();
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[13px] font-medium">{label}</span>
         <Select value={value.role} onValueChange={(v) => onChange({ ...value, role: v as Role })}>
-          <SelectTrigger size="sm" className="h-8 w-44 gap-2 text-xs" aria-label={`${label} colour`}>
+          <SelectTrigger size="sm" className="h-8 w-44 gap-2 text-xs" aria-label={t("colourOf", { label })}>
             <SelectValue>
               <span className="flex min-w-0 items-center gap-2">
                 <Swatch color={roleSwatch(theme, mode, value.role)} className="size-4" />
-                <span className="truncate">{describeRole(value.role)}</span>
+                <span className="truncate">{roleLabel(value.role)}</span>
               </span>
             </SelectValue>
           </SelectTrigger>
@@ -56,7 +59,7 @@ export function PaintField({
               <SelectItem key={r} value={r} className="text-xs">
                 <span className="flex items-center gap-2">
                   <Swatch color={roleSwatch(theme, mode, r)} className="size-4" />
-                  {describeRole(r)}
+                  {roleLabel(r)}
                 </span>
               </SelectItem>
             ))}
@@ -64,7 +67,7 @@ export function PaintField({
         </Select>
       </div>
       {alpha && (
-        <SliderField label="Opacity" value={value.alpha} min={0} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => onChange({ ...value, alpha: v })} />
+        <SliderField label={t("opacity")} value={value.alpha} min={0} max={1} step={0.05} format={(v) => `${Math.round(v * 100)}%`} onChange={(v) => onChange({ ...value, alpha: v })} />
       )}
     </div>
   );
@@ -90,6 +93,7 @@ export function DurationField({
   onChange: (ms: number) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations("studio.theme.designControls");
   const id = useId();
   const [text, setText] = useState(String(value));
   useEffect(() => setText(String(value)), [value]);
@@ -111,9 +115,9 @@ export function DurationField({
             onBlur={(e) => commit(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && commit((e.target as HTMLInputElement).value)}
             className="h-7 w-16 px-1.5 text-right font-mono text-xs tabular-nums"
-            aria-label={`${label} in milliseconds`}
+            aria-label={t("inMs", { label })}
           />
-          <span className="text-[11px] text-muted-foreground">ms</span>
+          <span className="text-[11px] text-muted-foreground">{t("ms")}</span>
         </span>
       </div>
       <Slider value={[value]} min={min} max={max} step={100} onValueChange={([v]) => v !== undefined && onChange(v)} aria-label={label} />
@@ -124,19 +128,12 @@ export function DurationField({
 
 // ----------------------------------------------------------------- easing ---
 
-const easingLabel: Record<string, string> = {
-  standard: "Standard",
-  gentle: "Gentle",
-  snappy: "Snappy",
-  linear: "Linear",
-  "ease-in-out": "Ease in-out",
-  overshoot: "Overshoot",
-};
 const THEME = "__theme";
 const CUSTOM = "__custom";
 
 /** "" = the theme curve, a preset name, or any CSS easing (custom). */
 export function EasingField({ label, value, onChange, themeOption = true }: { label: string; value: string; onChange: (v: string) => void; themeOption?: boolean }) {
+  const t = useTranslations("studio.theme.designControls");
   const names = Object.keys(easingPresets);
   const byValue = Object.entries(easingPresets).find(([, v]) => v === value)?.[0];
   const selected = value === "" ? THEME : names.includes(value) ? value : byValue ?? CUSTOM;
@@ -155,9 +152,9 @@ export function EasingField({ label, value, onChange, themeOption = true }: { la
         >
           <SelectTrigger size="sm" className="h-8 w-44 text-xs" aria-label={label}><SelectValue /></SelectTrigger>
           <SelectContent>
-            {themeOption && <SelectItem value={THEME} className="text-xs">Theme easing</SelectItem>}
-            {names.map((n) => <SelectItem key={n} value={n} className="text-xs">{easingLabel[n] ?? n}</SelectItem>)}
-            <SelectItem value={CUSTOM} className="text-xs">Custom curve…</SelectItem>
+            {themeOption && <SelectItem value={THEME} className="text-xs">{t("themeEasing")}</SelectItem>}
+            {names.map((n) => <SelectItem key={n} value={n} className="text-xs">{t.has(`easing.${n}` as "easing.standard") ? t(`easing.${n}` as "easing.standard") : n}</SelectItem>)}
+            <SelectItem value={CUSTOM} className="text-xs">{t("customCurve")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -168,7 +165,7 @@ export function EasingField({ label, value, onChange, themeOption = true }: { la
           onBlur={(e) => e.target.value.trim() && onChange(e.target.value.trim())}
           placeholder="cubic-bezier(0.2, 0.8, 0.2, 1)"
           className="h-8 font-mono text-xs"
-          aria-label={`${label} curve`}
+          aria-label={t("curveOf", { label })}
         />
       )}
     </div>
@@ -195,6 +192,7 @@ export function PresetRows<T extends { id: string; name: string }>({
   onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
+  const t = useTranslations("studio.theme.designControls");
   return (
     <ul className="space-y-1">
       {items.map((item) => (
@@ -211,13 +209,13 @@ export function PresetRows<T extends { id: string; name: string }>({
           </button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-7 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100" aria-label={`${item.name} actions`}>
+              <Button variant="ghost" size="icon" className="size-7 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 data-[state=open]:opacity-100" aria-label={t("actionsOf", { name: item.name })}>
                 <MoreHorizontal className="size-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onSelect={() => onDuplicate(item.id)}><Copy /> Duplicate</DropdownMenuItem>
-              <DropdownMenuItem variant="destructive" onSelect={() => onDelete(item.id)}><Trash2 /> Delete</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => onDuplicate(item.id)}><Copy /> {t("duplicate")}</DropdownMenuItem>
+              <DropdownMenuItem variant="destructive" onSelect={() => onDelete(item.id)}><Trash2 /> {t("delete")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </li>
@@ -234,17 +232,18 @@ export function AddButton({ label, onClick }: { label: string; onClick: () => vo
   );
 }
 
-/** Copy of `item` with a fresh id and "copy" name, inserted after it. */
-export function duplicateIn<T extends { id: string; name: string }>(list: T[], id: string): { list: T[]; id: string | null } {
+/** Copy of `item` with a fresh id and a caller-localised name, inserted after it. */
+export function duplicateIn<T extends { id: string; name: string }>(list: T[], id: string, copyName: (name: string) => string): { list: T[]; id: string | null } {
   const i = list.findIndex((x) => x.id === id);
   if (i < 0) return { list, id: null };
   const src = list[i]!;
-  const copy = { ...structuredClone(src), id: uniqueSlug(`${src.id}-copy`, list.map((x) => x.id)), name: `${src.name} copy` };
+  const copy = { ...structuredClone(src), id: uniqueSlug(`${src.id}-copy`, list.map((x) => x.id)), name: copyName(src.name) };
   return { list: [...list.slice(0, i + 1), copy, ...list.slice(i + 1)], id: copy.id };
 }
 
 export function NameInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const t = useTranslations("studio.theme.designControls");
   return (
-    <Input value={value} onChange={(e) => onChange(e.target.value)} className="h-8 text-[13px] font-medium" aria-label="Preset name" placeholder="Name" />
+    <Input value={value} onChange={(e) => onChange(e.target.value)} className="h-8 text-[13px] font-medium" aria-label={t("presetName")} placeholder={t("namePlaceholder")} />
   );
 }
