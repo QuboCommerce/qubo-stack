@@ -19,6 +19,8 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").notNull().default(false),
   image: text("image"),
   role: userRoleEnum("role").notNull().default("CUSTOMER"),
+  /** Admin panel language (`en`, `fr`); null follows the browser. */
+  locale: text("locale"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

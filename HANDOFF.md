@@ -876,6 +876,22 @@ Storefront: cards show a "−N%" badge when compare-at is above price.
 category has that slug. The Cart block has a code field (`showDiscount`), a discount line
 and a total; HM Froid's French labels are in `seed-hm-froid-commerce.ts`.
 
+### 52. Admin UI translations: English and French (2026-11-20)
+
+The admin uses next-intl without locale routing (`apps/qubo-admin/i18n/`, `messages/{en,fr}/<area>.json`,
+skill `qubo-i18n`). English is the typed source (`global.d.ts`), `messages.test.ts` fails when
+French loses a key or placeholder. Locale order: `qubo-lang` cookie, then `user.locale`
+(migration 0023, set from the user menu by `setLanguage`), then Accept-Language, then `en`.
+Server code uses `getTranslations` and `getFormatters()` (`lib/format-server.ts`); client code
+uses `useTranslations` and `formatters(useLocale())`. The `(canvas)` preview iframe is not
+translated on purpose.
+
+Not translated yet (phase 2): block, field, preset and theme names from `packages/blocks`,
+`packages/stylekit` and `@qubo/studio` errors (Puck labels in the Studio), and `formatBytes`
+units from `@qubo/storage`. Known cosmetic gaps: inbox filter tabs clip in French, one
+promotions form label wraps. Storefront copy stays content driven. Migration 0023 is not yet
+applied on prod (manual, see the promotions deploy notes).
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

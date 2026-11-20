@@ -1,0 +1,143 @@
+{
+  "promotions": {
+    "title": "Promotions",
+    "tabs": {
+      "sales": "Sale prices",
+      "codes": "Discount codes"
+    },
+    "actionForm": {
+      "defaultDone": "Saved"
+    },
+    "sales": {
+      "subtitle": "{count, plural, one {# product on sale} other {# products on sale}}",
+      "bulk": {
+        "title": "Put a selection on sale",
+        "description": "Lowers the price by a percentage. The current price becomes the struck-through price, so ending the sale restores it.",
+        "done": "Prices updated",
+        "category": "Category",
+        "anyCategory": "Any category",
+        "prefix": "Reference or name starts with",
+        "discount": "Discount",
+        "apply": "Apply discount",
+        "end": "End sale"
+      },
+      "tabs": {
+        "sale": "On sale",
+        "all": "All products"
+      },
+      "searchPlaceholder": "Search name or reference",
+      "empty": {
+        "saleTitle": "Nothing is on sale",
+        "saleDescription": "Use the form above, or open All products and type a sale price next to a product.",
+        "searchTitle": "No products match",
+        "searchDescription": "Try another name or reference."
+      },
+      "table": {
+        "product": "Product",
+        "regularPrice": "Regular price",
+        "salePrice": "Sale price"
+      },
+      "notOnSale": "Not on sale",
+      "salePriceFor": "Sale price for {name}",
+      "percentOff": "−{percent}%",
+      "ended": "Ended",
+      "endSale": "End sale"
+    },
+    "codes": {
+      "subtitle": "{count, plural, one {# discount code} other {# discount codes}}",
+      "new": "New code",
+      "empty": {
+        "title": "No discount codes yet",
+        "description": "Shoppers type a code in the cart. A code can take a percentage or an amount off, or make delivery free, with dates, a minimum order and usage limits.",
+        "action": "Create a code"
+      },
+      "table": {
+        "code": "Code",
+        "discount": "Discount",
+        "used": "Used",
+        "dates": "Dates",
+        "status": "Status"
+      },
+      "status": {
+        "paused": "Paused",
+        "expired": "Expired",
+        "usedUp": "Used up",
+        "scheduled": "Scheduled",
+        "active": "Active"
+      },
+      "describe": {
+        "freeDelivery": "Free delivery",
+        "percentOff": "{value}% off",
+        "amountOff": "{amount} off",
+        "from": "from {amount}"
+      },
+      "dates": {
+        "always": "Always",
+        "range": "{start} to {end}",
+        "now": "now",
+        "noEnd": "no end"
+      },
+      "editor": {
+        "newTitle": "New discount code",
+        "newDescription": "Codes are not case sensitive. Shoppers see the saving in the cart and on the Stripe payment page.",
+        "usedTimes": "{count, plural, one {Used # time} other {Used # times}}"
+      },
+      "fields": {
+        "code": "Code",
+        "name": "Internal name",
+        "nameHint": "Only you see this.",
+        "namePlaceholder": "Winter campaign",
+        "type": "Type",
+        "typePercentage": "Percentage off",
+        "typeFixed": "Amount off ({currency})",
+        "typeFreeShipping": "Free delivery",
+        "value": "Value",
+        "valueHint": "Percent or amount. Ignored for free delivery.",
+        "startsAt": "Starts",
+        "endsAt": "Ends",
+        "minPurchase": "Minimum order ({currency})",
+        "minQuantity": "Minimum quantity",
+        "minQuantityHint": "Counts eligible items only.",
+        "none": "None",
+        "maxUsesTotal": "Total uses",
+        "maxUsesPerCustomer": "Uses per customer",
+        "maxUsesPerCustomerHint": "Needs a signed-in shopper.",
+        "unlimited": "Unlimited",
+        "products": "Only these products",
+        "productsHint": "References or handles, one per line. Leave empty for the whole cart.",
+        "categories": "Only these categories",
+        "categoriesHint": "A category includes its subcategories.",
+        "active": "Active",
+        "activeDescription": "Paused codes are refused in the cart."
+      },
+      "pause": "Pause",
+      "resume": "Resume",
+      "delete": "Delete",
+      "usedCannotDelete": "Used codes can be paused, not deleted."
+    },
+    "errors": {
+      "amount": "Use an amount like 49.90.",
+      "pickProduct": "Pick a product.",
+      "productGone": "This product no longer exists.",
+      "salePriceTooHigh": "The sale price must be below the regular price ({regular}).",
+      "pickScope": "Pick a category or type a reference prefix.",
+      "unknownCategory": "Unknown category.",
+      "nothingOnSale": "No product in that selection is on sale.",
+      "percentRange": "Use a discount between 1 and 90 percent.",
+      "noProductMatches": "No product matches that selection.",
+      "codeFormat": "Codes use 2 to 40 letters, numbers, dashes or underscores.",
+      "valueRequired": "Give the discount a value above 0.",
+      "percentMax": "A percentage can't be above 100.",
+      "checkMinPurchase": "Check the minimum order.",
+      "checkMaxUsesTotal": "Check the total uses.",
+      "checkMaxUsesPerCustomer": "Check the uses per customer.",
+      "checkMinQuantity": "Check the minimum quantity.",
+      "endBeforeStart": "The end date must be after the start date.",
+      "unknownCode": "Unknown code.",
+      "checkFields": "Check the highlighted fields.",
+      "noProductFor": "No product found for {references}.",
+      "codeExists": "The code {code} already exists.",
+      "codeDeleted": "This code was deleted by someone else."
+    }
+  }
+}

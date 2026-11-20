@@ -16,7 +16,12 @@ import {
 
 export type Capability = "commerce" | "catalog" | "booking" | "leads" | "blog" | "accounts" | "locales";
 
-export type NavLeaf = { label: string; href: string; requires?: Capability[] };
+import type en from "@/messages/en";
+
+/** Keys of the `nav` namespace in messages/en.json. */
+export type NavKey = keyof (typeof en)["nav"];
+
+export type NavLeaf = { key: NavKey; href: string; requires?: Capability[] };
 export type NavItem = NavLeaf & {
   icon: LucideIcon;
   /** Shown as the parent's sub-menu while the section is active (Shopify style). */
@@ -24,95 +29,95 @@ export type NavItem = NavLeaf & {
   /** Live counter key, e.g. unfulfilled orders. */
   badge?: "orders" | "inbox";
 };
-export type NavGroup = { label?: string; items: NavItem[] };
+export type NavGroup = { key?: NavKey; items: NavItem[] };
 
 const groups: NavGroup[] = [
   {
     items: [
-      { label: "Home", href: "", icon: Home },
+      { key: "home", href: "", icon: Home },
       {
-        label: "Orders",
+        key: "orders",
         href: "/orders",
         icon: ShoppingBag,
         requires: ["commerce"],
         badge: "orders",
         children: [
-          { label: "Drafts", href: "/orders/drafts" },
-          { label: "Abandoned checkouts", href: "/orders/abandoned" },
+          { key: "drafts", href: "/orders/drafts" },
+          { key: "abandonedCheckouts", href: "/orders/abandoned" },
         ],
       },
       {
-        label: "Products",
+        key: "products",
         href: "/products",
         icon: Tag,
         requires: ["catalog"],
         children: [
-          { label: "Categories", href: "/products/categories" },
-          { label: "Collections", href: "/products/collections" },
-          { label: "Inventory", href: "/products/inventory", requires: ["commerce"] },
-          { label: "Gift cards", href: "/products/gift-cards", requires: ["commerce"] },
+          { key: "categories", href: "/products/categories" },
+          { key: "collections", href: "/products/collections" },
+          { key: "inventory", href: "/products/inventory", requires: ["commerce"] },
+          { key: "giftCards", href: "/products/gift-cards", requires: ["commerce"] },
         ],
       },
       {
-        label: "Bookings",
+        key: "bookings",
         href: "/bookings",
         icon: CalendarCheck,
         requires: ["booking"],
         children: [
-          { label: "Services", href: "/bookings/services" },
-          { label: "Availability", href: "/bookings/availability" },
+          { key: "services", href: "/bookings/services" },
+          { key: "availability", href: "/bookings/availability" },
         ],
       },
       {
-        label: "Customers",
+        key: "customers",
         href: "/customers",
         icon: Users,
         requires: ["accounts"],
-        children: [{ label: "Segments", href: "/customers/segments" }],
+        children: [{ key: "segments", href: "/customers/segments" }],
       },
-      { label: "Inbox", href: "/inbox", icon: Inbox, requires: ["leads"], badge: "inbox" },
+      { key: "inbox", href: "/inbox", icon: Inbox, requires: ["leads"], badge: "inbox" },
       {
-        label: "Content",
+        key: "content",
         href: "/content",
         icon: FileText,
         children: [
-          { label: "Entries", href: "/content/entries" },
-          { label: "Blog posts", href: "/content/blog", requires: ["blog"] },
-          { label: "Menus", href: "/content/menus" },
+          { key: "entries", href: "/content/entries" },
+          { key: "blogPosts", href: "/content/blog", requires: ["blog"] },
+          { key: "menus", href: "/content/menus" },
         ],
       },
-      { label: "Media", href: "/media", icon: Image },
+      { key: "media", href: "/media", icon: Image },
       {
-        label: "Promotions",
+        key: "promotions",
         href: "/promotions",
         icon: BadgePercent,
         requires: ["commerce"],
-        children: [{ label: "Discount codes", href: "/promotions/codes" }],
+        children: [{ key: "discountCodes", href: "/promotions/codes" }],
       },
-      { label: "Analytics", href: "/analytics", icon: BarChart3, children: [{ label: "Reports", href: "/analytics/reports" }] },
+      { key: "analytics", href: "/analytics", icon: BarChart3, children: [{ key: "reports", href: "/analytics/reports" }] },
     ],
   },
   {
-    label: "Sales channels",
+    key: "salesChannels",
     items: [
       {
-        label: "Online Store",
+        key: "onlineStore",
         href: "/online-store",
         icon: Paintbrush,
         children: [
-          { label: "Themes", href: "/online-store" },
-          { label: "Block library", href: "/online-store/blocks" },
-          { label: "Pages", href: "/online-store/pages" },
-          { label: "Navigation", href: "/online-store/navigation" },
-          { label: "Fonts", href: "/online-store/fonts" },
-          { label: "Preferences", href: "/online-store/preferences" },
+          { key: "themes", href: "/online-store" },
+          { key: "blockLibrary", href: "/online-store/blocks" },
+          { key: "pages", href: "/online-store/pages" },
+          { key: "navigation", href: "/online-store/navigation" },
+          { key: "fonts", href: "/online-store/fonts" },
+          { key: "preferences", href: "/online-store/preferences" },
         ],
       },
     ],
   },
 ];
 
-export const settingsItem: NavItem = { label: "Settings", href: "/settings", icon: Settings };
+export const settingsItem: NavItem = { key: "settings", href: "/settings", icon: Settings };
 
 const allowed = (caps: readonly string[], requires?: Capability[]) => !requires || requires.every((c) => caps.includes(c));
 
@@ -132,10 +137,10 @@ export function navigationFor(capabilities: readonly string[]): NavGroup[] {
 export function flatNavigation(capabilities: readonly string[]) {
   return navigationFor(capabilities).flatMap((g) =>
     g.items.flatMap((i) => [
-      { label: i.label, href: i.href, icon: i.icon, parent: undefined as string | undefined },
-      ...(i.children ?? []).filter((c) => c.href !== i.href).map((c) => ({ label: c.label, href: c.href, icon: i.icon, parent: i.label })),
+      { key: i.key, href: i.href, icon: i.icon, parent: undefined as NavKey | undefined },
+      ...(i.children ?? []).filter((c) => c.href !== i.href).map((c) => ({ key: c.key, href: c.href, icon: i.icon, parent: i.key })),
     ]),
-  ).concat([{ label: "Settings", href: "/settings", icon: settingsItem.icon, parent: undefined }]);
+  ).concat([{ key: "settings", href: "/settings", icon: settingsItem.icon, parent: undefined as NavKey | undefined }]);
 }
 
 export const siteTypeLabel: Record<string, string> = {

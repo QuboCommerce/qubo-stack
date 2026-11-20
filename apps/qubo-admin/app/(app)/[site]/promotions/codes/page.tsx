@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { Plus, TicketPercent } from "lucide-react";
 import { db } from "@qubo/db/client";
 import { discount, discountCondition, product, siteSettings } from "@qubo/db/schema";
@@ -13,32 +14,35 @@ import { SettingsForm } from "@/components/settings/settings-form";
 import { Button } from "@/components/ui/button";
 import { requireSite } from "@/lib/admin";
 import { getCategoryTree } from "@/lib/categories";
-import { money, number, shortDate } from "@/lib/format";
 import { DEFAULT_ZONE, toLocalInput } from "@/lib/zoned";
 
 const uuid = /^[0-9a-f-]{36}$/i;
 type Row = typeof discount.$inferSelect;
+type Status = "paused" | "expired" | "usedUp" | "scheduled" | "active";
 
-function state(d: Row, now = new Date()): { label: string; tone: "success" | "warning" | "info" | "muted" | "destructive" } {
-  if (!d.isActive) return { label: "Paused", tone: "muted" };
-  if (d.endsAt && d.endsAt <= now) return { label: "Expired", tone: "muted" };
-  if (d.maxUsesTotal !== null && d.usedCount >= d.maxUsesTotal) return { label: "Used up", tone: "warning" };
-  if (d.startsAt && d.startsAt > now) return { label: "Scheduled", tone: "info" };
-  return { label: "Active", tone: "success" };
-}
-
-function describe(d: Row, currency: string) {
-  if (d.type === "FREE_SHIPPING") return "Free delivery";
-  if (d.type === "PERCENTAGE") return `${Number(d.value)}% off`;
-  return `${money(d.value, currency)} off`;
+function state(d: Row, now = new Date()): { key: Status; tone: "success" | "warning" | "info" | "muted" | "destructive" } {
+  if (!d.isActive) return { key: "paused", tone: "muted" };
+  if (d.endsAt && d.endsAt <= now) return { key: "expired", tone: "muted" };
+  if (d.maxUsesTotal !== null && d.usedCount >= d.maxUsesTotal) return { key: "usedUp", tone: "warning" };
+  if (d.startsAt && d.startsAt > now) return { key: "scheduled", tone: "info" };
+  return { key: "active", tone: "success" };
 }
 
 export default async function DiscountCodesPage({ params, searchParams }: { params: Promise<{ site: string }>; searchParams: Promise<{ id?: string; new?: string }> }) {
   const [{ site: slug }, sp] = await Promise.all([params, searchParams]);
   const { site, siteId } = await requireSite(slug);
+  const t = await getTranslations("promotions");
+  const format = await getFormatter();
   if (!(site.capabilities ?? []).includes("commerce")) notFound();
   const currency = site.currency ?? "EUR";
   const base = `/${site.slug}/promotions/codes`;
+  const money = (v: number | string) => format.number(Number(v), { style: "currency", currency });
+  const shortDate = (d: Date) => format.dateTime(d, { day: "numeric", month: "short", year: "numeric" });
+  const describe = (d: Row) => {
+    if (d.type === "FREE_SHIPPING") return t("codes.describe.freeDelivery");
+    if (d.type === "PERCENTAGE") return t("codes.describe.percentOff", { value: format.number(Number(d.value)) });
+    return t("codes.describe.amountOff", { amount: money(d.value) });
+  };
 
   const [codes, tree, [settings]] = await Promise.all([
     db.select().from(discount).where(eq(discount.siteId, siteId)).orderBy(desc(discount.createdAt)),
@@ -66,13 +70,13 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
 
   return (
     <Page
-      title="Promotions"
-      subtitle={codes.length ? `${number(codes.length)} discount codes` : undefined}
+      title={t("title")}
+      subtitle={codes.length ? t("codes.subtitle", { count: codes.length }) : undefined}
       width="wide"
       actions={
         <Button size="sm" asChild>
           <Link href={`${base}?new=1`}>
-            <Plus /> New code
+            <Plus /> {t("codes.new")}
           </Link>
         </Button>
       }
@@ -85,11 +89,11 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
             {codes.length === 0 ? (
               <EmptyState
                 icon={TicketPercent}
-                title="No discount codes yet"
-                description="Shoppers type a code in the cart. A code can take a percentage or an amount off, or make delivery free, with dates, a minimum order and usage limits."
+                title={t("codes.empty.title")}
+                description={t("codes.empty.description")}
                 action={
                   <Button size="sm" variant="outline" asChild>
-                    <Link href={`${base}?new=1`}>Create a code</Link>
+                    <Link href={`${base}?new=1`}>{t("codes.empty.action")}</Link>
                   </Button>
                 }
               />
@@ -98,11 +102,11 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
                 <table className="w-full text-sm">
                   <thead className="border-b bg-muted/30">
                     <tr>
-                      <th className={th}>Code</th>
-                      <th className={th}>Discount</th>
-                      <th className={th}>Used</th>
-                      <th className={th}>Dates</th>
-                      <th className={th}>Status</th>
+                      <th className={th}>{t("codes.table.code")}</th>
+                      <th className={th}>{t("codes.table.discount")}</th>
+                      <th className={th}>{t("codes.table.used")}</th>
+                      <th className={th}>{t("codes.table.dates")}</th>
+                      <th className={th}>{t("codes.table.status")}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -117,20 +121,25 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
                             {c.name && <span className="block text-xs text-muted-foreground">{c.name}</span>}
                           </td>
                           <td className={td}>
-                            {describe(c, currency)}
-                            {c.minPurchaseAmount && <span className="block text-xs text-muted-foreground">from {money(c.minPurchaseAmount, currency)}</span>}
+                            {describe(c)}
+                            {c.minPurchaseAmount && <span className="block text-xs text-muted-foreground">{t("codes.describe.from", { amount: money(c.minPurchaseAmount) })}</span>}
                           </td>
                           <td className={`${td} tabular-nums`}>
-                            {number(c.usedCount)}
-                            {c.maxUsesTotal !== null && <span className="text-muted-foreground"> / {number(c.maxUsesTotal)}</span>}
+                            {format.number(c.usedCount)}
+                            {c.maxUsesTotal !== null && <span className="text-muted-foreground"> / {format.number(c.maxUsesTotal)}</span>}
                           </td>
                           <td className={`${td} whitespace-nowrap text-muted-foreground`}>
-                            {c.startsAt || c.endsAt ? `${c.startsAt ? shortDate(c.startsAt) : "now"} to ${c.endsAt ? shortDate(c.endsAt) : "no end"}` : "Always"}
+                            {c.startsAt || c.endsAt
+                              ? t("codes.dates.range", {
+                                  start: c.startsAt ? shortDate(c.startsAt) : t("codes.dates.now"),
+                                  end: c.endsAt ? shortDate(c.endsAt) : t("codes.dates.noEnd"),
+                                })
+                              : t("codes.dates.always")}
                           </td>
                           <td className={td}>
                             <span className="inline-flex items-center gap-1.5">
                               <StatusDot tone={s.tone} />
-                              {s.label}
+                              {t(`codes.status.${s.key}`)}
                             </span>
                           </td>
                         </tr>
@@ -145,8 +154,8 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
           {showEditor && (
             <Panel
               key={editing?.id ?? "new"}
-              title={editing ? editing.code : "New discount code"}
-              description={editing ? `Used ${number(editing.usedCount)} times` : "Codes are not case sensitive. Shoppers see the saving in the cart and on the Stripe payment page."}
+              title={editing ? editing.code : t("codes.editor.newTitle")}
+              description={editing ? t("codes.editor.usedTimes", { count: editing.usedCount }) : t("codes.editor.newDescription")}
               className="@min-[64rem]:sticky @min-[64rem]:top-4"
             >
               <SettingsForm action={saveDiscount} noun="code" watch={editing ? { table: "discount", id: editing.id } : undefined}>
@@ -154,53 +163,53 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
                 {editing && <input type="hidden" name="id" value={editing.id} />}
                 <div className="space-y-4">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Code" htmlFor="code">
+                    <Field label={t("codes.fields.code")} htmlFor="code">
                       <TextInput id="code" name="code" required defaultValue={editing?.code} placeholder="WINTER15" className="font-mono uppercase" autoComplete="off" />
                     </Field>
-                    <Field label="Internal name" htmlFor="name" hint="Only you see this.">
-                      <TextInput id="name" name="name" defaultValue={editing?.name ?? ""} placeholder="Winter campaign" />
+                    <Field label={t("codes.fields.name")} htmlFor="name" hint={t("codes.fields.nameHint")}>
+                      <TextInput id="name" name="name" defaultValue={editing?.name ?? ""} placeholder={t("codes.fields.namePlaceholder")} />
                     </Field>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Type" htmlFor="type">
+                    <Field label={t("codes.fields.type")} htmlFor="type">
                       <Select id="type" name="type" defaultValue={editing?.type ?? "PERCENTAGE"}>
-                        <option value="PERCENTAGE">Percentage off</option>
-                        <option value="FIXED_AMOUNT">Amount off ({currency})</option>
-                        <option value="FREE_SHIPPING">Free delivery</option>
+                        <option value="PERCENTAGE">{t("codes.fields.typePercentage")}</option>
+                        <option value="FIXED_AMOUNT">{t("codes.fields.typeFixed", { currency })}</option>
+                        <option value="FREE_SHIPPING">{t("codes.fields.typeFreeShipping")}</option>
                       </Select>
                     </Field>
-                    <Field label="Value" htmlFor="value" hint="Percent or amount. Ignored for free delivery.">
+                    <Field label={t("codes.fields.value")} htmlFor="value" hint={t("codes.fields.valueHint")}>
                       <TextInput id="value" name="value" inputMode="decimal" defaultValue={editing && editing.type !== "FREE_SHIPPING" ? Number(editing.value).toString() : ""} placeholder="15" />
                     </Field>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label="Starts" htmlFor="startsAt" hint={zone}>
+                    <Field label={t("codes.fields.startsAt")} htmlFor="startsAt" hint={zone}>
                       <TextInput id="startsAt" name="startsAt" type="datetime-local" defaultValue={toLocalInput(editing?.startsAt, zone)} />
                     </Field>
-                    <Field label="Ends" htmlFor="endsAt">
+                    <Field label={t("codes.fields.endsAt")} htmlFor="endsAt">
                       <TextInput id="endsAt" name="endsAt" type="datetime-local" defaultValue={toLocalInput(editing?.endsAt, zone)} />
                     </Field>
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <Field label={`Minimum order (${currency})`} htmlFor="minPurchase">
-                      <TextInput id="minPurchase" name="minPurchase" inputMode="decimal" defaultValue={editing?.minPurchaseAmount ?? ""} placeholder="None" />
+                    <Field label={t("codes.fields.minPurchase", { currency })} htmlFor="minPurchase">
+                      <TextInput id="minPurchase" name="minPurchase" inputMode="decimal" defaultValue={editing?.minPurchaseAmount ?? ""} placeholder={t("codes.fields.none")} />
                     </Field>
-                    <Field label="Minimum quantity" htmlFor="minQuantity" hint="Counts eligible items only.">
-                      <TextInput id="minQuantity" name="minQuantity" inputMode="numeric" defaultValue={minQuantity} placeholder="None" />
+                    <Field label={t("codes.fields.minQuantity")} htmlFor="minQuantity" hint={t("codes.fields.minQuantityHint")}>
+                      <TextInput id="minQuantity" name="minQuantity" inputMode="numeric" defaultValue={minQuantity} placeholder={t("codes.fields.none")} />
                     </Field>
-                    <Field label="Total uses" htmlFor="maxUsesTotal">
-                      <TextInput id="maxUsesTotal" name="maxUsesTotal" inputMode="numeric" defaultValue={editing?.maxUsesTotal ?? ""} placeholder="Unlimited" />
+                    <Field label={t("codes.fields.maxUsesTotal")} htmlFor="maxUsesTotal">
+                      <TextInput id="maxUsesTotal" name="maxUsesTotal" inputMode="numeric" defaultValue={editing?.maxUsesTotal ?? ""} placeholder={t("codes.fields.unlimited")} />
                     </Field>
-                    <Field label="Uses per customer" htmlFor="maxUsesPerCustomer" hint="Needs a signed-in shopper.">
-                      <TextInput id="maxUsesPerCustomer" name="maxUsesPerCustomer" inputMode="numeric" defaultValue={editing?.maxUsesPerCustomer ?? ""} placeholder="Unlimited" />
+                    <Field label={t("codes.fields.maxUsesPerCustomer")} htmlFor="maxUsesPerCustomer" hint={t("codes.fields.maxUsesPerCustomerHint")}>
+                      <TextInput id="maxUsesPerCustomer" name="maxUsesPerCustomer" inputMode="numeric" defaultValue={editing?.maxUsesPerCustomer ?? ""} placeholder={t("codes.fields.unlimited")} />
                     </Field>
                   </div>
-                  <Field label="Only these products" htmlFor="products" hint="References or handles, one per line. Leave empty for the whole cart.">
+                  <Field label={t("codes.fields.products")} htmlFor="products" hint={t("codes.fields.productsHint")}>
                     <TextArea id="products" name="products" defaultValue={productRefs.map((p) => p.ref).join("\n")} placeholder={"A77006\nWTAG716"} className="font-mono text-xs" />
                   </Field>
                   {tree.length > 0 && (
                     <fieldset className="space-y-1.5">
-                      <legend className="text-[13px] font-medium">Only these categories</legend>
+                      <legend className="text-[13px] font-medium">{t("codes.fields.categories")}</legend>
                       <div className="max-h-48 overflow-y-auto rounded-lg border bg-card p-2 text-sm">
                         {tree.map((c) => (
                           <label key={c.id} className="flex items-center gap-2 rounded px-1 py-0.5 hover:bg-accent/40" style={{ paddingLeft: `${c.depth * 1 + 0.25}rem` }}>
@@ -209,11 +218,11 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
                           </label>
                         ))}
                       </div>
-                      <p className="text-xs text-muted-foreground">A category includes its subcategories.</p>
+                      <p className="text-xs text-muted-foreground">{t("codes.fields.categoriesHint")}</p>
                     </fieldset>
                   )}
                   <div className="-mx-4 border-y sm:-mx-5">
-                    <SwitchRow name="isActive" defaultChecked={editing?.isActive ?? true} label="Active" description="Paused codes are refused in the cart." />
+                    <SwitchRow name="isActive" defaultChecked={editing?.isActive ?? true} label={t("codes.fields.active")} description={t("codes.fields.activeDescription")} />
                   </div>
                 </div>
               </SettingsForm>
@@ -223,7 +232,7 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
                     <input type="hidden" name="site" value={site.slug} />
                     <input type="hidden" name="id" value={editing.id} />
                     <Button type="submit" size="sm" variant="outline">
-                      {editing.isActive ? "Pause" : "Resume"}
+                      {editing.isActive ? t("codes.pause") : t("codes.resume")}
                     </Button>
                   </form>
                   {editing.usedCount === 0 ? (
@@ -231,11 +240,11 @@ export default async function DiscountCodesPage({ params, searchParams }: { para
                       <input type="hidden" name="site" value={site.slug} />
                       <input type="hidden" name="id" value={editing.id} />
                       <Button type="submit" size="sm" variant="ghost" className="text-destructive">
-                        Delete
+                        {t("codes.delete")}
                       </Button>
                     </form>
                   ) : (
-                    <p className="self-center text-xs text-muted-foreground">Used codes can be paused, not deleted.</p>
+                    <p className="self-center text-xs text-muted-foreground">{t("codes.usedCannotDelete")}</p>
                   )}
                 </div>
               )}

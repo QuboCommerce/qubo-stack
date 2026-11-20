@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { getLocale, getMessages, getTimeZone } from "next-intl/server";
 import { Providers } from "@/providers";
 import { StaffHint } from "@/components/staff-hint";
 import "../(app)/globals.css";
@@ -14,11 +15,14 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 // Full-screen editor: its own root so the admin chrome never mounts.
-export default function StudioRootLayout({ children }: { children: React.ReactNode }) {
+export default async function StudioRootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const timeZone = await getTimeZone();
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers locale={locale} messages={messages} timeZone={timeZone}>{children}</Providers>
         <StaffHint />
       </body>
     </html>

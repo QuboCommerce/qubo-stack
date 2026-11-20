@@ -4,9 +4,10 @@ import { contrastPairs, type DoctorReport, type Finding, type Mode, type Theme }
 import { cn } from "@qubo/shared/utils";
 import { AlertCircle, AlertTriangle, ArrowRight, Check, Info } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Group } from "./controls";
-import { describeRole } from "./palette";
+import { useRoleLabel } from "./use-labels";
 import { modesOf } from "./schemes";
 import type { ThemeNav } from "./theme-panel";
 
@@ -14,10 +15,11 @@ export const healthTone = (h: number) => (h >= 90 ? "text-emerald-600" : h >= 70
 
 /** Circular health gauge (0–100). */
 export function HealthRing({ value, size = 44, className }: { value: number; size?: number; className?: string }) {
+  const t = useTranslations("studio.theme.doctor");
   const r = (size - 5) / 2;
   const c = 2 * Math.PI * r;
   return (
-    <span className={cn("relative inline-grid shrink-0 place-items-center", healthTone(value), className)} style={{ width: size, height: size }} title={`Health ${value}/100`}>
+    <span className={cn("relative inline-grid shrink-0 place-items-center", healthTone(value), className)} style={{ width: size, height: size }} title={t("healthTitle", { value })}>
       <svg width={size} height={size} className="-rotate-90" aria-hidden>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeOpacity={0.15} strokeWidth={4} />
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="currentColor" strokeWidth={4} strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - value / 100)} className="transition-[stroke-dashoffset] duration-500" />
@@ -27,17 +29,10 @@ export function HealthRing({ value, size = 44, className }: { value: number; siz
   );
 }
 
-const tierLabel = { essential: "Essential", complete: "Complete", premium: "Premium" } as const;
-const tierHint = {
-  essential: "A compact, dependable theme.",
-  complete: "Covers every role with room for variety.",
-  premium: "Rich: multiple schemes, styles and motion.",
-} as const;
-
 const severityMeta = {
-  error: { icon: AlertCircle, label: "Must fix", tone: "text-destructive" },
-  warning: { icon: AlertTriangle, label: "Should fix", tone: "text-amber-600" },
-  info: { icon: Info, label: "Suggestions", tone: "text-muted-foreground" },
+  error: { icon: AlertCircle, tone: "text-destructive" },
+  warning: { icon: AlertTriangle, tone: "text-amber-600" },
+  info: { icon: Info, tone: "text-muted-foreground" },
 } as const;
 
 export function findingTarget(f: Finding): string | null {
@@ -47,6 +42,8 @@ export function findingTarget(f: Finding): string | null {
 }
 
 export function DoctorPage({ theme, report, nav, mode }: { theme: Theme; report: DoctorReport; nav: ThemeNav; mode: Mode }) {
+  const t = useTranslations("studio.theme.doctor");
+  const roleLabel = useRoleLabel();
   const counts = { error: 0, warning: 0, info: 0 };
   for (const f of report.findings) counts[f.severity]++;
   const modes = modesOf(theme);
@@ -63,22 +60,22 @@ export function DoctorPage({ theme, report, nav, mode }: { theme: Theme; report:
         <HealthRing value={report.health} size={64} />
         <div className="min-w-0 flex-1">
           <p className="text-[13px] font-semibold">
-            {report.health >= 90 ? "Healthy" : report.health >= 70 ? "Needs attention" : "Unhealthy"}
+            {report.health >= 90 ? t("healthy") : report.health >= 70 ? t("needsAttention") : t("unhealthy")}
           </p>
-          <p className="text-xs text-muted-foreground">Contrast and structure, scored out of 100.</p>
+          <p className="text-xs text-muted-foreground">{t("scoreHint")}</p>
           <p className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium">
-            {tierLabel[report.richness.tier]} · {report.richness.score}
+            {t(`tiers.${report.richness.tier}.label`)} · {report.richness.score}
           </p>
         </div>
       </div>
-      <p className="border-b px-4 py-2.5 text-xs text-muted-foreground">{tierHint[report.richness.tier]} Richness isn’t quality: an essential theme can be perfect.</p>
+      <p className="border-b px-4 py-2.5 text-xs text-muted-foreground">{t("richnessNote", { hint: t(`tiers.${report.richness.tier}.hint`) })}</p>
 
       {(["error", "warning", "info"] as const).map((sev) => {
         const list = report.findings.filter((f) => f.severity === sev);
         if (!list.length) return null;
         const M = severityMeta[sev];
         return (
-          <Group key={sev} title={`${M.label} · ${list.length}`}>
+          <Group key={sev} title={t(`severity.${sev}`, { count: list.length })}>
             <ul className="-mx-2 space-y-0.5">
               {list.map((f, i) => {
                 const target = findingTarget(f);
@@ -105,17 +102,17 @@ export function DoctorPage({ theme, report, nav, mode }: { theme: Theme; report:
         );
       })}
       {counts.error + counts.warning + counts.info === 0 && (
-        <p className="flex items-center gap-2 border-b px-4 py-4 text-[13px] text-emerald-700"><Check className="size-4" /> No findings. Nice work.</p>
+        <p className="flex items-center gap-2 border-b px-4 py-4 text-[13px] text-emerald-700"><Check className="size-4" /> {t("noFindings")}</p>
       )}
 
       <Group
-        title="Contrast grid"
-        description="Every text/background pair in every scheme. Click a cell to fix it."
+        title={t("gridTitle")}
+        description={t("gridDescription")}
         action={
           modes.length > 1 ? (
             <ToggleGroup type="single" size="sm" variant="outline" value={gridMode} onValueChange={(v) => v && setGridMode(v as Mode)} className="-mt-1">
-              <ToggleGroupItem value="light" className="h-6 px-2 text-[11px]">Light</ToggleGroupItem>
-              <ToggleGroupItem value="dark" className="h-6 px-2 text-[11px]">Dark</ToggleGroupItem>
+              <ToggleGroupItem value="light" className="h-6 px-2 text-[11px]">{t("light")}</ToggleGroupItem>
+              <ToggleGroupItem value="dark" className="h-6 px-2 text-[11px]">{t("dark")}</ToggleGroupItem>
             </ToggleGroup>
           ) : undefined
         }
@@ -138,14 +135,14 @@ export function DoctorPage({ theme, report, nav, mode }: { theme: Theme; report:
                 if (cells.every((c) => !c)) return null;
                 return (
                   <tr key={`${p.fg}-${p.bg}`}>
-                    <td className="max-w-24 truncate pr-1 text-muted-foreground" title={p.label}>{describeRole(p.fg)}</td>
+                    <td className="max-w-24 truncate pr-1 text-muted-foreground" title={p.label}>{roleLabel(p.fg)}</td>
                     {cells.map((c, i) => (
                       <td key={i} className="p-0">
                         {c ? (
                           <button
                             type="button"
                             onClick={() => nav.scheme(theme.schemes[i]!.id, gridMode, p.fg)}
-                            title={`${p.label}: ${c.ratio}:1 (needs ${c.min}:1)`}
+                            title={t("contrastTitle", { label: p.label, ratio: c.ratio, min: c.min })}
                             className={cn(
                               "w-full rounded px-1 py-1 text-center font-mono tabular-nums transition-opacity hover:opacity-80",
                               c.pass ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : c.ratio < 3 ? "bg-destructive/15 text-destructive" : "bg-amber-500/15 text-amber-700 dark:text-amber-400",

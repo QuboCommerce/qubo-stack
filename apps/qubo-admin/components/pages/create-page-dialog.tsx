@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { FilePlus2, Lock, Plus } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, RadioCard, TextInput } from "@/components/settings/controls";
@@ -50,6 +51,10 @@ export function CreatePageDialog({
   /** Blueprint id to preselect; "" for a blank page. */
   initial?: string;
 }) {
+  const t = useTranslations("onlineStore.pages.create");
+  const tc = useTranslations("common");
+  const locale = useLocale();
+  const list = new Intl.ListFormat(locale, { type: "conjunction" });
   const [state, action, pending] = useActionState<ActionState, FormData>(createPageAction, null);
   const [choice, setChoice] = useState(initial ?? BLANK);
   const [title, setTitle] = useState("");
@@ -87,10 +92,8 @@ export function CreatePageDialog({
           <input type="hidden" name="site" value={site} />
           <input type="hidden" name="blueprint" value={choice} />
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><FilePlus2 className="size-4" /> New page</DialogTitle>
-            <DialogDescription>
-              Start from a suggested page, with its sections and URL already in place, or from a blank page. Everything is editable in the Studio.
-            </DialogDescription>
+            <DialogTitle className="flex items-center gap-2"><FilePlus2 className="size-4" /> {t("title")}</DialogTitle>
+            <DialogDescription>{t("description")}</DialogDescription>
           </DialogHeader>
           <div className="grid max-h-[40vh] gap-2 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3">
             <RadioCard
@@ -98,8 +101,8 @@ export function CreatePageDialog({
               value={BLANK}
               checked={choice === BLANK}
               onChange={() => pick(BLANK)}
-              title="Blank page"
-              description="One rich text section to start from."
+              title={t("blank")}
+              description={t("blankDescription")}
               icon={<Plus className="size-4" />}
             />
             {available.map((s) => {
@@ -118,8 +121,8 @@ export function CreatePageDialog({
                   footer={
                     locked ? (
                       <span className="text-xs text-muted-foreground">
-                        Needs the {s.missing.join(" and ")} module.{" "}
-                        <a href={settingsHref} className="underline underline-offset-2">Switch it on</a>
+                        {t("needsModule", { modules: list.format(s.missing) })}{" "}
+                        <a href={settingsHref} className="underline underline-offset-2">{t("switchOn")}</a>
                       </span>
                     ) : (
                       <span className="text-xs text-muted-foreground">/{s.slug}</span>
@@ -130,10 +133,10 @@ export function CreatePageDialog({
             })}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Title" htmlFor="page-title">
-              <TextInput id="page-title" name="title" required minLength={1} value={title} onChange={(e) => onTitle(e.target.value)} placeholder={selected?.title ?? "About us"} />
+            <Field label={t("fields.title")} htmlFor="page-title">
+              <TextInput id="page-title" name="title" required minLength={1} value={title} onChange={(e) => onTitle(e.target.value)} placeholder={selected?.title ?? t("fields.titlePlaceholder")} />
             </Field>
-            <Field label="URL" hint={`/${slug || "..."}`} htmlFor="page-slug">
+            <Field label={t("fields.url")} hint={`/${slug || "..."}`} htmlFor="page-slug">
               <TextInput
                 id="page-slug"
                 name="slug"
@@ -143,14 +146,14 @@ export function CreatePageDialog({
                   setSlug(e.target.value);
                 }}
                 onBlur={() => setSlug(slugify(slug))}
-                placeholder={selected?.slug ?? "about-us"}
+                placeholder={selected?.slug ?? t("fields.urlPlaceholder")}
               />
             </Field>
           </div>
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-            <Button type="submit" disabled={pending || !title.trim()}>{pending ? "Creating…" : "Create and open in Studio"}</Button>
+            <DialogClose asChild><Button type="button" variant="ghost">{tc("cancel")}</Button></DialogClose>
+            <Button type="submit" disabled={pending || !title.trim()}>{pending ? t("creating") : t("submit")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

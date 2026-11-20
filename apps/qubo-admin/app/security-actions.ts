@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { requireUser } from "@/lib/admin";
 import { endSession, listDevices } from "@/lib/sessions";
@@ -9,7 +10,7 @@ import { endSession, listDevices } from "@/lib/sessions";
 export async function revokeSession(formData: FormData) {
   const me = await requireUser();
   const id = z.string().min(1).max(100).parse(formData.get("sessionId"));
-  if (id === me.sessionId) throw new Error("Use Sign out to end this device's session.");
+  if (id === me.sessionId) throw new Error((await getTranslations("security"))("useSignOut"));
   await endSession(me.id, id, "revoked", me.sessionId);
   revalidatePath(`/${z.string().parse(formData.get("site"))}/settings/security`);
 }

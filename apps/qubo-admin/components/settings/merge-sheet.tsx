@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { GitMerge } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { Conflict } from "@/lib/merge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@qubo/shared/utils";
 
 type Pick = "mine" | "theirs";
+
+export type MergeNoun = "page" | "product" | "category" | "code" | "site" | "settings";
 
 /**
  * Field-level merge: one row per field both sides changed, "Keep mine" by
@@ -20,12 +23,16 @@ export function MergeSheet({
   onResolve,
 }: {
   conflict: Conflict;
-  noun: string;
+  noun: MergeNoun;
   onCancel: () => void;
   onResolve: (choices: Record<string, Pick>) => void;
 }) {
   const [choices, setChoices] = useState<Record<string, Pick>>(() => Object.fromEntries(conflict.fields.map((f) => [f.name, "mine" as Pick])));
-  const who = conflict.by ?? "Someone";
+  const t = useTranslations("settings.merge");
+  const tCommon = useTranslations("common");
+  const tNouns = useTranslations("settings.nouns");
+  const who = conflict.by ?? t("someone");
+  const thisNoun = tNouns(noun);
   const nothing = !conflict.fields.length && !conflict.auto.length;
 
   return (
@@ -34,12 +41,12 @@ export function MergeSheet({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GitMerge className="size-4" />
-            {conflict.fields.length ? "Both of you changed this" : "Merge changes"}
+            {conflict.fields.length ? t("titleConflict") : t("title")}
           </DialogTitle>
           <DialogDescription>
             {nothing
-              ? `This ${noun} is up to date. Saving keeps all your edits.`
-              : `${who} saved this ${noun} while you were editing. ${conflict.fields.length ? "Pick which version to keep for each field." : "None of their changes touch your edits."}`}
+              ? t("upToDate", { noun: thisNoun })
+              : `${t("savedWhileEditing", { who, noun: thisNoun })} ${conflict.fields.length ? t("pickVersion") : t("noOverlap")}`}
           </DialogDescription>
         </DialogHeader>
 
@@ -63,7 +70,7 @@ export function MergeSheet({
                           on ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/60",
                         )}
                       >
-                        <span className="block text-xs font-medium text-muted-foreground">{side === "mine" ? "Keep mine" : `Use ${who}'s`}</span>
+                        <span className="block text-xs font-medium text-muted-foreground">{side === "mine" ? t("keepMine") : t("useTheirs", { who })}</span>
                         <span className="mt-0.5 line-clamp-4 block whitespace-pre-wrap break-words">{side === "mine" ? f.mineText : f.theirsText}</span>
                       </button>
                     );
@@ -76,13 +83,13 @@ export function MergeSheet({
 
         {conflict.auto.length > 0 && (
           <p className="rounded-lg bg-muted/60 px-3 py-2 text-xs text-muted-foreground">
-            Also keeping {who}&apos;s changes to {conflict.auto.join(", ")}.
+            {t("alsoKeeping", { who, fields: conflict.auto.join(", ") })}
           </p>
         )}
 
         <DialogFooter>
-          <Button variant="ghost" onClick={onCancel}>Cancel</Button>
-          <Button onClick={() => onResolve(choices)}>Save merged</Button>
+          <Button variant="ghost" onClick={onCancel}>{tCommon("cancel")}</Button>
+          <Button onClick={() => onResolve(choices)}>{t("saveMerged")}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

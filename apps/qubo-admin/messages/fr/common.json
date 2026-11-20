@@ -1,0 +1,16 @@
+{
+  "common": {
+    "back": "Retour",
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "remove": "Retirer",
+    "search": "Rechercher",
+    "loading": "Chargement…",
+    "none": "Aucun",
+    "yes": "Oui",
+    "no": "Non"
+  }
+}

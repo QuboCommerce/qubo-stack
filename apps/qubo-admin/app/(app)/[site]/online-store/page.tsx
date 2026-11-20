@@ -1,5 +1,6 @@
 import { studioHref } from "@/lib/view-meta";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   BookOpen,
   CircleHelp,
@@ -22,53 +23,55 @@ import { SchemeChip, ThemeMiniature } from "@/components/theme-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireSite } from "@/lib/admin";
-import { relativeTime } from "@/lib/format";
+import { getFormatters } from "@/lib/format-server";
 import { getActiveTheme, getTemplates } from "@/lib/queries";
 import { summarizeTheme } from "@/lib/theme-summary";
 
-const kindMeta: Record<string, { icon: LucideIcon; group: string }> = {
-  home: { icon: Home, group: "Pages" },
-  page: { icon: FileText, group: "Pages" },
-  product: { icon: Package, group: "Catalog" },
-  collection: { icon: Package, group: "Catalog" },
-  collection_list: { icon: Package, group: "Catalog" },
-  cart: { icon: ShoppingCart, group: "Commerce" },
-  search: { icon: Search, group: "Commerce" },
-  account: { icon: User, group: "Commerce" },
-  service: { icon: Wrench, group: "Services" },
-  booking: { icon: Wrench, group: "Services" },
-  blog: { icon: BookOpen, group: "Blog" },
-  article: { icon: BookOpen, group: "Blog" },
-  not_found: { icon: CircleHelp, group: "System" },
-  password: { icon: Lock, group: "System" },
-  maintenance: { icon: Wrench, group: "System" },
+const kindMeta: Record<string, { icon: LucideIcon; group: (typeof groupOrder)[number] }> = {
+  home: { icon: Home, group: "pages" },
+  page: { icon: FileText, group: "pages" },
+  product: { icon: Package, group: "catalog" },
+  collection: { icon: Package, group: "catalog" },
+  collection_list: { icon: Package, group: "catalog" },
+  cart: { icon: ShoppingCart, group: "commerce" },
+  search: { icon: Search, group: "commerce" },
+  account: { icon: User, group: "commerce" },
+  service: { icon: Wrench, group: "services" },
+  booking: { icon: Wrench, group: "services" },
+  blog: { icon: BookOpen, group: "blog" },
+  article: { icon: BookOpen, group: "blog" },
+  not_found: { icon: CircleHelp, group: "system" },
+  password: { icon: Lock, group: "system" },
+  maintenance: { icon: Wrench, group: "system" },
 };
 
-const groupOrder = ["Pages", "Catalog", "Commerce", "Services", "Blog", "Other", "System"];
+const groupOrder = ["pages", "catalog", "commerce", "services", "blog", "other", "system"] as const;
 
 export default async function OnlineStorePage({ params }: { params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
+  const t = await getTranslations("onlineStore.themes");
+  const { relativeTime } = await getFormatters();
   const { site, siteId } = await requireSite(slug);
   const [themeRow, templates] = await Promise.all([getActiveTheme(siteId), getTemplates(siteId)]);
   const theme = themeRow ? summarizeTheme(themeRow.published ?? themeRow.draft) : null;
 
-  const groups = new Map<string, typeof templates>();
-  for (const t of templates) {
-    const g = kindMeta[t.kind]?.group ?? "Other";
-    groups.set(g, [...(groups.get(g) ?? []), t]);
+  const groups = new Map<(typeof groupOrder)[number], typeof templates>();
+  for (const tpl of templates) {
+    const g = kindMeta[tpl.kind]?.group ?? "other";
+    groups.set(g, [...(groups.get(g) ?? []), tpl]);
   }
   const library = Object.values(builtInThemes)
-    .filter((t) => t.name !== theme?.name)
-    .map((t) => ({ theme: summarizeTheme(t), report: diagnoseTheme(t) }));
+    .filter((b) => b.name !== theme?.name)
+    .map((b) => ({ theme: summarizeTheme(b), report: diagnoseTheme(b) }));
 
   return (
     <Page
-      title="Themes"
+      title={t("title")}
       width="wide"
       actions={
         site.url ? (
           <Button variant="outline" size="sm" asChild>
-            <a href={site.url} target="_blank" rel="noreferrer">View your store</a>
+            <a href={site.url} target="_blank" rel="noreferrer">{t("viewStore")}</a>
           </Button>
         ) : undefined
       }
@@ -84,24 +87,28 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-semibold tracking-tight">{theme.name}</h2>
-                    <Badge variant="outline" className="gap-1.5"><StatusDot tone="success" /> Current theme</Badge>
+                    <Badge variant="outline" className="gap-1.5"><StatusDot tone="success" /> {t("current")}</Badge>
                   </div>
                   <p className="mt-1 text-[13px] text-muted-foreground">
-                    {themeRow.publishedAt ? `Published ${relativeTime(themeRow.publishedAt)}` : "Not published yet"} · {theme.flavor} flavor · {theme.modeStrategy} mode
+                    {t("meta", {
+                      published: themeRow.publishedAt ? t("published", { time: relativeTime(themeRow.publishedAt) }) : t("notPublished"),
+                      flavor: theme.flavor,
+                      mode: t(`modes.${theme.modeStrategy}`),
+                    })}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  {themeRow.health != null && <Badge variant="secondary" className="gap-1"><Sparkles className="size-3" /> Palette health {themeRow.health}/100</Badge>}
-                  {themeRow.richness && <Badge variant="secondary" className="capitalize">{themeRow.richness} pack</Badge>}
-                  <Badge variant="secondary">{theme.schemes.length} schemes</Badge>
-                  <Badge variant="secondary">{theme.buttons} button styles</Badge>
+                  {themeRow.health != null && <Badge variant="secondary" className="gap-1"><Sparkles className="size-3" /> {t("health", { score: themeRow.health })}</Badge>}
+                  {themeRow.richness && <Badge variant="secondary">{t("pack", { tier: t(`richness.${themeRow.richness as "essential" | "complete" | "premium"}`) })}</Badge>}
+                  <Badge variant="secondary">{t("schemes", { count: theme.schemes.length })}</Badge>
+                  <Badge variant="secondary">{t("buttons", { count: theme.buttons })}</Badge>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Fonts</p>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("fonts")}</p>
                   <p className="text-sm">{theme.fonts.join(" · ")}</p>
                 </div>
                 <div>
-                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">Palette</p>
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">{t("palette")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {theme.palette.map((p) => (
                       <span key={p.id} title={`${p.name} · ${p.value}`} className="size-7 rounded-md ring-1 ring-black/10" style={{ background: p.value }} />
@@ -109,8 +116,8 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
                   </div>
                 </div>
                 <div className="mt-auto flex flex-wrap gap-2 pt-2">
-                  <Button asChild><Link href={`/${slug}/studio`}><Paintbrush /> Customize</Link></Button>
-                  <Button variant="outline" asChild><Link href={`/${slug}/studio?panel=theme`}><Palette /> Theme settings</Link></Button>
+                  <Button asChild><Link href={`/${slug}/studio`}><Paintbrush /> {t("customize")}</Link></Button>
+                  <Button variant="outline" asChild><Link href={`/${slug}/studio?panel=theme`}><Palette /> {t("themeSettings")}</Link></Button>
                 </div>
               </div>
             </div>
@@ -119,26 +126,26 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
             </div>
           </Panel>
         ) : (
-          <Panel><EmptyState icon={Paintbrush} title="No theme yet" description="Pick a theme from the library below." /></Panel>
+          <Panel><EmptyState icon={Paintbrush} title={t("empty.title")} description={t("empty.description")} /></Panel>
         )}
 
         <div className="mt-5 grid gap-5 @min-[80rem]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-          <Panel title="Templates" description="Every page type your site can render. System pages are managed by Qubo and can't be deleted." flush>
+          <Panel title={t("templates.title")} description={t("templates.description")} flush>
             <div className="mt-1 border-t">
               {[...groups.entries()].sort((a, b) => groupOrder.indexOf(a[0]) - groupOrder.indexOf(b[0])).map(([group, items]) => (
                 <div key={group}>
-                  <p className="bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground sm:px-5">{group}</p>
+                  <p className="bg-muted/40 px-4 py-1.5 text-xs font-medium text-muted-foreground sm:px-5">{t(`templates.groups.${group}`)}</p>
                   <ul className="divide-y">
-                    {items.map((t) => {
-                      const Icon = kindMeta[t.kind]?.icon ?? FileText;
+                    {items.map((tpl) => {
+                      const Icon = kindMeta[tpl.kind]?.icon ?? FileText;
                       return (
-                        <li key={t.id}>
-                          <Link href={studioHref(slug, `template:${t.id}`)} className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/50 sm:px-5">
+                        <li key={tpl.id}>
+                          <Link href={studioHref(slug, `template:${tpl.id}`)} className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-accent/50 sm:px-5">
                             <Icon className="size-4 shrink-0 text-muted-foreground" />
-                            <span className="min-w-0 flex-1 truncate font-medium">{t.name}</span>
-                            {t.isSystem && <Lock className="size-3.5 text-muted-foreground" aria-label="System page" />}
+                            <span className="min-w-0 flex-1 truncate font-medium">{tpl.name}</span>
+                            {tpl.isSystem && <Lock className="size-3.5 text-muted-foreground" aria-label={t("templates.systemPage")} />}
                             <span className="hidden text-xs text-muted-foreground xs:inline">
-                              {t.publishedAt ? `Published ${relativeTime(t.publishedAt)}` : "Draft"}
+                              {tpl.publishedAt ? t("published", { time: relativeTime(tpl.publishedAt) }) : t("templates.draft")}
                             </span>
                           </Link>
                         </li>
@@ -150,15 +157,15 @@ export default async function OnlineStorePage({ params }: { params: Promise<{ si
             </div>
           </Panel>
 
-          <Panel title="Theme library" description="StyleKit packs, scored by the Palette Doctor.">
+          <Panel title={t("library.title")} description={t("library.description")}>
             <div className="grid gap-3 @min-[40rem]:grid-cols-2 @min-[80rem]:grid-cols-1 @min-[110rem]:grid-cols-2">
-              {library.map(({ theme: t, report }) => (
-                <div key={t.name} className="overflow-hidden rounded-xl border">
-                  <ThemeMiniature theme={t} className="rounded-none border-0 border-b shadow-none" />
+              {library.map(({ theme: lib, report }) => (
+                <div key={lib.name} className="overflow-hidden rounded-xl border">
+                  <ThemeMiniature theme={lib} className="rounded-none border-0 border-b shadow-none" />
                   <div className="flex items-center gap-2 p-3">
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">{t.name}</p>
-                      <p className="text-xs capitalize text-muted-foreground">{report.richness.tier} · {t.flavor}</p>
+                      <p className="truncate text-sm font-medium">{lib.name}</p>
+                      <p className="text-xs text-muted-foreground">{t(`richness.${report.richness.tier}`)} · {lib.flavor}</p>
                     </div>
                     <Badge variant="secondary" className="tabular-nums">{report.health}</Badge>
                   </div>

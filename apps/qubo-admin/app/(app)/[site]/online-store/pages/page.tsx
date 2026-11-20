@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { ExternalLink, FileText, Home, Lock, Paintbrush } from "lucide-react";
 import type { Capability } from "@qubo/blocks";
 import { blueprintCategories, suggestPages } from "@qubo/blocks/presets";
@@ -11,14 +12,19 @@ import type { PageSuggestion } from "@/components/pages/create-page-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireSite } from "@/lib/admin";
-import { relativeTime } from "@/lib/format";
+import { getFormatters } from "@/lib/format-server";
 import { studioHref } from "@/lib/view-meta";
 
-export const metadata = { title: "Pages" };
+export async function generateMetadata() {
+  const t = await getTranslations("onlineStore.pages");
+  return { title: t("title") };
+}
 
 export default async function PagesPage({ params }: { params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
+  const t = await getTranslations("onlineStore.pages");
   const { site, user } = await requireSite(slug);
+  const { relativeTime } = await getFormatters();
   const pages = await studio.listPages({ siteId: site.id, userId: user.id });
   const capabilities = (site.capabilities ?? []) as Capability[];
   const suggestions: PageSuggestion[] = suggestPages({ locale: site.locale, capabilities, existingSlugs: pages.map((p) => p.slug) }).map((s) => ({
@@ -36,19 +42,19 @@ export default async function PagesPage({ params }: { params: Promise<{ site: st
 
   return (
     <Page
-      title="Pages"
-      subtitle="Standalone pages: about, contact, policies. Templates for products, collections and the home live under Themes."
+      title={t("title")}
+      subtitle={t("subtitle")}
       width="wide"
       actions={
         <Button variant="outline" size="sm" asChild>
-          <Link href={`/${slug}/online-store`}><Paintbrush /> Themes and templates</Link>
+          <Link href={`/${slug}/online-store`}><Paintbrush /> {t("themesAndTemplates")}</Link>
         </Button>
       }
     >
       <SuggestedPages site={slug} suggestions={suggestions} settingsHref={settingsHref}>
-        <Panel title="Your pages" description={`${pages.length} page${pages.length === 1 ? "" : "s"}. Click one to edit it in the Studio.`} flush>
+        <Panel title={t("yourPages.title")} description={t("yourPages.description", { count: pages.length })} flush>
           {pages.length === 0 ? (
-            <EmptyState icon={FileText} title="No pages yet" description="Add one from the suggestions below or start blank." />
+            <EmptyState icon={FileText} title={t("empty.title")} description={t("empty.description")} />
           ) : (
             <ul className="mt-1 divide-y border-t">
               {pages.map((p) => {
@@ -60,14 +66,14 @@ export default async function PagesPage({ params }: { params: Promise<{ site: st
                       {p.title} <span className="font-normal text-muted-foreground">/{p.slug}</span>
                     </Link>
                     <Badge variant="outline" className="gap-1.5">
-                      <StatusDot tone={live ? "success" : "muted"} /> {live ? `Published ${relativeTime(p.publishedAt ?? p.updatedAt)}` : "Draft"}
+                      <StatusDot tone={live ? "success" : "muted"} /> {live ? t("published", { time: relativeTime(p.publishedAt ?? p.updatedAt) }) : t("draft")}
                     </Badge>
                     {live && site.url ? (
                       <Button variant="ghost" size="icon-sm" asChild>
-                        <a href={`${site.url}/${p.slug}`} target="_blank" rel="noreferrer" aria-label="View page"><ExternalLink /></a>
+                        <a href={`${site.url}/${p.slug}`} target="_blank" rel="noreferrer" aria-label={t("viewPage")}><ExternalLink /></a>
                       </Button>
                     ) : null}
-                    {p.isHomepage ? <Lock className="size-3.5 text-muted-foreground" aria-label="Homepage" /> : <DeletePageButton site={slug} id={p.id} title={p.title} slug={p.slug} published={live} />}
+                    {p.isHomepage ? <Lock className="size-3.5 text-muted-foreground" aria-label={t("homepage")} /> : <DeletePageButton site={slug} id={p.id} title={p.title} slug={p.slug} published={live} />}
                   </li>
                 );
               })}

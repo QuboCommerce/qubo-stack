@@ -1,10 +1,12 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { cn } from "@qubo/shared/utils";
 
 export function PromotionsTabs({ site, active }: { site: string; active: "sales" | "codes" }) {
+  const t = useTranslations("promotions.tabs");
   const tabs = [
-    { id: "sales", label: "Sale prices", href: `/${site}/promotions` },
-    { id: "codes", label: "Discount codes", href: `/${site}/promotions/codes` },
+    { id: "sales", label: t("sales"), href: `/${site}/promotions` },
+    { id: "codes", label: t("codes"), href: `/${site}/promotions/codes` },
   ] as const;
   return (
     <nav className="flex gap-1 border-b">
