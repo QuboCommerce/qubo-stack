@@ -91,6 +91,7 @@ function MediaField({
         site={site.slug}
         siteId={site.id}
         kind={accept === "any" ? undefined : accept}
+        lens="pages"
         title={label}
         onPick={([item]) => {
           if (!item) return;

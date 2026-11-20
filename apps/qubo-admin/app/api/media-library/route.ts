@@ -10,7 +10,8 @@ const MAX_FILES = 20;
 const MAX_REQUEST_BYTES = 2 * UPLOAD_PROFILES.media.maxBytes.video;
 
 /**
- * Media upload (multipart: `site`, `scope` = site|shared, `files`). A route
+ * Media upload (multipart: `site`, `scope` = site|shared, `files`). A file whose
+ * bytes are already in the library returns the existing item (listed in `notes`). A route
  * handler, not a server action: actions cap bodies at 1 MB.
  */
 export async function POST(req: Request) {
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
 
   const items: MediaItem[] = [];
   const errors: string[] = [];
+  const notes: string[] = [];
   for (const file of files) {
     const res = await uploadAsset({
       orgId: site.organizationId,
@@ -38,8 +40,11 @@ export async function POST(req: Request) {
       filename: file.name,
       bytes: new Uint8Array(await file.arrayBuffer()),
     });
-    if (res.ok) items.push(res.item);
-    else errors.push(res.error);
+    if (!res.ok) errors.push(res.error);
+    else {
+      items.push(res.item);
+      if (res.duplicate) notes.push(`${file.name} was already in the library as ${res.item.filename}, so that file is used.`);
+    }
   }
-  return Response.json({ items, errors }, { status: items.length ? 200 : 400 });
+  return Response.json({ items, errors, notes }, { status: items.length ? 200 : 400 });
 }
