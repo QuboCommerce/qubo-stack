@@ -173,6 +173,7 @@ export const Cart = defineSection({
     continueLink: f.link({ label: "Continue shopping link", default: { kind: "collection", value: "all" } }),
     checkoutLabel: f.text({ label: "Checkout button", default: "Secure checkout", inline: false }),
     note: f.text({ label: "Note under subtotal", default: "Taxes and shipping are calculated at checkout.", inline: false }),
+    showDiscount: f.toggle({ label: "Discount code field", default: true }),
     labels: f.group(
       {
         subtotal: f.text({ label: "Subtotal", default: "Subtotal", inline: false }),
@@ -180,6 +181,13 @@ export const Cart = defineSection({
         quantity: f.text({ label: "Quantity", default: "Quantity", inline: false }),
         redirecting: f.text({ label: "Redirecting", default: "Redirecting…", inline: false }),
         error: f.text({ label: "Checkout error", default: "Checkout is unavailable right now. Please try again or contact us.", inline: false }),
+        discount: f.text({ label: "Discount code field", default: "Discount code", inline: false }),
+        apply: f.text({ label: "Apply code", default: "Apply", inline: false }),
+        discountApplied: f.text({ label: "Applied discount", default: "Discount", inline: false }),
+        discountRefused: f.text({ label: "Code refused", default: "This code can't be used for this cart.", inline: false }),
+        discountSignIn: f.text({ label: "Code needs an account", default: "Sign in to use this code.", inline: false }),
+        freeShipping: f.text({ label: "Free delivery", default: "Free delivery", inline: false }),
+        total: f.text({ label: "Total after discount", default: "Total", inline: false }),
       },
       { label: "Labels", collapsed: true },
     ),
@@ -201,6 +209,7 @@ export const Cart = defineSection({
           basePath: ctx.metadata.basePath,
           checkout: p.checkoutLabel,
           note: p.note,
+          showDiscount: p.showDiscount,
         }}
       />
     );
