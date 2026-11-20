@@ -764,6 +764,25 @@ site (HM Froid page scripts, themes, company and VAT numbers) stays as a
 showcase. Product photos were never in git: they sit in a host folder
 served by the `legacy-assets` route, not in the media library.
 
+### 46. HM Froid catalogue fixes from Mostapha's feedback (2026-11-20)
+
+Mostapha reported "0 produits" on collection pages, wrong products in
+"Armoires réfrigérées négatives" and no intro on "Vitrine". The count was a
+code bug: the `productCount` subquery in `GET /v1/catalog/categories` used
+`${category.id}`, and Drizzle drops the table prefix in a single-table
+select, so the bare `"id"` bound to `product.id` and all 511 categories on
+prod returned 0 (the list endpoint was right). The columns are now qualified
+by hand, and the storefront hides the count line when the API sends no
+counts at all. The negatives were mostly correct: the "Armoire de stockage
+inox" products have model codes `UF…` (upright freezers). Only the titles
+were vague, so 24 `UF`/`UR` products were renamed on prod ("Congélateur
+vertical…", "Armoire réfrigérée…"), slugs and categories untouched, a
+before list in the session scratch. Open: `AN40/60`, `ANS40/60` (positives)
+and `GUF140` may be misfiled and need Mostapha's confirmation. Category text
+has one description field and no NL translation, so intros are French only
+for now (known gap). Prod is the source of truth (decision 44); a fresh
+import would bring the old titles back.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

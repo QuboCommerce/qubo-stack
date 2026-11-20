@@ -27,10 +27,11 @@ export const catalog = new Elysia({ prefix: "/catalog" })
           parentId: category.parentId,
           position: category.position,
           description: category.description,
+          // Qualify columns by hand: Drizzle drops the table prefix in a single-table select, so a bare "id" bound to product.id and every count was 0
           productCount: sql<number>`(
             select count(*)::int from ${productCategory}
-            join ${product} on ${product.id} = ${productCategory.productId}
-            where ${productCategory.categoryId} = ${category.id} and ${product.isArchived} = false
+            join ${product} on ${product}.id = ${productCategory}.product_id
+            where ${productCategory}.category_id = ${category}.id and ${product}.is_archived = false
           )`,
         })
         .from(category)

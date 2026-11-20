@@ -43,3 +43,6 @@ coverage/
 
 # Agent scratch (ad hoc scripts, screenshots, dumps)
 .scratch/
+
+# Agent build plans (task-sized, local only; long-lived plans go in docs/plans/)
+.plans/
