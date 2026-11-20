@@ -2,12 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ImageOff } from "lucide-react";
 import { db } from "@qubo/db/client";
-import { product, productCategory, productImage, productVariant } from "@qubo/db/schema";
-import { and, asc, eq } from "drizzle-orm";
+import { product, productCategory, productImage, productVariant, productVariantImage } from "@qubo/db/schema";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { saveProduct } from "@/app/product-actions";
 import { CategoryTree } from "@/components/categories/category-tree";
 import { Page } from "@/components/page";
 import { ProductMedia } from "@/components/products/product-media";
+import { VariantImages } from "@/components/products/variant-images";
 import { Field, Select, SwitchRow, TextArea, TextInput } from "@/components/settings/controls";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { Surface } from "@/components/settings/settings-group";
@@ -53,6 +54,10 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
   const linked = links.map((l) => l.id).sort((a, b) => (order.get(a) ?? 0) - (order.get(b) ?? 0));
   const currency = site.currency ?? "EUR";
   const p = row;
+  const variantLinks = variants.length
+    ? await db.select().from(productVariantImage).where(inArray(productVariantImage.variantId, variants.map((v) => v.id)))
+    : [];
+  const gallery = images.map((img) => ({ id: img.id, src: assetUrl(img.url) ?? img.url, alt: img.alt ?? "" }));
 
   return (
     <Page
@@ -107,13 +112,13 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
 
             {variants.length > 0 && (
               <Surface flush>
-                <div className="px-4 pt-4 pb-2"><h2 className="text-sm font-semibold">Variants</h2><p className="text-xs text-muted-foreground">Variant editing comes with the variant builder.</p></div>
+                <div className="px-4 pt-4 pb-2"><h2 className="text-sm font-semibold">Variants</h2><p className="text-xs text-muted-foreground">Pick the photos of each variant from the gallery. Prices and options come with the variant builder.</p></div>
                 <div className="overflow-x-auto border-t">
                   <table className="w-full text-[13px]">
-                    <thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr><th className="px-4 py-2 font-medium">Variant</th><th className="px-4 py-2 font-medium">SKU</th><th className="px-4 py-2 text-right font-medium">Price</th></tr></thead>
+                    <thead className="bg-muted/40 text-left text-xs text-muted-foreground"><tr><th className="px-4 py-2 font-medium">Variant</th><th className="px-4 py-2 font-medium">SKU</th><th className="px-4 py-2 font-medium">Photos</th><th className="px-4 py-2 text-right font-medium">Price</th></tr></thead>
                     <tbody className="divide-y">
                       {variants.map((v) => (
-                        <tr key={v.id}><td className="px-4 py-2">{v.name}</td><td className="px-4 py-2 font-mono text-xs text-muted-foreground">{v.sku ?? "—"}</td><td className="px-4 py-2 text-right tabular-nums">{money(v.price ?? p!.basePrice, currency)}</td></tr>
+                        <tr key={v.id}><td className="px-4 py-2">{v.name}</td><td className="px-4 py-2 font-mono text-xs text-muted-foreground">{v.sku ?? "—"}</td><td className="px-3 py-1"><VariantImages site={site.slug} variantId={v.id} variantName={v.name} gallery={gallery} initial={gallery.filter((g) => variantLinks.some((l) => l.variantId === v.id && l.productImageId === g.id)).map((g) => g.id)} /></td><td className="px-4 py-2 text-right tabular-nums">{money(v.price ?? p!.basePrice, currency)}</td></tr>
                       ))}
                     </tbody>
                   </table>

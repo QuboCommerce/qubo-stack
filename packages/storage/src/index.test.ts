@@ -6,6 +6,14 @@ const png = bytes(0x89, "PNG", 0x0d, 0x0a, 0x1a, 0x0a);
 const jpg = bytes(0xff, 0xd8, 0xff, 0xe0);
 
 describe("checkFile", () => {
+  test("media takes plain documents but not office files or scripts", () => {
+    expect(checkFile("media", "notes.md", bytes("# Hi")).ok).toBe(true);
+    expect(checkFile("media", "data.json", bytes('{"a":1}')).ok).toBe(true);
+    expect(checkFile("media", "data.json", bytes("{nope")).ok).toBe(false);
+    expect(checkFile("media", "list.csv", bytes("a,b")).ok).toBe(true);
+    expect(checkFile("media", "doc.docx", bytes(0x50, 0x4b, 0x03, 0x04)).ok).toBe(false);
+    expect(checkFile("media", "run.sh", bytes("#!/bin/sh")).ok).toBe(false);
+  });
   test("accepts matching content", () => {
     expect(checkFile("media", "Logo.PNG", png)).toEqual({ ok: true, file: { ext: "png", mime: "image/png", kind: "image" } });
     expect(checkFile("media", "photo.jpeg", jpg).ok).toBe(true);

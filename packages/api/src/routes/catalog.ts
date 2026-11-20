@@ -7,6 +7,7 @@ import {
   productCategory,
   productImage,
   productVariant,
+  productVariantImage,
 } from "@qubo/db/schema";
 import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { tenancy } from "../plugins/tenancy";
@@ -186,6 +187,15 @@ export const catalog = new Elysia({ prefix: "/catalog" })
           .orderBy(asc(category.position)),
       ]);
 
+      const variantImages = variants.length
+        ? await db
+            .select({ variantId: productVariantImage.variantId, url: productImage.url })
+            .from(productVariantImage)
+            .innerJoin(productImage, eq(productImage.id, productVariantImage.productImageId))
+            .where(inArray(productVariantImage.variantId, variants.map((v) => v.id)))
+            .orderBy(asc(productImage.position))
+        : [];
+
       const prices = await resolvePrices(
         site.id,
         actor?.id ?? null,
@@ -213,6 +223,8 @@ export const catalog = new Elysia({ prefix: "/catalog" })
               name: variant.name,
               sku: variant.sku,
               available: variant.available,
+              // Gallery URLs for this variant; empty means "use the product images".
+              images: variantImages.filter((v) => v.variantId === variant.id).map((v) => v.url),
               price: price.amount,
               priceSource: price.source,
             };

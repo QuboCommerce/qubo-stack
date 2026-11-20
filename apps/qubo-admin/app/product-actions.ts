@@ -1,15 +1,16 @@
 "use server";
 
 import { db } from "@qubo/db/client";
-import { category, product, productCategory, productImage } from "@qubo/db/schema";
+import { category, product, productCategory, productImage, productVariant, productVariantImage } from "@qubo/db/schema";
 import { galleryAssetIds } from "@qubo/storage/media";
-import { and, eq, inArray, ne } from "drizzle-orm";
+import { and, asc, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireSite, requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
 import { emitEntity } from "@/lib/events";
+import { assetUrl } from "@/lib/format";
 import { productSpec, productValues } from "@/lib/form-specs";
 import { RACE, reconcile, unchangedSince } from "@/lib/merge-server";
 
@@ -165,6 +166,20 @@ export async function saveProduct(_prev: ActionState, submitted: FormData): Prom
   return { ok: true, at: Date.now() };
 }
 
+export type GalleryImage = { url: string; alt: string; src: string };
+
+/** A product's whole gallery, for the Media page's product sheet. */
+export async function productGalleryAction(input: { site: string; productId: string }): Promise<{ name: string; images: GalleryImage[] } | null> {
+  const { siteId } = await requireSite(input.site);
+  const parsed = z.uuid().safeParse(input.productId);
+  if (!parsed.success) return null;
+  const productId = parsed.data;
+  const [row] = await db.select({ name: product.name }).from(product).where(and(eq(product.id, productId), eq(product.siteId, siteId)));
+  if (!row) return null;
+  const images = await db.select().from(productImage).where(eq(productImage.productId, productId)).orderBy(asc(productImage.position));
+  return { name: row.name, images: images.map((i) => ({ url: i.url, alt: i.alt ?? "", src: assetUrl(i.url) ?? i.url })) };
+}
+
 const imagesSchema = z.object({
   productId: z.uuid(),
   images: z.array(z.object({ url: z.string().min(1).max(2000), alt: z.string().max(300) })).max(50),
@@ -180,13 +195,47 @@ export async function setProductImagesAction(input: { site: string; productId: s
   const ok = await db.transaction(async (tx) => {
     const [row] = await tx.select({ id: product.id }).from(product).where(and(eq(product.id, productId), eq(product.siteId, siteId)));
     if (!row) return false;
-    await tx.delete(productImage).where(eq(productImage.productId, productId));
-    if (images.length) await tx.insert(productImage).values(images.map((img, position) => ({ productId, url: img.url, assetId: assetIds[position], alt: img.alt || null, position })));
+    // Keep the row of an image that stays (by URL) so variant links to it survive a reorder.
+    const existing = await tx.select({ id: productImage.id, url: productImage.url }).from(productImage).where(eq(productImage.productId, productId));
+    const free = Map.groupBy(existing, (r) => r.url);
+    const kept: string[] = [];
+    for (const [position, img] of images.entries()) {
+      const values = { url: img.url, assetId: assetIds[position], alt: img.alt || null, position };
+      const row = free.get(img.url)?.shift();
+      if (row) {
+        kept.push(row.id);
+        await tx.update(productImage).set(values).where(eq(productImage.id, row.id));
+      } else await tx.insert(productImage).values({ productId, ...values });
+    }
+    const gone = existing.filter((r) => !kept.includes(r.id)).map((r) => r.id);
+    if (gone.length) await tx.delete(productImage).where(inArray(productImage.id, gone));
     return true;
   });
   if (!ok) return { error: "Product not found." };
   await emitEntity(siteId, "product", productId, "updated");
   revalidatePath(`/${site.slug}/products/${productId}`);
   revalidatePath(`/${site.slug}/products`);
+  return { ok: true, at: Date.now() };
+}
+
+/** Sets which gallery photos belong to a variant. Ids outside the product's gallery are ignored. */
+export async function setVariantImagesAction(input: { site: string; variantId: string; imageIds: string[] }): Promise<ActionState> {
+  const { site, siteId } = await requireSite(input.site);
+  const p = z.object({ variantId: z.uuid(), imageIds: z.array(z.uuid()).max(50) }).safeParse(input);
+  if (!p.success) return { error: "Invalid images." };
+  const [variant] = await db
+    .select({ productId: productVariant.productId })
+    .from(productVariant)
+    .where(and(eq(productVariant.id, p.data.variantId), eq(productVariant.siteId, siteId)));
+  if (!variant) return { error: "Variant not found." };
+  const valid = p.data.imageIds.length
+    ? (await db.select({ id: productImage.id }).from(productImage).where(and(eq(productImage.productId, variant.productId), inArray(productImage.id, p.data.imageIds)))).map((r) => r.id)
+    : [];
+  await db.transaction(async (tx) => {
+    await tx.delete(productVariantImage).where(eq(productVariantImage.variantId, p.data.variantId));
+    if (valid.length) await tx.insert(productVariantImage).values(valid.map((productImageId) => ({ variantId: p.data.variantId, productImageId })));
+  });
+  await emitEntity(siteId, "product", variant.productId, "updated");
+  revalidatePath(`/${site.slug}/products/${variant.productId}`);
   return { ok: true, at: Date.now() };
 }
