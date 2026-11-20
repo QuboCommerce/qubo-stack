@@ -1,4 +1,7 @@
-import { FileJson, FileSpreadsheet, FileText, Film } from "lucide-react";
+"use client";
+
+import { useCallback, useState } from "react";
+import { FileJson, FileSpreadsheet, FileText, Film, ImageOff } from "lucide-react";
 import type { MediaItem } from "@qubo/storage/media";
 import { cn } from "@qubo/shared/utils";
 
@@ -10,11 +13,16 @@ export function fileIcon(item: Pick<MediaItem, "kind" | "mimeType">) {
 }
 
 export function Thumb({ item, className }: { item: Pick<MediaItem, "kind" | "url" | "alt" | "filename"> & { mimeType?: string }; className?: string }) {
-  if (item.kind === "image") {
+  const [failed, setFailed] = useState<string | null>(null);
+  // Catches images that failed before hydration, when onError never fires.
+  const check = useCallback((el: HTMLImageElement | null) => {
+    if (el?.complete && el.naturalWidth === 0) setFailed(item.url);
+  }, [item.url]);
+  if (item.kind === "image" && failed !== item.url) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={item.url} alt={item.alt || item.filename} loading="lazy" className={cn("size-full object-cover", className)} />;
+    return <img ref={check} src={item.url} alt={item.alt || item.filename} loading="lazy" onError={() => setFailed(item.url)} className={cn("size-full object-cover", className)} />;
   }
-  const Icon = fileIcon({ kind: item.kind, mimeType: item.mimeType ?? "" });
+  const Icon = item.kind === "image" ? ImageOff : fileIcon({ kind: item.kind, mimeType: item.mimeType ?? "" });
   return (
     <span className={cn("flex size-full flex-col items-center justify-center gap-1 p-2 text-muted-foreground", className)}>
       <Icon className="size-6" />

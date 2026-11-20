@@ -135,13 +135,15 @@ function GallerySheet({
   onClose: () => void;
   onChange: (productId: string, images: GalleryImage[]) => void;
 }) {
-  const [gallery, setGallery] = useState<{ id: string; images: GalleryImage[] } | null>(null);
+  const [gallery, setGallery] = useState<{ id: string; images: GalleryImage[] } | { id: string; missing: true } | null>(null);
 
   useEffect(() => {
     if (!card) return;
     let live = true;
     setGallery(null);
-    void productGalleryAction({ site, productId: card.id }).then((g) => live && g && setGallery({ id: card.id, images: g.images }));
+    productGalleryAction({ site, productId: card.id })
+      .then((g) => live && setGallery(g ? { id: card.id, images: g.images } : { id: card.id, missing: true }))
+      .catch(() => live && setGallery({ id: card.id, missing: true }));
     return () => {
       live = false;
     };
@@ -162,7 +164,9 @@ function GallerySheet({
           <SheetDescription className="text-xs">The first photo is the main one. Changes save right away and show in the product editor.</SheetDescription>
         </SheetHeader>
         <div className="@container min-h-0 flex-1 overflow-y-auto p-4">
-          {card && gallery?.id === card.id ? (
+          {card && gallery?.id === card.id && "missing" in gallery ? (
+            <p className="mt-8 text-center text-sm text-muted-foreground">This product could not be loaded. It may have been deleted.</p>
+          ) : card && gallery?.id === card.id && "images" in gallery ? (
             <ProductMedia key={card.id} site={site} siteId={siteId} productId={card.id} initial={gallery.images} onChange={(images) => onChange(card.id, images)} />
           ) : (
             <Loader2 className="mx-auto mt-8 size-5 animate-spin text-muted-foreground" />
