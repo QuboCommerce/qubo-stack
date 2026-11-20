@@ -1,5 +1,6 @@
 import type {
   CategoriesResponse,
+  CollectionsResponse,
   DomainsResponse,
   LayoutResponse,
   RedirectResponse,
@@ -122,15 +123,24 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
         (r) => r.categories,
       ),
 
+    /** Published collections, ordered as in the admin. */
+    getCollections: () =>
+      request<CollectionsResponse>("/catalog/collections").then(
+        (r) => r.collections,
+      ),
+
     getProducts: (params: {
       query?: string;
       category?: string;
+      /** Published collection slug; ignored by the API when `category` is set. */
+      collection?: string;
       onSale?: boolean;
       limit?: number;
     } = {}) => {
       const search = new URLSearchParams();
       if (params.query) search.set("q", params.query);
       if (params.category) search.set("category", params.category);
+      if (params.collection) search.set("collection", params.collection);
       if (params.onSale) search.set("onSale", "1");
       if (params.limit) search.set("limit", String(params.limit));
       const qs = search.toString();
@@ -155,7 +165,7 @@ export function createStorefrontClient(options: StorefrontClientOptions) {
     /** Verified domains; the primary one is the canonical host. */
     getDomains: () => request<DomainsResponse>("/render/domains"),
 
-    /** Every indexable URL of the site (products, categories, published pages). */
+    /** Every indexable URL of the site (products, categories, collections, published pages). */
     getSitemap: () => request<SitemapResponse>("/render/sitemap"),
 
     /** Legacy URL redirect for an exact path; null when none. */

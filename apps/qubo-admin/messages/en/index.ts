@@ -11,5 +11,7 @@ import settings from "./settings.json";
 import onlineStore from "./onlineStore.json";
 import studio from "./studio.json";
 import ui from "./ui.json";
+import inventory from "./inventory.json";
+import collections from "./collections.json";
 
-export default { ...common, ...nav, ...shell, ...auth, ...dashboard, ...products, ...commerce, ...media, ...promotions, ...settings, ...onlineStore, ...studio, ...ui };
+export default { ...common, ...nav, ...shell, ...auth, ...dashboard, ...products, ...commerce, ...media, ...promotions, ...settings, ...onlineStore, ...studio, ...ui, ...inventory, ...collections };

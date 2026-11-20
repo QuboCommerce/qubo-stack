@@ -1,0 +1,109 @@
+{
+  "inventory": {
+    "title": "Inventory",
+    "subtitle": "{count, plural, one {# item} other {# items}}, {low, number} low, {out, number} out of stock",
+    "list": {
+      "searchPlaceholder": "Search by product or SKU",
+      "tabs": {
+        "all": "All",
+        "low": "Low stock",
+        "out": "Out of stock",
+        "untracked": "Not tracked"
+      },
+      "columns": {
+        "product": "Product",
+        "sku": "SKU",
+        "status": "Status",
+        "available": "Available",
+        "onHand": "On hand"
+      },
+      "emptyTitle": "No products yet",
+      "emptyDescription": "Stock appears here once you add products.",
+      "noResultsTitle": "No matching items",
+      "noResults": "Try another search or tab.",
+      "filteredBy": "Showing {name}",
+      "clearFilter": "Show all products",
+      "quantityLabel": "On hand for {name}",
+      "decrease": "Remove one",
+      "increase": "Add one",
+      "save": "Save",
+      "saved": "Stock updated",
+      "notTracked": "Not tracked"
+    },
+    "status": {
+      "inStock": "In stock",
+      "low": "Low stock",
+      "out": "Out of stock",
+      "untracked": "Not tracked"
+    },
+    "sheet": {
+      "description": "Stock for this item",
+      "loading": "Loading…",
+      "openProduct": "Open product",
+      "onHand": "On hand",
+      "reserved": "Reserved",
+      "reservedHint": "Held by unpaid orders.",
+      "available": "Available",
+      "threshold": "Low stock alert at",
+      "thresholdHint": "Shown as low stock at or below this quantity.",
+      "tracked": "Track stock",
+      "trackedHint": "When off, the product can always be ordered.",
+      "supplier": "Supplier",
+      "storageLocation": "Storage location",
+      "storagePlaceholder": "Shelf, aisle, warehouse",
+      "save": "Save",
+      "saved": "Stock saved",
+      "record": {
+        "title": "Record a change",
+        "add": "Add",
+        "remove": "Remove",
+        "amount": "Quantity",
+        "reason": "Reason",
+        "note": "Note",
+        "notePlaceholder": "Optional, for example a delivery note number",
+        "submit": "Record",
+        "recorded": "Change recorded"
+      },
+      "history": {
+        "title": "History",
+        "empty": "No changes recorded yet.",
+        "system": "System",
+        "order": "Online order"
+      }
+    },
+    "reasons": {
+      "SALE": "Sale",
+      "RESTOCK": "Restock",
+      "RETURN": "Return",
+      "ADJUSTMENT": "Correction",
+      "RESERVED": "Reserved",
+      "UNRESERVED": "Released",
+      "DAMAGED": "Damaged or lost"
+    },
+    "productCard": {
+      "title": "Stock",
+      "onHand": "On hand",
+      "tracked": "Track stock",
+      "trackedHint": "When off, the product can always be ordered.",
+      "threshold": "Low stock alert at",
+      "viewHistory": "View history",
+      "save": "Save stock",
+      "saved": "Stock saved",
+      "separate": "Saved on its own, not with the product.",
+      "variantsHint": "Each variant has its own stock.",
+      "manage": "Manage in Inventory",
+      "available": "{count, number} available"
+    },
+    "errors": {
+      "notFound": "This item no longer exists.",
+      "quantity": "Enter a whole number between 0 and {max, number}.",
+      "race": "Someone changed this stock in the meantime. It is now {quantity, number}.",
+      "amount": "Enter a whole number other than 0.",
+      "note": "The note is too long.",
+      "nothingToRemove": "There is no stock left to remove.",
+      "threshold": "Enter a whole number of 0 or more.",
+      "tooLong": "Keep it under {max, number} characters.",
+      "failed": "Could not save. Try again."
+    }
+  }
+}

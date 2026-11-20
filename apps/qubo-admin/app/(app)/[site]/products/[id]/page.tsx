@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import { ImageOff } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { db } from "@qubo/db/client";
-import { product, productCategory, productImage, productVariant, productVariantImage } from "@qubo/db/schema";
+import { inventoryItem, product, productCategory, productImage, productVariant, productVariantImage } from "@qubo/db/schema";
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { saveProduct } from "@/app/product-actions";
 import { CategoryTree } from "@/components/categories/category-tree";
+import { ProductStockCard } from "@/components/inventory/product-stock-card";
 import { Page } from "@/components/page";
 import { ProductMedia } from "@/components/products/product-media";
 import { VariantImages } from "@/components/products/variant-images";
@@ -61,9 +62,25 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
   const currency = site.currency ?? "EUR";
   const money = (v: number | string) => format.number(Number(v), { style: "currency", currency });
   const p = row;
-  const variantLinks = variants.length
-    ? await db.select().from(productVariantImage).where(inArray(productVariantImage.variantId, variants.map((v) => v.id)))
-    : [];
+  const [variantLinks, stockRows] = variants.length
+    ? await Promise.all([
+        db.select().from(productVariantImage).where(inArray(productVariantImage.variantId, variants.map((v) => v.id))),
+        db.select().from(inventoryItem).where(inArray(inventoryItem.variantId, variants.map((v) => v.id))),
+      ])
+    : [[], []];
+  // A variant without an inventory row is not tracked.
+  const stock = variants.map((v) => {
+    const item = stockRows.find((s) => s.variantId === v.id);
+    return {
+      variantId: v.id,
+      name: v.name,
+      sku: v.sku,
+      tracked: item?.tracked ?? false,
+      quantity: item?.quantity ?? 0,
+      reserved: item?.reservedQuantity ?? 0,
+      threshold: item?.lowStockThreshold ?? 5,
+    };
+  });
   const gallery = images.map((img) => ({ id: img.id, src: assetUrl(img.url) ?? img.url, alt: img.alt ?? "" }));
 
   return (
@@ -116,6 +133,8 @@ export default async function ProductPage({ params }: { params: Promise<{ site: 
                 </Field>
               </div>
             </Card>
+
+            {p && stock.length > 0 && <ProductStockCard site={site.slug} productId={p.id} productName={p.name} variants={stock} />}
 
             {variants.length > 0 && (
               <Surface flush>

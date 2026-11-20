@@ -3,6 +3,7 @@ import { db } from "@qubo/db/client";
 import {
   discount,
   discountUsage,
+  inventoryHistory,
   inventoryItem,
   order as orderTable,
   orderItem,
@@ -371,11 +372,28 @@ async function recordOrder(eventId: string, session: StripeSession) {
     });
 
     // Paid is paid: stock goes to zero rather than failing the order (and Stripe retrying forever).
+    // The history row records what actually left the shelf, which can be less than the line.
     for (const v of variants) {
+      const [before] = await tx
+        .select({ id: inventoryItem.id, quantity: inventoryItem.quantity })
+        .from(inventoryItem)
+        .where(and(eq(inventoryItem.variantId, v.id), eq(inventoryItem.tracked, true)))
+        .for("update");
+      if (!before) continue;
+      const removed = Math.min(before.quantity, lineOf.get(v.id)!.quantity);
       await tx
         .update(inventoryItem)
         .set({ quantity: sql`greatest(${inventoryItem.quantity} - ${lineOf.get(v.id)!.quantity}, 0)` })
-        .where(and(eq(inventoryItem.variantId, v.id), eq(inventoryItem.tracked, true)));
+        .where(eq(inventoryItem.id, before.id));
+      if (removed > 0) {
+        await tx.insert(inventoryHistory).values({
+          inventoryItemId: before.id,
+          adjustment: -removed,
+          reason: "SALE",
+          referenceType: "order",
+          referenceId: row.id,
+        });
+      }
     }
 
     await tx.insert(payment).values({

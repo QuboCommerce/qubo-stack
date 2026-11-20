@@ -1,0 +1,213 @@
+{
+  "collections": {
+    "title": "Collections",
+    "list": {
+      "subtitle": "{count, plural, one {# collection} other {# collections}}",
+      "create": "Créer une collection",
+      "columns": {
+        "collection": "Collection",
+        "products": "Produits",
+        "status": "Statut"
+      },
+      "productCount": "{count, plural, =0 {Aucun produit} one {# produit} other {# produits}}",
+      "viewOnSite": "Voir sur le site",
+      "hiddenByCategory": "Une catégorie utilise cette adresse",
+      "hiddenByCategoryHint": "La catégorie /collections/{slug} est affichée sur la boutique à la place.",
+      "empty": {
+        "title": "Regroupez vos produits à votre façon",
+        "description": "Une collection est un groupe de produits avec sa propre page sur votre boutique. Remplissez-la automatiquement avec des règles, par exemple toutes les références qui commencent par JBM-, ou choisissez les produits vous-même.",
+        "action": "Créer une collection"
+      },
+      "notes": {
+        "title": "Bon à savoir",
+        "categories": "Les catégories sont aussi des collections : chacune a déjà sa propre page sur votre boutique. <link>Gérer les catégories</link>",
+        "promotions": "/collections/promotions liste automatiquement tous les produits en promo."
+      }
+    },
+    "status": {
+      "published": "Publiée",
+      "draft": "Brouillon"
+    },
+    "summary": {
+      "manual": "{count, plural, =0 {Aucun produit choisi pour l'instant} one {# produit choisi à la main} other {# produits choisis à la main}}",
+      "noRules": "Aucune règle pour l'instant"
+    },
+    "editor": {
+      "newTitle": "Nouvelle collection",
+      "metaTitle": "Collection",
+      "cards": {
+        "details": "Détails",
+        "products": "Produits",
+        "image": "Image",
+        "seo": "Référencement",
+        "status": "Visibilité",
+        "preview": "Aperçu"
+      },
+      "fields": {
+        "name": "Nom",
+        "namePlaceholder": "ex. Climatisation été",
+        "handle": "Identifiant",
+        "handleHint": "Adresse de la page : {path}",
+        "description": "Description",
+        "descriptionHint": "Affichée en haut de la page de la collection.",
+        "sort": "Trier les produits par",
+        "metaTitle": "Titre de la page",
+        "metaDescription": "Méta-description",
+        "length": "{count} sur {max} caractères recommandés"
+      },
+      "categoryClash": "La catégorie « {name} » utilise déjà cet identifiant. Sa page est affichée sur la boutique à la place de cette collection.",
+      "kind": {
+        "smart": "Automatique (règles)",
+        "smartHint": "Les produits entrent et sortent d'eux-mêmes selon l'évolution de votre catalogue.",
+        "manual": "Sélection manuelle",
+        "manualHint": "Vous choisissez chaque produit et son ordre."
+      },
+      "match": {
+        "label": "Les produits doivent respecter",
+        "all": "toutes les règles",
+        "any": "au moins une règle"
+      },
+      "addRule": "Ajouter une règle",
+      "removeRule": "Supprimer cette règle",
+      "noRules": "Ajoutez une règle pour commencer à remplir cette collection.",
+      "search": {
+        "placeholder": "Rechercher par nom ou référence",
+        "empty": "Aucun produit trouvé.",
+        "add": "Ajouter",
+        "added": "Ajouté",
+        "searching": "Recherche…"
+      },
+      "picks": {
+        "empty": "Aucun produit pour l'instant. Utilisez la recherche ci-dessus pour en ajouter.",
+        "count": "{count, plural, one {# produit} other {# produits}}",
+        "remove": "Retirer",
+        "moveUp": "Monter",
+        "moveDown": "Descendre",
+        "limit": "Une collection peut contenir jusqu'à {max} produits choisis à la main."
+      },
+      "image": {
+        "hint": "Affichée sur la page de la collection et lors d'un partage.",
+        "choose": "Choisir dans la médiathèque",
+        "replace": "Remplacer",
+        "remove": "Retirer l'image",
+        "url": "Ou collez l'adresse d'une image",
+        "pickerTitle": "Image de la collection"
+      },
+      "publish": {
+        "label": "Publiée",
+        "hint": "Les collections en brouillon sont masquées sur votre boutique."
+      },
+      "viewOnSite": "Voir sur le site",
+      "updated": "Dernier enregistrement {time}",
+      "delete": {
+        "button": "Supprimer la collection",
+        "title": "Supprimer {name} ?",
+        "description": "La page de la collection disparaît de votre boutique. Les produits eux-mêmes ne sont pas modifiés.",
+        "cancel": "Annuler",
+        "submit": "Supprimer"
+      }
+    },
+    "preview": {
+      "count": "{count, plural, =0 {Aucun produit ne correspond pour l'instant} one {# produit correspond} other {# produits correspondent}}",
+      "updating": "Mise à jour…",
+      "empty": "Les produits correspondants s'affichent ici au fur et à mesure de vos règles.",
+      "emptyManual": "Les produits choisis s'affichent ici.",
+      "more": "{count, plural, one {et # autre} other {et # autres}}",
+      "error": "L'aperçu n'a pas pu être chargé."
+    },
+    "rules": {
+      "fields": {
+        "category": "Catégorie",
+        "sku": "Référence",
+        "name": "Nom du produit",
+        "brand": "Marque",
+        "price": "Prix",
+        "onSale": "En promo",
+        "inStock": "En stock",
+        "createdWithinDays": "Ajouté récemment"
+      },
+      "ops": {
+        "category": {
+          "is": "est",
+          "isNot": "n'est pas"
+        },
+        "sku": {
+          "startsWith": "commence par",
+          "contains": "contient",
+          "equals": "est égal à"
+        },
+        "name": {
+          "startsWith": "commence par",
+          "contains": "contient"
+        },
+        "brand": {
+          "equals": "est égal à",
+          "contains": "contient"
+        },
+        "price": {
+          "gte": "est d'au moins",
+          "lte": "est d'au plus"
+        },
+        "createdWithinDays": {
+          "lte": "il y a moins de"
+        }
+      },
+      "flags": {
+        "onSale": "Uniquement les produits avec un prix promo",
+        "inStock": "Uniquement les produits disponibles à la commande"
+      },
+      "days": "jours",
+      "categoryPlaceholder": "Choisissez une catégorie",
+      "textPlaceholder": "ex. JBM-",
+      "phrases": {
+        "categoryIs": "catégorie {value} (et ses sous-catégories)",
+        "categoryIsNot": "hors catégorie {value}",
+        "skuStartsWith": "référence commence par {value}",
+        "skuContains": "référence contient {value}",
+        "skuEquals": "référence est égale à {value}",
+        "nameStartsWith": "nom commence par {value}",
+        "nameContains": "nom contient {value}",
+        "brandEquals": "marque est égale à {value}",
+        "brandContains": "marque contient {value}",
+        "priceGte": "prix d'au moins {value}",
+        "priceLte": "prix d'au plus {value}",
+        "onSale": "en promo",
+        "inStock": "en stock",
+        "createdWithinDays": "ajouté il y a moins de {days, plural, one {# jour} other {# jours}}"
+      },
+      "deletedCategory": "une catégorie supprimée",
+      "aria": {
+        "field": "Champ de la règle",
+        "operator": "Condition",
+        "value": "Valeur"
+      }
+    },
+    "sort": {
+      "featured": "Mis en avant d'abord",
+      "newest": "Les plus récents",
+      "name": "Nom (A à Z)",
+      "priceAsc": "Prix croissant",
+      "priceDesc": "Prix décroissant",
+      "manual": "Ordre manuel"
+    },
+    "merge": {
+      "rules": "Règles",
+      "products": "Produits choisis",
+      "kind": "Produits",
+      "match": "Les produits doivent respecter",
+      "image": "Image",
+      "publish": "Visibilité"
+    },
+    "errors": {
+      "nameRequired": "Donnez un nom à la collection.",
+      "handleFormat": "L'identifiant ne peut contenir que des minuscules, des chiffres et des tirets.",
+      "handleTaken": "Une autre collection utilise déjà cet identifiant.",
+      "notFound": "Cette collection a été supprimée.",
+      "race": "Quelqu'un a enregistré cette collection au même moment. Enregistrez à nouveau pour fusionner ses modifications.",
+      "checkFields": "Vérifiez les champs signalés.",
+      "tooManyProducts": "Une collection peut contenir jusqu'à {max} produits choisis à la main.",
+      "imageUrl": "L'image doit venir de la médiathèque ou être une adresse https:// complète.",
+      "generic": "Une erreur s'est produite. Réessayez."
+    }
+  }
+}
