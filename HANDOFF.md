@@ -918,6 +918,26 @@ or `note`). Untested with live Stripe. Known gaps: the collection list block and
 categories only; CollectionHeader's count wording is the block default (English) until edited.
 Migration 0024 is not yet applied on prod.
 
+### 54. Sale prices reach variants (2026-11-20)
+
+The API and checkout price a line by `variant.price` before `product.base_price`
+(`packages/api/src/lib/pricing.ts`), and every imported HM Froid product has a variant priced
+at the regular price. Sales only moved `product.base_price`, so product pages showed the full
+price without a strike-through and checkout charged it. `setSalePrice` and `bulkSale` now move
+each priced variant too (same ratio, regular price kept in `variant.compare_at_price`, ending
+restores it), and saving the product form copies the price to a lone variant. The 51 products
+already on sale on prod were fixed by hand. Multi-variant products keep their own prices on the
+product form; edit them per variant.
+
+### 55. Chapters masthead fits small phones (2026-11-20)
+
+The mega menu surface is a grid with rows only, so its implicit column grew to the brand
+line's `nowrap` width (489px on a 390px phone once HM Froid renamed itself "HM Catering
+Equipment"): Close went off-screen and the menu scrolled sideways. `overrides.css` now pins
+the column to `minmax(0, 1fr)`, truncates the brand line, and lets the header wordmark shrink
+(smaller type under 420px, ellipsis as a last resort). `styles.ts` was patched by swapping the
+appended overrides tail; the port source is not in the repo.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

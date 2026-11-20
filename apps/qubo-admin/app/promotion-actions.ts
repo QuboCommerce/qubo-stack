@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@qubo/db/client";
-import { discount, discountCondition, product, productCategory, siteSettings } from "@qubo/db/schema";
+import { discount, discountCondition, product, productCategory, productVariant, siteSettings } from "@qubo/db/schema";
 import { and, eq, inArray, isNotNull, or, sql, type SQL } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -39,6 +39,29 @@ const pricesChanged = async (slug: string) => {
 
 // ---------------------------------------------------------------- sale prices
 
+type Db = Pick<typeof db, "update">;
+const variantRegular = sql`case when ${productVariant.compareAtPrice} > ${productVariant.price} then ${productVariant.compareAtPrice} else ${productVariant.price} end`;
+
+/**
+ * A variant's own price outranks the product price in the API and at checkout, so a sale
+ * must move it too: each priced variant is sold at `factor` of its regular price.
+ */
+async function saleOnVariants(tx: Db, productIds: string[], factor: SQL) {
+  if (!productIds.length) return;
+  await tx
+    .update(productVariant)
+    .set({ price: sql`round(${variantRegular} * ${factor}, 2)`, compareAtPrice: variantRegular, updatedAt: new Date() })
+    .where(and(inArray(productVariant.productId, productIds), isNotNull(productVariant.price), sql`${productVariant.price} > 0`));
+}
+
+async function endSaleOnVariants(tx: Db, productIds: string[]) {
+  if (!productIds.length) return;
+  await tx
+    .update(productVariant)
+    .set({ price: sql`${productVariant.compareAtPrice}`, compareAtPrice: null, updatedAt: new Date() })
+    .where(and(inArray(productVariant.productId, productIds), sql`${productVariant.compareAtPrice} > ${productVariant.price}`));
+}
+
 /**
  * A sale moves the regular price to `compare_at_price` and sells at the new one,
  * which is what the storefront strikes through. Ending it moves it back.
@@ -60,15 +83,20 @@ export async function setSalePrice(_prev: ActionState, form: FormData): Promise<
   const raw = str(form, "salePrice");
   if (!raw) {
     if (!onSale) return { ok: true, at: Date.now() };
-    await db.update(product).set({ basePrice: regular, compareAtPrice: null, updatedAt: new Date() }).where(eq(product.id, id.data));
+    await db.transaction(async (tx) => {
+      await tx.update(product).set({ basePrice: regular, compareAtPrice: null, updatedAt: new Date() }).where(eq(product.id, id.data));
+      await endSaleOnVariants(tx, [id.data]);
+    });
   } else {
     const sale = amountSchema(t).safeParse(raw);
     if (!sale.success) return { error: sale.error.issues[0]?.message };
     if (Number(sale.data) <= 0 || Number(sale.data) >= Number(regular)) return { error: t("salePriceTooHigh", { regular }) };
-    await db
-      .update(product)
-      .set({ basePrice: Number(sale.data).toFixed(2), compareAtPrice: regular, updatedAt: new Date() })
-      .where(eq(product.id, id.data));
+    const salePrice = Number(sale.data).toFixed(2);
+    await db.transaction(async (tx) => {
+      await tx.update(product).set({ basePrice: salePrice, compareAtPrice: regular, updatedAt: new Date() }).where(eq(product.id, id.data));
+      // Variants keep the product's ratio; one at the regular price lands exactly on the sale price.
+      await saleOnVariants(tx, [id.data], sql`(${salePrice}::numeric / ${regular}::numeric)`);
+    });
   }
   await emitEntity(siteId, "product", id.data);
   await pricesChanged(site.slug);
@@ -109,11 +137,15 @@ export async function bulkSale(_prev: ActionState, form: FormData): Promise<Acti
   const mode = str(form, "mode");
 
   if (mode === "end") {
-    const rows = await db
-      .update(product)
-      .set({ basePrice: sql`${product.compareAtPrice}`, compareAtPrice: null, updatedAt: new Date() })
-      .where(and(where, isNotNull(product.compareAtPrice), sql`${product.compareAtPrice} > ${product.basePrice}`))
-      .returning({ id: product.id });
+    const rows = await db.transaction(async (tx) => {
+      const ended = await tx
+        .update(product)
+        .set({ basePrice: sql`${product.compareAtPrice}`, compareAtPrice: null, updatedAt: new Date() })
+        .where(and(where, isNotNull(product.compareAtPrice), sql`${product.compareAtPrice} > ${product.basePrice}`))
+        .returning({ id: product.id });
+      await endSaleOnVariants(tx, ended.map((r) => r.id));
+      return ended;
+    });
     if (rows.length) await pricesChanged(site.slug);
     return rows.length ? { ok: true, at: Date.now() } : { error: t("nothingOnSale") };
   }
@@ -122,15 +154,20 @@ export async function bulkSale(_prev: ActionState, form: FormData): Promise<Acti
   if (!Number.isFinite(pct) || pct < 1 || pct > 90) return { error: t("percentRange") };
   // Products already on sale keep their regular price as the reference, so a second run re-prices, not compounds.
   const regular = sql`case when ${product.compareAtPrice} > ${product.basePrice} then ${product.compareAtPrice} else ${product.basePrice} end`;
-  const rows = await db
-    .update(product)
-    .set({
-      basePrice: sql`round(${regular} * ${(100 - pct) / 100}::numeric, 2)`,
-      compareAtPrice: regular,
-      updatedAt: new Date(),
-    })
-    .where(and(where, sql`${product.basePrice} > 0`))
-    .returning({ id: product.id });
+  const factor = sql`${(100 - pct) / 100}::numeric`;
+  const rows = await db.transaction(async (tx) => {
+    const started = await tx
+      .update(product)
+      .set({
+        basePrice: sql`round(${regular} * ${factor}, 2)`,
+        compareAtPrice: regular,
+        updatedAt: new Date(),
+      })
+      .where(and(where, sql`${product.basePrice} > 0`))
+      .returning({ id: product.id });
+    await saleOnVariants(tx, started.map((r) => r.id), factor);
+    return started;
+  });
   if (rows.length) await pricesChanged(site.slug);
   return rows.length ? { ok: true, at: Date.now() } : { error: t("noProductMatches") };
 }
