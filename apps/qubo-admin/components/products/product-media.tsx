@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, X } from "lucide-react";
 import { cn } from "@qubo/shared/utils";
@@ -27,6 +28,7 @@ export function ProductMedia({
   onChange?: (images: Image[]) => void;
 }) {
   const router = useRouter();
+  const t = useTranslations("products.media");
   const [images, setImages] = useState(initial);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,17 +69,17 @@ export function ProductMedia({
             <div className="absolute inset-x-1 bottom-1 flex justify-between opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
               <span className="flex gap-1">
                 {i > 0 && (
-                  <Button type="button" size="icon" variant="secondary" className="size-6" onClick={() => move(i, -1)} aria-label={i === 1 ? "Make main image" : "Move left"}>
+                  <Button type="button" size="icon" variant="secondary" className="size-6" onClick={() => move(i, -1)} aria-label={i === 1 ? t("makeMain") : t("moveLeft")}>
                     <ArrowLeft className="size-3" />
                   </Button>
                 )}
                 {i < images.length - 1 && (
-                  <Button type="button" size="icon" variant="secondary" className="size-6" onClick={() => move(i, 1)} aria-label="Move right">
+                  <Button type="button" size="icon" variant="secondary" className="size-6" onClick={() => move(i, 1)} aria-label={t("moveRight")}>
                     <ArrowRight className="size-3" />
                   </Button>
                 )}
               </span>
-              <Button type="button" size="icon" variant="secondary" className="size-6" onClick={() => commit(images.filter((_, j) => j !== i))} aria-label="Remove image">
+              <Button type="button" size="icon" variant="secondary" className="size-6" onClick={() => commit(images.filter((_, j) => j !== i))} aria-label={t("remove")}>
                 <X className="size-3" />
               </Button>
             </div>
@@ -90,7 +92,7 @@ export function ProductMedia({
             className="flex aspect-square w-full flex-col items-center justify-center gap-1 rounded-lg border border-dashed text-xs text-muted-foreground hover:bg-accent/40"
           >
             {saving ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}
-            Add images
+            {t("add")}
           </button>
         </li>
       </ul>
@@ -103,7 +105,7 @@ export function ProductMedia({
         kind="image"
         lens="products"
         multiple
-        title="Product images"
+        title={t("pickerTitle")}
         onPick={(picked) => commit([...images, ...picked.filter((p) => !images.some((i) => i.url === p.url)).map((p) => ({ url: p.url, alt: p.alt, src: p.url }))])}
       />
     </div>

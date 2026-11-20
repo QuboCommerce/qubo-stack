@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Search, X } from "lucide-react";
 import { cn } from "@qubo/shared/utils";
 
@@ -16,6 +17,7 @@ type SelectMode = { mode: "select"; name: string; defaultSelected: string[] };
  * submit, and form.reset() restores them.
  */
 export function CategoryTree({ items, className, ...props }: { items: TreeItem[]; className?: string } & (LinkMode | SelectMode)) {
+  const t = useTranslations("categories.tree");
   const byId = useMemo(() => new Map(items.map((n) => [n.id, n])), [items]);
   const ancestors = useMemo(() => {
     const out = new Map<string, string[]>();
@@ -91,14 +93,14 @@ export function CategoryTree({ items, className, ...props }: { items: TreeItem[]
       {props.mode === "select" && (
         <div className="mb-2 flex flex-wrap gap-1.5">
           {checked.size === 0 ? (
-            <p className="text-xs text-muted-foreground">No category yet. Uncategorised products don't appear on category pages.</p>
+            <p className="text-xs text-muted-foreground">{t("none")}</p>
           ) : (
             [...checked].map((id) => (
               <span key={id} className="inline-flex max-w-full items-center gap-1 rounded-md bg-accent py-0.5 pl-2 pr-0.5 text-xs">
-                <span className="truncate" title={paths.get(id)}>{paths.get(id) ?? "Unknown"}</span>
+                <span className="truncate" title={paths.get(id)}>{paths.get(id) ?? t("unknown")}</span>
                 <button
                   type="button"
-                  aria-label={`Remove ${byId.get(id)?.name ?? "category"}`}
+                  aria-label={t("remove", { name: byId.get(id)?.name ?? t("removeFallback") })}
                   onClick={() => document.getElementById(inputId(id))?.click()}
                   className="grid size-5 shrink-0 place-items-center rounded text-muted-foreground hover:bg-background hover:text-foreground"
                 >
@@ -118,16 +120,16 @@ export function CategoryTree({ items, className, ...props }: { items: TreeItem[]
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Filter categories"
-            aria-label="Filter categories"
+            placeholder={t("filter")}
+            aria-label={t("filter")}
             className="h-8 w-full rounded-lg border bg-background pl-8 pr-2 text-[13px] outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
           />
         </div>
         <button
           type="button"
           onClick={() => setExpanded(allOpen ? new Set() : new Set(items.filter((n) => n.childCount > 0).map((n) => n.id)))}
-          title={allOpen ? "Collapse all" : "Expand all"}
-          aria-label={allOpen ? "Collapse all" : "Expand all"}
+          title={allOpen ? t("collapseAll") : t("expandAll")}
+          aria-label={allOpen ? t("collapseAll") : t("expandAll")}
           className="grid size-8 shrink-0 place-items-center rounded-lg border text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           {allOpen ? <ChevronsDownUp className="size-4" /> : <ChevronsUpDown className="size-4" />}
@@ -152,7 +154,7 @@ export function CategoryTree({ items, className, ...props }: { items: TreeItem[]
                     type="button"
                     onClick={() => toggle(n.id)}
                     disabled={!!matches}
-                    aria-label={open ? `Collapse ${n.name}` : `Expand ${n.name}`}
+                    aria-label={open ? t("collapse", { name: n.name }) : t("expand", { name: n.name })}
                     className="grid size-6 shrink-0 place-items-center rounded text-muted-foreground hover:text-foreground disabled:opacity-40"
                   >
                     <ChevronRight className={cn("size-3.5 transition-transform", open && "rotate-90")} />
@@ -191,7 +193,7 @@ export function CategoryTree({ items, className, ...props }: { items: TreeItem[]
             </li>
           );
         })}
-        {matches?.size === 0 && <li className="px-2 py-6 text-center text-xs text-muted-foreground">No category matches “{query}”.</li>}
+        {matches?.size === 0 && <li className="px-2 py-6 text-center text-xs text-muted-foreground">{t("noMatch", { query })}</li>}
       </ul>
     </div>
   );

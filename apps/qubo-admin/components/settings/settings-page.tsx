@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /** Header + body for a settings sub-page. The back arrow only shows when the list is hidden. */
 export function SettingsPage({
@@ -15,10 +16,11 @@ export function SettingsPage({
   actions?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("settings");
   return (
     <div>
       <header className="mb-4 flex flex-wrap items-start gap-x-3 gap-y-2 px-3 xs:px-0 sm:mb-6 @min-[52rem]:pt-1">
-        <Link href={`/${site}/settings`} className="-ml-1 grid size-8 shrink-0 place-items-center rounded-lg hover:bg-accent @min-[52rem]:hidden" aria-label="All settings">
+        <Link href={`/${site}/settings`} className="-ml-1 grid size-8 shrink-0 place-items-center rounded-lg hover:bg-accent @min-[52rem]:hidden" aria-label={t("allSettings")}>
           <ArrowLeft className="size-4" />
         </Link>
         <div className="min-w-0 flex-1">

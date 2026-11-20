@@ -1,4 +1,5 @@
 import { cookies, headers } from "next/headers";
+import { getLocale, getTranslations } from "next-intl/server";
 import { SignInForm } from "@/components/sign-in-form";
 import { siteForAdminHost } from "@/lib/admin-host";
 import { ago } from "@/lib/relative";
@@ -7,7 +8,7 @@ import { cookieToken, endedNotice } from "@/lib/sessions";
 type Props = { searchParams: Promise<{ email?: string }> };
 
 export default async function SignInPage({ searchParams }: Props) {
-  const [{ email }, h, jar] = await Promise.all([searchParams, headers(), cookies()]);
+  const [{ email }, h, jar, t, locale] = await Promise.all([searchParams, headers(), cookies(), getTranslations("auth.signIn"), getLocale()]);
   // A dead cookie from a session that was ended on purpose: say why (offline tab case).
   const token = cookieToken((n) => jar.get(n)?.value);
   const ended = token ? await endedNotice(token).catch(() => null) : null;
@@ -18,13 +19,13 @@ export default async function SignInPage({ searchParams }: Props) {
       <section className="w-full max-w-sm rounded-xl border bg-card p-6 shadow-sm">
         <h1 className="text-2xl font-semibold">{site?.name ?? "Qubo"}</h1>
         <p className="mb-6 text-sm text-muted-foreground">
-          Connectez-vous au panneau d’administration.
+          {t("title")}
         </p>
         {ended && (
           <div role="status" className="mb-5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm">
-            <p className="font-medium">{ended.reason === "takeover" ? "You have been logged in elsewhere" : "This device was signed out"}</p>
+            <p className="font-medium">{ended.reason === "takeover" ? t("endedTakeover") : t("endedSignedOut")}</p>
             <p className="mt-0.5 text-muted-foreground">
-              {[ended.deviceLabel, ended.place, ended.endedAt ? ago(ended.endedAt) : null].filter(Boolean).join(" · ")}
+              {[ended.deviceLabel, ended.place, ended.endedAt ? ago(ended.endedAt, locale) : null].filter(Boolean).join(" · ")}
             </p>
           </div>
         )}

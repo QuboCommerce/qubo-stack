@@ -1,6 +1,7 @@
 import type React from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@qubo/shared/utils";
 
 /** Shopify-style view tabs + search, driven by URL search params (works without JS). */
@@ -9,7 +10,7 @@ export function IndexToolbar({
   tabs,
   active,
   q,
-  placeholder = "Search",
+  placeholder,
   keep,
   extra,
 }: {
@@ -23,6 +24,7 @@ export function IndexToolbar({
   /** Rendered after the search box. */
   extra?: React.ReactNode;
 }) {
+  const t = useTranslations("ui");
   const keepQs = keep ? Object.entries(keep).map(([k, v]) => `&${k}=${encodeURIComponent(v)}`).join("") : "";
   return (
     <div className="flex flex-col gap-2 border-b px-2 py-2 @min-[40rem]:flex-row @min-[40rem]:items-center">
@@ -48,7 +50,7 @@ export function IndexToolbar({
         <input
           name="q"
           defaultValue={q}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("search")}
           className="h-8 w-full rounded-lg border bg-background pl-8 pr-3 text-[13px] outline-none transition-shadow placeholder:text-muted-foreground focus:ring-2 focus:ring-ring/40"
         />
       </form>
@@ -58,6 +60,7 @@ export function IndexToolbar({
 }
 
 export function Pagination({ href, page, perPage, total }: { href: (page: number) => string; page: number; perPage: number; total: number }) {
+  const t = useTranslations("pagination");
   const pages = Math.max(1, Math.ceil(total / perPage));
   const from = total ? (page - 1) * perPage + 1 : 0;
   const to = Math.min(total, page * perPage);
@@ -65,17 +68,17 @@ export function Pagination({ href, page, perPage, total }: { href: (page: number
   return (
     <div className="flex items-center justify-between gap-2 border-t px-4 py-2.5 text-[13px] text-muted-foreground">
       <span className="tabular-nums">
-        {from}–{to} of {new Intl.NumberFormat("en-BE").format(total)}
+        {t("range", { from, to, total })}
       </span>
       <div className="flex items-center gap-1">
         {page > 1 ? (
-          <Link className={btn} href={href(page - 1)} aria-label="Previous page"><ChevronLeft className="size-4" /></Link>
+          <Link className={btn} href={href(page - 1)} aria-label={t("previous")}><ChevronLeft className="size-4" /></Link>
         ) : (
           <span className={cn(btn, "opacity-40")}><ChevronLeft className="size-4" /></span>
         )}
-        <span className="px-2 tabular-nums">{page} / {pages}</span>
+        <span className="px-2 tabular-nums">{t("page", { page, pages })}</span>
         {page < pages ? (
-          <Link className={btn} href={href(page + 1)} aria-label="Next page"><ChevronRight className="size-4" /></Link>
+          <Link className={btn} href={href(page + 1)} aria-label={t("next")}><ChevronRight className="size-4" /></Link>
         ) : (
           <span className={cn(btn, "opacity-40")}><ChevronRight className="size-4" /></span>
         )}

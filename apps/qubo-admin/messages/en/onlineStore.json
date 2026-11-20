@@ -1,0 +1,176 @@
+{
+  "onlineStore": {
+    "themes": {
+      "title": "Themes",
+      "viewStore": "View your store",
+      "current": "Current theme",
+      "published": "Published {time}",
+      "notPublished": "Not published yet",
+      "meta": "{published} · {flavor} flavor · {mode} mode",
+      "modes": {
+        "dual": "light and dark",
+        "light": "light",
+        "dark": "dark"
+      },
+      "richness": {
+        "essential": "Essential",
+        "complete": "Complete",
+        "premium": "Premium"
+      },
+      "health": "Palette health {score}/100",
+      "pack": "{tier} pack",
+      "schemes": "{count, plural, one {# color scheme} other {# color schemes}}",
+      "buttons": "{count, plural, one {# button style} other {# button styles}}",
+      "fonts": "Fonts",
+      "palette": "Palette",
+      "customize": "Customize",
+      "themeSettings": "Theme settings",
+      "empty": {
+        "title": "No theme yet",
+        "description": "Pick a theme from the library below."
+      },
+      "templates": {
+        "title": "Templates",
+        "description": "Every page type your site can render. System pages are managed by Qubo and can't be deleted.",
+        "systemPage": "System page",
+        "draft": "Draft",
+        "groups": {
+          "pages": "Pages",
+          "catalog": "Catalog",
+          "commerce": "Commerce",
+          "services": "Services",
+          "blog": "Blog",
+          "other": "Other",
+          "system": "System"
+        }
+      },
+      "library": {
+        "title": "Theme library",
+        "description": "StyleKit packs, scored by the Palette Doctor."
+      },
+      "switch": {
+        "siteTheme": "Site theme"
+      }
+    },
+    "blocks": {
+      "title": "Block library",
+      "subtitle": "{count, plural, one {# schema-first block} other {# schema-first blocks}} · rendered live with {theme}",
+      "yourTheme": "your site theme",
+      "kinds": {
+        "all": "All",
+        "section": "Sections",
+        "layout": "Layout",
+        "element": "Elements"
+      },
+      "search": "Search blocks",
+      "empty": {
+        "title": "No blocks match",
+        "description": "Try another search or filter."
+      },
+      "requires": "Requires {modules}",
+      "presets": "{count, plural, one {# preset} other {# presets}}",
+      "fallbackTitle": "Block"
+    },
+    "inspector": {
+      "preview": "Preview",
+      "blueprint": "Blueprint",
+      "viewports": {
+        "mobile": "Mobile",
+        "tablet": "Tablet",
+        "desktop": "Desktop"
+      },
+      "default": "Default",
+      "blueprintNote": "Blueprint shows the component before any data flows in. {marker} marks where each field renders. Layout and style values stay as configured.",
+      "overview": {
+        "title": "Overview",
+        "kind": "Kind",
+        "category": "Category",
+        "fields": "Fields",
+        "requires": "Requires",
+        "anySite": "Any site",
+        "keywords": "Keywords"
+      },
+      "kinds": {
+        "section": "Section",
+        "layout": "Layout",
+        "element": "Element"
+      },
+      "fieldsPanel": {
+        "title": "Fields",
+        "description": "Declared once. The editor panel, validation, AI schema and translations all derive from this.",
+        "field": "Field",
+        "kind": "Kind",
+        "default": "Default",
+        "translatable": "Translatable"
+      },
+      "translations": {
+        "title": "Translations",
+        "description": "{count, plural, one {# translatable field} other {# translatable fields}}, edited per language in the inspector.",
+        "inSlots": "Copy lives in the nested blocks inside this section's slots.",
+        "none": "No translatable copy."
+      },
+      "json": {
+        "title": "Document JSON",
+        "stored": "what gets stored"
+      }
+    },
+    "pages": {
+      "title": "Pages",
+      "subtitle": "Standalone pages: about, contact, policies. Templates for products, collections and the home page live under Themes.",
+      "themesAndTemplates": "Themes and templates",
+      "yourPages": {
+        "title": "Your pages",
+        "description": "{count, plural, one {# page} other {# pages}}. Click one to edit it in the Studio."
+      },
+      "empty": {
+        "title": "No pages yet",
+        "description": "Add one from the suggestions below or start from a blank page."
+      },
+      "published": "Published {time}",
+      "draft": "Draft",
+      "viewPage": "View page",
+      "homepage": "Homepage",
+      "suggested": {
+        "title": "Suggested pages",
+        "description": "Pages a site like yours usually has. Nothing is forced: add the ones you want and skip the rest.",
+        "added": "Added",
+        "add": "Add",
+        "newPage": "New page",
+        "needs": "Needs {modules}",
+        "needsTitle": "Needs the {modules} module"
+      },
+      "create": {
+        "title": "New page",
+        "description": "Start from a suggested page, with its sections and URL already in place, or from a blank page. Everything can be edited in the Studio.",
+        "blank": "Blank page",
+        "blankDescription": "One rich text section to start from.",
+        "needsModule": "Needs the {modules} module.",
+        "switchOn": "Switch it on",
+        "fields": {
+          "title": "Title",
+          "titlePlaceholder": "About us",
+          "url": "URL",
+          "urlPlaceholder": "about-us"
+        },
+        "submit": "Create and open in Studio",
+        "creating": "Creating…"
+      },
+      "delete": {
+        "label": "Delete {title}",
+        "title": "Delete “{title}”?",
+        "description": "/{slug} and its sections will be permanently removed.",
+        "descriptionLive": "/{slug} and its sections will be permanently removed. The page is live, so visitors will get a 404 until you add a redirect.",
+        "confirm": "Delete page"
+      }
+    },
+    "errors": {
+      "generic": "Something went wrong.",
+      "unknownBlueprint": "Unknown page template.",
+      "missingModules": "This page needs the {modules} module. Switch it on in Settings first.",
+      "themeGeneric": "Something went wrong. Your theme changes are still in the editor.",
+      "themeInvalid": "Theme is invalid: {path} {message}",
+      "onlyAdmins": "Only owners and admins can publish.",
+      "neverPublished": "This theme has never been published."
+    }
+  }
+}

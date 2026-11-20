@@ -2,6 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { and, asc, eq, ne } from "drizzle-orm";
 import { db } from "@qubo/db/client";
 import { siteDomain } from "@qubo/db/schema";
@@ -20,14 +21,14 @@ const text = (fd: FormData, key: string) => {
 
 async function requireManager(formData: FormData) {
   const ctx = await requireSiteFromForm(formData);
-  if (ctx.site.memberRole !== "OWNER" && ctx.site.memberRole !== "ADMIN") throw new Error("Only owners and admins can manage domains.");
+  if (ctx.site.memberRole !== "OWNER" && ctx.site.memberRole !== "ADMIN") throw new Error((await getTranslations("domains")).raw("actions.managersOnly"));
   return ctx;
 }
 
 async function ownDomain(siteId: string, formData: FormData) {
   const id = text(formData, "domainId");
   const [row] = id ? await db.select().from(siteDomain).where(and(eq(siteDomain.id, id), eq(siteDomain.siteId, siteId))) : [];
-  if (!row) throw new Error("Domain not found.");
+  if (!row) throw new Error((await getTranslations("domains")).raw("actions.notFound"));
   return row;
 }
 
@@ -37,10 +38,11 @@ const done = (slug: string): ActionState => {
   return { ok: true, at: Date.now() };
 };
 
-const fail = (e: unknown): ActionState => ({ error: e instanceof Error ? e.message : "Something went wrong." });
+const fail = async (e: unknown): Promise<ActionState> => ({ error: e instanceof Error ? e.message : (await getTranslations("domains"))("actions.generic") });
 
 /** Adds a domain to the site and checks its DNS straight away. The first domain becomes primary. */
 export async function addDomainAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const t = await getTranslations("domains");
   try {
     const { site, siteId } = await requireManager(formData);
     const parsed = parseDomain(text(formData, "hostname"), {
@@ -50,12 +52,12 @@ export async function addDomainAction(_prev: ActionState, formData: FormData): P
     if (!parsed.ok) return { error: parsed.error };
 
     const owner = await hostnameTaken(parsed.hostname);
-    if (owner) return { error: owner === siteId ? "This domain is already connected to this site." : "This domain is connected to another site." };
+    if (owner) return { error: owner === siteId ? t("actions.alreadyHere") : t("actions.otherSite") };
 
     const existing = await db.select({ id: siteDomain.id }).from(siteDomain).where(eq(siteDomain.siteId, siteId));
     const limit = (await getAccess()).entitlements.limits.customDomainsPerSite;
     if (limit !== null && existing.length >= limit) {
-      return { error: `Your plan covers ${limit} domain${limit === 1 ? "" : "s"} per site. Remove one or upgrade.` };
+      return { error: t("actions.limit", { count: limit }) };
     }
 
     const [row] = await db
@@ -63,11 +65,11 @@ export async function addDomainAction(_prev: ActionState, formData: FormData): P
       .values({ siteId, hostname: parsed.hostname, isPrimary: existing.length === 0 })
       .onConflictDoNothing()
       .returning({ id: siteDomain.id });
-    if (!row) return { error: "This domain is connected to another site." };
+    if (!row) return { error: t("actions.otherSite") };
     await checkDomain(row.id).catch(() => null);
     return done(site.slug);
   } catch (e) {
-    return fail(e);
+    return await fail(e);
   }
 }
 
@@ -78,7 +80,7 @@ export async function checkDomainAction(_prev: ActionState, formData: FormData):
     if (!row.checkedAt || Date.now() - row.checkedAt.getTime() >= MIN_CHECK_GAP_MS) await checkDomain(row.id);
     return done(site.slug);
   } catch (e) {
-    return fail(e);
+    return await fail(e);
   }
 }
 
@@ -87,14 +89,14 @@ export async function makePrimaryAction(_prev: ActionState, formData: FormData):
   try {
     const { site, siteId } = await requireManager(formData);
     const row = await ownDomain(siteId, formData);
-    if (!row.verifiedAt) return { error: "Connect this domain before making it primary." };
+    if (!row.verifiedAt) return { error: (await getTranslations("domains"))("actions.notVerified") };
     await db.transaction(async (tx) => {
       await tx.update(siteDomain).set({ isPrimary: false }).where(and(eq(siteDomain.siteId, siteId), ne(siteDomain.id, row.id)));
       await tx.update(siteDomain).set({ isPrimary: true }).where(eq(siteDomain.id, row.id));
     });
     return done(site.slug);
   } catch (e) {
-    return fail(e);
+    return await fail(e);
   }
 }
 
@@ -112,7 +114,7 @@ export async function removeDomainAction(_prev: ActionState, formData: FormData)
     });
     return done(site.slug);
   } catch (e) {
-    return fail(e);
+    return await fail(e);
   }
 }
 
@@ -124,7 +126,7 @@ export async function regenerateShareLinkAction(_prev: ActionState, formData: Fo
     await db.update(siteDomain).set({ shareToken: randomBytes(18).toString("base64url") }).where(eq(siteDomain.id, row.id));
     return done(site.slug);
   } catch (e) {
-    return fail(e);
+    return await fail(e);
   }
 }
 
@@ -132,7 +134,7 @@ export async function regenerateShareLinkAction(_prev: ActionState, formData: Fo
 export async function checkSharedDomainAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const token = text(formData, "token");
   const [row] = token ? await db.select().from(siteDomain).where(eq(siteDomain.shareToken, token)) : [];
-  if (!row) return { error: "This link is no longer valid." };
+  if (!row) return { error: (await getTranslations("domains"))("actions.linkInvalid") };
   if (!row.checkedAt || Date.now() - row.checkedAt.getTime() >= MIN_CHECK_GAP_MS) await checkDomain(row.id).catch(() => null);
   revalidatePath(`/dns/${token}`);
   return { ok: true, at: Date.now() };

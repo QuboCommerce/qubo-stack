@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useActionState, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { cn } from "@qubo/shared/utils";
 import type { ActionState } from "@/lib/action-state";
 
@@ -13,13 +14,14 @@ export function ActionForm({
   action,
   children,
   className,
-  done = "Saved",
+  done,
 }: {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   children: React.ReactNode;
   className?: string;
   done?: string;
 }) {
+  const t = useTranslations("promotions.actionForm");
   const [state, formAction, pending] = useActionState(action, null);
   const [flash, setFlash] = useState(false);
   useEffect(() => {
@@ -46,7 +48,7 @@ export function ActionForm({
           {state.error}
         </p>
       ) : flash ? (
-        <p className="basis-full text-xs text-muted-foreground">{done}</p>
+        <p className="basis-full text-xs text-muted-foreground">{done ?? t("defaultDone")}</p>
       ) : null}
     </form>
   );

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import {
   ArrowUpRight,
   Check,
@@ -17,9 +18,9 @@ import { Button } from "@/components/ui/button";
 import { EmptyState, Panel, StatusDot } from "@/components/page";
 import { SalesChart } from "@/components/dashboard/sales-chart";
 import { SchemeChip, ThemeMiniature } from "@/components/theme-preview";
+import { siteTypeKey } from "@/components/shell/labels";
 import { requireSite } from "@/lib/admin";
-import { localeLabel, money, number, relativeTime } from "@/lib/format";
-import { siteTypeLabel } from "@/lib/navigation";
+import { getFormatters } from "@/lib/format-server";
 import {
   getActiveTheme,
   getCatalogHealth,
@@ -35,6 +36,8 @@ import { LiveRefresh } from "@/components/live-events";
 export default async function HomePage({ params }: { params: Promise<{ site: string }> }) {
   const { site: slug } = await params;
   const { user, site, siteId } = await requireSite(slug);
+  const [t, tShell] = await Promise.all([getTranslations("dashboard"), getTranslations("shell")]);
+  const { money, relativeTime, localeName } = await getFormatters();
   const caps = new Set<string>(site.capabilities ?? []);
   const [data, sales, catalog, themeRow, locales, counts] = await Promise.all([
     getDashboardData(siteId),
@@ -47,27 +50,29 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
   const theme = themeRow ? summarizeTheme(themeRow.published ?? themeRow.draft) : null;
   const base = `/${site.slug}`;
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const greetingKey = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
   const firstName = user.name.split(" ")[0];
   const sales30 = sales.reduce((s, d) => s + d.sales, 0);
   const orders30 = sales.reduce((s, d) => s + d.orders, 0);
+  const typeKey = siteTypeKey(site.type);
+  const typeLabel = typeKey ? tShell(`siteTypes.${typeKey}`) : site.type;
   const pct = (n: number) => (catalog.total ? Math.round((n / catalog.total) * 100) : 0);
 
   const metrics = [
-    caps.has("commerce") && { label: "Sales · 30 days", value: money(sales30, site.currency ?? "EUR"), hint: `${number(orders30)} orders`, icon: TrendingUp, href: `${base}/analytics` },
-    caps.has("commerce") && { label: "Open orders", value: number(counts.orders), hint: `${number(data.orderCount)} all time`, icon: ShoppingBag, href: `${base}/orders` },
-    caps.has("catalog") && { label: "Products", value: number(data.productCount), hint: `${number(catalog.active)} active`, icon: Package, href: `${base}/products` },
-    caps.has("accounts") && { label: "Customers", value: number(data.customerCount), hint: "imported & registered", icon: Users, href: `${base}/customers` },
-    caps.has("leads") && { label: "Inbox", value: number(counts.inbox), hint: "unread conversations", icon: Inbox, href: `${base}/inbox` },
+    caps.has("commerce") && { label: t("metrics.sales30"), value: money(sales30, site.currency ?? "EUR"), hint: t("metrics.orders30", { count: orders30 }), icon: TrendingUp, href: `${base}/analytics` },
+    caps.has("commerce") && { label: t("metrics.openOrders"), value: t("count", { count: counts.orders }), hint: t("metrics.allTime", { count: data.orderCount }), icon: ShoppingBag, href: `${base}/orders` },
+    caps.has("catalog") && { label: t("metrics.products"), value: t("count", { count: data.productCount }), hint: t("metrics.activeProducts", { count: catalog.active }), icon: Package, href: `${base}/products` },
+    caps.has("accounts") && { label: t("metrics.customers"), value: t("count", { count: data.customerCount }), hint: t("metrics.importedRegistered"), icon: Users, href: `${base}/customers` },
+    caps.has("leads") && { label: t("metrics.inbox"), value: t("count", { count: counts.inbox }), hint: t("metrics.unreadConversations"), icon: Inbox, href: `${base}/inbox` },
   ].filter(Boolean) as { label: string; value: string; hint: string; icon: typeof Package; href: string }[];
 
   const setup = [
-    { done: !!theme, label: "Publish a theme", hint: "Colors, fonts and flavor for your site.", href: `${base}/online-store` },
-    caps.has("catalog") && { done: catalog.total > 0, label: "Add products", hint: `${number(catalog.total)} products in the catalog.`, href: `${base}/products` },
-    caps.has("catalog") && { done: catalog.categorized > 0, label: "Organize collections", hint: "Group products so visitors can browse.", href: `${base}/products/collections` },
-    caps.has("catalog") && { done: pct(catalog.withBrand) > 50, label: "Fill in brands", hint: `${pct(catalog.withBrand)}% of products have a brand.`, href: `${base}/products` },
-    { done: locales.some((l) => !l.isPrimary && l.isPublished), label: "Publish translations", hint: `${locales.length} languages configured.`, href: `${base}/settings/languages` },
-    { done: !!site.domain, label: "Connect a domain", hint: site.domain ?? "Point your domain to Qubo.", href: `${base}/settings/domains` },
+    { done: !!theme, label: t("setup.theme.label"), hint: t("setup.theme.hint"), href: `${base}/online-store` },
+    caps.has("catalog") && { done: catalog.total > 0, label: t("setup.products.label"), hint: t("setup.products.hint", { count: catalog.total }), href: `${base}/products` },
+    caps.has("catalog") && { done: catalog.categorized > 0, label: t("setup.collections.label"), hint: t("setup.collections.hint"), href: `${base}/products/collections` },
+    caps.has("catalog") && { done: pct(catalog.withBrand) > 50, label: t("setup.brands.label"), hint: t("setup.brands.hint", { percent: pct(catalog.withBrand) }), href: `${base}/products` },
+    { done: locales.some((l) => !l.isPrimary && l.isPublished), label: t("setup.translations.label"), hint: t("setup.translations.hint", { count: locales.length }), href: `${base}/settings/languages` },
+    { done: !!site.domain, label: t("setup.domain.label"), hint: site.domain ?? t("setup.domain.hint"), href: `${base}/settings/domains` },
   ].filter(Boolean) as { done: boolean; label: string; hint: string; href: string }[];
   const doneCount = setup.filter((s) => s.done).length;
 
@@ -79,29 +84,29 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
           {/* title takes full row on phones so the greeting never squeezes */}
           <div className="min-w-0 flex-1 basis-full xs:basis-auto">
             <p className="truncate text-[13px] font-medium text-muted-foreground">
-              {siteTypeLabel[site.type] ?? site.type} · {site.name}
+              {typeLabel} · {site.name}
             </p>
             <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-              {greeting}, {firstName}
+              {t(`greeting.${greetingKey}`, { name: firstName })}
             </h1>
           </div>
           <div className="flex w-full gap-2 xs:w-auto [&>*]:flex-1 xs:[&>*]:flex-none">
             {site.url ? (
               <Button variant="outline" size="sm" asChild>
                 <a href={site.url} target="_blank" rel="noreferrer">
-                  <Eye /> View site
+                  <Eye /> {t("viewSite")}
                 </a>
               </Button>
             ) : (
               <Button variant="outline" size="sm" asChild>
-                <Link href={`${base}/settings/domains`} title="This site has no verified domain yet">
-                  <Eye /> Connect a domain
+                <Link href={`${base}/settings/domains`} title={t("noDomainTitle")}>
+                  <Eye /> {t("connectDomain")}
                 </Link>
               </Button>
             )}
             <Button size="sm" asChild>
               <Link href={`${base}/online-store`}>
-                <Paintbrush /> Customize
+                <Paintbrush /> {t("customize")}
               </Link>
             </Button>
           </div>
@@ -133,8 +138,8 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
           <div className="space-y-4 sm:space-y-5 @min-[64rem]:col-span-2 @min-[120rem]:col-span-2">
             {caps.has("commerce") && (
               <Panel
-                title="Sales over time"
-                description="Last 30 days, excluding cancelled and refunded orders."
+                title={t("sales.title")}
+                description={t("sales.description")}
                 action={<Badge variant="secondary">{money(sales30, site.currency ?? "EUR")}</Badge>}
               >
                 <SalesChart data={sales} currency={site.currency ?? "EUR"} />
@@ -143,19 +148,19 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
 
             {caps.has("commerce") && (
               <Panel
-                title="Recent orders"
+                title={t("recentOrders.title")}
                 flush
                 action={
                   <Link href={`${base}/orders`} className="text-[13px] font-medium text-info hover:underline">
-                    View all
+                    {t("recentOrders.viewAll")}
                   </Link>
                 }
               >
                 {data.recentOrders.length === 0 ? (
                   <EmptyState
                     icon={ShoppingBag}
-                    title="Your orders will show here"
-                    description="Once the storefront checkout is live, new orders land here in real time."
+                    title={t("recentOrders.emptyTitle")}
+                    description={t("recentOrders.emptyDescription")}
                     className="py-10 sm:py-12"
                   />
                 ) : (
@@ -163,7 +168,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
                     {data.recentOrders.map((o) => (
                       <li key={o.id} className="flex items-center gap-3 px-4 py-3 text-sm sm:px-5">
                         <span className="font-medium">#{o.orderNumber}</span>
-                        <span className="min-w-0 flex-1 truncate text-muted-foreground">{o.customerName ?? "Guest"}</span>
+                        <span className="min-w-0 flex-1 truncate text-muted-foreground">{o.customerName ?? t("recentOrders.guest")}</span>
                         <span className="hidden text-muted-foreground sm:inline">{relativeTime(o.createdAt)}</span>
                         <span className="tabular-nums">{money(o.total, o.currency)}</span>
                       </li>
@@ -174,13 +179,13 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
             )}
 
             {caps.has("catalog") && (
-              <Panel title="Catalog health" description="How complete your product data is.">
+              <Panel title={t("catalog.title")} description={t("catalog.description")}>
                 <div className="grid gap-4 @min-[40rem]:grid-cols-2 @min-[100rem]:grid-cols-4">
                   {[
-                    { label: "With images", value: catalog.withImage },
-                    { label: "Active", value: catalog.active },
-                    { label: "In a collection", value: catalog.categorized },
-                    { label: "With a brand", value: catalog.withBrand },
+                    { label: t("catalog.withImages"), value: catalog.withImage },
+                    { label: t("catalog.active"), value: catalog.active },
+                    { label: t("catalog.inCollection"), value: catalog.categorized },
+                    { label: t("catalog.withBrand"), value: catalog.withBrand },
                   ].map((row) => {
                     const p = pct(row.value);
                     return (
@@ -196,7 +201,7 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
                           />
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {number(row.value)} of {number(catalog.total)}
+                          {t("catalog.ofTotal", { value: row.value, total: catalog.total })}
                         </p>
                       </div>
                     );
@@ -208,8 +213,8 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
 
           <div className="space-y-4 sm:space-y-5 @min-[120rem]:col-span-2 @min-[120rem]:grid @min-[120rem]:grid-cols-2 @min-[120rem]:items-start @min-[120rem]:gap-5 @min-[120rem]:space-y-0">
             <Panel
-              title="Setup guide"
-              description={`${doneCount} of ${setup.length} tasks complete`}
+              title={t("setup.title")}
+              description={t("setup.progress", { done: doneCount, total: setup.length })}
               flush
             >
               <div className="mx-4 mb-1 h-1 overflow-hidden rounded-full bg-muted sm:mx-5">
@@ -240,10 +245,10 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
 
             <div className="space-y-4 sm:space-y-5">
               <Panel
-                title="Online Store"
+                title={t("onlineStore.title")}
                 action={
                   <Link href={`${base}/online-store`} className="text-[13px] font-medium text-info hover:underline">
-                    Manage
+                    {t("onlineStore.manage")}
                   </Link>
                 }
               >
@@ -253,11 +258,11 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="text-sm font-semibold">{theme.name}</span>
                       <Badge variant="outline" className="gap-1.5">
-                        <StatusDot tone="success" /> Live
+                        <StatusDot tone="success" /> {t("onlineStore.live")}
                       </Badge>
                       {themeRow.health != null && (
                         <Badge variant="secondary" className="gap-1">
-                          <Sparkles className="size-3" /> Health {themeRow.health}
+                          <Sparkles className="size-3" /> {t("onlineStore.health", { value: themeRow.health })}
                         </Badge>
                       )}
                       {themeRow.richness && <Badge variant="secondary" className="capitalize">{themeRow.richness}</Badge>}
@@ -269,22 +274,22 @@ export default async function HomePage({ params }: { params: Promise<{ site: str
                     </div>
                   </div>
                 ) : (
-                  <EmptyState icon={Paintbrush} title="No theme yet" description="Pick a starter theme to give your site a look." className="py-8" />
+                  <EmptyState icon={Paintbrush} title={t("onlineStore.noThemeTitle")} description={t("onlineStore.noThemeDescription")} className="py-8" />
                 )}
               </Panel>
 
-              <Panel title="Languages" description="Visitors see your site in these languages.">
+              <Panel title={t("languages.title")} description={t("languages.description")}>
                 <ul className="space-y-2">
                   {locales.map((l) => (
                     <li key={l.locale} className="flex items-center gap-2 text-sm">
                       <span className="w-12 font-mono text-xs text-muted-foreground">{l.locale}</span>
-                      <span className="flex-1">{localeLabel[l.locale] ?? l.locale}</span>
+                      <span className="flex-1">{localeName(l.locale)}</span>
                       {l.isPrimary ? (
-                        <Badge>Primary</Badge>
+                        <Badge>{t("languages.primary")}</Badge>
                       ) : (
                         <Badge variant="outline" className="gap-1.5">
                           <StatusDot tone={l.isPublished ? "success" : "muted"} />
-                          {l.isPublished ? "Published" : "Draft"}
+                          {l.isPublished ? t("languages.published") : t("languages.draft")}
                         </Badge>
                       )}
                     </li>

@@ -1,0 +1,132 @@
+{
+  "media": {
+    "page": {
+      "title": "Médias",
+      "subtitle": "{organization} · {count, plural, one {# fichier} other {# fichiers}}, {size}",
+      "storageTitle": "Le stockage de fichiers n'est pas configuré",
+      "storageDescription": "Définissez STORAGE_DIR (un dossier sur ce serveur) ou les paramètres du bucket STORAGE_ENDPOINT, puis redémarrez Qubo."
+    },
+    "quickPick": {
+      "title": "Médias",
+      "description": "Choisissez dans la bibliothèque, ou déposez, collez et importez de nouveaux fichiers.",
+      "close": "Fermer"
+    },
+    "browser": {
+      "scopes": {
+        "here": { "label": "Disponibles ici", "hint": "Les fichiers de ce site et les fichiers partagés" },
+        "site": { "label": "Ce site", "hint": "Importés sur ce site uniquement" },
+        "shared": { "label": "Partagés", "hint": "Utilisables par tous les sites de l'organisation" },
+        "all": { "label": "Tous les sites", "hint": "Tout le contenu de l'organisation" }
+      },
+      "kinds": {
+        "all": "Tous",
+        "image": "Images",
+        "video": "Vidéos"
+      },
+      "lenses": {
+        "all": { "label": "Tous les fichiers", "hint": "Tout, du plus récent au plus ancien", "empty": "Aucun fichier pour l'instant. Déposez, collez ou cliquez pour importer." },
+        "scratch": {
+          "label": "En vrac",
+          "hint": "Les fichiers que rien n'utilise et que personne n'a étiquetés. Tout est permis ici.",
+          "empty": "Rien en vrac. Les fichiers importés non utilisés et sans étiquette arrivent ici."
+        },
+        "products": { "label": "Produits", "hint": "Les photos des galeries de produits", "empty": "Aucune photo de produit ne vient de la bibliothèque pour l'instant." },
+        "pages": { "label": "Pages", "hint": "Les fichiers utilisés dans les pages", "empty": "Aucune page n'utilise encore un fichier de la bibliothèque." },
+        "design": { "label": "Thème et mise en page", "hint": "Logos, favicon, image de partage, en-têtes, pieds de page et modèles", "empty": "Aucun logo ni fichier de mise en page pour l'instant." },
+        "blog": { "label": "Blog", "hint": "Les images de couverture des articles", "empty": "Aucune couverture de blog ne vient de la bibliothèque pour l'instant." },
+        "documents": { "label": "Documents", "hint": "Fichiers PDF, texte, Markdown, CSV et JSON", "empty": "Aucun document pour l'instant. Les fichiers PDF, TXT, MD, CSV et JSON arrivent ici." }
+      },
+      "recent": "Récents",
+      "lensesLabel": "Vues",
+      "searchProductsPlaceholder": "Rechercher par nom ou référence, p. ex. JBM-",
+      "searchFilesPlaceholder": "Rechercher dans les noms, textes alternatifs et étiquettes",
+      "searchProducts": "Rechercher des produits",
+      "searchFiles": "Rechercher des fichiers",
+      "photos": "Photos",
+      "allProducts": "Tous les produits",
+      "withoutPhotos": "Sans photo",
+      "withoutPhotosHint": "Les produits qui ont encore besoin d'une photo",
+      "sites": "Sites",
+      "kind": "Type",
+      "upload": "Importer",
+      "tags": "Étiquettes",
+      "dismiss": "Fermer",
+      "noMatch": "Aucun résultat pour cette recherche.",
+      "limits": "Images jusqu'à 20 Mo (JPG, PNG, WebP, AVIF, GIF, SVG), MP4/WebM jusqu'à 100 Mo, PDF, TXT, MD, CSV et JSON.",
+      "files": "Fichiers",
+      "shared": "Partagé",
+      "select": "Sélectionner {name}",
+      "loadMore": "Afficher plus",
+      "selectedCount": "{count, plural, one {# sélectionné} other {# sélectionnés}}",
+      "pickHint": "Cliquez pour sélectionner, double-cliquez pour insérer",
+      "cancel": "Annuler",
+      "insert": "Insérer",
+      "dropToUpload": "Déposez pour importer",
+      "uploadFailed": "Échec de l'importation ({status}).",
+      "uploadFailedGeneric": "Échec de l'importation.",
+      "uploadedToTag": "Importé dans l'étiquette « {tag} ». Ajoutez les fichiers à un produit ou à une page pour les y classer.",
+      "uploadedToScratch": "Importé dans « En vrac ». Ajoutez les fichiers à un produit ou à une page pour les y classer."
+    },
+    "bulk": {
+      "label": "Fichiers sélectionnés",
+      "selected": "{count, plural, one {# sélectionné} other {# sélectionnés}}",
+      "tagPlaceholder": "Étiqueter la sélection",
+      "share": "Partager avec tous les sites",
+      "keep": "Réserver à ce site",
+      "confirmDelete": "{count, plural, one {Supprimer définitivement # fichier ?} other {Supprimer définitivement # fichiers ?}}",
+      "delete": "Supprimer",
+      "keepFiles": "Conserver",
+      "clear": "Effacer la sélection"
+    },
+    "details": {
+      "label": "Détails du fichier",
+      "fileName": "Nom du fichier",
+      "close": "Fermer les détails",
+      "open": "Ouvrir",
+      "type": "Type",
+      "size": "Taille",
+      "dimensions": "Dimensions",
+      "added": "Ajouté le",
+      "altText": "Texte alternatif",
+      "altPlaceholder": "Décrivez l'image pour les lecteurs d'écran et les moteurs de recherche",
+      "tags": "Étiquettes",
+      "sharedTitle": "Partagé avec tous les sites",
+      "sharedOtherSite": "Importé sur un autre site",
+      "sharedHint": "Tous les sites de l'organisation peuvent l'utiliser",
+      "usedIn": "Utilisé dans",
+      "checking": "Vérification…",
+      "notUsed": "Pas encore utilisé.",
+      "notUsedScratch": "Pas encore utilisé, il se trouve donc dans « En vrac ».",
+      "untitledPage": "Page sans titre",
+      "copyLink": "Copier le lien",
+      "copied": "Copié",
+      "usedConfirm": "{count, plural, one {Utilisé à # endroit. Il perdra ce fichier.} other {Utilisé à # endroits. Ils perdront ce fichier.}}",
+      "deleteConfirm": "Supprimer définitivement ce fichier ?",
+      "delete": "Supprimer",
+      "keep": "Conserver"
+    },
+    "tags": {
+      "add": "Ajouter une étiquette",
+      "addButton": "Ajouter l'étiquette",
+      "remove": "Retirer l'étiquette {tag}"
+    },
+    "products": {
+      "emptySearch": "Aucun produit ne correspond à ce nom ou à cette référence.",
+      "emptyMissing": "Chaque produit a au moins une photo.",
+      "empty": "Aucun produit sur ce site pour l'instant.",
+      "list": "Produits",
+      "loadMore": "Afficher plus",
+      "openPhotos": "Ouvrir les photos de {name}",
+      "noReference": "Sans référence",
+      "archived": "Archivé",
+      "noPhotos": "Pas encore de photo",
+      "galleryDescription": "La première photo est la photo principale. Les modifications sont enregistrées immédiatement et apparaissent dans l'éditeur de produit.",
+      "notLoaded": "Impossible de charger ce produit. Il a peut-être été supprimé.",
+      "openEditor": "Ouvrir dans l'éditeur de produit"
+    },
+    "errors": {
+      "notFound": "Fichier introuvable.",
+      "someKept": "{count, plural, one {# fichier a été conservé : seule la personne qui l'a importé ou un administrateur de l'organisation peut le supprimer.} other {# fichiers ont été conservés : seule la personne qui les a importés ou un administrateur de l'organisation peut les supprimer.}}"
+    }
+  }
+}

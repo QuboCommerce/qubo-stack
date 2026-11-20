@@ -1,0 +1,176 @@
+{
+  "onlineStore": {
+    "themes": {
+      "title": "Thèmes",
+      "viewStore": "Voir votre boutique",
+      "current": "Thème actuel",
+      "published": "Publié {time}",
+      "notPublished": "Pas encore publié",
+      "meta": "{published} · style {flavor} · mode {mode}",
+      "modes": {
+        "dual": "clair et sombre",
+        "light": "clair",
+        "dark": "sombre"
+      },
+      "richness": {
+        "essential": "Essentiel",
+        "complete": "Complet",
+        "premium": "Premium"
+      },
+      "health": "Santé de la palette {score}/100",
+      "pack": "Pack {tier}",
+      "schemes": "{count, plural, one {# palette de couleurs} other {# palettes de couleurs}}",
+      "buttons": "{count, plural, one {# style de bouton} other {# styles de bouton}}",
+      "fonts": "Polices",
+      "palette": "Palette",
+      "customize": "Personnaliser",
+      "themeSettings": "Réglages du thème",
+      "empty": {
+        "title": "Aucun thème pour l'instant",
+        "description": "Choisissez un thème dans la bibliothèque ci-dessous."
+      },
+      "templates": {
+        "title": "Modèles",
+        "description": "Tous les types de pages que votre site peut afficher. Les pages système sont gérées par Qubo et ne peuvent pas être supprimées.",
+        "systemPage": "Page système",
+        "draft": "Brouillon",
+        "groups": {
+          "pages": "Pages",
+          "catalog": "Catalogue",
+          "commerce": "Commerce",
+          "services": "Services",
+          "blog": "Blog",
+          "other": "Autres",
+          "system": "Système"
+        }
+      },
+      "library": {
+        "title": "Bibliothèque de thèmes",
+        "description": "Packs StyleKit, notés par le Palette Doctor."
+      },
+      "switch": {
+        "siteTheme": "Thème du site"
+      }
+    },
+    "blocks": {
+      "title": "Bibliothèque de blocs",
+      "subtitle": "{count, plural, one {# bloc piloté par schéma} other {# blocs pilotés par schéma}} · affichés en direct avec {theme}",
+      "yourTheme": "le thème de votre site",
+      "kinds": {
+        "all": "Tous",
+        "section": "Sections",
+        "layout": "Mise en page",
+        "element": "Éléments"
+      },
+      "search": "Rechercher un bloc",
+      "empty": {
+        "title": "Aucun bloc ne correspond",
+        "description": "Essayez une autre recherche ou un autre filtre."
+      },
+      "requires": "Nécessite {modules}",
+      "presets": "{count, plural, one {# préréglage} other {# préréglages}}",
+      "fallbackTitle": "Bloc"
+    },
+    "inspector": {
+      "preview": "Aperçu",
+      "blueprint": "Plan",
+      "viewports": {
+        "mobile": "Mobile",
+        "tablet": "Tablette",
+        "desktop": "Ordinateur"
+      },
+      "default": "Par défaut",
+      "blueprintNote": "Le plan montre le composant avant l'arrivée des données. {marker} indique où chaque champ s'affiche. Les valeurs de mise en page et de style restent celles configurées.",
+      "overview": {
+        "title": "Aperçu général",
+        "kind": "Type",
+        "category": "Catégorie",
+        "fields": "Champs",
+        "requires": "Nécessite",
+        "anySite": "Tout site",
+        "keywords": "Mots-clés"
+      },
+      "kinds": {
+        "section": "Section",
+        "layout": "Mise en page",
+        "element": "Élément"
+      },
+      "fieldsPanel": {
+        "title": "Champs",
+        "description": "Déclarés une seule fois. Le panneau d'édition, la validation, le schéma IA et les traductions en découlent.",
+        "field": "Champ",
+        "kind": "Type",
+        "default": "Par défaut",
+        "translatable": "Traduisible"
+      },
+      "translations": {
+        "title": "Traductions",
+        "description": "{count, plural, one {# champ traduisible} other {# champs traduisibles}}, modifiés par langue dans l'inspecteur.",
+        "inSlots": "Les textes se trouvent dans les blocs imbriqués dans les emplacements de cette section.",
+        "none": "Aucun texte traduisible."
+      },
+      "json": {
+        "title": "JSON du document",
+        "stored": "ce qui est enregistré"
+      }
+    },
+    "pages": {
+      "title": "Pages",
+      "subtitle": "Pages autonomes : à propos, contact, mentions légales. Les modèles de produits, de collections et de la page d'accueil se trouvent dans Thèmes.",
+      "themesAndTemplates": "Thèmes et modèles",
+      "yourPages": {
+        "title": "Vos pages",
+        "description": "{count, plural, one {# page} other {# pages}}. Cliquez sur une page pour la modifier dans le Studio."
+      },
+      "empty": {
+        "title": "Aucune page pour l'instant",
+        "description": "Ajoutez-en une depuis les suggestions ci-dessous ou partez d'une page vierge."
+      },
+      "published": "Publiée {time}",
+      "draft": "Brouillon",
+      "viewPage": "Voir la page",
+      "homepage": "Page d'accueil",
+      "suggested": {
+        "title": "Pages suggérées",
+        "description": "Les pages que l'on trouve habituellement sur un site comme le vôtre. Rien n'est imposé : ajoutez celles que vous voulez, ignorez les autres.",
+        "added": "Ajoutée",
+        "add": "Ajouter",
+        "newPage": "Nouvelle page",
+        "needs": "Nécessite {modules}",
+        "needsTitle": "Nécessite le module {modules}"
+      },
+      "create": {
+        "title": "Nouvelle page",
+        "description": "Partez d'une page suggérée, avec ses sections et son URL déjà en place, ou d'une page vierge. Tout reste modifiable dans le Studio.",
+        "blank": "Page vierge",
+        "blankDescription": "Une section de texte enrichi pour commencer.",
+        "needsModule": "Nécessite le module {modules}.",
+        "switchOn": "Activer",
+        "fields": {
+          "title": "Titre",
+          "titlePlaceholder": "À propos",
+          "url": "URL",
+          "urlPlaceholder": "a-propos"
+        },
+        "submit": "Créer et ouvrir dans le Studio",
+        "creating": "Création…"
+      },
+      "delete": {
+        "label": "Supprimer {title}",
+        "title": "Supprimer « {title} » ?",
+        "description": "/{slug} et ses sections seront supprimées définitivement.",
+        "descriptionLive": "/{slug} et ses sections seront supprimées définitivement. La page est en ligne : les visiteurs verront une erreur 404 tant que vous n'aurez pas ajouté de redirection.",
+        "confirm": "Supprimer la page"
+      }
+    },
+    "errors": {
+      "generic": "Une erreur s'est produite.",
+      "unknownBlueprint": "Modèle de page inconnu.",
+      "missingModules": "Cette page nécessite le module {modules}. Activez-le d'abord dans les paramètres.",
+      "themeGeneric": "Une erreur s'est produite. Vos modifications du thème sont toujours dans l'éditeur.",
+      "themeInvalid": "Le thème n'est pas valide : {path} {message}",
+      "onlyAdmins": "Seuls les propriétaires et les administrateurs peuvent publier.",
+      "neverPublished": "Ce thème n'a jamais été publié."
+    }
+  }
+}

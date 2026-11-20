@@ -4,6 +4,7 @@ import type { Capability } from "@qubo/blocks";
 import { blueprintLocale, pageBlueprint } from "@qubo/blocks/presets";
 import * as studio from "@qubo/studio";
 import { revalidatePath } from "next/cache";
+import { getLocale, getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
 import { requireSiteFromForm } from "@/lib/admin";
@@ -15,10 +16,11 @@ const text = (fd: FormData, key: string) => {
   return typeof v === "string" ? v.trim() : "";
 };
 
-const fail = (e: unknown): ActionState => {
+const fail = async (e: unknown): Promise<ActionState> => {
   if (e instanceof studio.StudioError) return { error: e.message };
   console.error("[page-action]", e);
-  return { error: "Something went wrong." };
+  const t = await getTranslations("onlineStore.errors");
+  return { error: t("generic") };
 };
 
 /**
@@ -28,16 +30,18 @@ const fail = (e: unknown): ActionState => {
  */
 export async function createPageAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   let href: string;
+  const t = await getTranslations("onlineStore.errors");
+  const list = new Intl.ListFormat(await getLocale(), { type: "conjunction" });
   try {
     const { site, user } = await requireSiteFromForm(formData);
     const scope: studio.Scope = { siteId: site.id, userId: user.id };
     const capabilities = (site.capabilities ?? []) as Capability[];
     const blueprintId = text(formData, "blueprint");
     const blueprint = blueprintId ? pageBlueprint(blueprintId) : undefined;
-    if (blueprintId && !blueprint) return { error: "Unknown page blueprint." };
+    if (blueprintId && !blueprint) return { error: t("unknownBlueprint") };
     if (blueprint) {
       const missing = blueprint.requires.filter((c) => !capabilities.includes(c));
-      if (missing.length) return { error: `This page needs the ${missing.join(", ")} module. Switch it on in Settings first.` };
+      if (missing.length) return { error: t("missingModules", { modules: list.format(missing.map(String)) }) };
     }
     const locale = blueprintLocale(site.locale);
     const title = text(formData, "title") || blueprint?.title[locale] || "";
@@ -52,7 +56,7 @@ export async function createPageAction(_prev: ActionState, formData: FormData): 
     revalidatePath(`/${site.slug}/online-store/pages`);
     href = studioHref(site.slug, `page:${created.id}`);
   } catch (e) {
-    return fail(e);
+    return await fail(e);
   }
   redirect(href);
 }

@@ -4,6 +4,7 @@ import { db } from "@qubo/db/client";
 import { asset, font, organization, organizationMember, site, user } from "@qubo/db/schema";
 import * as studio from "@qubo/studio";
 import { StudioError, ValidationError } from "@qubo/studio";
+import { getTranslations } from "next-intl/server";
 import { and, asc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { getAccess, requireUser } from "@/lib/admin";
 
@@ -31,12 +32,15 @@ export type ManageableOrg = Awaited<ReturnType<typeof manageableOrgs>>[number];
 
 export class OwnershipError extends Error {}
 
+const messages = () => getTranslations("settings.ownership");
+
 async function assertTarget(siteId: string, targetOrgId: string) {
+  const t = await messages();
   const orgs = await manageableOrgs();
   const [row] = await db.select({ organizationId: site.organizationId, publishedAt: site.publishedAt }).from(site).where(eq(site.id, siteId)).limit(1);
-  if (!row) throw new OwnershipError("Site not found.");
-  if (!orgs.some((o) => o.id === row.organizationId)) throw new OwnershipError("Only owners and admins of the site's organisation can do this.");
-  if (!orgs.some((o) => o.id === targetOrgId)) throw new OwnershipError("You can't add sites to that organisation.");
+  if (!row) throw new OwnershipError(t("siteNotFound"));
+  if (!orgs.some((o) => o.id === row.organizationId)) throw new OwnershipError(t("managersOnly"));
+  if (!orgs.some((o) => o.id === targetOrgId)) throw new OwnershipError(t("cannotAddToOrg"));
   return row;
 }
 
@@ -54,8 +58,9 @@ async function transfer(tx: Tx, siteId: string, from: string, to: string) {
 
 /** Draft only. The `published_at is null` guard sits in the UPDATE, so a publish racing a move can't slip through. */
 export async function moveDraft(siteId: string, targetOrgId: string) {
+  const t = await messages();
   const row = await assertTarget(siteId, targetOrgId);
-  if (row.publishedAt) throw new OwnershipError("Published sites stay in their organisation. Contact support for an assisted migration.");
+  if (row.publishedAt) throw new OwnershipError(t("publishedStays"));
   if (row.organizationId === targetOrgId) return;
   await db.transaction(async (tx) => {
     const [locked] = await tx
@@ -63,22 +68,23 @@ export async function moveDraft(siteId: string, targetOrgId: string) {
       .from(site)
       .where(and(eq(site.id, siteId), isNull(site.publishedAt), eq(site.organizationId, row.organizationId)))
       .for("update");
-    if (!locked) throw new OwnershipError("This site was published or moved meanwhile. Reload and try again.");
+    if (!locked) throw new OwnershipError(t("movedMeanwhile"));
     await transfer(tx, siteId, row.organizationId, targetOrgId);
   });
 }
 
 /** First publish, into the confirmed organisation. One-way. */
 export async function publish(siteId: string, targetOrgId: string) {
+  const t = await messages();
   const row = await assertTarget(siteId, targetOrgId);
-  if (row.publishedAt) throw new OwnershipError("This site is already published.");
+  if (row.publishedAt) throw new OwnershipError(t("alreadyPublished"));
   await db.transaction(async (tx) => {
     const [locked] = await tx
       .select({ id: site.id })
       .from(site)
       .where(and(eq(site.id, siteId), isNull(site.publishedAt), eq(site.organizationId, row.organizationId)))
       .for("update");
-    if (!locked) throw new OwnershipError("This site was published or moved meanwhile. Reload and try again.");
+    if (!locked) throw new OwnershipError(t("movedMeanwhile"));
     if (row.organizationId !== targetOrgId) await transfer(tx, siteId, row.organizationId, targetOrgId);
     await tx.update(site).set({ publishedAt: new Date(), updatedAt: new Date() }).where(eq(site.id, siteId));
   });
@@ -88,10 +94,11 @@ export async function publish(siteId: string, targetOrgId: string) {
 
 /** Manager of the site's organisation, deleted or not. Returns the organisation. */
 async function assertManagerOf(siteId: string) {
+  const t = await messages();
   const orgs = await manageableOrgs();
   const [row] = await db.select({ organizationId: site.organizationId }).from(site).where(eq(site.id, siteId)).limit(1);
-  if (!row) throw new OwnershipError("Site not found.");
-  if (!orgs.some((o) => o.id === row.organizationId)) throw new OwnershipError("Only owners and admins of the site's organisation can do this.");
+  if (!row) throw new OwnershipError(t("siteNotFound"));
+  if (!orgs.some((o) => o.id === row.organizationId)) throw new OwnershipError(t("managersOnly"));
   return row.organizationId;
 }
 

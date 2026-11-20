@@ -42,6 +42,7 @@ Load by name when the task matches the description.
 | `qubo-storefront-rendering` | Puck documents, templates, blocks, theme, SEO on the storefront |
 | `qubo-portal-link` | Portal link, licence/entitlements, site quota, `@qubo/portal-client` |
 | `qubo-design-language` | designing a site, adding a block, field or any visual feature |
+| `qubo-i18n` | adding or changing any user-visible string in the admin (EN and FR) |
 
 Vendored general skills (MIT, upstream noted in each folder):
 

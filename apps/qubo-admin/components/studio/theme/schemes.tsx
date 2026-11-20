@@ -17,6 +17,7 @@ import {
 import { cn } from "@qubo/shared/utils";
 import { AlertTriangle, Check, Copy, Moon, MoreHorizontal, Plus, SlidersHorizontal, Star, Sun, Trash2 } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -30,53 +31,34 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cssColor, Field, Group, MixEditor, Swatch, TokenSelect, uniqueSlug } from "./controls";
-import { describeRole } from "./palette";
 import { SchemePreview } from "./preview";
 import type { ThemeNav } from "./theme-panel";
+import { useCopyName, useRoleLabel } from "./use-labels";
 
-const roleGroups: { title: string; roles: Role[]; hint?: string }[] = [
-  { title: "Page", roles: ["background", "backgroundAlt", "text", "textMuted", "heading", "border"] },
-  { title: "Buttons", roles: ["primary", "onPrimary", "secondary", "onSecondary"] },
-  { title: "Cards", roles: ["surface", "onSurface"] },
-  { title: "Accent & links", roles: ["accent", "onAccent", "accentText", "link", "focusRing"] },
+const roleGroups: { id: "page" | "buttons" | "cards" | "accent"; roles: Role[] }[] = [
+  { id: "page", roles: ["background", "backgroundAlt", "text", "textMuted", "heading", "border"] },
+  { id: "buttons", roles: ["primary", "onPrimary", "secondary", "onSecondary"] },
+  { id: "cards", roles: ["surface", "onSurface"] },
+  { id: "accent", roles: ["accent", "onAccent", "accentText", "link", "focusRing"] },
 ];
-
-const roleHint: Partial<Record<Role, string>> = {
-  background: "Section background",
-  backgroundAlt: "Alternating bands, image placeholders",
-  text: "Body copy",
-  textMuted: "Captions, secondary copy",
-  heading: "Titles",
-  border: "Dividers, inputs, card outlines",
-  primary: "Main call to action",
-  onPrimary: "Label on primary buttons",
-  secondary: "Second call to action",
-  onSecondary: "Label on secondary buttons",
-  surface: "Cards, panels, inputs",
-  onSurface: "Text on cards",
-  accent: "Badges, chips, highlights",
-  onAccent: "Text on accent fills",
-  accentText: "Eyebrows, highlighted words",
-  link: "Inline links",
-  focusRing: "Keyboard focus outline",
-};
 
 export const modesOf = (theme: Theme): Mode[] => (theme.modeStrategy === "dual" ? ["light", "dark"] : [theme.modeStrategy]);
 
 // -------------------------------------------------------------------- list ---
 
 export function SchemesPage({ theme, update, nav, mode }: { theme: Theme; update: (fn: (t: Theme) => Theme, key?: string) => void; nav: ThemeNav; mode: Mode }) {
+  const t = useTranslations("studio.theme.schemes");
   const previewMode = modesOf(theme).includes(mode) ? mode : modesOf(theme)[0]!;
   const add = () => {
     const base = theme.schemes.find((s) => s.id === theme.defaultScheme) ?? theme.schemes[0]!;
     const id = uniqueSlug("new-scheme", theme.schemes.map((s) => s.id));
-    update((t) => ({ ...t, schemes: [...t.schemes, { ...structuredClone(base), id, name: "New scheme", description: "" }] }));
+    update((th) => ({ ...th, schemes: [...th.schemes, { ...structuredClone(base), id, name: t("newName"), description: "" }] }));
     nav.scheme(id);
   };
   return (
     <div>
       <p className="border-b px-4 py-3 text-xs text-muted-foreground">
-        Schemes are named colour recipes for sections. Name them by where they’re used (“Hero band”, “Footer”) so they’re easy to pick later.
+        {t("intro")}
       </p>
       <div className="grid gap-2.5 p-3">
         {theme.schemes.map((s) => (
@@ -91,15 +73,15 @@ export function SchemesPage({ theme, update, nav, mode }: { theme: Theme; update
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 truncate text-[13px] font-medium">
                   {s.name}
-                  {s.id === theme.defaultScheme && <span className="rounded bg-muted px-1.5 py-px text-[10px] font-medium text-muted-foreground">Page default</span>}
+                  {s.id === theme.defaultScheme && <span className="rounded bg-muted px-1.5 py-px text-[10px] font-medium text-muted-foreground">{t("pageDefault")}</span>}
                 </p>
-                <p className="truncate text-xs text-muted-foreground">{s.description || <span className="italic">No description</span>}</p>
+                <p className="truncate text-xs text-muted-foreground">{s.description || <span className="italic">{t("noDescription")}</span>}</p>
               </div>
             </div>
           </button>
         ))}
         <Button variant="outline" className="h-9 gap-1.5 border-dashed text-[13px]" onClick={add}>
-          <Plus className="size-4" /> Add scheme
+          <Plus className="size-4" /> {t("add")}
         </Button>
       </div>
     </div>
@@ -127,13 +109,15 @@ export function SchemeDetail({
   focusRole?: string;
   nav: ThemeNav;
 }) {
+  const t = useTranslations("studio.theme.schemes");
+  const copyName = useCopyName();
   const modes = modesOf(theme);
   const m: Mode = modes.includes(mode) ? mode : modes[0]!;
   const map: RoleMap | undefined = scheme[m] ?? scheme[m === "light" ? "dark" : "light"];
   const inherited = !scheme[m];
 
   const setScheme = (patch: Partial<Scheme>, key?: string) =>
-    update((t) => ({ ...t, schemes: t.schemes.map((s) => (s.id === scheme.id ? { ...s, ...patch } : s)) }), key);
+    update((th) => ({ ...th, schemes: th.schemes.map((s) => (s.id === scheme.id ? { ...s, ...patch } : s)) }), key);
 
   const setRole = (role: Role, ref: RoleRef | undefined, key?: string) => {
     const base = { ...(map ?? ({} as RoleMap)) } as Record<string, RoleRef | undefined>;
@@ -150,63 +134,63 @@ export function SchemeDetail({
         <SchemePreview theme={theme} scheme={scheme.id} mode={m} size="lg" className="ring-1 ring-border" />
         {modes.length > 1 && (
           <ToggleGroup type="single" variant="outline" size="sm" value={m} onValueChange={(v) => v && setMode(v as Mode)} className="w-full">
-            <ToggleGroupItem value="light" className="flex-1 gap-1.5 text-xs"><Sun className="size-3.5" /> Light</ToggleGroupItem>
-            <ToggleGroupItem value="dark" className="flex-1 gap-1.5 text-xs"><Moon className="size-3.5" /> Dark</ToggleGroupItem>
+            <ToggleGroupItem value="light" className="flex-1 gap-1.5 text-xs"><Sun className="size-3.5" /> {t("light")}</ToggleGroupItem>
+            <ToggleGroupItem value="dark" className="flex-1 gap-1.5 text-xs"><Moon className="size-3.5" /> {t("dark")}</ToggleGroupItem>
           </ToggleGroup>
         )}
         {inherited && (
           <p className="flex items-start gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-xs text-amber-700 dark:text-amber-400">
-            <AlertTriangle className="mt-px size-3.5 shrink-0" /> No {m} colours yet, so it reuses the other mode. Any change below creates the {m} version.
+            <AlertTriangle className="mt-px size-3.5 shrink-0" /> {t("inherited", { mode: m })}
           </p>
         )}
       </div>
 
-      <Group title="Details">
-        <Field label="Name" htmlFor={`sc-name-${scheme.id}`}>
+      <Group title={t("details")}>
+        <Field label={t("name")} htmlFor={`sc-name-${scheme.id}`}>
           <Input id={`sc-name-${scheme.id}`} className="h-8 text-[13px]" value={scheme.name} onChange={(e) => setScheme({ name: e.target.value }, `sname:${scheme.id}`)} />
         </Field>
-        <Field label="Where it’s used" htmlFor={`sc-desc-${scheme.id}`}>
+        <Field label={t("usedFor")} htmlFor={`sc-desc-${scheme.id}`}>
           <Textarea
             id={`sc-desc-${scheme.id}`}
             rows={2}
             className="min-h-0 resize-none text-[13px]"
-            placeholder="e.g. Hero bands and the footer"
+            placeholder={t("usedForPlaceholder")}
             value={scheme.description}
             onChange={(e) => setScheme({ description: e.target.value }, `sdesc:${scheme.id}`)}
           />
         </Field>
         <div className="flex items-center gap-2">
           {scheme.id === theme.defaultScheme ? (
-            <span className="flex h-8 items-center gap-1.5 text-xs text-muted-foreground"><Star className="size-3.5 fill-current" /> Page default</span>
+            <span className="flex h-8 items-center gap-1.5 text-xs text-muted-foreground"><Star className="size-3.5 fill-current" /> {t("pageDefault")}</span>
           ) : (
-            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => update((t) => ({ ...t, defaultScheme: scheme.id }))}>
-              <Star className="size-3.5" /> Make page default
+            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs" onClick={() => update((th) => ({ ...th, defaultScheme: scheme.id }))}>
+              <Star className="size-3.5" /> {t("makeDefault")}
             </Button>
           )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="ml-auto size-8" aria-label="Scheme actions"><MoreHorizontal /></Button>
+              <Button variant="ghost" size="icon" className="ml-auto size-8" aria-label={t("actions")}><MoreHorizontal /></Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
                 onSelect={() => {
                   const id = uniqueSlug(scheme.id, theme.schemes.map((s) => s.id));
-                  update((t) => ({ ...t, schemes: [...t.schemes, { ...structuredClone(scheme), id, name: `${scheme.name} copy` }] }));
+                  update((th) => ({ ...th, schemes: [...th.schemes, { ...structuredClone(scheme), id, name: copyName(scheme.name) }] }));
                   nav.scheme(id);
                 }}
               >
-                <Copy /> Duplicate
+                <Copy /> {t("duplicate")}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"
                 disabled={scheme.id === theme.defaultScheme || theme.schemes.length <= 1}
                 onSelect={() => {
-                  update((t) => ({ ...t, schemes: t.schemes.filter((s) => s.id !== scheme.id) }));
+                  update((th) => ({ ...th, schemes: th.schemes.filter((s) => s.id !== scheme.id) }));
                   nav.go("schemes");
                 }}
               >
-                <Trash2 /> Delete scheme
+                <Trash2 /> {t("delete")}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -214,7 +198,7 @@ export function SchemeDetail({
       </Group>
 
       {roleGroups.map((g) => (
-        <Group key={g.title} title={g.title}>
+        <Group key={g.id} title={t(`roleGroups.${g.id}`)}>
           <ul className="-mx-1 space-y-1">
             {g.roles.map((role) => (
               <RoleRow
@@ -255,6 +239,8 @@ function RoleRow({
   highlight: boolean;
   onChange: (ref: RoleRef | undefined, key?: string) => void;
 }) {
+  const t = useTranslations("studio.theme.schemes");
+  const roleLabel = useRoleLabel();
   const ref = refValue ? normalizeRef(refValue) : undefined;
   const optional = (optionalRoles as readonly string[]).includes(role);
   const fallback = optional ? roleFallbacks[role as keyof typeof roleFallbacks] : undefined;
@@ -272,10 +258,10 @@ function RoleRow({
         <Swatch color={color} className="size-6 rounded-md" />
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1.5 text-[13px] leading-tight font-medium">
-            {describeRole(role)}
+            {roleLabel(role)}
             {worst && (
               <span
-                title={`${worst.ratio}:1 contrast, needs ${worst.min}:1`}
+                title={t("contrastTitle", { ratio: worst.ratio, min: worst.min })}
                 className={cn(
                   "inline-flex items-center gap-0.5 rounded px-1 py-px font-mono text-[10px] tabular-nums",
                   worst.pass ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400" : worst.ratio < 3 ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-700 dark:text-amber-400",
@@ -286,15 +272,15 @@ function RoleRow({
               </span>
             )}
           </p>
-          <p className="truncate text-[11px] text-muted-foreground">{roleHint[role]}</p>
+          <p className="truncate text-[11px] text-muted-foreground">{t(`roleHints.${role}`)}</p>
         </div>
       </div>
       <div className="mt-1.5 flex items-center gap-1 pl-8">
         <TokenSelect
           theme={theme}
           value={ref?.token}
-          ariaLabel={`${describeRole(role)} colour`}
-          auto={fallback ? `Auto · from ${describeRole(fallback.role)}` : undefined}
+          ariaLabel={t("colourOf", { role: roleLabel(role) })}
+          auto={fallback ? t("autoFrom", { role: roleLabel(fallback.role) }) : undefined}
           onChange={(token) => onChange(token ? (ref?.mix ? { token, mix: ref.mix } : token) : undefined)}
         />
         <Popover>
@@ -304,16 +290,16 @@ function RoleRow({
               size="icon"
               className={cn("relative size-8 shrink-0", hasMix && "text-primary")}
               disabled={!ref}
-              aria-label="Adjust shade"
-              title={ref ? "Adjust shade (lightness, saturation, opacity)" : "Pick a colour first"}
+              aria-label={t("adjustShade")}
+              title={ref ? t("adjustShadeTitle") : t("pickFirst")}
             >
               <SlidersHorizontal className="size-3.5" />
               {hasMix && <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary" />}
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" className="w-64">
-            <p className="mb-1 text-[13px] font-semibold">Adjust {describeRole(role).toLowerCase()}</p>
-            <p className="mb-3 text-xs text-muted-foreground">Tweaks apply only here; the palette colour stays the same.</p>
+            <p className="mb-1 text-[13px] font-semibold">{t("adjustRole", { role: roleLabel(role).toLowerCase() })}</p>
+            <p className="mb-3 text-xs text-muted-foreground">{t("adjustNote")}</p>
             {ref && <MixEditor mix={ref.mix} onChange={(mix) => onChange(mix ? { token: ref.token, mix } : ref.token, `mix:${scheme.id}:${mode}:${role}`)} />}
           </PopoverContent>
         </Popover>

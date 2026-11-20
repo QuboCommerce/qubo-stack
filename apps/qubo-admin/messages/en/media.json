@@ -1,0 +1,132 @@
+{
+  "media": {
+    "page": {
+      "title": "Media",
+      "subtitle": "{organization} · {count, plural, one {# file} other {# files}}, {size}",
+      "storageTitle": "File storage isn't set up",
+      "storageDescription": "Set STORAGE_DIR (a folder on this server) or the STORAGE_ENDPOINT bucket settings, then restart Qubo."
+    },
+    "quickPick": {
+      "title": "Media",
+      "description": "Pick from the library, or drop, paste and upload new files.",
+      "close": "Close"
+    },
+    "browser": {
+      "scopes": {
+        "here": { "label": "Available here", "hint": "This site's files and the shared ones" },
+        "site": { "label": "This site", "hint": "Uploaded on this site only" },
+        "shared": { "label": "Shared", "hint": "Usable by every site of the organisation" },
+        "all": { "label": "All sites", "hint": "Everything in the organisation" }
+      },
+      "kinds": {
+        "all": "All",
+        "image": "Images",
+        "video": "Videos"
+      },
+      "lenses": {
+        "all": { "label": "All files", "hint": "Everything, newest first", "empty": "No files yet. Drop, paste or click to upload." },
+        "scratch": {
+          "label": "Scratch",
+          "hint": "Files nothing uses and nobody tagged. Anything goes here.",
+          "empty": "Scratch is empty. Uploads that aren't used or tagged yet land here."
+        },
+        "products": { "label": "Products", "hint": "Photos in product galleries", "empty": "No product photo comes from the library yet." },
+        "pages": { "label": "Pages", "hint": "Files used on pages", "empty": "No page uses a library file yet." },
+        "design": { "label": "Theme & layout", "hint": "Logos, favicon, share image, headers, footers and templates", "empty": "No logo or layout file yet." },
+        "blog": { "label": "Blog", "hint": "Blog post covers", "empty": "No blog cover comes from the library yet." },
+        "documents": { "label": "Documents", "hint": "PDF, text, Markdown, CSV and JSON files", "empty": "No documents yet. PDF, TXT, MD, CSV and JSON files go here." }
+      },
+      "recent": "Recent",
+      "lensesLabel": "Lenses",
+      "searchProductsPlaceholder": "Search by name or reference, e.g. JBM-",
+      "searchFilesPlaceholder": "Search names, alt text and tags",
+      "searchProducts": "Search products",
+      "searchFiles": "Search files",
+      "photos": "Photos",
+      "allProducts": "All products",
+      "withoutPhotos": "Without photos",
+      "withoutPhotosHint": "Products that still need a photo",
+      "sites": "Sites",
+      "kind": "Kind",
+      "upload": "Upload",
+      "tags": "Tags",
+      "dismiss": "Dismiss",
+      "noMatch": "Nothing matches that search.",
+      "limits": "Images up to 20 MB (JPG, PNG, WebP, AVIF, GIF, SVG), MP4/WebM up to 100 MB, PDF, TXT, MD, CSV and JSON.",
+      "files": "Files",
+      "shared": "Shared",
+      "select": "Select {name}",
+      "loadMore": "Load more",
+      "selectedCount": "{count} selected",
+      "pickHint": "Click to select, double-click to insert",
+      "cancel": "Cancel",
+      "insert": "Insert",
+      "dropToUpload": "Drop to upload",
+      "uploadFailed": "Upload failed ({status}).",
+      "uploadFailedGeneric": "Upload failed.",
+      "uploadedToTag": "Uploaded to the “{tag}” tag. Add the files to a product or a page to file them there.",
+      "uploadedToScratch": "Uploaded to Scratch. Add the files to a product or a page to file them there."
+    },
+    "bulk": {
+      "label": "Selected files",
+      "selected": "{count} selected",
+      "tagPlaceholder": "Tag selected files",
+      "share": "Share with all sites",
+      "keep": "Keep to this site",
+      "confirmDelete": "{count, plural, one {Delete # file for good?} other {Delete # files for good?}}",
+      "delete": "Delete",
+      "keepFiles": "Keep",
+      "clear": "Clear selection"
+    },
+    "details": {
+      "label": "File details",
+      "fileName": "File name",
+      "close": "Close details",
+      "open": "Open",
+      "type": "Type",
+      "size": "Size",
+      "dimensions": "Dimensions",
+      "added": "Added",
+      "altText": "Alt text",
+      "altPlaceholder": "Describe the image for screen readers and search engines",
+      "tags": "Tags",
+      "sharedTitle": "Shared with all sites",
+      "sharedOtherSite": "Uploaded on another site",
+      "sharedHint": "Every site in the organisation can use it",
+      "usedIn": "Used in",
+      "checking": "Checking…",
+      "notUsed": "Not used yet.",
+      "notUsedScratch": "Not used yet, so it sits in Scratch.",
+      "untitledPage": "Untitled page",
+      "copyLink": "Copy link",
+      "copied": "Copied",
+      "usedConfirm": "{count, plural, one {Used in # place. It will lose this file.} other {Used in # places. They will lose this file.}}",
+      "deleteConfirm": "Delete this file for good?",
+      "delete": "Delete",
+      "keep": "Keep"
+    },
+    "tags": {
+      "add": "Add a tag",
+      "addButton": "Add tag",
+      "remove": "Remove tag {tag}"
+    },
+    "products": {
+      "emptySearch": "No product matches that name or reference.",
+      "emptyMissing": "Every product has at least one photo.",
+      "empty": "No products on this site yet.",
+      "list": "Products",
+      "loadMore": "Load more",
+      "openPhotos": "Open the photos of {name}",
+      "noReference": "No reference",
+      "archived": "Archived",
+      "noPhotos": "No photos yet",
+      "galleryDescription": "The first photo is the main one. Changes save right away and show in the product editor.",
+      "notLoaded": "This product could not be loaded. It may have been deleted.",
+      "openEditor": "Open in the product editor"
+    },
+    "errors": {
+      "notFound": "File not found.",
+      "someKept": "{count, plural, one {# file was kept: only the uploader or an organisation admin can delete it.} other {# files were kept: only the uploader or an organisation admin can delete them.}}"
+    }
+  }
+}

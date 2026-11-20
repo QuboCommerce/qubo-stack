@@ -1,10 +1,13 @@
 "use client";
 
+import { useLocale, useTranslations } from "next-intl";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 export function SalesChart({ data, currency }: { data: { day: string; sales: number; orders: number }[]; currency: string }) {
+  const t = useTranslations("dashboard.sales");
+  const locale = useLocale();
   const empty = data.every((d) => d.sales === 0);
-  const fmt = new Intl.NumberFormat("en-BE", { style: "currency", currency, notation: "compact" });
+  const fmt = new Intl.NumberFormat(locale, { style: "currency", currency, notation: "compact" });
   return (
     <div className="relative h-56 w-full @min-[40rem]:h-64 @min-[100rem]:h-72">
       <ResponsiveContainer width="100%" height="100%">
@@ -22,7 +25,7 @@ export function SalesChart({ data, currency }: { data: { day: string; sales: num
             axisLine={false}
             minTickGap={28}
             tick={{ fontSize: 11, fill: "var(--color-muted-foreground)" }}
-            tickFormatter={(d: string) => new Date(d).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+            tickFormatter={(d: string) => new Date(d).toLocaleDateString(locale, { day: "numeric", month: "short" })}
           />
           <YAxis
             tickLine={false}
@@ -36,8 +39,8 @@ export function SalesChart({ data, currency }: { data: { day: string; sales: num
             <Tooltip
               cursor={{ stroke: "var(--color-border)" }}
               contentStyle={{ borderRadius: 10, border: "1px solid var(--color-border)", background: "var(--color-popover)", fontSize: 12 }}
-              formatter={(v) => [fmt.format(Number(v)), "Sales"]}
-              labelFormatter={(d) => new Date(String(d)).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}
+              formatter={(v) => [fmt.format(Number(v)), t("series")]}
+              labelFormatter={(d) => new Date(String(d)).toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" })}
             />
           )}
           <Area type="monotone" dataKey="sales" stroke="var(--color-chart-1)" strokeWidth={2} fill="url(#sales-fill)" />
@@ -46,7 +49,7 @@ export function SalesChart({ data, currency }: { data: { day: string; sales: num
       {empty && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">
           <div className="rounded-full border bg-card/90 px-3 py-1.5 text-xs text-muted-foreground shadow-sm backdrop-blur">
-            No sales in this period yet
+            {t("empty")}
           </div>
         </div>
       )}

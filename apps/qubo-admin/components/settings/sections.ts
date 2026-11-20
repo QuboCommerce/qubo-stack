@@ -22,62 +22,66 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+export type SettingsSlug =
+  | "general" | "business" | "brand" | "domains" | "languages" | "notifications" | "inbox" | "users" | "ai" | "sites" | "portal" | "security"
+  | "payments" | "checkout" | "shipping" | "taxes" | "catalog" | "policies" | "privacy" | "integrations" | "storage";
+
+export type SettingsGroupId = "site" | "organization" | "account" | "commerce" | "legal";
+
+/** Labels and descriptions live in the `settings.sections` messages, keyed by slug. */
 export type SettingsSection = {
-  slug: string;
-  label: string;
-  /** Used by search and page headers — never rendered in the nav itself. */
-  description: string;
+  slug: SettingsSlug;
   icon: LucideIcon;
   requires?: string;
   /** false = placeholder page until its milestone lands. */
   ready?: boolean;
 };
 
-export const settingsGroups: { label: string; items: SettingsSection[] }[] = [
+export const settingsGroups: { id: SettingsGroupId; items: SettingsSection[] }[] = [
   {
-    label: "Site",
+    id: "site",
     items: [
-      { slug: "general", label: "General", description: "Name, site type, features and currency.", icon: Building2, ready: true },
-      { slug: "business", label: "Business & SEO", description: "Contact details, opening hours, legal identity and how the site appears in search.", icon: Store, ready: true },
-      { slug: "brand", label: "Brand", description: "Logo variants, favicon and social sharing image.", icon: Palette },
-      { slug: "domains", label: "Domains", description: "Web addresses that point to this site.", icon: Globe, ready: true },
-      { slug: "languages", label: "Languages", description: "Primary language and published translations.", icon: Languages, ready: true },
-      { slug: "notifications", label: "Notifications", description: "Emails sent to customers and staff.", icon: Bell },
-      { slug: "inbox", label: "Inbox", description: "Forms, e-mail in and out, and who is notified of new messages.", icon: Inbox, requires: "leads", ready: true },
+      { slug: "general", icon: Building2, ready: true },
+      { slug: "business", icon: Store, ready: true },
+      { slug: "brand", icon: Palette },
+      { slug: "domains", icon: Globe, ready: true },
+      { slug: "languages", icon: Languages, ready: true },
+      { slug: "notifications", icon: Bell },
+      { slug: "inbox", icon: Inbox, requires: "leads", ready: true },
     ],
   },
   {
-    label: "Organization",
+    id: "organization",
     items: [
-      { slug: "users", label: "Users & permissions", description: "Who can access this organization and what they can do.", icon: Users, ready: true },
-      { slug: "ai", label: "AI", description: "Your own AI provider and key for inbox triage and reply drafts.", icon: Sparkles, ready: true },
-      { slug: "sites", label: "Sites", description: "Every site this organization runs from one admin.", icon: AppWindow, ready: true },
-      { slug: "portal", label: "Qubo Portal", description: "Optional link to a Portal account: plan, licence and update notices.", icon: Plug, ready: true },
+      { slug: "users", icon: Users, ready: true },
+      { slug: "ai", icon: Sparkles, ready: true },
+      { slug: "sites", icon: AppWindow, ready: true },
+      { slug: "portal", icon: Plug, ready: true },
     ],
   },
   {
-    label: "Your account",
+    id: "account",
     items: [
-      { slug: "security", label: "Security & sessions", description: "Devices signed in to your account and where they are.", icon: ShieldCheck, ready: true },
+      { slug: "security", icon: ShieldCheck, ready: true },
     ],
   },
   {
-    label: "Commerce",
+    id: "commerce",
     items: [
-      { slug: "payments", label: "Payments", description: "Payment providers, payouts and capture.", icon: CreditCard, requires: "commerce" },
-      { slug: "checkout", label: "Checkout", description: "Customer accounts and checkout fields.", icon: Receipt, requires: "commerce" },
-      { slug: "shipping", label: "Shipping & delivery", description: "Zones, rates and local pickup.", icon: Truck, requires: "commerce" },
-      { slug: "taxes", label: "Taxes & duties", description: "VAT rates and tax-inclusive pricing.", icon: Percent, requires: "commerce" },
-      { slug: "catalog", label: "Catalog", description: "Product types, custom fields and units.", icon: Package, requires: "catalog" },
+      { slug: "payments", icon: CreditCard, requires: "commerce" },
+      { slug: "checkout", icon: Receipt, requires: "commerce" },
+      { slug: "shipping", icon: Truck, requires: "commerce" },
+      { slug: "taxes", icon: Percent, requires: "commerce" },
+      { slug: "catalog", icon: Package, requires: "catalog" },
     ],
   },
   {
-    label: "Legal & advanced",
+    id: "legal",
     items: [
-      { slug: "policies", label: "Policies", description: "Refund, privacy and terms of service.", icon: Scale },
-      { slug: "privacy", label: "Privacy & access", description: "Password page, maintenance mode and cookie banner.", icon: Lock },
-      { slug: "integrations", label: "Integrations", description: "Analytics, pixels, chat and embeds.", icon: Plug },
-      { slug: "storage", label: "Media storage", description: "Storage bucket, usage and image delivery.", icon: HardDrive },
+      { slug: "policies", icon: Scale },
+      { slug: "privacy", icon: Lock },
+      { slug: "integrations", icon: Plug },
+      { slug: "storage", icon: HardDrive },
     ],
   },
 ];

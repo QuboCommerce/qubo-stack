@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { ArrowRightLeft, Building2, Rocket, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { moveDraftSiteAction, publishSiteAction, purgeSiteAction, restoreSiteAction, trashSiteAction } from "@/app/site-ownership-actions";
 import { Button } from "@/components/ui/button";
@@ -49,38 +50,40 @@ function useResult(state: ActionState, done: string, close: () => void) {
 
 /** First publish: the organisation is chosen and confirmed here, because it can't change afterwards. */
 export function PublishSiteDialog({ site, siteName, currentOrgId, orgs }: { site: string; siteName: string; currentOrgId: string; orgs: OrgOption[] }) {
+  const t = useTranslations("settings.ownership");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [org, setOrg] = useState(orgs.some((o) => o.id === currentOrgId) ? currentOrgId : (orgs[0]?.id ?? ""));
   const [confirmed, setConfirmed] = useState(false);
   const [state, action, pending] = useActionState(publishSiteAction, null);
-  useResult(state, `${siteName} is live`, () => setOpen(false));
+  useResult(state, t("publish.done", { name: siteName }), () => setOpen(false));
   const chosen = orgs.find((o) => o.id === org);
 
   return (
     <Dialog open={open} onOpenChange={(v) => (setOpen(v), setConfirmed(false))}>
       <DialogTrigger asChild>
-        <Button size="sm"><Rocket /> Publish</Button>
+        <Button size="sm"><Rocket /> {t("publish.button")}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form action={action} className="grid gap-4">
           <input type="hidden" name="site" value={site} />
           <DialogHeader>
-            <DialogTitle>Publish {siteName}</DialogTitle>
+            <DialogTitle>{t("publish.title", { name: siteName })}</DialogTitle>
             <DialogDescription>
-              The site goes live on its domains. It will belong to the organisation below for good: orders, invoices and customers are recorded under that company.
+              {t("publish.description")}
             </DialogDescription>
           </DialogHeader>
           <OrgPicker orgs={orgs} value={org} onChange={setOrg} />
           <label className="flex items-start gap-2.5 text-sm">
             <input type="checkbox" name="confirm" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-4 accent-foreground" />
             <span>
-              Publish under <span className="font-medium">{chosen?.legalName ?? chosen?.name ?? "this organisation"}</span>. I understand a published site can&apos;t be moved to another organisation.
+              {t.rich("publish.confirm", { org: chosen?.legalName ?? chosen?.name ?? t("publish.thisOrg"), b: (c) => <span className="font-medium">{c}</span> })}
             </span>
           </label>
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-            <Button type="submit" disabled={!confirmed || !org || pending}>{pending ? "Publishing…" : "Publish"}</Button>
+            <DialogClose asChild><Button type="button" variant="ghost">{tc("cancel")}</Button></DialogClose>
+            <Button type="submit" disabled={!confirmed || !org || pending}>{pending ? t("publish.publishing") : t("publish.button")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -90,30 +93,32 @@ export function PublishSiteDialog({ site, siteName, currentOrgId, orgs }: { site
 
 /** Drafts only: free, any time, between organisations you manage. */
 export function MoveDraftDialog({ site, siteName, currentOrgId, orgs }: { site: string; siteName: string; currentOrgId: string; orgs: OrgOption[] }) {
+  const t = useTranslations("settings.ownership");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const others = orgs.filter((o) => o.id !== currentOrgId);
   const [org, setOrg] = useState(others[0]?.id ?? "");
   const [state, action, pending] = useActionState(moveDraftSiteAction, null);
-  useResult(state, `${siteName} transferred`, () => setOpen(false));
+  useResult(state, t("move.done", { name: siteName }), () => setOpen(false));
   if (!others.length) return null;
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline"><ArrowRightLeft /> Transfer</Button>
+        <Button size="sm" variant="outline"><ArrowRightLeft /> {t("move.button")}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form action={action} className="grid gap-4">
           <input type="hidden" name="site" value={site} />
           <DialogHeader>
-            <DialogTitle>Transfer {siteName}</DialogTitle>
-            <DialogDescription>Drafts can be transferred freely. The site&apos;s media and the organisation&apos;s fonts come along.</DialogDescription>
+            <DialogTitle>{t("move.title", { name: siteName })}</DialogTitle>
+            <DialogDescription>{t("move.description")}</DialogDescription>
           </DialogHeader>
           <OrgPicker orgs={others} value={org} onChange={setOrg} />
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-            <Button type="submit" disabled={!org || pending}>{pending ? "Transferring…" : "Transfer"}</Button>
+            <DialogClose asChild><Button type="button" variant="ghost">{tc("cancel")}</Button></DialogClose>
+            <Button type="submit" disabled={!org || pending}>{pending ? t("move.moving") : t("move.button")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -123,10 +128,12 @@ export function MoveDraftDialog({ site, siteName, currentOrgId, orgs }: { site: 
 
 /** Draft to the recycle bin. When the current site goes, the page moves to a site that still exists. */
 export function TrashSiteButton({ siteId, siteName, isCurrent, nextHref, retentionDays }: { siteId: string; siteName: string; isCurrent: boolean; nextHref: string; retentionDays: number }) {
+  const t = useTranslations("settings.ownership");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const [state, action, pending] = useActionState(trashSiteAction, null);
-  useResult(state, `${siteName} moved to the recycle bin`, () => {
+  useResult(state, t("trash.done", { name: siteName }), () => {
     setOpen(false);
     if (isCurrent) router.replace(nextHref);
   });
@@ -134,7 +141,7 @@ export function TrashSiteButton({ siteId, siteName, isCurrent, nextHref, retenti
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="icon-sm" variant="ghost" aria-label={`Delete ${siteName}`} title="Delete" className="text-muted-foreground hover:text-destructive">
+        <Button size="icon-sm" variant="ghost" aria-label={t("trash.label", { name: siteName })} title={tc("delete")} className="text-muted-foreground hover:text-destructive">
           <Trash2 />
         </Button>
       </DialogTrigger>
@@ -142,15 +149,15 @@ export function TrashSiteButton({ siteId, siteName, isCurrent, nextHref, retenti
         <form action={action} className="grid gap-4">
           <input type="hidden" name="siteId" value={siteId} />
           <DialogHeader>
-            <DialogTitle>Delete {siteName}?</DialogTitle>
+            <DialogTitle>{t("trash.title", { name: siteName })}</DialogTitle>
             <DialogDescription>
-              It goes to the recycle bin at the bottom of this page, with its pages, theme, products and domains. You can restore it for {retentionDays} days; after that it is deleted for good.
+              {t("trash.description", { days: retentionDays })}
             </DialogDescription>
           </DialogHeader>
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-            <Button type="submit" variant="destructive" disabled={pending}>{pending ? "Deleting…" : "Delete site"}</Button>
+            <DialogClose asChild><Button type="button" variant="ghost">{tc("cancel")}</Button></DialogClose>
+            <Button type="submit" variant="destructive" disabled={pending}>{pending ? t("deleting") : t("trash.confirm")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>
@@ -159,12 +166,14 @@ export function TrashSiteButton({ siteId, siteName, isCurrent, nextHref, retenti
 }
 
 export function RestoreSiteButton({ siteId, siteName }: { siteId: string; siteName: string }) {
+  const t = useTranslations("settings.ownership");
+  const tc = useTranslations("common");
   const [state, action, pending] = useActionState(restoreSiteAction, null);
-  useResult(state, `${siteName} restored`, () => {});
+  useResult(state, t("restore.done", { name: siteName }), () => {});
   return (
     <form action={action} className="contents">
       <input type="hidden" name="siteId" value={siteId} />
-      <Button size="sm" variant="outline" type="submit" disabled={pending}><RotateCcw /> {pending ? "Restoring…" : "Restore"}</Button>
+      <Button size="sm" variant="outline" type="submit" disabled={pending}><RotateCcw /> {pending ? t("restore.restoring") : t("restore.button")}</Button>
       {state?.error && <span className="text-xs text-destructive">{state.error}</span>}
     </form>
   );
@@ -172,31 +181,33 @@ export function RestoreSiteButton({ siteId, siteName }: { siteId: string; siteNa
 
 /** Permanent delete before the retention period ends. */
 export function PurgeSiteButton({ siteId, siteName }: { siteId: string; siteName: string }) {
+  const t = useTranslations("settings.ownership");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const [state, action, pending] = useActionState(purgeSiteAction, null);
-  useResult(state, `${siteName} deleted for good`, () => setOpen(false));
+  useResult(state, t("purge.done", { name: siteName }), () => setOpen(false));
 
   return (
     <Dialog open={open} onOpenChange={(v) => (setOpen(v), setConfirmed(false))}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">Delete now</Button>
+        <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-destructive">{t("purge.button")}</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <form action={action} className="grid gap-4">
           <input type="hidden" name="siteId" value={siteId} />
           <DialogHeader>
-            <DialogTitle>Delete {siteName} for good?</DialogTitle>
-            <DialogDescription>Everything in it is removed now: pages, theme, products, customers, orders, media and domains. There is no way back.</DialogDescription>
+            <DialogTitle>{t("purge.title", { name: siteName })}</DialogTitle>
+            <DialogDescription>{t("purge.description")}</DialogDescription>
           </DialogHeader>
           <label className="flex items-start gap-2.5 text-sm">
             <input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} className="mt-0.5 size-4 accent-foreground" />
-            <span>I understand this can&apos;t be undone.</span>
+            <span>{t("purge.confirm")}</span>
           </label>
           {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
           <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="ghost">Cancel</Button></DialogClose>
-            <Button type="submit" variant="destructive" disabled={!confirmed || pending}>{pending ? "Deleting…" : "Delete for good"}</Button>
+            <DialogClose asChild><Button type="button" variant="ghost">{tc("cancel")}</Button></DialogClose>
+            <Button type="submit" variant="destructive" disabled={!confirmed || pending}>{pending ? t("deleting") : t("purge.confirmButton")}</Button>
           </DialogFooter>
         </form>
       </DialogContent>

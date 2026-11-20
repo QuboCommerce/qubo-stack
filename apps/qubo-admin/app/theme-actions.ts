@@ -2,6 +2,7 @@
 
 import * as studio from "@qubo/studio";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireSite } from "@/lib/admin";
 import type { SaveOutcome } from "./studio-actions";
 import { emitThemePublished } from "@/lib/events";
@@ -16,15 +17,22 @@ const canPublish = (role: string) => role === "OWNER" || role === "ADMIN";
 
 async function context(slug: string, needsPublish = false) {
   const { user, site } = await requireSite(slug);
-  if (needsPublish && !canPublish(site.memberRole)) throw new studio.StudioError("forbidden", "Only owners and admins can publish.");
+  if (needsPublish && !canPublish(site.memberRole)) {
+    const t = await getTranslations("onlineStore.errors");
+    throw new studio.StudioError("forbidden", t("onlyAdmins"));
+  }
   return { scope: { siteId: site.id, userId: user.id } satisfies studio.Scope, site };
 }
 
-function message(e: unknown) {
-  if (e instanceof studio.ValidationError) return e.issues[0] ? `Theme is invalid: ${e.issues[0].path} ${e.issues[0].message}` : e.message;
+async function message(e: unknown) {
+  const t = await getTranslations("onlineStore.errors");
+  if (e instanceof studio.ValidationError) {
+    const issue = e.issues[0];
+    return issue ? t("themeInvalid", { path: String(issue.path), message: issue.message }) : e.message;
+  }
   if (e instanceof studio.StudioError) return e.message;
   console.error("[theme-action]", e);
-  return "Something went wrong. Your theme changes are still in the editor.";
+  return t("themeGeneric");
 }
 
 export async function saveThemeDraftAction(
@@ -48,7 +56,7 @@ export async function saveThemeDraftAction(
     if (e instanceof studio.ConflictError) {
       return { ok: false, conflict: { version: e.current.version, updatedAt: e.current.updatedAt.toISOString(), updatedByName: null } };
     }
-    return { ok: false, error: message(e) };
+    return { ok: false, error: await message(e) };
   }
 }
 
@@ -58,7 +66,7 @@ export async function loadThemeAction(slug: string, themeId: string) {
     const t = await studio.getTheme(scope, themeId);
     return { ok: true as const, data: t.draft as unknown, version: t.draftVersion, hasUnpublishedChanges: t.hasUnpublishedChanges };
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -73,7 +81,7 @@ export async function publishThemeAction(slug: string, input: { themeId: string;
     revalidatePath(`/${site.slug}/online-store`);
     return { ok: true as const, version: res.version, publishedAt: res.publishedAt.toISOString() };
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -82,11 +90,11 @@ export async function discardThemeDraftAction(slug: string, themeId: string) {
   try {
     const { scope } = await context(slug);
     const t = await studio.getTheme(scope, themeId);
-    if (!t.published) return { ok: false as const, error: "This theme has never been published." };
+    if (!t.published) return { ok: false as const, error: (await getTranslations("onlineStore.errors"))("neverPublished") };
     await studio.saveThemeDraft(scope, { id: themeId, data: t.published, baseVersion: t.draftVersion });
     return loadThemeAction(slug, themeId);
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }
 
@@ -101,7 +109,7 @@ export async function listThemeRevisionsAction(
     const rows = await studio.listThemeRevisions(scope, themeId);
     return { ok: true, revisions: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })) };
   } catch (e) {
-    return { ok: false, error: message(e) };
+    return { ok: false, error: await message(e) };
   }
 }
 
@@ -111,6 +119,6 @@ export async function restoreThemeRevisionAction(slug: string, input: { themeId:
     await studio.restoreThemeRevision(scope, { id: input.themeId, revisionId: input.revisionId });
     return loadThemeAction(slug, input.themeId);
   } catch (e) {
-    return { ok: false as const, error: message(e) };
+    return { ok: false as const, error: await message(e) };
   }
 }

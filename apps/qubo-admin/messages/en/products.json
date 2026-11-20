@@ -1,0 +1,207 @@
+{
+  "products": {
+    "status": {
+      "active": "Active",
+      "archived": "Archived"
+    },
+    "list": {
+      "title": "Products",
+      "import": "Import",
+      "add": "Add product",
+      "emptyTitle": "Add your first product",
+      "emptyDescription": "Products appear on your storefront once they're active.",
+      "searchPlaceholder": "Search by name, brand or handle",
+      "view": "View",
+      "listView": "List view",
+      "gridView": "Grid view",
+      "tabs": {
+        "all": "All",
+        "active": "Active",
+        "archived": "Archived"
+      },
+      "noResultsTitle": "No products found",
+      "noResultsCategory": "Nothing matches in this category. Try another one or clear the filter.",
+      "noResults": "Try changing the filters or search term.",
+      "clearCategory": "Clear category",
+      "inStock": "{count, number} in stock",
+      "notTracked": "Not tracked",
+      "restore": "Restore",
+      "archive": "Archive",
+      "columns": {
+        "product": "Product",
+        "status": "Status",
+        "inventory": "Inventory",
+        "variants": "Variants",
+        "brand": "Brand",
+        "updated": "Updated",
+        "price": "Price",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "addTitle": "Add product",
+      "cards": {
+        "details": "Details",
+        "media": "Media",
+        "pricing": "Pricing",
+        "variants": "Variants",
+        "shipping": "Shipping",
+        "seo": "Search engine listing",
+        "status": "Status",
+        "organisation": "Organisation"
+      },
+      "fields": {
+        "title": "Title",
+        "titlePlaceholder": "e.g. Upright refrigerated cabinet 700 L",
+        "description": "Description",
+        "descriptionHint": "Plain text for now. Line breaks are kept.",
+        "price": "Price ({currency})",
+        "compareAt": "Compare-at price",
+        "compareAtHint": "Shown struck through when higher than the price.",
+        "weight": "Weight",
+        "width": "Width",
+        "height": "Height",
+        "depth": "Depth",
+        "handle": "Handle",
+        "handleHint": "{path} · Leave empty to generate it from the title.",
+        "pageTitle": "Page title",
+        "metaDescription": "Meta description",
+        "status": "Status",
+        "brand": "Brand",
+        "categories": "Categories",
+        "manage": "Manage"
+      },
+      "mediaNew": "Save the product first, then add images.",
+      "mediaHint": "The first image is the main one. Changes save right away.",
+      "variantsHint": "Pick the photos of each variant from the gallery. Prices and options come with the variant builder.",
+      "variantColumns": {
+        "variant": "Variant",
+        "sku": "SKU",
+        "photos": "Photos",
+        "price": "Price"
+      },
+      "shippingHint": "Weight in kg, dimensions in cm.",
+      "featured": "Featured",
+      "featuredHint": "Highlighted in featured product sections.",
+      "noCategories": "No categories yet.",
+      "updated": "Updated {time}",
+      "updatedLegacy": "Updated {time} · Legacy #{id}"
+    },
+    "media": {
+      "makeMain": "Make main image",
+      "moveLeft": "Move left",
+      "moveRight": "Move right",
+      "remove": "Remove image",
+      "add": "Add images",
+      "pickerTitle": "Product images"
+    },
+    "variantImages": {
+      "trigger": "Photos of {name}",
+      "empty": "Product photos",
+      "title": "Photos of {name}",
+      "pickHint": "Pick from the product gallery. If none is picked, the variant shows the product photos.",
+      "galleryEmpty": "Add photos to the product gallery first.",
+      "photo": "Product photo"
+    },
+    "thumb": {
+      "noImage": "No image"
+    },
+    "errors": {
+      "price": "Prices use numbers like 1299.00.",
+      "positiveNumber": "Use a positive number.",
+      "titleLength": "The title needs at least 2 characters.",
+      "handleFormat": "The handle uses lowercase letters, numbers and dashes.",
+      "priceRequired": "Enter a price.",
+      "checkFields": "Check the highlighted fields.",
+      "notFound": "Product not found on this site.",
+      "deleted": "This product was deleted by someone else.",
+      "handleTaken": "Another product already uses this handle.",
+      "categoryGone": "One of the categories no longer exists. Reload the page and try again.",
+      "race": "Someone saved this at the same moment. Save again to merge their changes.",
+      "generic": "Something went wrong.",
+      "invalidImages": "Invalid images.",
+      "productMissing": "Product not found.",
+      "variantMissing": "Variant not found."
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "subtitle": "{count, plural, one {# category} other {# categories}} · {uncategorised, plural, one {# product without one} other {# products without one}}",
+    "add": "Add category",
+    "addSub": "Add subcategory",
+    "emptyTitle": "Organise your catalogue",
+    "emptyDescription": "Categories group products on your storefront and in navigation menus.",
+    "pickTitle": "Pick a category to edit it",
+    "pickUncategorised": "{count, plural, one {# product doesn't have a category yet. Open it and tick a category under Organisation.} other {# products don't have a category yet. Open one and tick a category under Organisation.}}",
+    "pickDescription": "Rename, move or reorder categories, and see the products inside each one.",
+    "showUncategorised": "Show uncategorised products",
+    "breadcrumb": "Breadcrumb",
+    "all": "All categories",
+    "none": "Uncategorised",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "positionInParent": "{index} of {total} in “{parent}”",
+    "positionTop": "{index} of {total} at the top level",
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "descriptionHint": "Shown at the top of the category page on the storefront.",
+      "parent": "Parent category",
+      "parentNone": "None (top level)",
+      "handle": "Handle"
+    },
+    "products": {
+      "title": "Products",
+      "countDirect": "{count, number} in this category",
+      "countBoth": "{direct, number} directly here · {total, number} including subcategories",
+      "viewAll": "View all",
+      "inSubcategories": "Products are in its subcategories.",
+      "none": "No products yet. Add them from a product's Organisation card.",
+      "archived": "Archived"
+    },
+    "imported": "Imported from ShopApplication #{id}",
+    "filter": {
+      "label": "Category"
+    },
+    "tree": {
+      "none": "No category yet. Uncategorised products don't appear on category pages.",
+      "unknown": "Unknown",
+      "remove": "Remove {name}",
+      "removeFallback": "category",
+      "filter": "Filter categories",
+      "collapseAll": "Collapse all",
+      "expandAll": "Expand all",
+      "collapse": "Collapse {name}",
+      "expand": "Expand {name}",
+      "noMatch": "No category matches “{query}”."
+    },
+    "delete": {
+      "button": "Delete",
+      "submit": "Delete category",
+      "cancel": "Cancel",
+      "title": "Delete “{name}”?",
+      "description": "No product is deleted.",
+      "childrenToParent": "{count, plural, one {Its # subcategory moves up to “{parent}”.} other {Its # subcategories move up to “{parent}”.}}",
+      "childrenToTop": "{count, plural, one {Its # subcategory moves up to the top level.} other {Its # subcategories move up to the top level.}}",
+      "products": "{count, plural, one {# product loses this category.} other {# products lose this category.}}",
+      "noProducts": "No products are in this category."
+    },
+    "defaults": {
+      "newCategory": "New category",
+      "newSubcategory": "New subcategory"
+    },
+    "errors": {
+      "nameRequired": "Give the category a name.",
+      "handleFormat": "The handle uses lowercase letters, numbers and dashes.",
+      "checkFields": "Check the highlighted fields.",
+      "deleted": "This category was deleted by someone else.",
+      "notFound": "Category not found on this site.",
+      "parentGone": "The parent category no longer exists.",
+      "moveInside": "A category can't be moved inside itself.",
+      "handleTaken": "Another category already uses this handle.",
+      "parentNotFound": "Parent category not found on this site.",
+      "race": "Someone saved this at the same moment. Save again to merge their changes.",
+      "generic": "Something went wrong."
+    }
+  }
+}

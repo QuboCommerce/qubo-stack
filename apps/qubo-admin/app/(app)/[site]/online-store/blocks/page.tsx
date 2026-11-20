@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Blocks, Lock, Search } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 import { blockCategories, registry, type BlockCategory } from "@qubo/blocks";
 import { builtInThemes } from "@qubo/stylekit";
 import { BlockFrame } from "@/components/block-frame";
@@ -10,21 +11,21 @@ import { requireSite } from "@/lib/admin";
 import { cn } from "@qubo/shared/utils";
 
 type Search = { q?: string; kind?: string; theme?: string };
-const kinds = [
-  { id: "all", label: "All" },
-  { id: "section", label: "Sections" },
-  { id: "layout", label: "Layout" },
-  { id: "element", label: "Elements" },
-];
+const kinds = ["all", "section", "layout", "element"] as const;
 
-export const metadata = { title: "Block library" };
+export async function generateMetadata() {
+  const t = await getTranslations("onlineStore.blocks");
+  return { title: t("title") };
+}
 
 export default async function BlockLibraryPage({ params, searchParams }: { params: Promise<{ site: string }>; searchParams: Promise<Search> }) {
+  const t = await getTranslations("onlineStore.blocks");
+  const list = new Intl.ListFormat(await getLocale(), { type: "conjunction" });
   const [{ site: slug }, sp] = await Promise.all([params, searchParams]);
   const { site } = await requireSite(slug);
   const caps = new Set<string>(site.capabilities ?? []);
   const theme = sp.theme && sp.theme in builtInThemes ? sp.theme : undefined;
-  const kind = kinds.some((k) => k.id === sp.kind) ? sp.kind! : "all";
+  const kind = kinds.some((k) => k === sp.kind) ? sp.kind! : "all";
   const q = sp.q?.trim().toLowerCase();
   const base = `/${site.slug}/online-store/blocks`;
   const qs = (patch: Partial<Search>) => {
@@ -44,12 +45,12 @@ export default async function BlockLibraryPage({ params, searchParams }: { param
   const byCategory = (Object.keys(blockCategories) as BlockCategory[])
     .map((c) => ({ id: c, label: blockCategories[c], blocks: blocks.filter((b) => b.category === c) }))
     .filter((g) => g.blocks.length);
-  const counts = Object.fromEntries(kinds.map((k) => [k.id, k.id === "all" ? all.length : all.filter((b) => b.kind === k.id).length]));
+  const counts = Object.fromEntries(kinds.map((k) => [k, k === "all" ? all.length : all.filter((b) => b.kind === k).length]));
 
   return (
     <Page
-      title="Block library"
-      subtitle={`${all.length} schema-first blocks · rendered live with ${theme ? builtInThemes[theme as keyof typeof builtInThemes].name : "your site theme"}`}
+      title={t("title")}
+      subtitle={t("subtitle", { count: all.length, theme: theme ? builtInThemes[theme as keyof typeof builtInThemes].name : t("yourTheme") })}
       width="full"
       className="max-w-[140rem]"
     >
@@ -58,14 +59,14 @@ export default async function BlockLibraryPage({ params, searchParams }: { param
           <nav className="flex gap-0.5 overflow-x-auto">
             {kinds.map((k) => (
               <Link
-                key={k.id}
-                href={qs({ kind: k.id })}
+                key={k}
+                href={qs({ kind: k })}
                 className={cn(
                   "flex shrink-0 items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-medium",
-                  kind === k.id ? "bg-accent" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                  kind === k ? "bg-accent" : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                 )}
               >
-                {k.label} <span className="text-xs tabular-nums text-muted-foreground">{counts[k.id]}</span>
+                {t(`kinds.${k}`)} <span className="text-xs tabular-nums text-muted-foreground">{counts[k]}</span>
               </Link>
             ))}
           </nav>
@@ -73,7 +74,7 @@ export default async function BlockLibraryPage({ params, searchParams }: { param
             {kind !== "all" && <input type="hidden" name="kind" value={kind} />}
             {theme && <input type="hidden" name="theme" value={theme} />}
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-            <input name="q" defaultValue={sp.q} placeholder="Search blocks" className="h-8 w-full rounded-lg border bg-background pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-ring/40" />
+            <input name="q" defaultValue={sp.q} placeholder={t("search")} className="h-8 w-full rounded-lg border bg-background pl-8 pr-3 text-[13px] outline-none focus:ring-2 focus:ring-ring/40" />
           </form>
         </div>
         <div className="border-b px-3 py-2">
@@ -82,7 +83,7 @@ export default async function BlockLibraryPage({ params, searchParams }: { param
       </Panel>
 
       {byCategory.length === 0 && (
-        <Panel><EmptyState icon={Blocks} title="No blocks match" description="Try another search or filter." /></Panel>
+        <Panel><EmptyState icon={Blocks} title={t("empty.title")} description={t("empty.description")} /></Panel>
       )}
 
       {byCategory.map((group) => (
@@ -105,11 +106,11 @@ export default async function BlockLibraryPage({ params, searchParams }: { param
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-1.5 text-sm font-medium">
                         {b.label}
-                        {missing.length > 0 && <Lock className="size-3 text-muted-foreground" aria-label={`Requires ${missing.join(", ")}`} />}
+                        {missing.length > 0 && <Lock className="size-3 text-muted-foreground" aria-label={t("requires", { modules: list.format(missing) })} />}
                       </p>
                       <p className="line-clamp-2 text-xs text-muted-foreground">{b.description}</p>
                     </div>
-                    {b.presets.length > 0 && <Badge variant="secondary" className="shrink-0">{b.presets.length} presets</Badge>}
+                    {b.presets.length > 0 && <Badge variant="secondary" className="shrink-0">{t("presets", { count: b.presets.length })}</Badge>}
                   </div>
                 </Link>
               );

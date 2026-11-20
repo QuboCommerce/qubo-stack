@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { BadgePercent } from "lucide-react";
 import { db } from "@qubo/db/client";
 import { product, productImage } from "@qubo/db/schema";
@@ -13,7 +14,7 @@ import { Field, Select, TextInput } from "@/components/settings/controls";
 import { Button } from "@/components/ui/button";
 import { requireSite } from "@/lib/admin";
 import { getCategoryTree } from "@/lib/categories";
-import { assetUrl, money, number } from "@/lib/format";
+import { assetUrl } from "@/lib/format";
 
 type Search = { q?: string; status?: string; page?: string };
 const PER_PAGE = 50;
@@ -21,6 +22,10 @@ const PER_PAGE = 50;
 export default async function SalePricesPage({ params, searchParams }: { params: Promise<{ site: string }>; searchParams: Promise<Search> }) {
   const [{ site: slug }, sp] = await Promise.all([params, searchParams]);
   const { site, siteId } = await requireSite(slug);
+  const t = await getTranslations("promotions");
+  const tc = await getTranslations("common");
+  const format = await getFormatter();
+  const money = (v: number | string) => format.number(Number(v), { style: "currency", currency });
   if (!(site.capabilities ?? []).includes("commerce")) notFound();
   const status = sp.status === "all" ? "all" : "sale";
   const q = sp.q?.trim() ?? "";
@@ -62,15 +67,15 @@ export default async function SalePricesPage({ params, searchParams }: { params:
   const href = (p: number) => `/${site.slug}/promotions?status=${status}${q ? `&q=${encodeURIComponent(q)}` : ""}&page=${p}`;
 
   return (
-    <Page title="Promotions" subtitle={`${number(counts!.sale)} ${counts!.sale === 1 ? "product" : "products"} on sale`} width="wide">
+    <Page title={t("title")} subtitle={t("sales.subtitle", { count: counts!.sale })} width="wide">
       <PromotionsTabs site={site.slug} active="sales" />
 
-      <Panel title="Put a selection on sale" description="Lowers the price by a percentage. The current price becomes the struck-through price, so ending the sale restores it.">
-        <ActionForm action={bulkSale} className="flex flex-wrap items-end gap-3" done="Prices updated">
+      <Panel title={t("sales.bulk.title")} description={t("sales.bulk.description")}>
+        <ActionForm action={bulkSale} className="flex flex-wrap items-end gap-3" done={t("sales.bulk.done")}>
           <input type="hidden" name="site" value={site.slug} />
-          <Field label="Category" htmlFor="bulk-category" className="min-w-56 flex-1">
+          <Field label={t("sales.bulk.category")} htmlFor="bulk-category" className="min-w-56 flex-1">
             <Select id="bulk-category" name="categoryId" defaultValue="">
-              <option value="">Any category</option>
+              <option value="">{t("sales.bulk.anyCategory")}</option>
               {tree.map((c) => (
                 <option key={c.id} value={c.id}>
                   {"\u00a0\u00a0".repeat(c.depth)}
@@ -79,10 +84,10 @@ export default async function SalePricesPage({ params, searchParams }: { params:
               ))}
             </Select>
           </Field>
-          <Field label="Reference or name starts with" htmlFor="bulk-prefix" className="w-56">
+          <Field label={t("sales.bulk.prefix")} htmlFor="bulk-prefix" className="w-56">
             <TextInput id="bulk-prefix" name="prefix" placeholder="JBM-" autoComplete="off" />
           </Field>
-          <Field label="Discount" htmlFor="bulk-percent" className="w-28">
+          <Field label={t("sales.bulk.discount")} htmlFor="bulk-percent" className="w-28">
             <div className="relative">
               <TextInput id="bulk-percent" name="percent" inputMode="decimal" placeholder="15" className="pr-7" />
               <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
@@ -90,10 +95,10 @@ export default async function SalePricesPage({ params, searchParams }: { params:
           </Field>
           <div className="flex gap-2">
             <Button type="submit" name="mode" value="apply" className="group-data-[pending]:opacity-60">
-              Apply discount
+              {t("sales.bulk.apply")}
             </Button>
             <Button type="submit" name="mode" value="end" variant="outline" className="group-data-[pending]:opacity-60">
-              End sale
+              {t("sales.bulk.end")}
             </Button>
           </div>
         </ActionForm>
@@ -104,28 +109,28 @@ export default async function SalePricesPage({ params, searchParams }: { params:
           <IndexToolbar
             basePath={`/${site.slug}/promotions`}
             tabs={[
-              { id: "sale", label: "On sale", count: counts!.sale },
-              { id: "all", label: "All products", count: counts!.all },
+              { id: "sale", label: t("sales.tabs.sale"), count: counts!.sale },
+              { id: "all", label: t("sales.tabs.all"), count: counts!.all },
             ]}
             active={status}
             q={q}
-            placeholder="Search name or reference"
+            placeholder={t("sales.searchPlaceholder")}
           />
         </div>
         {rows.length === 0 ? (
           <EmptyState
             icon={BadgePercent}
-            title={status === "sale" ? "Nothing is on sale" : "No products match"}
-            description={status === "sale" ? "Use the form above, or open All products and type a sale price next to a product." : "Try another name or reference."}
+            title={status === "sale" ? t("sales.empty.saleTitle") : t("sales.empty.searchTitle")}
+            description={status === "sale" ? t("sales.empty.saleDescription") : t("sales.empty.searchDescription")}
           />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b bg-muted/30">
                 <tr>
-                  <th className={th}>Product</th>
-                  <th className={th}>Regular price</th>
-                  <th className={th}>Sale price</th>
+                  <th className={th}>{t("sales.table.product")}</th>
+                  <th className={th}>{t("sales.table.regularPrice")}</th>
+                  <th className={th}>{t("sales.table.salePrice")}</th>
                   <th className={th} />
                 </tr>
               </thead>
@@ -149,7 +154,7 @@ export default async function SalePricesPage({ params, searchParams }: { params:
                           </div>
                         </div>
                       </td>
-                      <td className={`${td} tabular-nums ${sale ? "text-muted-foreground line-through" : ""}`}>{money(regular, currency)}</td>
+                      <td className={`${td} tabular-nums ${sale ? "text-muted-foreground line-through" : ""}`}>{money(regular)}</td>
                       <td className={td}>
                         <ActionForm action={setSalePrice} className="flex flex-wrap items-center gap-2">
                           <input type="hidden" name="site" value={site.slug} />
@@ -158,24 +163,24 @@ export default async function SalePricesPage({ params, searchParams }: { params:
                             name="salePrice"
                             inputMode="decimal"
                             defaultValue={sale ? p.basePrice : ""}
-                            placeholder="Not on sale"
-                            aria-label={`Sale price for ${p.name}`}
+                            placeholder={t("sales.notOnSale")}
+                            aria-label={t("sales.salePriceFor", { name: p.name })}
                             className="h-8 w-32 tabular-nums"
                           />
                           <Button type="submit" size="sm" variant="outline">
-                            Save
+                            {tc("save")}
                           </Button>
-                          {pct ? <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">−{pct}%</span> : null}
+                          {pct ? <span className="rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">{t("sales.percentOff", { percent: pct })}</span> : null}
                         </ActionForm>
                       </td>
                       <td className={`${td} text-right`}>
                         {sale ? (
-                          <ActionForm action={setSalePrice} done="Ended">
+                          <ActionForm action={setSalePrice} done={t("sales.ended")}>
                             <input type="hidden" name="site" value={site.slug} />
                             <input type="hidden" name="productId" value={p.id} />
                             <input type="hidden" name="salePrice" value="" />
                             <Button type="submit" size="sm" variant="ghost">
-                              End sale
+                              {t("sales.endSale")}
                             </Button>
                           </ActionForm>
                         ) : null}
