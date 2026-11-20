@@ -168,7 +168,10 @@ own price/stock/barcode). `product.basePrice` is the default; a variant
    customers, orders, content.
 5. **No Shopify** — ShopApplication's repricing is exactly the dependency risk
    being escaped. Same argument applies to any hosted CMS.
-6. **Odoo is being dropped entirely** for TailG — too complex for the need.
+6. **Odoo is being dropped entirely** for TailG, too complex for the need. *Update
+   2026-11-20:* that is the end goal, not the current state. TailG stays on its own
+   Next.js app with Odoo for orders, invoicing and Peppol until Qubo commerce can carry it;
+   the migration is planned but too early.
 7. **Puck (MIT) for page building** — persist versioned block JSON, never
    generated React source. AI should emit validated block trees from approved
    component schemas; executing merchant-authored React in the panel is a
@@ -785,6 +788,22 @@ Inox-neutre and Préparation went in by SQL because no admin session was
 available, so the admin category form is still untested for Mostapha's use;
 catalogue edits show on the storefront after the 5 minute cache TTL. Prod is the source of truth (decision 44); a fresh
 import would bring the old titles back.
+
+### 47. Media library links are typed foreign keys (ml1, 2026-11-20)
+
+Plan: `.plans/media-library.md` (one pool, many lenses: Products, Blog, Scratch...). A
+lens groups files by what uses them, so the links must be real. Migration 0020 adds
+`product_image.asset_id` (FK to `asset`, on delete cascade) and `asset.sha256` with an
+`(organization_id, sha256)` index. We chose one FK per owner over a polymorphic
+`asset_link(owner_kind, owner_id)` table: Postgres enforces it, deletes cascade, and
+joins stay plain. The migration links existing gallery rows whose URL is
+`/api/media/<org>/<asset>.<ext>` within the same organisation and drops the old
+`product:` rows from `asset_usage`; product usage is now read from the FK, and
+`asset_usage` is for page documents only. `setProductImagesAction` resolves
+`asset_id` through `galleryAssetIds()` (same-org files only); uploads store the hash.
+HM Froid's 3,946 legacy gallery URLs stay unlinked until the ml2 import.
+`post.cover_asset_id` comes with the blog lens, since nothing writes `post.cover_image`
+yet.
 
 ## Roadmap
 

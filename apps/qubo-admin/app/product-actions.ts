@@ -2,7 +2,7 @@
 
 import { db } from "@qubo/db/client";
 import { category, product, productCategory, productImage } from "@qubo/db/schema";
-import { syncProductUsage } from "@qubo/storage/media";
+import { galleryAssetIds } from "@qubo/storage/media";
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -176,15 +176,15 @@ export async function setProductImagesAction(input: { site: string; productId: s
   const parsed = imagesSchema.safeParse(input);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid images." };
   const { productId, images } = parsed.data;
+  const assetIds = await galleryAssetIds(site.organizationId, images.map((i) => i.url));
   const ok = await db.transaction(async (tx) => {
     const [row] = await tx.select({ id: product.id }).from(product).where(and(eq(product.id, productId), eq(product.siteId, siteId)));
     if (!row) return false;
     await tx.delete(productImage).where(eq(productImage.productId, productId));
-    if (images.length) await tx.insert(productImage).values(images.map((img, position) => ({ productId, url: img.url, alt: img.alt || null, position })));
+    if (images.length) await tx.insert(productImage).values(images.map((img, position) => ({ productId, url: img.url, assetId: assetIds[position], alt: img.alt || null, position })));
     return true;
   });
   if (!ok) return { error: "Product not found." };
-  await syncProductUsage(productId, images.map((i) => i.url));
   await emitEntity(siteId, "product", productId, "updated");
   revalidatePath(`/${site.slug}/products/${productId}`);
   revalidatePath(`/${site.slug}/products`);
