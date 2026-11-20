@@ -929,6 +929,15 @@ restores it), and saving the product form copies the price to a lone variant. Th
 already on sale on prod were fixed by hand. Multi-variant products keep their own prices on the
 product form; edit them per variant.
 
+### 55. Chapters masthead fits small phones (2026-11-20)
+
+The mega menu surface is a grid with rows only, so its implicit column grew to the brand
+line's `nowrap` width (489px on a 390px phone once HM Froid renamed itself "HM Catering
+Equipment"): Close went off-screen and the menu scrolled sideways. `overrides.css` now pins
+the column to `minmax(0, 1fr)`, truncates the brand line, and lets the header wordmark shrink
+(smaller type under 420px, ellipsis as a last resort). `styles.ts` was patched by swapping the
+appended overrides tail; the port source is not in the repo.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub
