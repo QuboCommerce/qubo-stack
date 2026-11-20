@@ -2,6 +2,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Eye, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { usePeers } from "@qubo/realtime/client";
 import { fieldEl, peerColor } from "@/components/presence";
@@ -92,17 +93,18 @@ function Follow({ userId, stop }: { userId: string; stop: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [stop]);
 
+  const t = useTranslations("spectate");
   const first = (peer?.name ?? name.current).split(" ")[0] || "…";
   return (
     <div role="status" className="fixed bottom-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground py-1 pr-1 pl-3 text-[13px] text-background shadow-lg">
       <span className="size-2 rounded-full" style={{ background: peerColor(userId) }} />
       <Eye className="size-3.5 opacity-70" />
       <span>
-        Watching {first}
-        {!peer && " · waiting…"}
+        {t("watching", { name: first })}
+        {!peer && ` · ${t("waiting")}`}
       </span>
       <button type="button" onClick={stop} className="inline-flex items-center gap-1 rounded-full bg-background/15 px-2.5 py-1 text-xs font-medium hover:bg-background/25">
-        <X className="size-3" /> Stop
+        <X className="size-3" /> {t("stop")}
       </button>
     </div>
   );

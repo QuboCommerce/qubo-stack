@@ -1,0 +1,127 @@
+{
+  "shell": {
+    "mainNavigation": "Main",
+    "meta": {
+      "description": "Qubo, business manager and site studio."
+    },
+    "openNavigation": "Open navigation",
+    "quboHome": "Qubo home",
+    "search": "Search",
+    "viewLiveSite": "View live site",
+    "notifications": "Notifications",
+    "siteTypes": {
+      "store": "Online store",
+      "services": "Services",
+      "business": "Business",
+      "editorial": "Editorial",
+      "custom": "Custom"
+    },
+    "plans": {
+      "free": "Free",
+      "starter": "Starter",
+      "growth": "Growth",
+      "agency": "Agency"
+    },
+    "siteSwitcher": {
+      "notInPlan": "Not in your plan",
+      "published": "Published",
+      "draft": "Draft",
+      "upgradeToOpen": "Upgrade to open",
+      "viewSite": "View site",
+      "unreadIn": "{count} unread in {name}",
+      "findPlaceholder": "Find a site or organisation",
+      "noMatch": "Nothing matches “{query}”.",
+      "siteCount": "{count, plural, one {# site} other {# sites}}",
+      "noSitesYet": "No sites yet",
+      "outsidePlan": "Outside your plan",
+      "createFirst": "Create the first site in this organisation",
+      "plansSitesUsed": "All the sites in your plan are in use",
+      "sitesUnlimited": "{used, plural, one {# site} other {# sites}}",
+      "sitesLimited": "{used} of {limit, plural, one {# site} other {# sites}}",
+      "orgsUnlimited": "{used, plural, one {# organisation} other {# organisations}}",
+      "orgsLimited": "{used} of {limit, plural, one {# organisation} other {# organisations}}",
+      "newOrganisation": "New organisation",
+      "newSite": "New site",
+      "orgLimitReason": "Your {plan} plan covers {limit, plural, one {# organisation} other {# organisations}}.",
+      "siteLimitReason": "Your {plan} plan covers {limit, plural, one {# site} other {# sites}}.",
+      "noOrgToManage": "You don't manage an organisation to put it in.",
+      "upgradeHint": "{reason} Open the portal to upgrade."
+    },
+    "create": {
+      "cancel": "Cancel",
+      "organisation": {
+        "created": "Organisation created",
+        "title": "New organisation",
+        "description": "The company that owns its sites. Orders, invoices and customers are recorded under it, so use one organisation per legal entity.",
+        "name": "Name",
+        "namePlaceholder": "TailG Belgium",
+        "legalName": "Legal name",
+        "legalNamePlaceholder": "TLG Belgium SRL",
+        "companyNumber": "Company number",
+        "companyNumberPlaceholder": "0655.678.923",
+        "optional": "Optional",
+        "creating": "Creating…",
+        "submit": "Create organisation"
+      },
+      "site": {
+        "title": "New site",
+        "description": "Pick what it's for and we set up the pages, header, footer and a starter theme. Everything can change later in Studio.",
+        "name": "Site name",
+        "language": "Language",
+        "organisation": "Organisation",
+        "transferHint": "Drafts can be transferred between organisations; publishing fixes it.",
+        "purpose": "What is the site for?",
+        "settingUp": "Setting up…",
+        "submit": "Create site"
+      },
+      "types": {
+        "store": {
+          "label": "Online store",
+          "description": "Sell products with a catalog, cart and checkout."
+        },
+        "services": {
+          "label": "Services & bookings",
+          "description": "Present services and take bookings: clinics, studios, coaches."
+        },
+        "business": {
+          "label": "Business showcase",
+          "description": "Generate leads for a company that sells offline: quotes, calls, visits."
+        },
+        "editorial": {
+          "label": "Blog & editorial",
+          "description": "Publish articles and grow an audience."
+        },
+        "custom": {
+          "label": "Custom",
+          "description": "Start empty and switch on only what you need."
+        }
+      }
+    }
+  },
+  "commandMenu": {
+    "title": "Search",
+    "description": "Jump anywhere in Qubo",
+    "searchPlaceholder": "Search {site}…",
+    "empty": "No results.",
+    "actions": "Actions",
+    "customizeTheme": "Customize theme",
+    "createPage": "Create page",
+    "viewLiveSite": "View live site",
+    "goTo": "Go to",
+    "switchSite": "Switch site",
+    "current": "Current",
+    "appearance": "Appearance",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "systemAppearance": "System appearance"
+  },
+  "userMenu": {
+    "profile": "Your profile",
+    "appearance": "Appearance",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "language": "Language",
+    "signOut": "Sign out"
+  }
+}

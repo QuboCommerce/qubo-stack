@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { libraryStats } from "@qubo/storage/media";
 import { storageConfigured } from "@qubo/storage/server";
 import { formatBytes } from "@qubo/storage";
@@ -8,14 +9,15 @@ import { HardDrive } from "lucide-react";
 
 export default async function MediaPage({ params }: { params: Promise<{ site: string }> }) {
   const { site } = await requireSite((await params).site);
+  const t = await getTranslations("media.page");
   if (!storageConfigured()) {
     return (
-      <Page title="Media" width="wide">
+      <Page title={t("title")} width="wide">
         <Panel>
           <EmptyState
             icon={HardDrive}
-            title="File storage isn't set up"
-            description="Set STORAGE_DIR (a folder on this server) or the STORAGE_ENDPOINT bucket settings, then restart Qubo."
+            title={t("storageTitle")}
+            description={t("storageDescription")}
           />
         </Panel>
       </Page>
@@ -24,8 +26,8 @@ export default async function MediaPage({ params }: { params: Promise<{ site: st
   const stats = await libraryStats(site.organizationId);
   return (
     <Page
-      title="Media"
-      subtitle={`${site.organizationName} · ${stats.files} file${stats.files === 1 ? "" : "s"}, ${formatBytes(stats.bytes)}`}
+      title={t("title")}
+      subtitle={t("subtitle", { organization: site.organizationName, count: stats.files, size: formatBytes(stats.bytes) })}
       width="wide"
     >
       <Panel flush className="overflow-hidden">

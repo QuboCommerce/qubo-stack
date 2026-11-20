@@ -7,6 +7,7 @@ import { and, eq } from "drizzle-orm";
 import { getInboxFile, keepInboxFile, readBytes, reply, updateConversation } from "@qubo/inbox/server";
 import { uploadAsset } from "@qubo/storage/media";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { z } from "zod";
 import { requireSiteFromForm } from "@/lib/admin";
 import type { ActionState } from "@/lib/action-state";
@@ -16,11 +17,12 @@ const id = z.uuid();
 
 export async function replyAction(_: ActionState, formData: FormData): Promise<ActionState> {
   const { site, user } = await requireSiteFromForm(formData);
+  const t = await getTranslations("inbox.errors");
   const parsed = z
     .object({ id, body: z.string().trim().max(20000), internal: z.enum(["on"]).optional(), fileIds: z.array(id).max(LIMITS.replyFiles) })
     .safeParse({ ...Object.fromEntries(formData), fileIds: formData.getAll("fileIds") });
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid reply." };
-  if (!parsed.data.body && !parsed.data.fileIds.length) return { error: "Write a message first." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t("invalidReply") };
+  if (!parsed.data.body && !parsed.data.fileIds.length) return { error: t("writeFirst") };
   const result = await reply({
     conversationId: parsed.data.id,
     siteId: site.id,
@@ -30,7 +32,7 @@ export async function replyAction(_: ActionState, formData: FormData): Promise<A
     fileIds: parsed.data.fileIds,
   });
   revalidatePath(`/${site.slug}/inbox`);
-  if (result.error) return { ok: true, at: Date.now(), error: `Saved, but the e-mail wasn't sent: ${result.error}` };
+  if (result.error) return { ok: true, at: Date.now(), error: t("emailFailed", { error: result.error }) };
   return { ok: true, at: Date.now() };
 }
 
@@ -48,7 +50,7 @@ export async function updateConversationAction(formData: FormData) {
   const { site, user } = await requireSiteFromForm(formData);
   const p = patchSchema.parse(Object.fromEntries(formData));
   if (p.assigneeId && p.assigneeId !== "me" && !(await assignableMembers(site.organizationId)).some((m) => m.id === p.assigneeId)) {
-    throw new Error("That person isn't a member of this organisation.");
+    throw new Error((await getTranslations("inbox.errors"))("notMember"));
   }
   await updateConversation(site.id, p.id, {
     ...(p.status && { status: p.status }),
@@ -68,29 +70,30 @@ export async function markReadAction(siteSlug: string, conversationId: string) {
   await updateConversation(site.id, id.parse(conversationId), { unread: false });
 }
 
-const formSchema = z.object({
+const formSchema = (t: Awaited<ReturnType<typeof getTranslations<"inbox.errors">>>) => z.object({
   formId: id,
-  name: z.string().trim().min(1, "Give the form a name.").max(80, "Form names are limited to 80 characters."),
+  name: z.string().trim().min(1, t("formNameRequired")).max(80, t("formNameLong")),
   notifyEmails: z
     .string()
     .max(2000)
     .transform((v) => [...new Set(v.split(/[\s,;]+/).map((e) => e.trim().toLowerCase()).filter(Boolean))])
-    .refine((list) => list.length <= 10, "Up to 10 addresses per form.")
-    .refine((list) => list.every(isEmail), "One of the addresses isn't a valid e-mail."),
+    .refine((list) => list.length <= 10, t("tooManyAddresses"))
+    .refine((list) => list.every(isEmail), t("badAddress")),
 });
 
 /** Inbox settings: a form's display name and who is e-mailed on each submission. */
 export async function updateFormAction(_: ActionState, formData: FormData): Promise<ActionState> {
   const { site } = await requireSiteFromForm(formData);
-  if (site.memberRole !== "OWNER" && site.memberRole !== "ADMIN") return { error: "You don't have permission to change settings." };
-  const parsed = formSchema.safeParse(Object.fromEntries(formData));
-  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid form settings." };
+  const t = await getTranslations("inbox.errors");
+  if (site.memberRole !== "OWNER" && site.memberRole !== "ADMIN") return { error: t("noPermission") };
+  const parsed = formSchema(t).safeParse(Object.fromEntries(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t("invalidForm") };
   const [row] = await db
     .update(form)
     .set({ name: parsed.data.name, notifyEmails: parsed.data.notifyEmails })
     .where(and(eq(form.id, parsed.data.formId), eq(form.siteId, site.id)))
     .returning({ id: form.id });
-  if (!row) return { error: "That form no longer exists." };
+  if (!row) return { error: t("formGone") };
   revalidatePath(`/${site.slug}/settings/inbox`);
   return { ok: true, at: Date.now() };
 }
@@ -100,9 +103,10 @@ export async function keepFileAction(siteSlug: string, fileId: string, keep: boo
   const fd = new FormData();
   fd.set("site", siteSlug);
   const { site } = await requireSiteFromForm(fd);
+  const t = await getTranslations("inbox.errors");
   const res = await keepInboxFile(site.id, id.parse(fileId), keep);
   revalidatePath(`/${site.slug}/inbox`);
-  return res ? { ok: true as const } : { ok: false as const, error: "Only files visitors sent in chat expire." };
+  return res ? { ok: true as const } : { ok: false as const, error: t("onlyChat") };
 }
 
 /** Copies a conversation file into the site's media library (the original stays in the thread). */
@@ -110,10 +114,11 @@ export async function saveFileToMediaAction(siteSlug: string, fileId: string) {
   const fd = new FormData();
   fd.set("site", siteSlug);
   const { site, user } = await requireSiteFromForm(fd);
+  const t = await getTranslations("inbox.errors");
   const row = await getInboxFile(id.parse(fileId));
-  if (!row || row.siteId !== site.id) return { ok: false as const, error: "This file has expired." };
+  if (!row || row.siteId !== site.id) return { ok: false as const, error: t("fileExpired") };
   const bytes = await readBytes(row.key);
-  if (!bytes) return { ok: false as const, error: "This file has expired." };
+  if (!bytes) return { ok: false as const, error: t("fileExpired") };
   const res = await uploadAsset({ orgId: site.organizationId, siteId: site.id, userId: user.id, filename: row.filename, bytes });
   if (!res.ok) return { ok: false as const, error: res.error };
   return { ok: true as const, name: res.item.filename };

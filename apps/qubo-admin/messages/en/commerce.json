@@ -1,0 +1,244 @@
+{
+  "inbox": {
+    "title": "Inbox",
+    "subtitle": "Messages from your site's forms, e-mail and chat, in one place.",
+    "views": {
+      "open": "Open",
+      "mine": "Mine",
+      "pending": "Pending",
+      "snoozed": "Snoozed",
+      "resolved": "Resolved",
+      "all": "All"
+    },
+    "statuses": {
+      "open": "Open",
+      "pending": "Pending",
+      "resolved": "Resolved",
+      "snoozed": "Snoozed"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "channels": {
+      "form": "form",
+      "email": "e-mail",
+      "chat": "chat",
+      "portal": "portal",
+      "system": "system"
+    },
+    "list": {
+      "searchPlaceholder": "Search subject, name, e-mail",
+      "noMatches": "No matches.",
+      "empty": "Nothing here.",
+      "inboundAddress": "E-mail in: <code>{address}</code>",
+      "inboundAddressHint": "Mail sent or forwarded here lands in this inbox",
+      "unread": "Unread",
+      "anonymous": "Anonymous",
+      "spam": "spam",
+      "waiting": "waiting {time}",
+      "waitingHint": "Customer is waiting for an answer",
+      "wakes": "wakes {time}",
+      "you": "You: ",
+      "waitMinutes": "{count}m",
+      "waitHours": "{count}h",
+      "waitDays": "{count}d"
+    },
+    "empty": {
+      "notFoundTitle": "Conversation not found",
+      "notFoundDescription": "It may have been removed, or it belongs to another site.",
+      "pickTitle": "Pick a conversation",
+      "pickDescription": "Select a conversation on the left to read and reply.",
+      "noneTitle": "No conversations yet",
+      "noneDescription": "Form submissions and chats show up here. Add a Contact form or Live chat block to a page.",
+      "noneDescriptionForward": "Form submissions and chats show up here. Add a Contact form or Live chat block to a page, or forward your mailbox to {address}."
+    },
+    "thread": {
+      "back": "Back to list",
+      "meta": "{name} · via {channel} · {date}",
+      "metaEmail": "{name} · {email} · via {channel} · {date}",
+      "staff": "Staff",
+      "customer": "Customer",
+      "internalNote": "Internal note",
+      "deliveryErrorChat": "Shown in chat, but not e-mailed: {error}",
+      "deliveryError": "Not e-mailed: {error}",
+      "emailedTo": "E-mailed to {email}",
+      "sentInChat": "Sent in chat"
+    },
+    "context": {
+      "contact": "Contact",
+      "customerSince": "Customer since {date}",
+      "order": "Order",
+      "formTitle": "{name} form",
+      "sentFrom": "Sent from {path}",
+      "earlier": "Earlier conversations"
+    },
+    "controls": {
+      "status": "Status",
+      "snooze": "Snooze",
+      "wakes": "Wakes {time}",
+      "priority": "Priority",
+      "assignee": "Assignee",
+      "unassigned": "Unassigned",
+      "snoozeOptions": {
+        "1h": "1 hour",
+        "4h": "4 hours",
+        "1d": "Tomorrow",
+        "3d": "3 days",
+        "7d": "Next week"
+      }
+    },
+    "ai": {
+      "title": "AI summary",
+      "rerun": "Read the conversation again",
+      "runNow": "Summarise now",
+      "rerunLabel": "Run AI triage again",
+      "runLabel": "Run AI triage",
+      "spam": "Looks like spam",
+      "mentions": "Mentions: {products}",
+      "disclaimer": "{model}. Can be wrong; check before acting.",
+      "triageOn": "Read a few seconds after the customer's latest message.",
+      "triageOff": "Triage is off. Use the button to summarise this one.",
+      "facts": {
+        "category": "Category",
+        "mood": "Mood",
+        "urgency": "Urgency",
+        "language": "Language",
+        "order": "Order",
+        "phone": "Phone"
+      },
+      "categories": {
+        "order": "Order",
+        "quote": "Quote",
+        "product": "Product",
+        "shipping": "Shipping",
+        "returns": "Returns",
+        "billing": "Billing",
+        "technical": "Technical",
+        "feedback": "Feedback",
+        "other": "Other"
+      },
+      "sentiments": {
+        "positive": "Positive",
+        "neutral": "Neutral",
+        "negative": "Negative"
+      },
+      "urgencies": {
+        "low": "Low",
+        "normal": "Normal",
+        "high": "High",
+        "urgent": "Urgent"
+      }
+    },
+    "composer": {
+      "confirmReplace": "Replace what you've written with an AI draft?",
+      "hintInternal": "Internal note: only your team sees this.",
+      "hintChatOnline": "Visitor is in the chat now: they'll see this instantly.",
+      "hintChatAwayEmail": "Visitor left the chat: shown when they return and e-mailed to {email}.",
+      "hintChatAwayNoMail": "Visitor left the chat: shown when they return (e-mail isn't configured on this instance).",
+      "hintChatAwayNoAddress": "Visitor left the chat: shown when they return. They left no e-mail address.",
+      "hintEmail": "Sent by e-mail to {email}.",
+      "hintEmailOff": "Saved to the thread. E-mail isn't configured on this instance, so {email} won't receive it.",
+      "notePlaceholder": "Add a note for your team…",
+      "replyPlaceholder": "Write a reply…",
+      "reply": "Reply",
+      "note": "Note",
+      "attach": "Attach files",
+      "attachHint": "Attach files (or paste / drop them)",
+      "draftHint": "Draft a reply from the conversation, the customer's orders and your house rules. Nothing is sent until you press Send.",
+      "drafting": "Drafting…",
+      "draft": "Draft with AI",
+      "sending": "Sending…",
+      "addNote": "Add note",
+      "send": "Send"
+    },
+    "files": {
+      "expiredHint": "Chat files are removed after 30 days unless kept.",
+      "expired": "{name} · expired",
+      "daysLeft": "{count}d left",
+      "kept": "Kept",
+      "actionsFor": "Actions for {name}",
+      "download": "Download",
+      "saveToMedia": "Save to media library",
+      "keep": "Keep (don't expire)",
+      "letExpire": "Let it expire",
+      "savedToMedia": "{name} was added to the media library.",
+      "kept30": "{name} will be kept.",
+      "expires30": "{name} expires 30 days after it was sent.",
+      "genericError": "Something went wrong.",
+      "tooMany": "{count, plural, one {Up to # file per reply.} other {Up to # files per reply.}}",
+      "uploadFailed": "Upload failed.",
+      "remove": "Remove {name}",
+      "uploading": "Uploading {count}…"
+    },
+    "formSettings": {
+      "submissions": "{count, plural, one {# submission} other {# submissions}}",
+      "name": "Name",
+      "notify": "Notify by e-mail",
+      "notifyPlaceholder": "sales@example.com, owner@example.com",
+      "saving": "Saving…",
+      "save": "Save",
+      "saved": "Saved"
+    },
+    "errors": {
+      "invalidReply": "Invalid reply.",
+      "writeFirst": "Write a message first.",
+      "emailFailed": "Saved, but the e-mail wasn't sent: {error}",
+      "notMember": "That person isn't a member of this organisation.",
+      "formNameRequired": "Give the form a name.",
+      "formNameLong": "Form names are limited to 80 characters.",
+      "tooManyAddresses": "Up to 10 addresses per form.",
+      "badAddress": "One of the addresses isn't a valid e-mail.",
+      "noPermission": "You don't have permission to change settings.",
+      "invalidForm": "Invalid form settings.",
+      "formGone": "That form no longer exists.",
+      "onlyChat": "Only files visitors sent in chat expire.",
+      "fileExpired": "This file has expired."
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "count": "{count, plural, one {# customer} other {# customers}}",
+    "add": "Add customer",
+    "searchPlaceholder": "Search by name, e-mail or company",
+    "emptyTitle": "No customers found",
+    "emptyDescription": "Customers who create an account or place an order appear here.",
+    "columns": {
+      "customer": "Customer",
+      "company": "Company",
+      "phone": "Phone",
+      "subscription": "E-mail subscription",
+      "since": "Customer since"
+    },
+    "subscribed": "Subscribed",
+    "notSubscribed": "Not subscribed"
+  },
+  "orders": {
+    "title": "Orders",
+    "export": "Export",
+    "emptyTitle": "Your orders will show here",
+    "emptyDescription": "Orders placed on the storefront, and draft orders you create for customers, are managed from this page.",
+    "createDraft": "Create draft order",
+    "columns": {
+      "order": "Order",
+      "date": "Date",
+      "customer": "Customer",
+      "total": "Total",
+      "status": "Status"
+    },
+    "guest": "Guest",
+    "save": "Save",
+    "statuses": {
+      "PENDING": "Pending",
+      "CONFIRMED": "Confirmed",
+      "PROCESSING": "Processing",
+      "SHIPPED": "Shipped",
+      "DELIVERED": "Delivered",
+      "COMPLETED": "Completed",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    }
+  }
+}

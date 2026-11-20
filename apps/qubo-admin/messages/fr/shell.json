@@ -1,0 +1,127 @@
+{
+  "shell": {
+    "mainNavigation": "Principale",
+    "meta": {
+      "description": "Qubo, gestion d'entreprise et studio de sites."
+    },
+    "openNavigation": "Ouvrir la navigation",
+    "quboHome": "Accueil Qubo",
+    "search": "Rechercher",
+    "viewLiveSite": "Voir le site en ligne",
+    "notifications": "Notifications",
+    "siteTypes": {
+      "store": "Boutique en ligne",
+      "services": "Services",
+      "business": "Entreprise",
+      "editorial": "Éditorial",
+      "custom": "Sur mesure"
+    },
+    "plans": {
+      "free": "Gratuit",
+      "starter": "Starter",
+      "growth": "Growth",
+      "agency": "Agence"
+    },
+    "siteSwitcher": {
+      "notInPlan": "Hors de votre offre",
+      "published": "Publié",
+      "draft": "Brouillon",
+      "upgradeToOpen": "Passez à l'offre supérieure pour l'ouvrir",
+      "viewSite": "Voir le site",
+      "unreadIn": "{count} non lus dans {name}",
+      "findPlaceholder": "Trouver un site ou une organisation",
+      "noMatch": "Aucun résultat pour « {query} ».",
+      "siteCount": "{count, plural, one {# site} other {# sites}}",
+      "noSitesYet": "Aucun site pour l'instant",
+      "outsidePlan": "Hors de votre offre",
+      "createFirst": "Créer le premier site de cette organisation",
+      "plansSitesUsed": "Tous les sites de votre offre sont utilisés",
+      "sitesUnlimited": "{used, plural, one {# site} other {# sites}}",
+      "sitesLimited": "{used} sur {limit, plural, one {# site} other {# sites}}",
+      "orgsUnlimited": "{used, plural, one {# organisation} other {# organisations}}",
+      "orgsLimited": "{used} sur {limit, plural, one {# organisation} other {# organisations}}",
+      "newOrganisation": "Nouvelle organisation",
+      "newSite": "Nouveau site",
+      "orgLimitReason": "Votre offre {plan} inclut {limit, plural, one {# organisation} other {# organisations}}.",
+      "siteLimitReason": "Votre offre {plan} inclut {limit, plural, one {# site} other {# sites}}.",
+      "noOrgToManage": "Vous ne gérez aucune organisation où l'ajouter.",
+      "upgradeHint": "{reason} Ouvrez le portail pour changer d'offre."
+    },
+    "create": {
+      "cancel": "Annuler",
+      "organisation": {
+        "created": "Organisation créée",
+        "title": "Nouvelle organisation",
+        "description": "L'entreprise qui possède ses sites. Les commandes, factures et clients y sont rattachés : prévoyez une organisation par entité juridique.",
+        "name": "Nom",
+        "namePlaceholder": "TailG Belgium",
+        "legalName": "Raison sociale",
+        "legalNamePlaceholder": "TLG Belgium SRL",
+        "companyNumber": "Numéro d'entreprise",
+        "companyNumberPlaceholder": "0655.678.923",
+        "optional": "Facultatif",
+        "creating": "Création…",
+        "submit": "Créer l'organisation"
+      },
+      "site": {
+        "title": "Nouveau site",
+        "description": "Choisissez son usage et nous préparons les pages, l'en-tête, le pied de page et un thème de départ. Tout pourra être modifié plus tard dans Studio.",
+        "name": "Nom du site",
+        "language": "Langue",
+        "organisation": "Organisation",
+        "transferHint": "Les brouillons peuvent être transférés d'une organisation à l'autre ; la publication fige le choix.",
+        "purpose": "À quoi sert le site ?",
+        "settingUp": "Préparation…",
+        "submit": "Créer le site"
+      },
+      "types": {
+        "store": {
+          "label": "Boutique en ligne",
+          "description": "Vendez des produits avec un catalogue, un panier et un paiement."
+        },
+        "services": {
+          "label": "Services et réservations",
+          "description": "Présentez vos services et prenez des réservations : cabinets, studios, coachs."
+        },
+        "business": {
+          "label": "Vitrine d'entreprise",
+          "description": "Générez des contacts pour une entreprise qui vend hors ligne : devis, appels, visites."
+        },
+        "editorial": {
+          "label": "Blog et éditorial",
+          "description": "Publiez des articles et développez votre audience."
+        },
+        "custom": {
+          "label": "Sur mesure",
+          "description": "Partez de zéro et activez uniquement ce dont vous avez besoin."
+        }
+      }
+    }
+  },
+  "commandMenu": {
+    "title": "Recherche",
+    "description": "Accédez à n'importe quelle page de Qubo",
+    "searchPlaceholder": "Rechercher dans {site}…",
+    "empty": "Aucun résultat.",
+    "actions": "Actions",
+    "customizeTheme": "Personnaliser le thème",
+    "createPage": "Créer une page",
+    "viewLiveSite": "Voir le site en ligne",
+    "goTo": "Aller à",
+    "switchSite": "Changer de site",
+    "current": "Actuel",
+    "appearance": "Apparence",
+    "lightMode": "Mode clair",
+    "darkMode": "Mode sombre",
+    "systemAppearance": "Apparence du système"
+  },
+  "userMenu": {
+    "profile": "Votre profil",
+    "appearance": "Apparence",
+    "light": "Clair",
+    "dark": "Sombre",
+    "system": "Système",
+    "language": "Langue",
+    "signOut": "Se déconnecter"
+  }
+}

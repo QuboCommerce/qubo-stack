@@ -1,0 +1,207 @@
+{
+  "products": {
+    "status": {
+      "active": "Actif",
+      "archived": "Archivé"
+    },
+    "list": {
+      "title": "Produits",
+      "import": "Importer",
+      "add": "Ajouter un produit",
+      "emptyTitle": "Ajoutez votre premier produit",
+      "emptyDescription": "Les produits apparaissent sur votre boutique dès qu'ils sont actifs.",
+      "searchPlaceholder": "Rechercher par nom, marque ou identifiant",
+      "view": "Affichage",
+      "listView": "Vue liste",
+      "gridView": "Vue grille",
+      "tabs": {
+        "all": "Tous",
+        "active": "Actifs",
+        "archived": "Archivés"
+      },
+      "noResultsTitle": "Aucun produit trouvé",
+      "noResultsCategory": "Aucun résultat dans cette catégorie. Essayez-en une autre ou retirez le filtre.",
+      "noResults": "Modifiez les filtres ou le terme de recherche.",
+      "clearCategory": "Retirer la catégorie",
+      "inStock": "{count, number} en stock",
+      "notTracked": "Non suivi",
+      "restore": "Restaurer",
+      "archive": "Archiver",
+      "columns": {
+        "product": "Produit",
+        "status": "Statut",
+        "inventory": "Stock",
+        "variants": "Variantes",
+        "brand": "Marque",
+        "updated": "Modifié",
+        "price": "Prix",
+        "actions": "Actions"
+      }
+    },
+    "form": {
+      "addTitle": "Ajouter un produit",
+      "cards": {
+        "details": "Détails",
+        "media": "Médias",
+        "pricing": "Prix",
+        "variants": "Variantes",
+        "shipping": "Expédition",
+        "seo": "Référencement",
+        "status": "Statut",
+        "organisation": "Organisation"
+      },
+      "fields": {
+        "title": "Titre",
+        "titlePlaceholder": "ex. Armoire réfrigérée positive 700 L",
+        "description": "Description",
+        "descriptionHint": "Texte brut pour l'instant. Les retours à la ligne sont conservés.",
+        "price": "Prix ({currency})",
+        "compareAt": "Prix barré",
+        "compareAtHint": "Affiché barré lorsqu'il est supérieur au prix.",
+        "weight": "Poids",
+        "width": "Largeur",
+        "height": "Hauteur",
+        "depth": "Profondeur",
+        "handle": "Identifiant",
+        "handleHint": "{path} · Laissez vide pour le générer à partir du titre.",
+        "pageTitle": "Titre de la page",
+        "metaDescription": "Méta-description",
+        "status": "Statut",
+        "brand": "Marque",
+        "categories": "Catégories",
+        "manage": "Gérer"
+      },
+      "mediaNew": "Enregistrez d'abord le produit, puis ajoutez des images.",
+      "mediaHint": "La première image est l'image principale. Les modifications sont enregistrées immédiatement.",
+      "variantsHint": "Choisissez les photos de chaque variante dans la galerie. Les prix et les options arriveront avec l'éditeur de variantes.",
+      "variantColumns": {
+        "variant": "Variante",
+        "sku": "SKU",
+        "photos": "Photos",
+        "price": "Prix"
+      },
+      "shippingHint": "Poids en kg, dimensions en cm.",
+      "featured": "Mis en avant",
+      "featuredHint": "Affiché dans les sections de produits mis en avant.",
+      "noCategories": "Aucune catégorie pour l'instant.",
+      "updated": "Modifié {time}",
+      "updatedLegacy": "Modifié {time} · Ancien n° {id}"
+    },
+    "media": {
+      "makeMain": "Définir comme image principale",
+      "moveLeft": "Déplacer vers la gauche",
+      "moveRight": "Déplacer vers la droite",
+      "remove": "Retirer l'image",
+      "add": "Ajouter des images",
+      "pickerTitle": "Images du produit"
+    },
+    "variantImages": {
+      "trigger": "Photos de {name}",
+      "empty": "Photos du produit",
+      "title": "Photos de {name}",
+      "pickHint": "Choisissez dans la galerie du produit. Sans sélection, la variante affiche les photos du produit.",
+      "galleryEmpty": "Ajoutez d'abord des photos à la galerie du produit.",
+      "photo": "Photo du produit"
+    },
+    "thumb": {
+      "noImage": "Aucune image"
+    },
+    "errors": {
+      "price": "Les prix s'écrivent avec des chiffres, par exemple 1299,00.",
+      "positiveNumber": "Saisissez un nombre positif.",
+      "titleLength": "Le titre doit comporter au moins 2 caractères.",
+      "handleFormat": "L'identifiant ne peut contenir que des minuscules, des chiffres et des tirets.",
+      "priceRequired": "Saisissez un prix.",
+      "checkFields": "Vérifiez les champs signalés.",
+      "notFound": "Produit introuvable sur ce site.",
+      "deleted": "Ce produit a été supprimé par quelqu'un d'autre.",
+      "handleTaken": "Un autre produit utilise déjà cet identifiant.",
+      "categoryGone": "Une des catégories n'existe plus. Rechargez la page et réessayez.",
+      "race": "Quelqu'un a enregistré en même temps que vous. Enregistrez à nouveau pour fusionner ses modifications.",
+      "generic": "Une erreur est survenue.",
+      "invalidImages": "Images non valides.",
+      "productMissing": "Produit introuvable.",
+      "variantMissing": "Variante introuvable."
+    }
+  },
+  "categories": {
+    "title": "Catégories",
+    "subtitle": "{count, plural, one {# catégorie} other {# catégories}} · {uncategorised, plural, one {# produit sans catégorie} other {# produits sans catégorie}}",
+    "add": "Ajouter une catégorie",
+    "addSub": "Ajouter une sous-catégorie",
+    "emptyTitle": "Organisez votre catalogue",
+    "emptyDescription": "Les catégories regroupent les produits sur votre boutique et dans les menus de navigation.",
+    "pickTitle": "Choisissez une catégorie à modifier",
+    "pickUncategorised": "{count, plural, one {# produit n'a pas encore de catégorie. Ouvrez-le et cochez une catégorie dans Organisation.} other {# produits n'ont pas encore de catégorie. Ouvrez-en un et cochez une catégorie dans Organisation.}}",
+    "pickDescription": "Renommez, déplacez ou réorganisez les catégories, et consultez les produits de chacune.",
+    "showUncategorised": "Afficher les produits sans catégorie",
+    "breadcrumb": "Fil d'Ariane",
+    "all": "Toutes les catégories",
+    "none": "Sans catégorie",
+    "moveUp": "Monter",
+    "moveDown": "Descendre",
+    "positionInParent": "{index} sur {total} dans « {parent} »",
+    "positionTop": "{index} sur {total} au premier niveau",
+    "fields": {
+      "name": "Nom",
+      "description": "Description",
+      "descriptionHint": "Affichée en haut de la page de la catégorie sur la boutique.",
+      "parent": "Catégorie parente",
+      "parentNone": "Aucune (premier niveau)",
+      "handle": "Identifiant"
+    },
+    "products": {
+      "title": "Produits",
+      "countDirect": "{count, number} dans cette catégorie",
+      "countBoth": "{direct, number} directement ici · {total, number} avec les sous-catégories",
+      "viewAll": "Tout voir",
+      "inSubcategories": "Les produits sont dans ses sous-catégories.",
+      "none": "Aucun produit pour l'instant. Ajoutez-en depuis la carte Organisation d'un produit.",
+      "archived": "Archivé"
+    },
+    "imported": "Importée depuis ShopApplication n° {id}",
+    "filter": {
+      "label": "Catégorie"
+    },
+    "tree": {
+      "none": "Aucune catégorie pour l'instant. Les produits sans catégorie n'apparaissent pas sur les pages de catégorie.",
+      "unknown": "Inconnue",
+      "remove": "Retirer {name}",
+      "removeFallback": "la catégorie",
+      "filter": "Filtrer les catégories",
+      "collapseAll": "Tout replier",
+      "expandAll": "Tout déplier",
+      "collapse": "Replier {name}",
+      "expand": "Déplier {name}",
+      "noMatch": "Aucune catégorie ne correspond à « {query} »."
+    },
+    "delete": {
+      "button": "Supprimer",
+      "submit": "Supprimer la catégorie",
+      "cancel": "Annuler",
+      "title": "Supprimer « {name} » ?",
+      "description": "Aucun produit n'est supprimé.",
+      "childrenToParent": "{count, plural, one {Sa # sous-catégorie remonte dans « {parent} ».} other {Ses # sous-catégories remontent dans « {parent} ».}}",
+      "childrenToTop": "{count, plural, one {Sa # sous-catégorie remonte au premier niveau.} other {Ses # sous-catégories remontent au premier niveau.}}",
+      "products": "{count, plural, one {# produit perd cette catégorie.} other {# produits perdent cette catégorie.}}",
+      "noProducts": "Aucun produit dans cette catégorie."
+    },
+    "defaults": {
+      "newCategory": "Nouvelle catégorie",
+      "newSubcategory": "Nouvelle sous-catégorie"
+    },
+    "errors": {
+      "nameRequired": "Donnez un nom à la catégorie.",
+      "handleFormat": "L'identifiant ne peut contenir que des minuscules, des chiffres et des tirets.",
+      "checkFields": "Vérifiez les champs signalés.",
+      "deleted": "Cette catégorie a été supprimée par quelqu'un d'autre.",
+      "notFound": "Catégorie introuvable sur ce site.",
+      "parentGone": "La catégorie parente n'existe plus.",
+      "moveInside": "Une catégorie ne peut pas être déplacée dans elle-même.",
+      "handleTaken": "Une autre catégorie utilise déjà cet identifiant.",
+      "parentNotFound": "Catégorie parente introuvable sur ce site.",
+      "race": "Quelqu'un a enregistré en même temps que vous. Enregistrez à nouveau pour fusionner ses modifications.",
+      "generic": "Une erreur est survenue."
+    }
+  }
+}

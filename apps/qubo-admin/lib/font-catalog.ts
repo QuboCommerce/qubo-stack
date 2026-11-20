@@ -57,28 +57,16 @@ export const fontCatalog: CatalogFont[] = [
 
 export const catalogFont = (family: string) => fontCatalog.find((f) => f.family.toLowerCase() === family.toLowerCase());
 
-/** Named modular-scale ratios (what designers call them). */
+/** Named modular-scale ratios (what designers call them); `key` indexes studio.theme.typography.ratios. */
 export const scaleRatios = [
-  { value: 1.067, label: "Minor second" },
-  { value: 1.125, label: "Major second" },
-  { value: 1.2, label: "Minor third" },
-  { value: 1.25, label: "Major third" },
-  { value: 1.333, label: "Perfect fourth" },
-  { value: 1.414, label: "Augmented fourth" },
-  { value: 1.5, label: "Perfect fifth" },
-  { value: 1.618, label: "Golden ratio" },
-];
+  { value: 1.067, key: "minorSecond" },
+  { value: 1.125, key: "majorSecond" },
+  { value: 1.2, key: "minorThird" },
+  { value: 1.25, key: "majorThird" },
+  { value: 1.333, key: "perfectFourth" },
+  { value: 1.414, key: "augmentedFourth" },
+  { value: 1.5, key: "perfectFifth" },
+  { value: 1.618, key: "goldenRatio" },
+] as const;
 
-export const ratioLabel = (r: number) => scaleRatios.find((s) => Math.abs(s.value - r) < 0.005)?.label ?? `×${r}`;
-
-export const weightNames: Record<number, string> = {
-  100: "Thin",
-  200: "Extra light",
-  300: "Light",
-  400: "Regular",
-  500: "Medium",
-  600: "Semibold",
-  700: "Bold",
-  800: "Extra bold",
-  900: "Black",
-};
+export const ratioKey = (r: number) => scaleRatios.find((s) => Math.abs(s.value - r) < 0.005)?.key;

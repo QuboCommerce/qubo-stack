@@ -1,6 +1,7 @@
 "use client";
 
 import { SNOOZE_OPTIONS } from "@qubo/inbox";
+import { useTranslations } from "next-intl";
 import { updateConversationAction } from "@/app/inbox-actions";
 
 const select = "h-8 rounded-lg border bg-background px-2 text-[13px]";
@@ -17,8 +18,6 @@ function Field({ site, id, name, value, children, label }: { site: string; id: s
     </form>
   );
 }
-
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 export function ThreadControls({
   site,
@@ -38,31 +37,32 @@ export function ThreadControls({
   snoozedUntil?: string | null;
   members: { id: string; name: string }[];
 }) {
+  const t = useTranslations("inbox");
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Field site={site} id={id} name="status" value={status} label="Status">
-        {["open", "pending", "resolved"].map((s) => (
-          <option key={s} value={s}>{cap(s)}</option>
+      <Field site={site} id={id} name="status" value={status} label={t("controls.status")}>
+        {(["open", "pending", "resolved"] as const).map((s) => (
+          <option key={s} value={s}>{t(`statuses.${s}`)}</option>
         ))}
-        {status === "snoozed" && <option value="snoozed">Snoozed</option>}
+        {status === "snoozed" && <option value="snoozed">{t("statuses.snoozed")}</option>}
       </Field>
       {status !== "resolved" && (
-        <Field site={site} id={id} name="snooze" value="" label="Snooze">
+        <Field site={site} id={id} name="snooze" value="" label={t("controls.snooze")}>
           <option value="" disabled>
-            {status === "snoozed" && snoozedUntil ? `Wakes ${snoozedUntil}` : "Snooze"}
+            {status === "snoozed" && snoozedUntil ? t("controls.wakes", { time: snoozedUntil }) : t("controls.snooze")}
           </option>
-          {Object.entries(SNOOZE_OPTIONS).map(([k, [label]]) => (
-            <option key={k} value={k}>{label}</option>
+          {(Object.keys(SNOOZE_OPTIONS) as (keyof typeof SNOOZE_OPTIONS)[]).map((k) => (
+            <option key={k} value={k}>{t(`controls.snoozeOptions.${k}`)}</option>
           ))}
         </Field>
       )}
-      <Field site={site} id={id} name="priority" value={priority} label="Priority">
-        {["low", "normal", "high", "urgent"].map((p) => (
-          <option key={p} value={p}>{cap(p)}</option>
+      <Field site={site} id={id} name="priority" value={priority} label={t("controls.priority")}>
+        {(["low", "normal", "high", "urgent"] as const).map((p) => (
+          <option key={p} value={p}>{t(`priorities.${p}`)}</option>
         ))}
       </Field>
-      <Field site={site} id={id} name="assigneeId" value={assigneeId ?? ""} label="Assignee">
-        <option value="">Unassigned</option>
+      <Field site={site} id={id} name="assigneeId" value={assigneeId ?? ""} label={t("controls.assignee")}>
+        <option value="">{t("controls.unassigned")}</option>
         {members.map((m) => (
           <option key={m.id} value={m.id}>{m.name}</option>
         ))}

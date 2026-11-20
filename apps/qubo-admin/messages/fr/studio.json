@@ -1,0 +1,905 @@
+{
+  "studio": {
+    "viewPicker": {
+      "unpublished": "Modifications non publiées",
+      "systemPage": "Page système",
+      "trigger": "Modification de {label}. Changer de vue",
+      "search": "Rechercher un modèle ou une page…",
+      "empty": "Aucune vue correspondante.",
+      "sharedSections": "Sections partagées"
+    },
+    "mediaField": {
+      "replace": "Remplacer",
+      "remove": "Retirer",
+      "choose": "{accept, select, video {Choisir une vidéo} image {Choisir une image} other {Choisir un fichier}}",
+      "altText": "Texte alternatif"
+    },
+    "addSection": {
+      "lockedTitle": "Activez {needs} dans les paramètres pour utiliser cette section",
+      "addTitle": "Ajouter {label}",
+      "preview": "Aperçu de {label}",
+      "needs": "Nécessite {needs}",
+      "title": "Ajouter une section",
+      "goesAfter": "Placée après <b>{name}</b>",
+      "goesAtEnd": "Placée à la fin de la page",
+      "previewsUse": "aperçus avec le thème {theme}",
+      "close": "Fermer",
+      "tabs": {
+        "library": "Bibliothèque",
+        "generate": "Générer"
+      },
+      "search": "Rechercher une section",
+      "categories": "Catégories de sections",
+      "allSections": "Toutes les sections",
+      "noMatch": "Aucune section ne correspond à « {query} »",
+      "noMatchHint": "Essayez un autre mot, ou décrivez-la dans Générer.",
+      "generate": {
+        "title": "Générer une section",
+        "description": "Décrivez ce qu'il vous faut et l'assistant la compose à partir de cette bibliothèque, avec votre thème. Vous la prévisualisez avant tout ajout.",
+        "placeholder": "Un processus en trois étapes expliquant comment une chambre froide est installée…",
+        "soon": "Bientôt disponible avec Puck AI."
+      }
+    },
+    "history": {
+      "saveFirst": "Enregistrez vos modifications avant de créer une version.",
+      "versionSaved": "Version {version} enregistrée",
+      "confirmRollback": "Mettre la version {version} en ligne maintenant ? Les visiteurs la verront immédiatement.",
+      "restored": "Version {version} restaurée dans votre brouillon",
+      "rolledBack": "Retour à la version {version}",
+      "title": "Historique des versions",
+      "description": "Annuler et rétablir ne couvrent que cette session. Les versions sont conservées indéfiniment : restaurez-en une dans votre brouillon, ou remettez le site en ligne à cette version.",
+      "namePlaceholder": "Nommer cette version (facultatif)",
+      "saveVersion": "Enregistrer la version",
+      "empty": "Rien n'a encore été publié.",
+      "published": "Publiée",
+      "savedVersion": "Version enregistrée",
+      "live": "En ligne",
+      "restore": "Restaurer dans le brouillon",
+      "rollback": "Remettre en ligne"
+    },
+    "designFields": {
+      "missing": "Introuvable : « {value} »",
+      "highlightStyle": "Style de surlignage",
+      "noHighlight": "Aucun surlignage",
+      "chooseWords": "Choisir les mots à surligner",
+      "mainLanguage": "Langue principale",
+      "dialogTitle": "Surligner des mots",
+      "dialogDescription": "Cliquez sur les mots à marquer dans chaque langue. Les mots voisins forment un seul marquage.",
+      "style": "Style",
+      "loadingLanguages": "Chargement des langues…",
+      "removeStale": "{count, plural, one {Retirer # sélection de l'ancien texte} other {Retirer # sélections de l'ancien texte}}",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "statusStale": "Traduction obsolète",
+      "statusDraft": "Traduction en brouillon",
+      "main": "Principale",
+      "matchedByPhrase": "Repérée par l'expression",
+      "notTranslated": "Pas encore traduit. Choisissez les mots une fois la traduction disponible."
+    },
+    "publishErrors": {
+      "forbidden": "Seuls les propriétaires et les administrateurs peuvent publier.",
+      "generic": "Une erreur est survenue. Vos modifications sont toujours dans l'éditeur."
+    },
+    "ai": {
+      "forbidden": "Seuls les propriétaires et les administrateurs peuvent modifier les réglages de l'IA.",
+      "generic": "Une erreur est survenue.",
+      "pickProvider": "Choisissez un fournisseur.",
+      "enterModel": "Saisissez un modèle.",
+      "budgetWhole": "Le budget doit être un nombre entier de jetons.",
+      "planRequired": "L'IA est incluse à partir de l'offre Starter.",
+      "checkFields": "Vérifiez les champs.",
+      "enterServer": "Saisissez l'adresse du serveur, par exemple http://localhost:11434/v1.",
+      "pasteKey": "Collez votre clé API {provider}.",
+      "saveFirst": "Enregistrez d'abord vos réglages.",
+      "emptyAnswer": "(réponse vide)",
+      "instructionsTooLong": "Les instructions ne doivent pas dépasser 4 000 caractères.",
+      "invalidConversation": "Conversation invalide.",
+      "noCustomerMessage": "Il n'y a pas encore de message client à lire."
+    },
+    "editor": {
+      "leaseRequest": "{name} souhaite modifier {view}",
+      "giveControl": "Donner la main",
+      "nowEditing": "{name} modifie maintenant",
+      "keepControl": "Garder",
+      "undoTheme": "Annuler la modification du thème",
+      "undo": "Annuler",
+      "redoTheme": "Rétablir la modification du thème",
+      "redo": "Rétablir",
+      "resolveSave": "Résolvez le problème d'enregistrement avant de publier.",
+      "themeInvalid": "Le thème contient une valeur invalide. Corrigez-la avant de publier.",
+      "publishedTheme": "thème v{version}",
+      "publishedPage": "page v{version}",
+      "newerVersion": "Quelqu'un a enregistré une version plus récente. Rechargez avant de publier.",
+      "pageLive": "{view} est en ligne",
+      "themeLive": "Le thème est en ligne",
+      "publishedList": "Publié : {list}.",
+      "leaveUnsaved": "Vos dernières modifications n'ont pas pu être enregistrées. Quitter quand même ?",
+      "saved": "Enregistré",
+      "sectionAdded": "{label} ajoutée",
+      "tabs": {
+        "sections": "Sections",
+        "blocks": "Blocs",
+        "theme": "Thème",
+        "add": "Ajouter",
+        "editBlock": "Modifier le bloc",
+        "settings": "Réglages"
+      },
+      "blocksFollowing": "Vous pourrez ajouter des blocs dès que vous modifierez la page.",
+      "blocksHint": "Faites glisser un bloc dans une section, ou directement sur la page.",
+      "addSection": "Ajouter une section",
+      "viewSettings": "Réglages de {label}",
+      "settings": "Réglages",
+      "exit": "Quitter l'éditeur",
+      "toggleSections": "Afficher ou masquer les sections",
+      "noTheme": "Aucun thème",
+      "themeEdited": "modifié",
+      "previewSize": "Taille de l'aperçu",
+      "viewports": {
+        "fit": "Ajuster à la fenêtre",
+        "desktop": "Ordinateur · 1280",
+        "tablet": "Tablette · 768",
+        "mobile": "Mobile · 390"
+      },
+      "playTransition": "Lire la transition de page",
+      "playTransitionNamed": "Lire la transition de page : {name}",
+      "noTransition": "Cette page n'a pas de transition en superposition",
+      "toggleMode": "Changer le mode de l'aperçu",
+      "previewDark": "Aperçu en mode sombre",
+      "previewLight": "Aperçu en mode clair",
+      "moreActions": "Plus d'actions",
+      "versionHistory": "Historique des versions",
+      "saveNow": "Enregistrer maintenant",
+      "discard": "Abandonner les modifications non publiées",
+      "publish": "Publier",
+      "published": "Publié",
+      "publishTip": {
+        "forbidden": "Seuls les propriétaires et les administrateurs peuvent publier",
+        "both": "Publier cette page et les modifications du thème",
+        "theme": "Publier les modifications du thème (toutes les pages)",
+        "page": "Mettre votre brouillon en ligne",
+        "none": "Tout est en ligne"
+      },
+      "sheet": {
+        "fields": "Réglages du bloc",
+        "add": "Ajouter un bloc",
+        "theme": "Thème",
+        "sections": "Sections"
+      },
+      "discardDialog": {
+        "title": "Abandonner les modifications non publiées ?",
+        "description": "Votre brouillon de <b>{label}</b> revient à ce qui est en ligne. Les versions enregistrées restent dans l'historique des versions.",
+        "keep": "Continuer à modifier",
+        "done": "Modifications abandonnées",
+        "confirm": "Abandonner les modifications"
+      },
+      "follow": {
+        "asked": "Demande envoyée à {name}",
+        "unreachable": "Impossible de joindre le serveur. Réessayez.",
+        "nobody": "Personne ne modifie {what}.",
+        "otherTab": "Vous modifiez {what} dans un autre onglet.",
+        "someone": "{name} modifie {what}. Vous voyez ses changements en direct.",
+        "start": "Commencer à modifier",
+        "editHere": "Modifier ici",
+        "requested": "Demande envoyée…",
+        "request": "Demander la main"
+      },
+      "save": {
+        "saved": "Enregistré",
+        "savedAgo": "Brouillon enregistré {when}",
+        "upToDate": "Le brouillon est à jour",
+        "unsaved": "Non enregistré",
+        "unsavedHint": "Enregistrement imminent · ⌘S pour enregistrer maintenant",
+        "saving": "Enregistrement…",
+        "savingHint": "Enregistrement de votre brouillon",
+        "failed": "Non enregistré",
+        "failedHint": "Échec de l'enregistrement. Cliquez pour réessayer.",
+        "conflict": "Conflit",
+        "conflictHint": "Quelqu'un d'autre a modifié ceci"
+      },
+      "conflict": {
+        "titlePage": "Cette page a été modifiée ailleurs",
+        "titleTheme": "Le thème a été modifié ailleurs",
+        "someone": "Quelqu'un",
+        "description": "{name} a enregistré un brouillon plus récent {when}, peut-être dans un autre onglet. Chargez sa version, ou gardez la vôtre et remplacez la sienne.",
+        "theirs": "Charger sa version",
+        "mine": "Garder la mienne"
+      }
+    },
+    "theme": {
+      "appearance": {
+        "darkAdded": "Mode sombre ajouté",
+        "darkAddedHint": "La version sombre de chaque palette démarre comme une copie de la version claire. Ouvrez une palette et passez en sombre pour la composer.",
+        "undo": "Annuler",
+        "removedDark": "Les couleurs sombres ont été supprimées.",
+        "removedLight": "Les couleurs claires ont été supprimées.",
+        "modesTitle": "Modes de couleur",
+        "modesDescription": "À décider une fois. Vous pourrez changer plus tard ; annuler restaure les couleurs supprimées.",
+        "strategies": {
+          "dual": {
+            "label": "Clair et sombre",
+            "hint": "Suit l'appareil du visiteur. Chaque palette a une version claire et une version sombre."
+          },
+          "light": {
+            "label": "Clair uniquement",
+            "hint": "Un seul style, conçu sur fond clair. Deux fois moins de couleurs à gérer."
+          },
+          "dark": {
+            "label": "Sombre uniquement",
+            "hint": "Un seul style, conçu sur fond sombre."
+          }
+        },
+        "pageDefault": "Page par défaut",
+        "mode": {
+          "light": "clair",
+          "dark": "sombre"
+        }
+      },
+      "motion": {
+        "title": "Animation",
+        "description": "Les visiteurs qui demandent à leur appareil de réduire les animations n'en voient jamais.",
+        "off": "Aucune",
+        "subtle": "Discrète",
+        "lively": "Dynamique",
+        "sectionsAppear": "Apparition des sections",
+        "entrance": {
+          "none": "Aucune",
+          "fade": "Fondu",
+          "rise": "Montée",
+          "scale": "Zoom",
+          "blur": "Netteté progressive",
+          "mask": "Révélation",
+          "slide": "Glissement"
+        },
+        "easing": "Courbe d'accélération",
+        "custom": "Personnalisée",
+        "easings": {
+          "smooth": "Fluide",
+          "expressive": "Expressive",
+          "standard": "Standard",
+          "bouncy": "Rebond",
+          "linear": "Linéaire"
+        },
+        "speed": "Vitesse",
+        "speedHint": "Les survols et petites transitions vont deux fois plus vite, les entrées de page deux fois moins.",
+        "spacing": "Espacement",
+        "spacingDescription": "L'unité de base derrière chaque écart et chaque marge de section.",
+        "unitPhone": "Unité · mobile",
+        "unitDesktop": "Unité · ordinateur",
+        "flavorTitle": "Style de mise en page",
+        "flavorDescription": "La structure du site : style de navigation et squelette des pages. Les couleurs et les polices ne changent pas.",
+        "flavors": {
+          "fancy": {
+            "label": "Expressif",
+            "hint": "Navigation d'en-tête dynamique, sections expressives. Boutiques et studios."
+          },
+          "grounded": {
+            "label": "Sobre",
+            "hint": "Barre latérale d'abord, calme et dense. Catalogues et B2B."
+          }
+        }
+      },
+      "shared": {
+        "emphasis": {
+          "primary": "Principal",
+          "secondary": "Secondaire",
+          "outline": "Contour",
+          "ghost": "Discret",
+          "link": "Lien"
+        },
+        "fontRoles": {
+          "display": "Titre d'accroche",
+          "heading": "Titres",
+          "body": "Texte",
+          "accent": "Accent",
+          "mono": "Monospace"
+        },
+        "weights": {
+          "100": "Fin",
+          "200": "Extra léger",
+          "300": "Léger",
+          "400": "Normal",
+          "500": "Moyen",
+          "600": "Demi-gras",
+          "700": "Gras",
+          "800": "Extra gras",
+          "900": "Noir"
+        }
+      },
+      "controls": {
+        "back": "Retour",
+        "pickColour": "Choisir une couleur",
+        "hex": "Hex",
+        "cssColour": "Couleur CSS",
+        "lightness": "Luminosité",
+        "saturation": "Saturation",
+        "opacity": "Opacité",
+        "missing": "Introuvable : « {value} »",
+        "automatic": "Automatique"
+      },
+      "brand": {
+        "title": "Marque",
+        "identity": "Identité",
+        "identityDescription": "Utilisée par l'en-tête, les transitions de page, l'onglet du navigateur et les aperçus de liens.",
+        "voice": "Ton de la marque",
+        "voiceDescription": "La façon dont la marque s'exprime. Les suggestions de texte et l'assistant IA s'en inspirent.",
+        "tone": "Ton",
+        "tonePlaceholder": "Simple, chaleureux et précis. Nous réparons, nous n'en rajoutons pas.",
+        "slots": {
+          "logo": {
+            "label": "Logo",
+            "hint": "Pour les fonds clairs"
+          },
+          "logoInverse": {
+            "label": "Logo sur fond sombre",
+            "hint": "Utilise le logo à défaut"
+          },
+          "mark": {
+            "label": "Symbole",
+            "hint": "Symbole carré pour les chargements et transitions"
+          },
+          "favicon": {
+            "label": "Favicon",
+            "hint": "Onglet du navigateur, au moins 48 px"
+          },
+          "ogImage": {
+            "label": "Image de partage",
+            "hint": "Affichée lors du partage d'un lien, 1200 × 630"
+          }
+        },
+        "replace": "Remplacer : {label}",
+        "remove": "Retirer : {label}",
+        "choose": "Choisir",
+        "usingLogo": "Utilise le logo",
+        "describeImage": "Décrivez l'image",
+        "altText": "Texte alternatif : {label}",
+        "avoid": "Mots à éviter",
+        "removeWord": "Retirer {word}",
+        "avoidPlaceholder": "révolutionnaire, sans effort, libérez"
+      },
+      "buttons": {
+        "cornersTitle": "Angles et bordures",
+        "cornersDescription": "Le rayon de base définit tous les angles arrondis du site : cartes, images, champs.",
+        "cornerRadius": "Rayon des angles",
+        "borderWidth": "Épaisseur des bordures",
+        "stylesTitle": "Styles de bouton",
+        "stylesDescription": "Les couleurs viennent de la palette de la section : un même style fonctionne sur les bandes claires et sombres. Vous pouvez mélanger les styles sur une page.",
+        "newStyle": "Nouveau style",
+        "add": "Ajouter",
+        "default": "Par défaut",
+        "name": "Nom",
+        "corners": "Angles",
+        "font": "Police",
+        "weight": "Graisse",
+        "hover": "Survol",
+        "hovers": {
+          "none": "Aucun",
+          "darken": "Assombrir",
+          "lift": "Soulever",
+          "press": "Enfoncer",
+          "glow": "Halo"
+        },
+        "shadow": "Ombre",
+        "border": "Bordure",
+        "paddingSides": "Marge intérieure · côtés",
+        "paddingHeight": "Marge intérieure · hauteur",
+        "letterSpacing": "Espacement des lettres",
+        "allCaps": "Majuscules",
+        "makeDefault": "Définir par défaut",
+        "copyName": "{name} (copie)",
+        "duplicate": "Dupliquer",
+        "deleteStyle": "Supprimer le style",
+        "shadowsTitle": "Ombres",
+        "shadowsDescription": "Niveaux d'élévation nommés, utilisés par les boutons et les cartes.",
+        "newShadow": "Nouvelle ombre",
+        "noShadows": "Aucune ombre. Le plat est aussi un style.",
+        "colour": "Couleur",
+        "strength": "Intensité",
+        "offset": "Décalage",
+        "blur": "Flou",
+        "spread": "Étalement",
+        "inset": "Intérieure (bord)",
+        "insetShadow": "Ombre intérieure",
+        "usedByButton": "Utilisée par un style de bouton",
+        "deleteShadow": "Supprimer l'ombre"
+      },
+      "typography": {
+        "fontsTitle": "Polices",
+        "fontsDescription": "Les familles chargées par ce thème. Moins de polices, des pages plus rapides.",
+        "sourceUploaded": "Importée",
+        "sourceSystem": "Système",
+        "unused": "inutilisée",
+        "usedByStyle": "Utilisée par un style de texte",
+        "removeFont": "Retirer la police",
+        "removeFamily": "Retirer {family}",
+        "stylesTitle": "Styles de texte",
+        "stylesDescription": "Les blocs choisissent un style, jamais une police : modifier un style ici change l'apparence de tout le site.",
+        "roles": {
+          "display": {
+            "label": "Accroche",
+            "sample": "De grandes déclarations",
+            "hint": "Titres d'en-tête et grands chiffres"
+          },
+          "heading": {
+            "label": "Titres",
+            "sample": "Titre de section",
+            "hint": "Titres de sections et de cartes"
+          },
+          "body": {
+            "label": "Texte",
+            "sample": "Des paragraphes lisibles qui portent votre histoire.",
+            "hint": "Paragraphes, listes, formulaires"
+          },
+          "accent": {
+            "label": "Accent",
+            "sample": "Surtitre · Étiquette",
+            "hint": "Surtitres, étiquettes, boutons (facultatif)"
+          },
+          "mono": {
+            "label": "Monospace",
+            "sample": "REF-2048 · 12,5 kW",
+            "hint": "Codes, caractéristiques, prix"
+          }
+        },
+        "font": "Police",
+        "weight": "Graisse",
+        "lineHeight": "Interligne",
+        "letterSpacing": "Espacement des lettres",
+        "allCaps": "Majuscules",
+        "scaleTitle": "Échelle de tailles",
+        "scaleDescription": "Les tailles évoluent en douceur du mobile à l'ordinateur. Chaque niveau est le précédent multiplié par le rapport.",
+        "basePhone": "Base · mobile",
+        "baseDesktop": "Base · ordinateur",
+        "ratioPhone": "Rapport · mobile",
+        "ratioDesktop": "Rapport · ordinateur",
+        "ratios": {
+          "minorSecond": "Seconde mineure",
+          "majorSecond": "Seconde majeure",
+          "minorThird": "Tierce mineure",
+          "majorThird": "Tierce majeure",
+          "perfectFourth": "Quarte juste",
+          "augmentedFourth": "Quarte augmentée",
+          "perfectFifth": "Quinte juste",
+          "goldenRatio": "Nombre d'or"
+        },
+        "add": "Ajouter",
+        "searchFonts": "Rechercher dans Google Fonts…",
+        "useFont": "Utiliser « {name} » depuis Google Fonts",
+        "noFonts": "Aucune police trouvée.",
+        "categories": {
+          "sans": "Sans empattement",
+          "serif": "Avec empattement",
+          "display": "Titrage",
+          "mono": "Monospace",
+          "handwriting": "Manuscrite"
+        }
+      },
+      "roles": {
+        "background": "Arrière-plan",
+        "backgroundAlt": "Arrière-plan alterné",
+        "surface": "Cartes",
+        "onSurface": "Texte des cartes",
+        "text": "Texte",
+        "textMuted": "Texte atténué",
+        "heading": "Titres",
+        "primary": "Bouton principal",
+        "onPrimary": "Libellé principal",
+        "secondary": "Bouton secondaire",
+        "onSecondary": "Libellé secondaire",
+        "accent": "Accent",
+        "onAccent": "Texte sur accent",
+        "accentText": "Texte d'accent",
+        "link": "Liens",
+        "border": "Bordures",
+        "focusRing": "Contour de focus"
+      },
+      "designControls": {
+        "colourOf": "Couleur : {label}",
+        "opacity": "Opacité",
+        "inMs": "{label} en millisecondes",
+        "ms": "ms",
+        "themeEasing": "Accélération du thème",
+        "easing": {
+          "standard": "Standard",
+          "gentle": "Douce",
+          "snappy": "Vive",
+          "linear": "Linéaire",
+          "ease-in-out": "Entrée et sortie progressives",
+          "overshoot": "Dépassement"
+        },
+        "customCurve": "Courbe personnalisée…",
+        "curveOf": "Courbe : {label}",
+        "actionsOf": "Actions pour {name}",
+        "duplicate": "Dupliquer",
+        "delete": "Supprimer",
+        "copyName": "{name} (copie)",
+        "presetName": "Nom du préréglage",
+        "namePlaceholder": "Nom"
+      },
+      "decor": {
+        "sample": {
+          "before": "Des mots qui",
+          "mark": "comptent"
+        },
+        "editorSample": {
+          "before": "Un froid qui",
+          "mark": "dure",
+          "after": "."
+        },
+        "title": "Mots mis en valeur",
+        "description": "Des marques pour les mots clés des titres. Choisissez les mots pour chaque langue dans le champ Mise en valeur du bloc.",
+        "kinds": {
+          "color": "Couleur",
+          "underline": "Soulignement",
+          "squiggle": "Ondulé",
+          "stroke": "Coup de pinceau",
+          "box": "Cadre",
+          "circle": "Cercle",
+          "marker": "Surligneur",
+          "gradient": "Texte en dégradé"
+        },
+        "new": "Nouvelle mise en valeur",
+        "replay": "Rejouer",
+        "all": "Toutes les mises en valeur",
+        "style": "Style",
+        "colour": "Couleur",
+        "lineWeight": "Épaisseur du trait",
+        "tintText": "Colorer aussi les mots",
+        "drawIn": "Tracé animé",
+        "drawInHint": "S'anime une fois à l'apparition du titre."
+      },
+      "doctor": {
+        "healthTitle": "Santé : {value}/100",
+        "healthy": "En bonne santé",
+        "needsAttention": "À surveiller",
+        "unhealthy": "En mauvais état",
+        "scoreHint": "Contraste et structure, notés sur 100.",
+        "tiers": {
+          "essential": {
+            "label": "Essentiel",
+            "hint": "Un thème compact et fiable."
+          },
+          "complete": {
+            "label": "Complet",
+            "hint": "Couvre tous les rôles, avec de la place pour la variété."
+          },
+          "premium": {
+            "label": "Premium",
+            "hint": "Riche : plusieurs jeux de couleurs, styles et animations."
+          }
+        },
+        "richnessNote": "{hint} La richesse n'est pas la qualité : un thème essentiel peut être parfait.",
+        "severity": {
+          "error": "À corriger · {count}",
+          "warning": "À corriger si possible · {count}",
+          "info": "Suggestions · {count}"
+        },
+        "noFindings": "Aucun problème détecté. Beau travail.",
+        "gridTitle": "Grille de contraste",
+        "gridDescription": "Chaque paire texte et arrière-plan de chaque jeu de couleurs. Cliquez sur une cellule pour la corriger.",
+        "light": "Clair",
+        "dark": "Sombre",
+        "contrastTitle": "{label} : {ratio}:1 (minimum {min}:1)"
+      },
+      "palette": {
+        "groups": {
+          "brand": {
+            "label": "Marque",
+            "hint": "Les couleurs par lesquelles on vous reconnaît."
+          },
+          "accent": {
+            "label": "Accent",
+            "hint": "Mises en avant, badges, illustrations."
+          },
+          "neutral": {
+            "label": "Neutres",
+            "hint": "Arrière-plans, texte, bordures."
+          },
+          "feedback": {
+            "label": "Retours",
+            "hint": "Succès, avertissement, erreur."
+          },
+          "custom": {
+            "label": "Autres"
+          }
+        },
+        "newName": "Nouvelle couleur",
+        "intro": "Chaque couleur du site vient de cette palette. Les jeux de couleurs désignent ces couleurs par leur nom : en modifier une ici met à jour tous les endroits où elle est utilisée.",
+        "add": "Ajouter",
+        "empty": "Aucune couleur dans ce groupe.",
+        "lockedLabel": "Couleur de marque verrouillée",
+        "noDescription": "Aucune description",
+        "usesTitle": "Emplacements utilisant cette couleur",
+        "lockedNote": "Couleur de marque, verrouillée par le créateur de votre site.",
+        "name": "Nom",
+        "purpose": "À quoi elle sert",
+        "purposePlaceholder": "ex. Boutons principaux et liens sur fond clair",
+        "group": "Groupe",
+        "lock": "Verrouillage",
+        "lockSwitch": "Verrouiller la couleur de marque",
+        "usedBy": "Utilisée par",
+        "unused": "Pas encore utilisée. Associez-la à un rôle dans un jeu de couleurs.",
+        "shadow": "Ombre",
+        "tokenId": "Identifiant du jeton",
+        "tokenIdHint": "Utilisé en CSS comme nom de variable. Le renommer met à jour toutes les références.",
+        "idInvalid": "Les identifiants utilisent des minuscules, des chiffres et des tirets.",
+        "removeFirst": "Retirez-la d'abord de tous les jeux de couleurs",
+        "inUse": "{count, plural, one {Utilisée à # endroit} other {Utilisée à # endroits}}",
+        "delete": "Supprimer la couleur"
+      },
+      "effects": {
+        "siteWide": "Tout le site",
+        "siteWideDescription": "Un effet sur toutes les pages. Les sections peuvent toujours choisir le leur dans Style de section.",
+        "effect": "Effet",
+        "none": "Aucun",
+        "schedule": "Seulement entre deux dates",
+        "scheduleHint": "Peut chevaucher le nouvel an, par exemple 12-01 à 01-06 (mois-jour).",
+        "from": "Du",
+        "to": "Au",
+        "presets": "Préréglages d'effets",
+        "presetsDescription": "Des couches d'ambiance derrière le contenu. Elles se mettent en pause hors écran et restent immobiles pour les visiteurs qui préfèrent les animations réduites.",
+        "kinds": {
+          "snow": "Neige",
+          "particles": "Particules flottantes",
+          "aurora": "Aurore",
+          "grain": "Grain de pellicule"
+        },
+        "new": "Nouvel effet",
+        "dayPlaceholder": "MM-DD",
+        "sampleTitle": "Service d'hiver",
+        "sampleBody": "L'effet se place derrière le contenu.",
+        "all": "Tous les effets",
+        "kind": "Type",
+        "colour": "Couleur",
+        "density": "Densité",
+        "speed": "Vitesse",
+        "size": "Taille"
+      },
+      "surfaces": {
+        "title": "Dégradés",
+        "description": "Des arrière-plans de section construits à partir des couleurs du jeu de couleurs : ils changent avec chaque jeu et chaque mode.",
+        "kinds": {
+          "linear": "Linéaire",
+          "radial": "Radial",
+          "conic": "Conique",
+          "stripes": "Rayures"
+        },
+        "stops": "{count, plural, one {# palier} other {# paliers}}",
+        "new": "Nouveau dégradé",
+        "sampleTitle": "Titre de section",
+        "sampleBody": "Le texte courant se place sur le dégradé.",
+        "all": "Tous les dégradés",
+        "angle": "Angle",
+        "period": "Période",
+        "centreX": "Centre X",
+        "centreY": "Centre Y",
+        "stopsTitle": "Paliers",
+        "stopsDescription": "Les couleurs viennent du jeu de couleurs de la section. Passez à 0 % d'opacité pour se fondre dans la page.",
+        "removeStop": "Supprimer le palier {n}",
+        "stop": "Palier {n}",
+        "position": "Position",
+        "addStop": "Ajouter un palier"
+      },
+      "transitions": {
+        "stage": {
+          "title": "Page un",
+          "cta": "Page suivante"
+        },
+        "test": "Tester",
+        "betweenPages": "Entre les pages",
+        "motionOff": "Les animations sont désactivées pour ce thème : les pages changent instantanément.",
+        "betweenPagesHint": "Ce que voient les visiteurs pendant le chargement de la page suivante.",
+        "pageTransition": "Transition de page",
+        "noneInstant": "Aucune, changement instantané",
+        "native": "Fondu enchaîné du navigateur (sans calque)",
+        "nativeNote": "Chrome, Edge et Safari enchaînent les pages en fondu d'eux-mêmes. Les autres navigateurs changent instantanément.",
+        "presets": "Préréglages de transition",
+        "presetsDescription": "Construits à partir des couleurs et du symbole de votre marque. Dupliquez-en un pour le personnaliser.",
+        "backgrounds": {
+          "solid": "Uni",
+          "translucent": "Dépoli",
+          "radial": "Halo"
+        },
+        "moves": {
+          "fade": "Fondu",
+          "slide-up": "Glissement vers le haut",
+          "slide-down": "Glissement vers le bas",
+          "wipe": "Balayage",
+          "circle": "Cercle"
+        },
+        "totalMs": "{ms} ms",
+        "inUse": "Utilisée",
+        "new": "Nouvelle transition",
+        "all": "Toutes les transitions",
+        "use": "Utiliser",
+        "cover": "Recouvrement",
+        "colour": "Couleur",
+        "blur": "Flou",
+        "movement": "Mouvement",
+        "icon": "Icône",
+        "iconMissing": "Pas encore de symbole ni de logo : un point les remplace. Ajoutez-en un dans Marque.",
+        "icons": {
+          "none": "Aucune",
+          "mark": "Symbole",
+          "logo": "Logo"
+        },
+        "animation": "Animation",
+        "iconMotions": {
+          "none": "Fixe",
+          "pulse": "Pulsation",
+          "rotate": "Rotation",
+          "line": "Ligne de chargement",
+          "dots": "Points"
+        },
+        "size": "Taille",
+        "rotation": "Rotation",
+        "timing": "Durées",
+        "timingDescription": "Le recouvrement reste jusqu'à l'affichage de la page suivante, et jamais moins que le minimum.",
+        "coverIn": "Recouvrement",
+        "coverOut": "Découvrement",
+        "minHold": "Durée minimale",
+        "minHoldHint": "Évite un flash sur les connexions rapides.",
+        "easing": "Accélération",
+        "navTitle": "Menus et panneaux",
+        "navDescription": "Le menu mobile, les panneaux latéraux et la navigation plein écran. L'ouverture et la fermeture peuvent différer.",
+        "navSample": {
+          "services": "Services",
+          "projects": "Réalisations",
+          "contact": "Contact"
+        },
+        "enter": "Ouverture",
+        "leave": "Fermeture",
+        "navMoves": {
+          "slide": "Glissement",
+          "fade": "Fondu",
+          "scale": "Zoom",
+          "circle": "Cercle qui s'ouvre"
+        }
+      },
+      "schemes": {
+        "newName": "Nouveau jeu de couleurs",
+        "intro": "Les jeux de couleurs sont des recettes de couleurs nommées pour les sections. Nommez-les selon leur usage (« Bandeau d'accueil », « Pied de page ») pour les retrouver facilement.",
+        "pageDefault": "Par défaut de la page",
+        "noDescription": "Aucune description",
+        "add": "Ajouter un jeu de couleurs",
+        "light": "Clair",
+        "dark": "Sombre",
+        "inherited": "{mode, select, light {Pas encore de couleurs claires : ce jeu reprend les sombres. Toute modification ci-dessous crée la version claire.} other {Pas encore de couleurs sombres : ce jeu reprend les claires. Toute modification ci-dessous crée la version sombre.}}",
+        "details": "Détails",
+        "name": "Nom",
+        "usedFor": "Où il est utilisé",
+        "usedForPlaceholder": "ex. Bandeaux d'accueil et pied de page",
+        "makeDefault": "Définir par défaut",
+        "actions": "Actions du jeu de couleurs",
+        "duplicate": "Dupliquer",
+        "delete": "Supprimer le jeu de couleurs",
+        "roleGroups": {
+          "page": "Page",
+          "buttons": "Boutons",
+          "cards": "Cartes",
+          "accent": "Accent et liens"
+        },
+        "roleHints": {
+          "background": "Arrière-plan de section",
+          "backgroundAlt": "Bandes alternées, espaces réservés aux images",
+          "text": "Texte courant",
+          "textMuted": "Légendes, texte secondaire",
+          "heading": "Titres",
+          "border": "Séparateurs, champs, contours de cartes",
+          "primary": "Appel à l'action principal",
+          "onPrimary": "Libellé des boutons principaux",
+          "secondary": "Second appel à l'action",
+          "onSecondary": "Libellé des boutons secondaires",
+          "surface": "Cartes, panneaux, champs",
+          "onSurface": "Texte sur les cartes",
+          "accent": "Badges, pastilles, mises en avant",
+          "onAccent": "Texte sur fond d'accent",
+          "accentText": "Sur-titres, mots mis en valeur",
+          "link": "Liens dans le texte",
+          "focusRing": "Contour de focus au clavier"
+        },
+        "contrastTitle": "Contraste {ratio}:1, minimum {min}:1",
+        "colourOf": "Couleur : {role}",
+        "autoFrom": "Auto · d'après {role}",
+        "adjustShade": "Ajuster la teinte",
+        "adjustShadeTitle": "Ajuster la teinte (luminosité, saturation, opacité)",
+        "pickFirst": "Choisissez d'abord une couleur",
+        "adjustRole": "Ajuster : {role}",
+        "adjustNote": "Les retouches s'appliquent ici seulement ; la couleur de la palette ne change pas."
+      },
+      "preview": {
+        "eyebrow": "Sur-titre",
+        "heading": "Titre",
+        "body": "Texte courant",
+        "muted": "et atténué",
+        "link": "lien",
+        "card": "Texte de carte",
+        "primary": "Principal",
+        "secondary": "Secondaire",
+        "accent": "Accent"
+      },
+      "nav": {
+        "titles": {
+          "home": "Thème",
+          "palette": "Palette",
+          "schemes": "Jeux de couleurs",
+          "appearance": "Clair et sombre",
+          "typography": "Typographie",
+          "buttons": "Boutons et forme",
+          "motion": "Animations et mise en page",
+          "doctor": "Docteur de palette",
+          "brand": "Marque",
+          "gradients": "Dégradés",
+          "decor": "Mots mis en valeur",
+          "effects": "Effets",
+          "transitions": "Transitions"
+        },
+        "groups": {
+          "colours": "Couleurs",
+          "style": "Style",
+          "design": "Langage visuel",
+          "health": "Santé"
+        },
+        "modes": {
+          "dual": "Les deux, selon l'appareil",
+          "light": "Clair uniquement",
+          "dark": "Sombre uniquement"
+        },
+        "coloursCount": "{count, plural, one {# couleur} other {# couleurs}}",
+        "buttonsMeta": "{count, plural, one {# style de bouton} other {# styles de bouton}} · coins de {radius} px",
+        "motionMeta": "Animation : {profile} · {flavor}",
+        "brand": {
+          "logo": "Logo",
+          "mark": "Symbole",
+          "favicon": "Favicon",
+          "voice": "Ton",
+          "empty": "Logo, favicon, image de partage, ton"
+        },
+        "gradientsMeta": "{count, plural, one {# arrière-plan de section} other {# arrière-plans de section}}",
+        "none": "Aucune",
+        "effectsActive": "Tout le site : {name}",
+        "effectsCount": "{count, plural, one {# préréglage} other {# préréglages}}",
+        "nativeTransition": "Fondu enchaîné du navigateur",
+        "instantTransition": "Changement de page instantané",
+        "doctorErrors": "{errors} à corriger · {warnings, plural, one {# avertissement} other {# avertissements}}",
+        "doctorWarnings": "{count, plural, one {# avertissement} other {# avertissements}}",
+        "doctorOk": "Toutes les vérifications passent"
+      },
+      "panel": {
+        "noTheme": "Ce site n'a pas encore de thème.",
+        "undo": "Annuler la modification du thème",
+        "redo": "Rétablir la modification du thème",
+        "scheme": "Jeu de couleurs",
+        "schemeSubtitle": "Jeu de couleurs",
+        "name": "Nom du thème",
+        "noDescription": "Aucune description",
+        "openDoctor": "Ouvrir le docteur de palette",
+        "actions": "Actions du thème",
+        "versions": "Versions du thème",
+        "discard": "Abandonner les modifications du thème",
+        "notSaved": "Non enregistré : {field} {message}.",
+        "discardTitle": "Abandonner les modifications du thème ?",
+        "discardDescription": "Le thème revient à ce qui est en ligne actuellement. Les versions publiées restent dans Versions du thème.",
+        "keepEditing": "Continuer à modifier",
+        "discarded": "Modifications du thème abandonnées",
+        "discardConfirm": "Abandonner les modifications",
+        "save": {
+          "draft": "Brouillon enregistré · pas encore en ligne",
+          "live": "En ligne",
+          "dirty": "Modifications non enregistrées",
+          "saving": "Enregistrement…",
+          "error": "Enregistrement impossible",
+          "conflict": "Modifié ailleurs"
+        },
+        "versionsDialog": {
+          "title": "Versions du thème",
+          "description": "Chaque publication est conservée. Restaurer copie une version dans votre brouillon ; publiez pour la mettre en ligne.",
+          "empty": "Aucune version publiée pour l'instant.",
+          "defaultLabel": "Version publiée {version}",
+          "latest": "Dernière",
+          "restored": "Version {version} restaurée dans votre brouillon",
+          "restore": "Restaurer"
+        }
+      }
+    }
+  }
+}

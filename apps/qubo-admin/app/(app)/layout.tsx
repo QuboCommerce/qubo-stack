@@ -1,15 +1,19 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
+import { getLocale, getMessages, getTimeZone, getTranslations } from "next-intl/server";
 import { Providers } from "@/providers";
 import { StaffHint } from "@/components/staff-hint";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
-export const metadata: Metadata = {
-  title: { default: "Qubo", template: "%s · Qubo" },
-  description: "Qubo — business manager and site studio.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("shell.meta");
+  return {
+    title: { default: "Qubo", template: "%s · Qubo" },
+    description: t("description"),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: [
@@ -18,11 +22,14 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const timeZone = await getTimeZone();
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
       <body className="min-h-dvh font-sans antialiased">
-        <Providers>{children}</Providers>
+        <Providers locale={locale} messages={messages} timeZone={timeZone}>{children}</Providers>
         <StaffHint />
       </body>
     </html>

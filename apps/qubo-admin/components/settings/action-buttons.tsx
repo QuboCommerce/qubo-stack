@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { useFormStatus } from "react-dom";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export function ConfirmAction({
   destructive?: boolean;
   disabled?: boolean;
 }) {
+  const t = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
   const run = () =>
@@ -57,7 +59,7 @@ export function ConfirmAction({
         </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>
-            Cancel
+            {t("cancel")}
           </Button>
           <Button variant={destructive ? "destructive" : "default"} onClick={run} disabled={pending}>
             {pending && <Loader2 className="animate-spin" />}

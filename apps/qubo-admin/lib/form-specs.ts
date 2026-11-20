@@ -1,5 +1,8 @@
 import type { FormValues, MergeSpec } from "@/lib/merge";
-import { expandHours, weekdayLabel, weekdays, type OpeningHoursRule } from "@/lib/opening-hours";
+import type { getTranslations } from "next-intl/server";
+import { expandHours, weekdays, type OpeningHoursRule } from "@/lib/opening-hours";
+
+type SettingsT = Awaited<ReturnType<typeof getTranslations<"settings">>>;
 
 const onOff = (v: unknown) => (v === "on" ? "On" : "Off");
 const names = (lookup: Map<string, string>) => (v: unknown) =>
@@ -90,13 +93,13 @@ export function siteGeneralValues(s: SiteRow): FormValues {
   };
 }
 
-export function siteGeneralSpec(labels: { type: (t: string) => string; capability: (c: string) => string }): MergeSpec {
+export function siteGeneralSpec(labels: { type: (t: string) => string; capability: (c: string) => string }, t: SettingsT): MergeSpec {
   return {
-    name: { label: "Site name" },
-    description: { label: "Short description" },
-    currency: { label: "Currency" },
-    type: { label: "Site type", format: (v) => labels.type(String(v)) },
-    capabilities: { label: "Features", multi: true, format: (v) => (Array.isArray(v) && v.length ? v.map(labels.capability).join(", ") : "None") },
+    name: { label: t("fields.siteName") },
+    description: { label: t("fields.shortDescription") },
+    currency: { label: t("fields.currency") },
+    type: { label: t("fields.siteType"), format: (v) => labels.type(String(v)) },
+    capabilities: { label: t("fields.features"), multi: true, format: (v) => (Array.isArray(v) && v.length ? v.map(labels.capability).join(", ") : t("fields.none")) },
   };
 }
 
@@ -152,29 +155,31 @@ export function businessValues(s: BusinessSettingsRow | null | undefined, o: Org
   return values;
 }
 
-export function businessSpec(): MergeSpec {
+export function businessSpec(t: SettingsT): MergeSpec {
+  const switchText = (v: unknown) => (v === "on" ? t("fields.on") : t("fields.off"));
   const spec: MergeSpec = {
-    metaTitle: { label: "Site title" },
-    metaDescription: { label: "Site description" },
-    phone: { label: "Phone" },
-    email: { label: "Email" },
-    businessType: { label: "Business type", format: (v) => (v ? String(v) : "Local business") },
-    latitude: { label: "Latitude" },
-    longitude: { label: "Longitude" },
-    legalName: { label: "Legal name" },
-    legalForm: { label: "Legal form" },
-    companyNumber: { label: "Company number" },
-    vatNumber: { label: "VAT number" },
-    addressLine1: { label: "Address" },
-    addressLine2: { label: "Address line 2" },
-    postalCode: { label: "Postal code" },
-    city: { label: "City" },
-    country: { label: "Country" },
+    metaTitle: { label: t("fields.siteTitle") },
+    metaDescription: { label: t("fields.siteDescription") },
+    phone: { label: t("fields.phone") },
+    email: { label: t("fields.email") },
+    businessType: { label: t("fields.businessType"), format: (v) => (v ? String(v) : t("fields.localBusiness")) },
+    latitude: { label: t("fields.latitude") },
+    longitude: { label: t("fields.longitude") },
+    legalName: { label: t("fields.legalName") },
+    legalForm: { label: t("fields.legalForm") },
+    companyNumber: { label: t("fields.companyNumber") },
+    vatNumber: { label: t("fields.vatNumber") },
+    addressLine1: { label: t("fields.address") },
+    addressLine2: { label: t("fields.addressLine2") },
+    postalCode: { label: t("fields.postalCode") },
+    city: { label: t("fields.city") },
+    country: { label: t("fields.country") },
   };
   for (const d of weekdays) {
-    spec[`hours_${d}_open`] = { label: `${weekdayLabel[d]} open`, format: onOff };
-    spec[`hours_${d}_opens`] = { label: `${weekdayLabel[d]} opens` };
-    spec[`hours_${d}_closes`] = { label: `${weekdayLabel[d]} closes` };
+    const day = t(`weekdays.${d}`);
+    spec[`hours_${d}_open`] = { label: t("hours.open", { day }), format: switchText };
+    spec[`hours_${d}_opens`] = { label: t("hours.opens", { day }) };
+    spec[`hours_${d}_closes`] = { label: t("hours.closes", { day }) };
   }
   return spec;
 }

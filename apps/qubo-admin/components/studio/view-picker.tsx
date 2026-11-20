@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Check, ChevronsUpDown, Lock } from "lucide-react";
 import type { ViewIndex } from "@qubo/studio";
 import { cn } from "@qubo/shared/utils";
@@ -17,6 +18,7 @@ const iconOf = (e: Entry) => viewIcons[e.resourceKind ?? e.key.split(":")[1] ?? 
  * without leaving the editor. Searchable; system views carry a lock.
  */
 export function ViewPicker({ index, current, onSelect }: { index: ViewIndex; current: Entry; onSelect: (key: string) => void }) {
+  const t = useTranslations("studio.viewPicker");
   const [open, setOpen] = useState(false);
   const Icon = iconOf(current);
 
@@ -37,8 +39,8 @@ export function ViewPicker({ index, current, onSelect }: { index: ViewIndex; cur
           {e.label}
           {e.description && <span className="ml-1.5 text-xs text-muted-foreground">{e.description}</span>}
         </span>
-        {e.hasUnpublishedChanges && <span className="size-1.5 rounded-full bg-amber-500" title="Unpublished changes" />}
-        {e.isSystem && e.resourceKind && <Lock className="size-3 text-muted-foreground" aria-label="System page" />}
+        {e.hasUnpublishedChanges && <span className="size-1.5 rounded-full bg-amber-500" title={t("unpublished")} />}
+        {e.isSystem && e.resourceKind && <Lock className="size-3 text-muted-foreground" aria-label={t("systemPage")} />}
         <Check className={cn("size-3.5", e.key === current.key ? "opacity-100" : "opacity-0")} />
       </CommandItem>
     );
@@ -50,7 +52,7 @@ export function ViewPicker({ index, current, onSelect }: { index: ViewIndex; cur
         <button
           type="button"
           className="group flex h-8 min-w-0 max-w-full items-center gap-2 rounded-lg border bg-background px-2.5 text-sm font-medium shadow-xs transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-w-56"
-          aria-label={`Editing ${current.label}. Change view`}
+          aria-label={t("trigger", { label: current.label })}
         >
           <Icon className="size-4 shrink-0 text-muted-foreground" />
           <span className="min-w-0 flex-1 truncate text-left">{current.label}</span>
@@ -60,9 +62,9 @@ export function ViewPicker({ index, current, onSelect }: { index: ViewIndex; cur
       </PopoverTrigger>
       <PopoverContent className="w-[min(22rem,calc(100vw-1rem))] p-0" align="center">
         <Command>
-          <CommandInput placeholder="Search templates and pages…" />
+          <CommandInput placeholder={t("search")} />
           <CommandList className="max-h-[min(28rem,70vh)]">
-            <CommandEmpty>No matching view.</CommandEmpty>
+            <CommandEmpty>{t("empty")}</CommandEmpty>
             {index.groups.map((g) => (
               <CommandGroup key={g.id} heading={g.label}>
                 {g.entries.map(item)}
@@ -71,7 +73,7 @@ export function ViewPicker({ index, current, onSelect }: { index: ViewIndex; cur
             {index.sectionGroups.length > 0 && (
               <>
                 <CommandSeparator />
-                <CommandGroup heading="Shared sections">{index.sectionGroups.map(item)}</CommandGroup>
+                <CommandGroup heading={t("sharedSections")}>{index.sectionGroups.map(item)}</CommandGroup>
               </>
             )}
           </CommandList>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { ago } from "@/lib/relative";
 
 type Other = {
@@ -16,9 +17,11 @@ type Other = {
 };
 
 const flag = (cc: string | null) => (cc && /^[A-Z]{2}$/i.test(cc) ? String.fromCodePoint(...[...cc.toUpperCase()].map((c) => 0x1f1a5 + c.charCodeAt(0))) : "");
-const place = (o: Other) => (o.isLocal ? "this network" : [o.city && o.region && o.region !== o.city ? `${o.city} (${o.region})` : o.city, o.country].filter(Boolean).join(", ") || "an unknown location");
+const place = (o: Other, t: (key: "thisNetwork" | "unknownPlace") => string) => (o.isLocal ? t("thisNetwork") : [o.city && o.region && o.region !== o.city ? `${o.city} (${o.region})` : o.city, o.country].filter(Boolean).join(", ") || t("unknownPlace"));
 
 export function SignInForm({ email }: { email?: string }) {
+  const t = useTranslations("auth.signIn");
+  const locale = useLocale();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
   const [others, setOthers] = useState<Other[] | null>(null);
@@ -34,7 +37,7 @@ export function SignInForm({ email }: { email?: string }) {
     });
     if (!r.ok) {
       setPending(false);
-      setError("Couldn't sign out the other device. Try again.");
+      setError(t("takeoverFailed"));
       return;
     }
     window.location.assign("/");
@@ -52,21 +55,24 @@ export function SignInForm({ email }: { email?: string }) {
     const [first, ...rest] = others;
     return (
       <div className="space-y-4" role="alertdialog" aria-labelledby="takeover-title">
-        <h2 id="takeover-title" className="text-base font-semibold">Already signed in elsewhere</h2>
+        <h2 id="takeover-title" className="text-base font-semibold">{t("takeover.title")}</h2>
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Your account currently has another session open on <strong className="text-foreground">{first!.deviceLabel}</strong> from{" "}
-          <strong className="text-foreground">{flag(first!.countryCode)} {place(first!)}</strong>. Last active{" "}
-          <strong className="text-foreground">{ago(first!.lastActiveAt)}</strong>
-          {first!.isFocused ? ", tab in focus" : ""}.
-          {rest.length > 0 && ` And ${rest.length} other device${rest.length === 1 ? "" : "s"}.`}
+          {t.rich("takeover.body", {
+            device: first!.deviceLabel,
+            place: `${flag(first!.countryCode)} ${place(first!, t)}`.trim(),
+            ago: ago(first!.lastActiveAt, locale),
+            focused: String(first!.isFocused),
+            b: (chunks) => <strong className="text-foreground">{chunks}</strong>,
+          })}
+          {rest.length > 0 && ` ${t("takeover.others", { count: rest.length })}`}
         </p>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex flex-col gap-2">
           <button className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50" disabled={pending} onClick={takeOver} type="button">
-            Sign out {others.length === 1 ? "that device" : "those devices"} and continue
+            {t("takeover.confirm", { count: others.length })}
           </button>
           <button className="w-full rounded-md border px-4 py-2 disabled:opacity-50" disabled={pending} onClick={cancel} type="button">
-            Cancel
+            {t("takeover.cancel")}
           </button>
         </div>
       </div>
@@ -101,7 +107,7 @@ export function SignInForm({ email }: { email?: string }) {
           setError(
             payload?.message ??
               payload?.error?.message ??
-              "Connexion impossible.",
+              t("failed"),
           );
           return;
         }
@@ -118,16 +124,16 @@ export function SignInForm({ email }: { email?: string }) {
       }}
     >
       <label className="block space-y-1">
-        <span className="text-sm font-medium">E-mail</span>
+        <span className="text-sm font-medium">{t("email")}</span>
         <input className="w-full rounded-md border bg-background px-3 py-2" name="email" required type="email" defaultValue={email} autoFocus={!email} />
       </label>
       <label className="block space-y-1">
-        <span className="text-sm font-medium">Mot de passe</span>
+        <span className="text-sm font-medium">{t("password")}</span>
         <input className="w-full rounded-md border bg-background px-3 py-2" name="password" required type="password" autoFocus={Boolean(email)} />
       </label>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <button className="w-full rounded-md bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50" disabled={pending} type="submit">
-        {pending ? "Connexion…" : "Se connecter"}
+        {pending ? t("submitting") : t("submit")}
       </button>
     </form>
   );

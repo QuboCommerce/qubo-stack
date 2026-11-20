@@ -1,0 +1,33 @@
+{
+  "ui": {
+    "close": "Close",
+    "search": "Search"
+  },
+  "pagination": {
+    "range": "{from}–{to} of {total, number}",
+    "page": "{page} / {pages}",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "presence": {
+    "home": "Home",
+    "studio": "Studio",
+    "new": "New",
+    "editing": "Editing",
+    "stopWatching": "stop watching",
+    "clickToWatch": "click to watch",
+    "peerTitle": "{name} · {where} · {action}",
+    "peerTitleAway": "{name} · {where} (away) · {action}"
+  },
+  "spectate": {
+    "watching": "Watching {name}",
+    "waiting": "waiting…",
+    "stop": "Stop"
+  },
+  "sessionEnded": {
+    "takeover": "You have been logged in elsewhere",
+    "revoked": "This device was signed out",
+    "body": "Unsaved changes in this tab can no longer be saved. Sign in again to continue.",
+    "signIn": "Sign in again"
+  }
+}

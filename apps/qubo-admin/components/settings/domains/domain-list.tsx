@@ -2,6 +2,7 @@
 
 import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Globe, Link2, Loader2, MoreHorizontal, Plus, RefreshCw, Star, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { useEvent } from "@qubo/realtime/client";
@@ -40,7 +41,19 @@ function useResult(state: ActionState, onOk?: () => void) {
   }, [state?.at, state?.error]); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
+function useSummaryLabel() {
+  const t = useTranslations("domains");
+  return (d: DomainView) => {
+    const total = d.records.length;
+    const ok = d.records.filter((r) => r.status === "ok").length;
+    if (d.records.every((r) => r.status === "unknown")) return d.verified ? t("summary.connected") : t("summary.notChecked");
+    if (d.verified) return ok === total ? t("summary.connected") : t("summary.connectedFix", { count: total - ok });
+    return t("summary.progress", { ok, total });
+  };
+}
+
 export function DomainList({ site, siteId, domains, origin, canManage }: { site: string; siteId: string; domains: DomainView[]; origin: string; canManage: boolean }) {
+  const t = useTranslations("domains");
   useDomainEvents(siteId);
   const [setupId, setSetupId] = useState<string | null>(null);
   const [connectOpen, setConnectOpen] = useState(false);
@@ -68,13 +81,13 @@ export function DomainList({ site, siteId, domains, origin, canManage }: { site:
             <span className="flex size-10 items-center justify-center rounded-full bg-muted">
               <Globe className="size-5 text-muted-foreground" strokeWidth={1.7} />
             </span>
-            <p className="text-sm font-medium">No domain yet</p>
-            <p className="max-w-xs text-[13px] text-muted-foreground">Connect a domain you own. We guide you through the DNS and handle the certificate.</p>
+            <p className="text-sm font-medium">{t("list.emptyTitle")}</p>
+            <p className="max-w-xs text-[13px] text-muted-foreground">{t("list.emptyHelp")}</p>
           </div>
         )}
         {canManage && (
           <button type="button" onClick={() => setConnectOpen(true)} className="flex w-full items-center gap-2 px-4 py-3 text-left text-[13px] font-medium text-muted-foreground transition hover:bg-muted/50 hover:text-foreground sm:px-5">
-            <Plus className="size-4" /> Connect domain
+            <Plus className="size-4" /> {t("list.connect")}
           </button>
         )}
       </Surface>
@@ -89,7 +102,7 @@ export function DomainList({ site, siteId, domains, origin, canManage }: { site:
                 <DialogTitle className="flex items-center gap-2">
                   <Globe className="size-4" /> {setup.hostname}
                 </DialogTitle>
-                <DialogDescription>{setup.verified ? "Connected. These records keep it that way." : "Add these records at your DNS provider. This page updates by itself as they appear."}</DialogDescription>
+                <DialogDescription>{setup.verified ? t("list.setupConnected") : t("list.setupPending")}</DialogDescription>
               </DialogHeader>
               <DnsSetup domain={setup} site={site} shareUrl={`${origin}${setup.sharePath}`} />
             </>
@@ -101,12 +114,14 @@ export function DomainList({ site, siteId, domains, origin, canManage }: { site:
 }
 
 function DomainRow({ site, domain: d, origin, canManage, onSetup }: { site: string; domain: DomainView; origin: string; canManage: boolean; onSetup: () => void }) {
+  const t = useTranslations("domains");
+  const summaryLabel = useSummaryLabel();
   const ago = useAgo(d.checkedAt);
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [primaryState, makePrimary, primaryPending] = useActionState(makePrimaryAction, null);
   const [shareState, newShare] = useActionState(regenerateShareLinkAction, null);
-  useResult(primaryState, () => toast.success(`${d.hostname} is now the primary domain`));
-  useResult(shareState, () => toast.success("New link created. The old one no longer works."));
+  useResult(primaryState, () => toast.success(t("row.nowPrimary", { hostname: d.hostname })));
+  useResult(shareState, () => toast.success(t("row.newLinkCreated")));
   const fire = (dispatch: (fd: FormData) => void) => {
     const fd = new FormData();
     fd.set("site", site);
@@ -125,45 +140,45 @@ function DomainRow({ site, domain: d, origin, canManage, onSetup }: { site: stri
           <a href={`https://${d.hostname}`} target="_blank" rel="noreferrer" className="truncate text-sm font-medium hover:underline">
             {d.hostname}
           </a>
-          {d.isPrimary && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10.5px] font-medium">Primary</span>}
+          {d.isPrimary && <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10.5px] font-medium">{t("row.primary")}</span>}
         </div>
         <p className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground">
           <span className={cn("inline-block size-1.5 rounded-full", TONE[d.summary.tone])} />
-          {d.summary.label}
-          {d.checkedAt && <span className="hidden sm:inline">· checked {ago}</span>}
+          {summaryLabel(d)}
+          {d.checkedAt && <span className="hidden sm:inline">· {t("row.checked", { ago })}</span>}
         </p>
       </div>
       <Button size="sm" variant={d.verified ? "ghost" : "outline"} onClick={onSetup}>
         <Wrench className="size-3.5" strokeWidth={2} />
-        {d.verified ? "DNS" : "Set up"}
+        {d.verified ? t("row.dns") : t("row.setUp")}
       </Button>
       {canManage && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button size="icon" variant="ghost" className="size-8" aria-label={`Actions for ${d.hostname}`}>
+            <Button size="icon" variant="ghost" className="size-8" aria-label={t("row.actionsFor", { hostname: d.hostname })}>
               {primaryPending ? <Loader2 className="size-4 animate-spin" /> : <MoreHorizontal className="size-4" />}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             {!d.isPrimary && (
               <DropdownMenuItem disabled={!d.verified} onSelect={() => fire(makePrimary)}>
-                <Star className="size-4" /> Make primary
+                <Star className="size-4" /> {t("row.makePrimary")}
               </DropdownMenuItem>
             )}
             <DropdownMenuItem
               onSelect={() => {
                 void navigator.clipboard.writeText(`${origin}${d.sharePath}`);
-                toast.success("Setup link copied");
+                toast.success(t("row.linkCopied"));
               }}
             >
-              <Link2 className="size-4" /> Copy setup link
+              <Link2 className="size-4" /> {t("row.copyLink")}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => fire(newShare)}>
-              <RefreshCw className="size-4" /> New setup link
+              <RefreshCw className="size-4" /> {t("row.newLink")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onSelect={() => setConfirmRemove(true)}>
-              <Trash2 className="size-4" /> Remove
+              <Trash2 className="size-4" /> {t("row.remove")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -174,9 +189,10 @@ function DomainRow({ site, domain: d, origin, canManage, onSetup }: { site: stri
 }
 
 function RemoveDomainDialog({ site, domain, open, onOpenChange }: { site: string; domain: DomainView; open: boolean; onOpenChange: (o: boolean) => void }) {
+  const t = useTranslations("domains");
   const [state, action, pending] = useActionState(removeDomainAction, null);
   useResult(state, () => {
-    toast.success(`${domain.hostname} removed`);
+    toast.success(t("remove.done", { hostname: domain.hostname }));
     onOpenChange(false);
   });
   return (
@@ -186,20 +202,18 @@ function RemoveDomainDialog({ site, domain, open, onOpenChange }: { site: string
           <input type="hidden" name="site" value={site} />
           <input type="hidden" name="domainId" value={domain.id} />
           <DialogHeader>
-            <DialogTitle>Remove {domain.hostname}?</DialogTitle>
+            <DialogTitle>{t("remove.title", { hostname: domain.hostname })}</DialogTitle>
             <DialogDescription>
-              {domain.verified
-                ? "Visitors on this domain stop reaching the site within a minute, and the admin stops answering on it. You can connect it again later."
-                : "The domain was never connected, so nothing changes for visitors."}
-              {domain.isPrimary && " Another domain becomes primary."}
+              {domain.verified ? t("remove.verified") : t("remove.unverified")}
+              {domain.isPrimary && ` ${t("remove.primary")}`}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
+              <Button type="button" variant="outline">{t("cancel")}</Button>
             </DialogClose>
             <Button type="submit" variant="destructive" disabled={pending}>
-              {pending && <Loader2 className="size-3.5 animate-spin" />} Remove domain
+              {pending && <Loader2 className="size-3.5 animate-spin" />} {t("remove.confirm")}
             </Button>
           </DialogFooter>
         </form>
@@ -209,6 +223,7 @@ function RemoveDomainDialog({ site, domain, open, onOpenChange }: { site: string
 }
 
 export function ConnectDomainDialog({ site, open, onOpenChange, onAdded }: { site: string; open: boolean; onOpenChange: (o: boolean) => void; onAdded: (hostname: string) => void }) {
+  const t = useTranslations("domains");
   const [state, action, pending] = useActionState(addDomainAction, null);
   const [value, setValue] = useState("");
   const submitted = useRef("");
@@ -227,20 +242,20 @@ export function ConnectDomainDialog({ site, open, onOpenChange, onAdded }: { sit
           <input type="hidden" name="site" value={site} />
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Globe className="size-4" /> Connect a domain
+              <Globe className="size-4" /> {t("connect.title")}
             </DialogTitle>
-            <DialogDescription>A domain you already own. Next you get the exact DNS records to add, and we check them for you.</DialogDescription>
+            <DialogDescription>{t("connect.description")}</DialogDescription>
           </DialogHeader>
-          <Field label="Domain" htmlFor="domain-host" hint="Without www. A subdomain such as shop.example.be works too.">
+          <Field label={t("connect.domain")} htmlFor="domain-host" hint={t("connect.hint")}>
             <TextInput id="domain-host" name="hostname" required autoFocus autoComplete="off" spellCheck={false} placeholder="example.be" value={value} onChange={(e) => setValue(e.target.value)} />
           </Field>
           {state?.error && <p className="text-[13px] text-destructive">{state.error}</p>}
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
+              <Button type="button" variant="outline">{t("cancel")}</Button>
             </DialogClose>
             <Button type="submit" disabled={pending || !value.trim()}>
-              {pending && <Loader2 className="size-3.5 animate-spin" />} Continue
+              {pending && <Loader2 className="size-3.5 animate-spin" />} {t("connect.continue")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { Globe } from "lucide-react";
@@ -9,7 +10,10 @@ import { DnsSetup } from "@/components/settings/domains/dns-setup";
 import { AutoRefresh } from "@/components/settings/domains/auto-refresh";
 import { domainContext, domainView } from "@/lib/domains";
 
-export const metadata: Metadata = { title: "DNS setup", robots: { index: false, follow: false } };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("domains");
+  return { title: t("share.pageTitle"), robots: { index: false, follow: false } };
+}
 
 /** While someone has this page open, DNS is re-checked at most this often. */
 const LIVE_CHECK_MS = 30_000;
@@ -20,6 +24,7 @@ const LIVE_CHECK_MS = 30_000;
  * and their status for one domain and nothing else about the site.
  */
 export default async function SharedDnsPage({ params }: { params: Promise<{ token: string }> }) {
+  const t = await getTranslations("domains");
   const { token } = await params;
   let [row] = await db.select().from(siteDomain).where(eq(siteDomain.shareToken, token));
   if (!row) notFound();
@@ -34,12 +39,12 @@ export default async function SharedDnsPage({ params }: { params: Promise<{ toke
       <AutoRefresh everyMs={domain.verified ? 0 : 15_000} />
       <div className="mx-auto grid max-w-2xl gap-6">
         <header className="grid gap-2">
-          <span className="text-[12px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">Qubo · DNS setup</span>
+          <span className="text-[12px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">{t("share.kicker")}</span>
           <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight">
             <Globe className="size-5 text-muted-foreground" /> {domain.hostname}
           </h1>
           <p className="text-sm text-muted-foreground">
-            The owner of this domain asked you to add a few DNS records. Each one turns green as soon as it is visible on the internet.
+            {t("share.intro")}
           </p>
         </header>
         <div className="rounded-2xl bg-card p-4 shadow-sm ring-1 ring-black/5 sm:p-6 dark:ring-white/10">

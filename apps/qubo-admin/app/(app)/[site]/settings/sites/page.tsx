@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { siteTypePresets } from "@qubo/blocks/presets";
 import { SettingsGroup, Surface } from "@/components/settings/settings-group";
 import { SettingsPage } from "@/components/settings/settings-page";
@@ -9,11 +10,14 @@ import { CreateSiteButton } from "@/components/settings/create-site-button";
 import { manageableOrgs, recycleBin } from "@/lib/site-ownership";
 import { MoveDraftDialog, PublishSiteDialog, PurgeSiteButton, RestoreSiteButton, TrashSiteButton } from "@/components/settings/site-ownership";
 import { Badge } from "@/components/ui/badge";
-import { localeLabel, relativeTime } from "@/lib/format";
+import { getFormatters } from "@/lib/format-server";
 import { TRASH_RETENTION_DAYS } from "@qubo/studio";
 import { Trash2 } from "lucide-react";
 
 export default async function SiteSettings({ params }: { params: Promise<{ site: string }> }) {
+  const t = await getTranslations("settings.sites");
+  const f = await getFormatters();
+  const tTypes = await getTranslations("settings.siteTypes");
   const { site: slug } = await params;
   const { site, sites } = await requireSite(slug);
   const own = sites.filter((s) => s.organizationId === site.organizationId);
@@ -22,28 +26,27 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
   const bin = canManage ? await recycleBin(site.organizationId) : [];
   const fallback = sites.find((s) => s.id !== site.id);
   const afterDelete = fallback ? `/${fallback.slug}/settings/sites` : "/";
-  const usage = (q: { used: number; limit: number | null }, noun: string) => {
-    const plural = (n: number) => `${noun}${n === 1 ? "" : "s"}`;
-    if (q.limit === null) return `${q.used} ${plural(q.used)}`;
-    return q.used <= q.limit ? `${q.used} of ${q.limit} ${plural(q.limit)}` : `${q.used} ${plural(q.used)} (plan covers ${q.limit})`;
+  const usage = (q: { used: number; limit: number | null }, kind: "site" | "organisation") => {
+    if (q.limit === null) return t(`usage.${kind}.unlimited`, { used: q.used });
+    return q.used <= q.limit ? t(`usage.${kind}.within`, { used: q.used, limit: q.limit }) : t(`usage.${kind}.over`, { used: q.used, limit: q.limit });
   };
-  const quotaLine = `${own.length} in this organisation · ${usage(licence.sites, "site")} and ${usage(licence.orgs, "organisation")} on this instance.`;
+  const quotaLine = t("quota", { own: own.length, sites: usage(licence.sites, "site"), orgs: usage(licence.orgs, "organisation") });
   const createTitle = licence.sites.canCreate
     ? undefined
     : licence.entitlements.plan === "free"
-      ? "Free runs one site. Link a Portal account under Settings → Qubo Portal for more."
-      : `Your ${licence.entitlements.plan} plan covers ${licence.sites.limit} sites across all organisations. Delete a site to free one up, or upgrade.`;
+      ? t("createFree")
+      : t("createLimit", { plan: licence.entitlements.plan, count: licence.sites.limit ?? 0 });
 
   return (
     <SettingsPage
       site={site.slug}
-      title="Sites"
-      description="Each site has its own domain, theme, content and settings. Customers, team and media can be shared."
+      title={t("title")}
+      description={t("description")}
       actions={
         <CreateSiteButton orgs={allOrgs} defaultOrgId={site.organizationId} disabled={!licence.sites.canCreate || !orgs.length} title={createTitle} />
       }
     >
-      <SettingsGroup title="Your sites" description={`${quotaLine} Drafts can be transferred between organisations; a published site stays in its organisation.`}>
+      <SettingsGroup title={t("yours")} description={`${quotaLine} ${t("yoursHelp")}`}>
         <Surface flush className="divide-y">
           {own.map((s) => (
             <div key={s.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
@@ -52,11 +55,11 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-2 truncate text-sm font-medium">
                     {s.name}
-                    {s.id === site.id && <span className="font-normal text-muted-foreground">(current)</span>}
-                    <Badge variant={s.publishedAt ? "secondary" : "outline"} className="font-normal">{s.publishedAt ? "Live" : "Draft"}</Badge>
+                    {s.id === site.id && <span className="font-normal text-muted-foreground">{t("current")}</span>}
+                    <Badge variant={s.publishedAt ? "secondary" : "outline"} className="font-normal">{s.publishedAt ? t("live") : t("draft")}</Badge>
                   </p>
                   <p className="truncate text-[13px] text-muted-foreground">
-                    {siteTypePresets[s.type as keyof typeof siteTypePresets]?.label ?? s.type} · {s.domain ?? "No domain"} · {localeLabel[s.locale] ?? s.locale}
+                    {s.type in siteTypePresets ? tTypes(`${s.type as keyof typeof siteTypePresets}.label`) : s.type} · {s.domain ?? t("noDomain")} · {f.localeName(s.locale)}
                   </p>
                 </div>
               </Link>
@@ -74,13 +77,13 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
 
       {canManage && (
         <SettingsGroup
-          title="Recycle bin"
-          description={`Deleted sites stay here for ${TRASH_RETENTION_DAYS} days, then they are removed for good. Restore one to get it back exactly as it was.`}
+          title={t("bin")}
+          description={t("binHelp", { days: TRASH_RETENTION_DAYS })}
         >
           <Surface flush className="divide-y">
             {bin.length === 0 ? (
               <p className="flex items-center gap-2 px-4 py-6 text-sm text-muted-foreground sm:px-5">
-                <Trash2 className="size-4" aria-hidden /> Nothing in the bin.
+                <Trash2 className="size-4" aria-hidden /> {t("binEmpty")}
               </p>
             ) : (
               bin.map((s) => (
@@ -89,7 +92,7 @@ export default async function SiteSettings({ params }: { params: Promise<{ site:
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{s.name}</p>
                     <p className="truncate text-[13px] text-muted-foreground">
-                      Deleted {relativeTime(s.deletedAt)}{s.deletedBy ? ` by ${s.deletedBy}` : ""} · {s.daysLeft === 0 ? "removed today" : `${s.daysLeft} day${s.daysLeft === 1 ? "" : "s"} left`}
+                      {s.deletedBy ? t("deletedBy", { when: f.relativeTime(s.deletedAt), by: s.deletedBy }) : t("deleted", { when: f.relativeTime(s.deletedAt) })} · {t("daysLeft", { count: s.daysLeft })}
                     </p>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
