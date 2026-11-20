@@ -31,6 +31,26 @@
 /* Reveal offsets and decorative bleeds must never widen the page on phones. */
 section[data-kit="chapters"], footer[data-kit="chapters"], .qb-ch-hero-stage { overflow-x: clip; }
 
+/* The menu's single column fits the screen: a long brand line truncates
+   instead of pushing the close button off the edge. */
+.qb-ch-mega-menu__surface { grid-template-columns: minmax(0, 1fr); overflow-x: clip; }
+.qb-ch-mega-menu__top { gap: 12px; }
+.qb-ch-mega-menu__eyebrow { min-width: 0; overflow: hidden; }
+.qb-ch-mega-menu__eyebrow > * { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.qb-ch-mega-menu__eyebrow > .qb-ch-mega-menu__brand-mark { overflow: visible; }
+.qb-ch-mega-menu__close { flex: none; }
+/* Same for the header bar: the wordmark gives way to the menu button on small phones. */
+@media (max-width: 720px) {
+  .qb-ch-site-header__inner { gap: 12px; }
+  .qb-ch-site-header__inner > .qb-ch-wordmark { flex: 0 1 auto; min-width: 0; }
+  .qb-ch-site-header__inner > .qb-ch-wordmark .qb-ch-wordmark__text { min-width: 0; }
+  .qb-ch-site-header__inner > .qb-ch-wordmark .qb-ch-wordmark__text > * { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .qb-ch-site-header__inner > .qb-ch-menu-toggle { flex: none; }
+}
+@media (max-width: 420px) {
+  .qb-ch-site-header__inner > .qb-ch-wordmark .qb-ch-wordmark__text strong { font-size: clamp(16px, 5vw, 22px); }
+}
+
 /* Hero texture strength (`data-ch-texture`). "faint" is the reference; the
    others let more of the grain through while keeping the left-to-right wash. */
 .qb-ch-hero-stage[data-ch-texture="visible"]::before { opacity: .5; mask-image: linear-gradient(225deg,#000 0%,rgba(0,0,0,.72) 28%,rgba(0,0,0,.3) 58%,transparent 86%); }
