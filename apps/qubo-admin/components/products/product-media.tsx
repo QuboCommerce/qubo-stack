@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, ImagePlus, Loader2, X } from "lucide-react";
 import { cn } from "@qubo/shared/utils";
@@ -11,7 +12,21 @@ import { Button } from "@/components/ui/button";
 type Image = { url: string; alt: string; src: string };
 
 /** Product gallery: pick from the media library, reorder, remove. Saves immediately. */
-export function ProductMedia({ site, siteId, productId, initial }: { site: string; siteId: string; productId: string; initial: Image[] }) {
+export function ProductMedia({
+  site,
+  siteId,
+  productId,
+  initial,
+  onChange,
+}: {
+  site: string;
+  siteId: string;
+  productId: string;
+  initial: Image[];
+  /** Called after a save went through. */
+  onChange?: (images: Image[]) => void;
+}) {
+  const router = useRouter();
   const [images, setImages] = useState(initial);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +41,11 @@ export function ProductMedia({ site, siteId, productId, initial }: { site: strin
       if (res?.error) {
         setImages(prev);
         setError(res.error);
+        return;
       }
+      onChange?.(next);
+      // Variant image pickers on the editor read the gallery rows from the server.
+      router.refresh();
     });
   };
 
@@ -82,6 +101,7 @@ export function ProductMedia({ site, siteId, productId, initial }: { site: strin
         site={site}
         siteId={siteId}
         kind="image"
+        lens="products"
         multiple
         title="Product images"
         onPick={(picked) => commit([...images, ...picked.filter((p) => !images.some((i) => i.url === p.url)).map((p) => ({ url: p.url, alt: p.alt, src: p.url }))])}
