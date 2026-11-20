@@ -99,7 +99,9 @@ export function SettingsForm({
   useEffect(() => {
     const form = ref.current;
     if (!form || readOnly) return;
-    const mark = () => {
+    const mark = (e: Event) => {
+      // Controls that save on their own (the product Stock card) opt out.
+      if (e.target instanceof Element && e.target.closest("[data-form-ignore]")) return;
       dirtyRef.current = true;
       setDirty(true);
     };

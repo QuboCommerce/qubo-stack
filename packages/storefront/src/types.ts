@@ -38,6 +38,25 @@ export type CategoryNode = {
   productCount?: number;
 };
 
+/** A published collection (rules or hand-picked products) with its own page at `/collections/<slug>`. */
+export type CollectionSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  /** Image URL, used as the social share image. */
+  image: string | null;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  /** Non-archived products the collection matches. */
+  productCount: number;
+};
+
+export type CollectionsResponse = {
+  site: string;
+  collections: CollectionSummary[];
+};
+
 export type ProductListItem = {
   id: string;
   slug: string;
@@ -185,6 +204,8 @@ export type SitemapEntry = { slug: string; updatedAt: string };
 export type SitemapResponse = {
   products: SitemapEntry[];
   categories: SitemapEntry[];
+  /** Published collections. */
+  collections: SitemapEntry[];
   /** Published pages (home excluded), ordered by title, with translated slug/title per secondary locale. */
   pages: (SitemapEntry & { title: string; locales: Record<string, { slug?: string; title?: string }> })[];
 };

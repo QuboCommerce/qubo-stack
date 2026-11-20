@@ -10,7 +10,7 @@ import { cn } from "@qubo/shared/utils";
 
 type Pick = "mine" | "theirs";
 
-export type MergeNoun = "page" | "product" | "category" | "code" | "site" | "settings";
+export type MergeNoun = "page" | "product" | "category" | "collection" | "code" | "site" | "settings";
 
 /**
  * Field-level merge: one row per field both sides changed, "Keep mine" by

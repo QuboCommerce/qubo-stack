@@ -1,0 +1,213 @@
+{
+  "collections": {
+    "title": "Collections",
+    "list": {
+      "subtitle": "{count, plural, one {# collection} other {# collections}}",
+      "create": "Create collection",
+      "columns": {
+        "collection": "Collection",
+        "products": "Products",
+        "status": "Status"
+      },
+      "productCount": "{count, plural, =0 {No products} one {# product} other {# products}}",
+      "viewOnSite": "View on site",
+      "hiddenByCategory": "A category uses this address",
+      "hiddenByCategoryHint": "The category /collections/{slug} is shown on the storefront instead.",
+      "empty": {
+        "title": "Group products your way",
+        "description": "A collection is a named group of products with its own page on your storefront. Fill it automatically with rules, like every reference starting with JBM-, or pick the products by hand.",
+        "action": "Create collection"
+      },
+      "notes": {
+        "title": "Good to know",
+        "categories": "Categories are collections too: each one already has its own page on your storefront. <link>Manage categories</link>",
+        "promotions": "/collections/promotions lists every product on sale, automatically."
+      }
+    },
+    "status": {
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "summary": {
+      "manual": "{count, plural, =0 {No products picked yet} one {# product picked by hand} other {# products picked by hand}}",
+      "noRules": "No rules yet"
+    },
+    "editor": {
+      "newTitle": "New collection",
+      "metaTitle": "Collection",
+      "cards": {
+        "details": "Details",
+        "products": "Products",
+        "image": "Image",
+        "seo": "Search engine listing",
+        "status": "Visibility",
+        "preview": "Preview"
+      },
+      "fields": {
+        "name": "Name",
+        "namePlaceholder": "e.g. Summer air conditioning",
+        "handle": "Handle",
+        "handleHint": "The page address: {path}",
+        "description": "Description",
+        "descriptionHint": "Shown at the top of the collection page.",
+        "sort": "Sort products by",
+        "metaTitle": "Page title",
+        "metaDescription": "Meta description",
+        "length": "{count} of {max} characters recommended"
+      },
+      "categoryClash": "The category \"{name}\" already uses this handle. Its page is shown on the storefront instead of this collection.",
+      "kind": {
+        "smart": "Automatic (rules)",
+        "smartHint": "Products join and leave on their own as your catalogue changes.",
+        "manual": "Hand-picked",
+        "manualHint": "You choose each product and its order."
+      },
+      "match": {
+        "label": "Products must match",
+        "all": "all rules",
+        "any": "any rule"
+      },
+      "addRule": "Add a rule",
+      "removeRule": "Remove this rule",
+      "noRules": "Add a rule to start filling this collection.",
+      "search": {
+        "placeholder": "Search by name or reference",
+        "empty": "No product found.",
+        "add": "Add",
+        "added": "Added",
+        "searching": "Searching…"
+      },
+      "picks": {
+        "empty": "No products yet. Search above to add some.",
+        "count": "{count, plural, one {# product} other {# products}}",
+        "remove": "Remove",
+        "moveUp": "Move up",
+        "moveDown": "Move down",
+        "limit": "A collection holds up to {max} hand-picked products."
+      },
+      "image": {
+        "hint": "Shown on the collection page and when the collection is shared.",
+        "choose": "Choose from library",
+        "replace": "Replace",
+        "remove": "Remove image",
+        "url": "Or paste an image URL",
+        "pickerTitle": "Collection image"
+      },
+      "publish": {
+        "label": "Published",
+        "hint": "Draft collections are hidden from your storefront."
+      },
+      "viewOnSite": "View on site",
+      "updated": "Last saved {time}",
+      "delete": {
+        "button": "Delete collection",
+        "title": "Delete {name}?",
+        "description": "The collection page disappears from your storefront. The products themselves are not changed.",
+        "cancel": "Cancel",
+        "submit": "Delete"
+      }
+    },
+    "preview": {
+      "count": "{count, plural, =0 {No products match yet} one {# product matches} other {# products match}}",
+      "updating": "Updating…",
+      "empty": "Matching products appear here as you add rules.",
+      "emptyManual": "Hand-picked products appear here.",
+      "more": "{count, plural, one {and # more} other {and # more}}",
+      "error": "The preview could not be loaded."
+    },
+    "rules": {
+      "fields": {
+        "category": "Category",
+        "sku": "SKU",
+        "name": "Product name",
+        "brand": "Brand",
+        "price": "Price",
+        "onSale": "On sale",
+        "inStock": "In stock",
+        "createdWithinDays": "Recently added"
+      },
+      "ops": {
+        "category": {
+          "is": "is",
+          "isNot": "is not"
+        },
+        "sku": {
+          "startsWith": "starts with",
+          "contains": "contains",
+          "equals": "is exactly"
+        },
+        "name": {
+          "startsWith": "starts with",
+          "contains": "contains"
+        },
+        "brand": {
+          "equals": "is",
+          "contains": "contains"
+        },
+        "price": {
+          "gte": "is at least",
+          "lte": "is at most"
+        },
+        "createdWithinDays": {
+          "lte": "in the last"
+        }
+      },
+      "flags": {
+        "onSale": "Only products with a sale price",
+        "inStock": "Only products available to order"
+      },
+      "days": "days",
+      "categoryPlaceholder": "Choose a category",
+      "textPlaceholder": "e.g. JBM-",
+      "phrases": {
+        "categoryIs": "category is {value} (and its subcategories)",
+        "categoryIsNot": "category is not {value}",
+        "skuStartsWith": "SKU starts with {value}",
+        "skuContains": "SKU contains {value}",
+        "skuEquals": "SKU is {value}",
+        "nameStartsWith": "name starts with {value}",
+        "nameContains": "name contains {value}",
+        "brandEquals": "brand is {value}",
+        "brandContains": "brand contains {value}",
+        "priceGte": "price is at least {value}",
+        "priceLte": "price is at most {value}",
+        "onSale": "on sale",
+        "inStock": "in stock",
+        "createdWithinDays": "added in the last {days, plural, one {# day} other {# days}}"
+      },
+      "deletedCategory": "a deleted category",
+      "aria": {
+        "field": "Rule field",
+        "operator": "Condition",
+        "value": "Value"
+      }
+    },
+    "sort": {
+      "featured": "Featured first",
+      "newest": "Newest",
+      "name": "Name (A to Z)",
+      "priceAsc": "Price, low to high",
+      "priceDesc": "Price, high to low",
+      "manual": "Manual order"
+    },
+    "merge": {
+      "rules": "Rules",
+      "products": "Hand-picked products",
+      "kind": "Products",
+      "match": "Products must match",
+      "image": "Image",
+      "publish": "Visibility"
+    },
+    "errors": {
+      "nameRequired": "Give the collection a name.",
+      "handleFormat": "Use only lowercase letters, numbers and hyphens in the handle.",
+      "handleTaken": "Another collection already uses this handle.",
+      "notFound": "This collection was deleted.",
+      "race": "Someone saved this collection at the same moment. Save again to merge their changes.",
+      "checkFields": "Check the highlighted fields.",
+      "tooManyProducts": "A collection holds up to {max} hand-picked products.",
+      "imageUrl": "The image must be a library image or a full https:// address.",
+      "generic": "Something went wrong. Try again."
+    }
+  }
+}
