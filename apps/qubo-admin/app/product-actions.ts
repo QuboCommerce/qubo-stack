@@ -171,7 +171,9 @@ export type GalleryImage = { url: string; alt: string; src: string };
 /** A product's whole gallery, for the Media page's product sheet. */
 export async function productGalleryAction(input: { site: string; productId: string }): Promise<{ name: string; images: GalleryImage[] } | null> {
   const { siteId } = await requireSite(input.site);
-  const productId = z.uuid().parse(input.productId);
+  const parsed = z.uuid().safeParse(input.productId);
+  if (!parsed.success) return null;
+  const productId = parsed.data;
   const [row] = await db.select({ name: product.name }).from(product).where(and(eq(product.id, productId), eq(product.siteId, siteId)));
   if (!row) return null;
   const images = await db.select().from(productImage).where(eq(productImage.productId, productId)).orderBy(asc(productImage.position));
