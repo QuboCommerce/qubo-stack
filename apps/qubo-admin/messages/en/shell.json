@@ -96,7 +96,9 @@
           "description": "Start empty and switch on only what you need."
         }
       }
-    }
+    },
+    "more": "More",
+    "tabBar": "Sections"
   },
   "commandMenu": {
     "title": "Search",
@@ -123,5 +125,15 @@
     "system": "System",
     "language": "Language",
     "signOut": "Sign out"
+  },
+  "install": {
+    "install": "Install app",
+    "reload": "Reload",
+    "iosTitle": "Add Qubo to your Home Screen",
+    "iosDescription": "It opens full screen, like an app, straight on your site.",
+    "iosStep1": "Tap Share in the Safari toolbar.",
+    "iosStep2": "Choose “Add to Home Screen”. Scroll the list if you don't see it.",
+    "iosAdd": "Add",
+    "iosStep3": "Tap Add. Qubo is now on your Home Screen."
   }
 }

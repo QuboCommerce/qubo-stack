@@ -96,7 +96,7 @@ function Follow({ userId, stop }: { userId: string; stop: () => void }) {
   const t = useTranslations("spectate");
   const first = (peer?.name ?? name.current).split(" ")[0] || "…";
   return (
-    <div role="status" className="fixed bottom-4 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground py-1 pr-1 pl-3 text-[13px] text-background shadow-lg">
+    <div role="status" className="fixed bottom-[calc(var(--qb-tabbar)+1rem)] left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground py-1 pr-1 pl-3 text-[13px] text-background shadow-lg">
       <span className="size-2 rounded-full" style={{ background: peerColor(userId) }} />
       <Eye className="size-3.5 opacity-70" />
       <span>
