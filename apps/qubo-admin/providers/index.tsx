@@ -30,7 +30,7 @@ export function Providers({ children, locale, messages, timeZone }: { children: 
         disableTransitionOnChange
       >
         {children}
-        <Toaster richColors position="bottom-right" />
+        <Toaster richColors position="bottom-right" offset={{ bottom: "calc(var(--qb-tabbar) + 24px)" }} mobileOffset={{ bottom: "calc(var(--qb-tabbar) + 16px)" }} />
       </ThemeProvider>
     </QueryClientProvider>
     </NextIntlClientProvider>
