@@ -938,6 +938,22 @@ the column to `minmax(0, 1fr)`, truncates the brand line, and lets the header wo
 (smaller type under 420px, ellipsis as a last resort). `styles.ts` was patched by swapping the
 appended overrides tail; the port source is not in the repo.
 
+### 56. Admin as an installed app (2026-11-21)
+
+The admin is meant to be added to the home screen. `app/manifest.ts` is per host (name,
+`start_url` and shortcuts follow the admin host's site and its capabilities), with PNG icons
+rendered from `public/icon*.svg` by `scripts/pwa-icons.mjs` (rerun it when the mark changes;
+iOS needs the full-bleed PNG). The root layout is edge to edge (`viewport-fit=cover`,
+black-translucent status bar over the dark top bar). Chrome heights are two CSS variables in
+`globals.css`: `--qb-top` (top bar plus top inset) and `--qb-tabbar` (bottom tab bar plus home
+indicator, `0px` from `md`). Anything fixed to the bottom of the viewport must sit above
+`var(--qb-tabbar)`. Below `md` the hamburger is gone: `TabBar` shows Home, the first three of
+orders, products, bookings, inbox, content, media that the site has, and More (the full nav
+sheet). `public/sw.js` never caches pages or API data: it caches hashed `/_next/static`
+assets and serves `offline.html` when a navigation fails; bump `VERSION` to drop old caches.
+It only registers in production builds. References were the kyf member panel and the old Lumé
+app; neither had a service worker or safe-area handling.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

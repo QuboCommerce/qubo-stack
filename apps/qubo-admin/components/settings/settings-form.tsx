@@ -182,7 +182,7 @@ export function SettingsForm({
 
       {dirty &&
         createPortal(
-          <div className="fixed inset-x-0 top-0 z-50 flex h-14 items-center gap-3 bg-topbar px-3 text-topbar-foreground shadow-lg animate-in fade-in slide-in-from-top-2 sm:px-5">
+          <div className="fixed inset-x-0 top-0 z-50 flex h-(--qb-top) items-center gap-3 bg-topbar px-3 pt-[env(safe-area-inset-top)] text-topbar-foreground shadow-lg animate-in fade-in slide-in-from-top-2 sm:px-5">
             <AlertCircle className="size-4 shrink-0 text-warning" />
             <span className="flex-1 truncate text-sm font-medium">{t("unsaved")}</span>
             <button
@@ -215,7 +215,7 @@ export function SettingsForm({
           <div
             role="status"
             className={cn(
-              "fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background shadow-xl",
+              "fixed bottom-[calc(var(--qb-tabbar)+1.5rem)] left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full bg-foreground px-4 py-2 text-[13px] font-medium text-background shadow-xl",
               "animate-in fade-in slide-in-from-bottom-2",
             )}
           >

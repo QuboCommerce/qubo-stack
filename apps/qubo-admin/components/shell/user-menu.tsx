@@ -2,7 +2,7 @@
 
 import { Languages, LogOut, Monitor, Moon, Sun, UserRound } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -20,6 +20,7 @@ import { setLanguage } from "@/app/language-actions";
 import { localeNames, locales } from "@/i18n/config";
 import { clearStaffHint } from "@/components/staff-hint";
 import type { ShellUser } from "./types";
+import { InstallHelp, InstallMenuItems } from "./app-install";
 
 export const initials = (name: string) =>
   name
@@ -34,7 +35,9 @@ export function UserMenu({ user }: { user: ShellUser }) {
   const t = useTranslations("userMenu");
   const locale = useLocale();
   const [, startTransition] = useTransition();
+  const [installHelp, setInstallHelp] = useState(false);
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger className="flex h-9 items-center gap-2 rounded-lg px-1 text-topbar-foreground outline-none hover:bg-topbar-muted focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-topbar-muted 2xl:pr-2.5">
         <Avatar className="size-7 rounded-lg">
@@ -69,6 +72,7 @@ export function UserMenu({ user }: { user: ShellUser }) {
           ))}
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
+        <InstallMenuItems onHelp={() => setInstallHelp(true)} />
         <DropdownMenuItem
           onSelect={async () => {
             await clearStaffHint();
@@ -80,5 +84,7 @@ export function UserMenu({ user }: { user: ShellUser }) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <InstallHelp open={installHelp} onOpenChange={setInstallHelp} />
+    </>
   );
 }

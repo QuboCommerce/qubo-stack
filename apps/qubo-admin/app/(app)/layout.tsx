@@ -12,13 +12,22 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: { default: "Qubo", template: "%s · Qubo" },
     description: t("description"),
+    applicationName: "Qubo",
+    appleWebApp: { capable: true, title: "Qubo", statusBarStyle: "black-translucent" },
+    formatDetection: { telephone: false, email: false, address: false },
+    icons: { icon: "/icon.svg", apple: "/apple-touch-icon.png" },
   };
 }
 
+// Edge to edge: the top bar paints under the status bar and pads itself with the safe-area insets.
 export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#1a1a1a" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#121212" },
+    { media: "(prefers-color-scheme: dark)", color: "#060606" },
   ],
 };
 
