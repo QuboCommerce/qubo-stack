@@ -13,7 +13,7 @@ const hostVariants = (host: string) => {
 /** Site behind a verified domain (apex or www), or null. */
 export async function siteForHost(host: string) {
   const [row] = await db
-    .select({ id: site.id, slug: site.slug, name: site.name, isPrimary: siteDomain.isPrimary })
+    .select({ id: site.id, slug: site.slug, name: site.name, capabilities: site.capabilities, isPrimary: siteDomain.isPrimary })
     .from(siteDomain)
     .innerJoin(site, eq(site.id, siteDomain.siteId))
     .where(and(inArray(siteDomain.hostname, hostVariants(host)), isNotNull(siteDomain.verifiedAt)))
