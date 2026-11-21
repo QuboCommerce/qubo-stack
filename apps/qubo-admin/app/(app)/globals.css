@@ -151,11 +151,75 @@
     @apply bg-background text-foreground;
     font-feature-settings: "cv11", "ss01";
   }
+  /* App chrome heights, safe-area aware. The tab bar only exists below md. */
+  :root {
+    --qb-top: calc(3.5rem + env(safe-area-inset-top));
+    --qb-tabbar: calc(3.5rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 48rem) {
+    :root { --qb-tabbar: 0px; }
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  /* Installed: no rubber band revealing the page behind the chrome. */
+  @media (display-mode: standalone) {
+    html, body { overscroll-behavior-y: none; }
+  }
   /* Ultrawide: scale the whole UI up a notch so it doesn't look tiny on large panels. */
   @media (min-width: 160rem) {
     html { font-size: 17px; }
   }
   @media (min-width: 215rem) {
     html { font-size: 18px; }
+  }
+}
+
+/* Touch screens: 16px form text so iOS never zooms on focus; chrome is not selectable. */
+@media (hover: none) and (pointer: coarse) {
+  input:not([type="checkbox"], [type="radio"], [type="range"], [type="color"], [type="file"]), textarea, select {
+    font-size: max(16px, 1em);
+  }
+  .qb-chrome, .qb-tabbar {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* Keyboard up: the tab bar would ride on top of it (Android resizes the viewport). */
+  body:has(:is(input, textarea, select, [contenteditable="true"]):focus) .qb-tabbar {
+    display: none;
+  }
+}
+
+@layer components {
+  .qb-tab {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding-inline: 2px;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.005em;
+    color: var(--muted-foreground);
+    transition: color 150ms ease, transform 120ms ease;
+    touch-action: manipulation;
+  }
+  .qb-tab[aria-current="page"], .qb-tab[aria-expanded="true"] {
+    color: var(--foreground);
+    font-weight: 600;
+  }
+  .qb-tab:active {
+    transform: scale(0.94);
+  }
+  .qb-tab:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: -4px;
+    border-radius: 12px;
   }
 }

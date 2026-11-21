@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#121212">
+<title>Qubo</title>
+<style>
+  :root { color-scheme: dark; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    display: grid; place-items: center; background: #121212; color: #f2f2f2;
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; -webkit-tap-highlight-color: transparent;
+    padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+  }
+  main { max-width: 22rem; text-align: center; }
+  img { width: 56px; height: 56px; border-radius: 16px; }
+  h1 { font-size: 20px; margin: 20px 0 6px; letter-spacing: -0.01em; }
+  p { margin: 0 0 24px; color: #a3a3a3; }
+  button {
+    font: inherit; font-weight: 600; color: #121212; background: #f2f2f2; border: 0; border-radius: 12px;
+    height: 44px; padding: 0 22px; transition: transform .12s ease;
+  }
+  button:active { transform: scale(.96); }
+</style>
+</head>
+<body>
+<main>
+  <img src="/icon.svg" alt="">
+  <h1 data-en="You're offline" data-fr="Vous êtes hors ligne">You're offline</h1>
+  <p data-en="Qubo needs a connection to show live data. It will be back as soon as the network is." data-fr="Qubo a besoin d'une connexion pour afficher vos données. Tout revient dès que le réseau est là.">Qubo needs a connection to show live data. It will be back as soon as the network is.</p>
+  <button type="button" onclick="location.reload()" data-en="Try again" data-fr="Réessayer">Try again</button>
+</main>
+<script>
+  var fr = /(^|;\s*)qubo-lang=fr/.test(document.cookie) || (!/qubo-lang=/.test(document.cookie) && /^fr/i.test(navigator.language));
+  if (fr) { document.documentElement.lang = "fr"; document.querySelectorAll("[data-fr]").forEach(function (el) { el.textContent = el.getAttribute("data-fr"); }); }
+  addEventListener("online", function () { location.reload(); });
+</script>
+</body>
+</html>
