@@ -96,7 +96,9 @@
           "description": "Partez de zéro et activez uniquement ce dont vous avez besoin."
         }
       }
-    }
+    },
+    "more": "Plus",
+    "tabBar": "Sections"
   },
   "commandMenu": {
     "title": "Recherche",
@@ -123,5 +125,15 @@
     "system": "Système",
     "language": "Langue",
     "signOut": "Se déconnecter"
+  },
+  "install": {
+    "install": "Installer l'app",
+    "reload": "Actualiser",
+    "iosTitle": "Ajouter Qubo à l'écran d'accueil",
+    "iosDescription": "Il s'ouvre en plein écran, comme une app, directement sur votre site.",
+    "iosStep1": "Touchez Partager dans la barre de Safari.",
+    "iosStep2": "Choisissez « Sur l'écran d'accueil ». Faites défiler la liste si vous ne le voyez pas.",
+    "iosAdd": "Ajouter",
+    "iosStep3": "Touchez Ajouter. Qubo est sur votre écran d'accueil."
   }
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Bell, ExternalLink, Menu, Search } from "lucide-react";
+import { Bell, ExternalLink, Search } from "lucide-react";
 import { Kbd } from "@/components/ui/kbd";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,11 +13,14 @@ import { SidebarNav } from "./sidebar-nav";
 import { SiteSwitcher } from "./site-switcher";
 import type { ShellAccess, ShellCounts, ShellOrg, ShellSite, ShellUser } from "./types";
 import { UserMenu } from "./user-menu";
+import { TabBar } from "./tab-bar";
+import { AppRuntime } from "./app-install";
 import { PresenceStack } from "@/components/presence";
 
 /**
  * Responsive shell:
- *  - < md   : top bar + slide-over navigation (sheet), icon-only search
+ *  - < md   : top bar + bottom tab bar (More opens the full navigation sheet), icon-only search;
+ *             insets come from --qb-top / --qb-tabbar (globals.css) so it sits edge to edge when installed
  *  - md–lg  : 64px icon rail with tooltips
  *  - lg+    : full 240px sidebar; 3xl widens it; page content adapts via container queries
  */
@@ -37,16 +40,8 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
   return (
     <TooltipProvider delayDuration={200}>
       <div className="min-h-dvh bg-sidebar">
-        <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-1 bg-topbar px-2 text-topbar-foreground xs:gap-2 sm:px-3 lg:px-4">
-          <button
-            type="button"
-            onClick={() => setNavOpen(true)}
-            className="grid size-9 place-items-center rounded-lg hover:bg-topbar-muted md:hidden"
-            aria-label={t("openNavigation")}
-          >
-            <Menu className="size-5" />
-          </button>
-          <Link href={`/${site.slug}`} className="hidden items-center gap-2 rounded-lg px-1 xs:flex lg:w-[13.5rem] 3xl:w-[15rem]" aria-label={t("quboHome")}>
+        <header className="qb-chrome fixed inset-x-0 top-0 z-40 flex h-(--qb-top) items-center pt-[env(safe-area-inset-top)] gap-1 bg-topbar px-2 text-topbar-foreground xs:gap-2 sm:px-3 lg:px-4">
+          <Link href={`/${site.slug}`} className="flex shrink-0 items-center gap-2 rounded-lg px-1 lg:w-[13.5rem] 3xl:w-[15rem]" aria-label={t("quboHome")}>
             <QuboMark className="size-7" />
             <span className="hidden text-[15px] font-semibold tracking-tight lg:inline">Qubo</span>
           </Link>
@@ -91,7 +86,7 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
           </div>
         </header>
 
-        <aside className="fixed bottom-0 left-0 top-14 z-30 hidden w-16 bg-sidebar md:block lg:w-60 3xl:w-64">
+        <aside className="fixed bottom-0 left-0 top-(--qb-top) z-30 hidden w-16 bg-sidebar md:block lg:w-60 3xl:w-64">
           <div className="h-full lg:hidden">
             <SidebarNav site={site} counts={counts} mode="rail" />
           </div>
@@ -101,7 +96,7 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
         </aside>
 
         <Sheet open={navOpen} onOpenChange={setNavOpen}>
-          <SheetContent side="left" className="w-[18rem] max-w-[85vw] gap-0 border-0 bg-sidebar p-0">
+          <SheetContent side="left" className="w-[18rem] max-w-[85vw] gap-0 border-0 bg-sidebar p-0 pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
             <SheetTitle className="flex h-14 items-center gap-2 px-4 text-[15px]">
               <QuboMark className="size-7" /> Qubo
             </SheetTitle>
@@ -111,11 +106,14 @@ export function AdminFrame({ site, sites, orgs, access, user, counts, children }
           </SheetContent>
         </Sheet>
 
-        <main className="min-h-dvh pt-14 md:pl-16 lg:pl-60 3xl:pl-64">
-          <div className="@container min-h-[calc(100dvh-3.5rem)] bg-background md:rounded-tl-2xl md:border-l md:border-t md:border-sidebar-border">
+        <main className="min-h-dvh pt-(--qb-top) pb-(--qb-tabbar) md:pl-16 lg:pl-60 3xl:pl-64">
+          <div className="@container min-h-[calc(100dvh-var(--qb-top)-var(--qb-tabbar))] bg-background md:rounded-tl-2xl md:border-l md:border-t md:border-sidebar-border">
             {children}
           </div>
         </main>
+
+        <TabBar site={site} counts={counts} moreOpen={navOpen} onMore={() => setNavOpen(true)} />
+        <AppRuntime />
 
         <CommandMenu open={searchOpen} onOpenChange={setSearchOpen} site={site} sites={sites} />
       </div>
