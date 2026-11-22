@@ -3,8 +3,8 @@ import { conversation, form, formSubmission, inboxFile, message, site, type Mess
 import { publish } from "@qubo/realtime/server";
 import { storageConfigured } from "@qubo/storage/server";
 import { createHash } from "node:crypto";
-import { and, count, desc, eq, gt, inArray, isNotNull, isNull, lte, ne } from "drizzle-orm";
-import { baseSubject, CHAT_AWAY_MS, chatSubject, createRateLimiter, htmlToText, INBOUND_PER_HOUR, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
+import { and, count, desc, eq, gt, inArray, isNotNull, isNull, lte, ne, sql as q } from "drizzle-orm";
+import { baseSubject, CHAT_AWAY_MS, cleanAddresses, docToHtml, docToText, type RichDoc, chatSubject, createRateLimiter, htmlToText, INBOUND_PER_HOUR, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
 
 import { checkUploads, claimDraftFiles, linkFiles, readBytes, storeFiles, type IncomingFile } from "./files";
 import { CHAT_ATTACHMENTS, cleanFilename } from "@qubo/storage";
@@ -129,6 +129,8 @@ type Mail = {
   text: string;
   html: string;
   fromName?: string;
+  cc?: string[];
+  bcc?: string[];
   replyTo?: string;
   headers?: Record<string, string>;
   attachments?: { filename: string; content: string }[];
@@ -143,7 +145,7 @@ async function sendMail(mail: Mail): Promise<{ sent: true } | null> {
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
-    body: JSON.stringify({ from: sender, to: mail.to, subject: mail.subject, text: mail.text, html: mail.html, reply_to: mail.replyTo, headers: mail.headers, attachments: mail.attachments }),
+    body: JSON.stringify({ from: sender, to: mail.to, cc: mail.cc?.length ? mail.cc : undefined, bcc: mail.bcc?.length ? mail.bcc : undefined, subject: mail.subject, text: mail.text, html: mail.html, reply_to: mail.replyTo, headers: mail.headers, attachments: mail.attachments }),
   });
   if (!res.ok) throw new Error(`Resend ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return { sent: true };
@@ -182,25 +184,38 @@ export async function reply(input: {
   siteId: string;
   author: { id: string; name: string };
   body: string;
+  /** Rich editor document; when set it wins over `body` (which becomes its text twin). */
+  doc?: RichDoc | null;
   internal: boolean;
+  /**
+   * E-mail copies. When given they replace the thread's participants, so
+   * removing someone is a deliberate edit of this list, never a side effect.
+   */
+  cc?: string[];
+  bcc?: string[];
   /** Draft uploads (`uploadDraftFiles`) by this author to send with the reply. */
   fileIds?: string[];
 }): Promise<ReplyResult> {
-  const body = input.body.trim().slice(0, LIMITS.replyLength);
+  const html = input.doc ? docToHtml(input.doc) : null;
+  const body = (input.doc ? docToText(input.doc) : input.body).trim().slice(0, LIMITS.replyLength);
   const conv = await db.query.conversation.findFirst({ where: and(eq(conversation.id, input.conversationId), eq(conversation.siteId, input.siteId)) });
   if (!conv) throw new Error("conversation_not_found");
 
   const from = fromAddress();
+  const own = [conv.contactEmail ?? "", parseAddress(from)?.email ?? ""];
+  const participants = !input.internal && (input.cc || input.bcc)
+    ? { cc: cleanAddresses(input.cc ?? [], own), bcc: cleanAddresses(input.bcc ?? [], own) }
+    : conv.participants;
   const [msg] = await db
     .insert(message)
-    .values({ conversationId: conv.id, authorType: "staff", authorId: input.author.id, authorName: input.author.name, body, internal: input.internal })
+    .values({ conversationId: conv.id, authorType: "staff", authorId: input.author.id, authorName: input.author.name, body, bodyHtml: html || null, internal: input.internal })
     .returning({ id: message.id });
   const messageId = msg!.id;
   const attachments = await claimDraftFiles(conv.id, input.author.id, messageId, input.fileIds ?? []);
   await linkFiles(messageId, attachments);
   await db
     .update(conversation)
-    .set({ lastMessageAt: new Date(), updatedAt: new Date(), unread: false, assigneeId: conv.assigneeId ?? input.author.id })
+    .set({ lastMessageAt: new Date(), updatedAt: new Date(), unread: false, assigneeId: conv.assigneeId ?? input.author.id, participants })
     .where(eq(conversation.id, conv.id));
 
   let delivered: boolean | null = null;
@@ -223,9 +238,11 @@ export async function reply(input: {
       const files = await mailAttachments(messageId);
       const sent = await sendMail({
         to: [conv.contactEmail],
+        cc: participants.cc,
+        bcc: participants.bcc,
         subject: replySubject(conv.subject),
         text: body,
-        html: textToHtml(body),
+        html: html || textToHtml(body),
         fromName: s?.name,
         headers,
         replyTo: inbound ? replyAddress(conv.id, inbound) : undefined,
@@ -233,7 +250,12 @@ export async function reply(input: {
       });
       delivered = sent ? true : null;
       error = sent ? null : "E-mail isn't configured on this instance (RESEND_API_KEY / EMAIL_FROM).";
-      if (sent) await db.update(message).set({ emailMessageId: emailId }).where(eq(message.id, messageId));
+      if (sent) {
+        await db
+          .update(message)
+          .set({ emailMessageId: emailId, recipients: { to: [conv.contactEmail], cc: participants.cc, bcc: participants.bcc } })
+          .where(eq(message.id, messageId));
+      }
     } catch (e) {
       delivered = false;
       error = e instanceof Error ? e.message : String(e);
@@ -285,6 +307,28 @@ export async function updateConversation(
     .returning({ id: conversation.id });
   if (row) await emit({ type: "conversation.updated", siteId, payload: { conversationId: id } });
   return Boolean(row);
+}
+
+/**
+ * Turns a thread into a ticket: the next number for the site, kept forever.
+ * The origin (form, e-mail, chat) doesn't change; a system line records who
+ * escalated it. Calling it again on a ticket returns the existing number.
+ */
+export async function escalate(siteId: string, id: string, by: { id: string; name: string }): Promise<number | null> {
+  const number = await db.transaction(async (tx) => {
+    // One escalation at a time per site keeps numbers gap-free without a sequence per site.
+    await tx.execute(q`select pg_advisory_xact_lock(hashtext(${`qubo-ticket:${siteId}`}))`);
+    const conv = await tx.query.conversation.findFirst({ where: and(eq(conversation.id, id), eq(conversation.siteId, siteId)), columns: { ticketNumber: true } });
+    if (!conv) return null;
+    if (conv.ticketNumber) return conv.ticketNumber;
+    const [{ max }] = (await tx.select({ max: q<number>`coalesce(max(${conversation.ticketNumber}), 0)` }).from(conversation).where(eq(conversation.siteId, siteId))) as [{ max: number }];
+    const next = Number(max) + 1;
+    await tx.update(conversation).set({ ticketNumber: next, escalatedAt: new Date(), updatedAt: new Date(), status: "open" }).where(eq(conversation.id, id));
+    await tx.insert(message).values({ conversationId: id, authorType: "system", authorId: by.id, authorName: by.name, body: `ticket:${next}`, internal: true });
+    return next;
+  });
+  if (number) await emit({ type: "conversation.updated", siteId, payload: { conversationId: id } });
+  return number;
 }
 
 /**
@@ -572,6 +616,11 @@ export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
     body += `\n\n[Not imported: ${imported.skipped.join(", ")}]`;
   }
   const emailMessageId = mail.messageId ?? `resend:${mail.id}`;
+  const inbound = inboundDomain();
+  const ours = (e: string) => (inbound && e.endsWith(`@${inbound}`)) || e === parseAddress(fromAddress())?.email;
+  const recipients = { to: cleanAddresses(mail.to, [], 50), cc: cleanAddresses(mail.cc, [], 50) };
+  // Whoever the customer copied stays copied on our answers, until staff remove them.
+  const copied = (prior: string[]) => cleanAddresses([...prior, ...[...recipients.to, ...recipients.cc].filter((e) => !ours(e))], [sender.email]);
 
   if (!conv) {
     const opened = await openConversation({
@@ -582,7 +631,8 @@ export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
       contactName: sender.name,
       contactEmail: sender.email,
     });
-    await db.update(message).set({ emailMessageId }).where(eq(message.id, opened.messageId));
+    await db.update(message).set({ emailMessageId, recipients }).where(eq(message.id, opened.messageId));
+    await db.update(conversation).set({ participants: { cc: copied([]), bcc: [] } }).where(eq(conversation.id, opened.conversation.id));
     await linkFiles(opened.messageId, await storeFiles(files, { siteId, conversationId: opened.conversation.id, messageId: opened.messageId, source: "email" }));
     await emit({ type: "conversation.created", siteId, payload: { conversationId: opened.conversation.id } });
     return { ok: true, conversationId: opened.conversation.id, created: true };
@@ -590,7 +640,7 @@ export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
 
   const [msg] = await db
     .insert(message)
-    .values({ conversationId: conv.id, authorType: "customer", authorId: null, authorName: sender.name ?? sender.email, body, emailMessageId })
+    .values({ conversationId: conv.id, authorType: "customer", authorId: null, authorName: sender.name ?? sender.email, body, emailMessageId, recipients })
     .returning({ id: message.id });
   await linkFiles(msg!.id, await storeFiles(files, { siteId: conv.siteId, conversationId: conv.id, messageId: msg!.id, source: "email" }));
   await db
@@ -603,6 +653,7 @@ export async function receiveEmail(mail: InboundEmail): Promise<ReceiveResult> {
       updatedAt: new Date(),
       contactEmail: conv.contactEmail ?? sender.email,
       contactName: conv.contactName ?? sender.name,
+      participants: { cc: copied(conv.participants.cc), bcc: conv.participants.bcc },
     })
     .where(eq(conversation.id, conv.id));
   await emit({ type: "conversation.message", siteId: conv.siteId, payload: { conversationId: conv.id, messageId: msg!.id } });

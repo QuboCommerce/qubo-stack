@@ -954,6 +954,27 @@ assets and serves `offline.html` when a navigation fails; bump `VERSION` to drop
 It only registers in production builds. References were the kyf member panel and the old Lumé
 app; neither had a service worker or safe-area handling.
 
+### 57. Inbox lenses, tickets and the rich composer (2026-11-22)
+
+Every conversation is still one `conversation` row with `message` rows; the inbox only changes
+how they are grouped and drawn. Lenses live in the URL (`/inbox`, `/inbox/forms`, `/email`,
+`/chats`, `/tickets`, optional catch-all `inbox/[[...lens]]`) and filter in `lensFilter`
+(`lib/inbox.ts`): a ticket leaves its channel lens and shows only under Tickets. A ticket is a
+conversation with `ticket_number` (unique per site, `max+1` under a per-site advisory lock in
+`escalate()`, idempotent) and a system message `ticket:<n>` that the UI renders as "Made ticket
+#n". `conversation.participants` holds the thread's Cc/Bcc; a reply replaces it only when the
+composer sent its recipients row (`recipients=on`), and incoming mail adds its To/Cc minus our
+own addresses. `message.recipients` records who a sent mail went to. Staff replies are written
+in Tiptap and stored as text plus `body_html` from `docToHtml` (`packages/inbox/src/rich.ts`, an allowlist
+of nodes and marks, http(s)/mailto links only); only staff `body_html` is ever rendered, customer
+HTML is shown as text. `components/inbox/thread.tsx` picks the renderer per message (form card,
+letter, bubble, note, system line); `COMPOSE_EVENT` lets any button focus the composer in reply
+or note mode. Room left for later: staff DMs and bot chats are more `chat` lenses, an AI
+suggestion strip sits above the composer, and the slash menu is a plain command list. Dev box:
+the edge (octopus-dx Traefik, now `v3.6` for Docker 29) runs on this machine again and the dev
+database is a plain `qubo-dev-db` Postgres 17 container on `127.0.0.1:54322` (no Supabase); the
+seed lives in `.scratch/dev-seed/`. E-mail replies still need `RESEND_API_KEY`; prod has none.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

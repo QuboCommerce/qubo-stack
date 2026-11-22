@@ -34,6 +34,8 @@ export const LIMITS = {
   emailFiles: 10,
   /** Total size of the files on one outgoing e-mail (Resend allows 40 MB after encoding). */
   emailFilesBytes: 25e6,
+  /** Cc + Bcc addresses kept on one thread. */
+  ccRecipients: 10,
   /** Staff uploads that never made it into a reply are removed after this. */
   draftFileMs: 86_400_000,
 } as const;
@@ -252,10 +254,11 @@ const QUOTE_HEADER = [
 ];
 
 /**
- * The new part of a reply: everything above the quoted history. Falls back to
- * the whole text when stripping would leave nothing.
+ * A message split at its quoted history: `fresh` is what the sender wrote,
+ * `quoted` the trail below it (empty when there is none). The inbox collapses
+ * the quoted part instead of throwing it away.
  */
-export function stripQuoted(text: string): string {
+export function splitQuoted(text: string): { fresh: string; quoted: string } {
   const lines = text.replace(/\r\n/g, "\n").split("\n");
   let end = lines.length;
   for (let i = 0; i < lines.length; i++) {
@@ -271,8 +274,28 @@ export function stripQuoted(text: string): string {
       break;
     }
   }
-  const kept = lines.slice(0, end).join("\n").replace(/\n{3,}/g, "\n\n").trim();
-  return kept || text.trim();
+  const fresh = lines.slice(0, end).join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  if (!fresh) return { fresh: text.trim(), quoted: "" };
+  return { fresh, quoted: lines.slice(end).join("\n").trim() };
+}
+
+/**
+ * The new part of a reply: everything above the quoted history. Falls back to
+ * the whole text when stripping would leave nothing.
+ */
+export const stripQuoted = (text: string) => splitQuoted(text).fresh;
+
+/** Lower-cased, valid, unique addresses, minus the ones in `exclude`, capped at `max`. */
+export function cleanAddresses(list: string[], exclude: string[] = [], max: number = LIMITS.ccRecipients): string[] {
+  const skip = new Set(exclude.map((e) => e.trim().toLowerCase()));
+  const out: string[] = [];
+  for (const raw of list) {
+    const email = parseAddress(raw)?.email;
+    if (!email || skip.has(email) || out.includes(email)) continue;
+    out.push(email);
+    if (out.length >= max) break;
+  }
+  return out;
 }
 
 /** Subject without reply/forward prefixes, for matching a thread whose headers got lost. */
@@ -281,3 +304,5 @@ export const baseSubject = (subject: string) =>
     .replace(/^\s*((re|fw|fwd|tr|aw|wg|antw|réf)\s*(\[\d+\])?\s*:\s*)+/i, "")
     .trim()
     .toLowerCase();
+
+export * from "./rich";

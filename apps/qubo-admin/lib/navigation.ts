@@ -74,7 +74,19 @@ const groups: NavGroup[] = [
         requires: ["accounts"],
         children: [{ key: "segments", href: "/customers/segments" }],
       },
-      { key: "inbox", href: "/inbox", icon: Inbox, requires: ["leads"], badge: "inbox" },
+      {
+        key: "inbox",
+        href: "/inbox",
+        icon: Inbox,
+        requires: ["leads"],
+        badge: "inbox",
+        children: [
+          { key: "inboxForms", href: "/inbox/forms" },
+          { key: "inboxEmail", href: "/inbox/email" },
+          { key: "inboxChats", href: "/inbox/chats" },
+          { key: "inboxTickets", href: "/inbox/tickets" },
+        ],
+      },
       {
         key: "content",
         href: "/content",

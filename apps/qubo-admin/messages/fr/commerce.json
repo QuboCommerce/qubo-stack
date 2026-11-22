@@ -57,23 +57,31 @@
     },
     "thread": {
       "back": "Retour à la liste",
-      "meta": "{name} · via {channel} · {date}",
-      "metaEmail": "{name} · {email} · via {channel} · {date}",
       "staff": "Équipe",
       "customer": "Client",
       "internalNote": "Note interne",
       "deliveryErrorChat": "Affiché dans le chat, mais non envoyé par e-mail : {error}",
       "deliveryError": "Non envoyé par e-mail : {error}",
       "emailedTo": "Envoyé par e-mail à {email}",
-      "sentInChat": "Envoyé dans le chat"
+      "sentInChat": "Envoyé dans le chat",
+      "makeTicket": "Créer un ticket",
+      "makeTicketHint": "Donner un numéro de ticket à cette conversation et la garder dans Tickets jusqu'à sa résolution",
+      "escalated": "Ticket n° {number} créé par {name}",
+      "replyByEmail": "Répondre par e-mail",
+      "addNote": "Ajouter une note",
+      "showQuoted": "Afficher le texte cité",
+      "to": "À {list}",
+      "cc": "Cc {list}",
+      "bcc": "Cci {list}",
+      "notSent": "Enregistré dans la conversation, non envoyé par e-mail"
     },
     "context": {
       "contact": "Contact",
       "customerSince": "Client depuis le {date}",
       "order": "Commande",
       "formTitle": "Formulaire {name}",
-      "sentFrom": "Envoyé depuis {path}",
-      "earlier": "Conversations précédentes"
+      "earlier": "Conversations précédentes",
+      "copied": "En copie"
     },
     "controls": {
       "status": "Statut",
@@ -152,7 +160,61 @@
       "draft": "Rédiger avec l'IA",
       "sending": "Envoi…",
       "addNote": "Ajouter la note",
-      "send": "Envoyer"
+      "send": "Envoyer",
+      "chatPlaceholder": "Message…",
+      "editorLabel": "Message",
+      "slashHint": "Tapez / pour les commandes",
+      "commands": {
+        "label": "Commandes",
+        "reply": {
+          "label": "Répondre au client",
+          "done": "Rédaction d'une réponse"
+        },
+        "note": {
+          "label": "Note interne",
+          "done": "Rédaction d'une note"
+        },
+        "ticket": {
+          "label": "Créer un ticket",
+          "done": "Ticket créé"
+        },
+        "pending": {
+          "label": "En attente du client",
+          "done": "Marqué en attente"
+        },
+        "close": {
+          "label": "Marquer comme résolu",
+          "done": "Résolu"
+        },
+        "snooze": {
+          "label": "Reporter à demain",
+          "done": "Reporté à demain"
+        },
+        "assign": {
+          "label": "M'attribuer",
+          "done": "Attribué à vous"
+        }
+      },
+      "format": {
+        "label": "Mise en forme",
+        "bold": "Gras",
+        "italic": "Italique",
+        "link": "Lien",
+        "bulletList": "Liste à puces",
+        "orderedList": "Liste numérotée",
+        "quote": "Citation",
+        "linkPrompt": "Adresse du lien (vide pour le retirer)"
+      },
+      "recipients": {
+        "to": "À",
+        "cc": "Cc",
+        "bcc": "Cci",
+        "toHint": "Le client reçoit toujours la réponse",
+        "remove": "Retirer {email}",
+        "add": "Ajouter une adresse en {kind}",
+        "placeholder": "nom@exemple.be, puis Entrée",
+        "invalid": "Cette adresse e-mail ne semble pas valide."
+      }
     },
     "files": {
       "expiredHint": "Les fichiers du chat sont supprimés après 30 jours, sauf s'ils sont conservés.",
@@ -196,6 +258,54 @@
       "formGone": "Ce formulaire n'existe plus.",
       "onlyChat": "Seuls les fichiers envoyés par les visiteurs dans le chat expirent.",
       "fileExpired": "Ce fichier a expiré."
+    },
+    "lenses": {
+      "label": "Rubriques de la messagerie",
+      "all": {
+        "tab": "Tout",
+        "title": "Messagerie",
+        "subtitle": "Tous les messages de vos formulaires, e-mails et chats, au même endroit.",
+        "empty": "Rien ici."
+      },
+      "forms": {
+        "tab": "Formulaires",
+        "title": "Formulaires",
+        "subtitle": "Ce que les visiteurs ont envoyé via les formulaires de votre site.",
+        "empty": "Aucun formulaire ici."
+      },
+      "email": {
+        "tab": "E-mails",
+        "title": "E-mails",
+        "subtitle": "Les conversations arrivées par e-mail.",
+        "empty": "Aucun e-mail ici."
+      },
+      "chats": {
+        "tab": "Chats",
+        "title": "Chats",
+        "subtitle": "Les conversations en direct avec les visiteurs de votre site.",
+        "empty": "Aucun chat ici."
+      },
+      "tickets": {
+        "tab": "Tickets",
+        "title": "Tickets",
+        "subtitle": "Les demandes transformées en tickets numérotés pour le suivi.",
+        "empty": "Aucun ticket ici. Utilisez « Créer un ticket » sur une conversation."
+      }
+    },
+    "origins": {
+      "form": "Formulaire",
+      "email": "E-mail",
+      "chat": "Chat",
+      "portal": "Compte client",
+      "system": "Système"
+    },
+    "fields": {
+      "name": "Nom",
+      "company": "Société",
+      "email": "E-mail",
+      "phone": "Téléphone",
+      "address": "Adresse",
+      "message": "Message"
     }
   },
   "customers": {

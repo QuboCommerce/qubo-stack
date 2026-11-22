@@ -17,6 +17,12 @@ export const messageAuthorEnum = pgEnum("message_author", ["customer", "staff", 
 /** Display copy of a file on a message. `id` points at `inbox_file`; `url` is only set for links that live elsewhere. */
 export type MessageAttachment = { id?: string; name: string; url?: string; size?: number; type?: string };
 
+/** Addresses an e-mail went to, as sent or received. */
+export type MessageRecipients = { to: string[]; cc: string[]; bcc?: string[] };
+
+/** People copied on every reply until staff remove them. The contact is always "to". */
+export type ConversationParticipants = { cc: string[]; bcc: string[] };
+
 /** What the inbox AI made of a conversation, as of `messageId` (the last customer message it read). */
 export type ConversationAi = {
   summary: string;
@@ -49,6 +55,10 @@ export const conversation = pgTable(
     orderId: uuid("order_id").references(() => order.id, { onDelete: "set null" }),
     formSubmissionId: uuid("form_submission_id").references(() => formSubmission.id, { onDelete: "set null" }),
     tags: text("tags").array().notNull().default([]),
+    /** Set once the thread is escalated to a ticket; numbered per site, never reused. */
+    ticketNumber: integer("ticket_number"),
+    escalatedAt: timestamp("escalated_at"),
+    participants: jsonb("participants").$type<ConversationParticipants>().notNull().default({ cc: [], bcc: [] }),
     /** Chat: sha256 of the anonymous visitor's cookie token (the token itself never hits the DB). */
     visitorTokenHash: text("visitor_token_hash"),
     /** Chat: last time the visitor had the chat open; staff replies are e-mailed only when they're away. */
@@ -67,6 +77,7 @@ export const conversation = pgTable(
     index("conversation_contact_email_idx").on(t.siteId, t.contactEmail),
     uniqueIndex("conversation_visitor_token_idx").on(t.siteId, t.visitorTokenHash),
     index("conversation_customer_idx").on(t.siteId, t.customerId),
+    uniqueIndex("conversation_ticket_number_idx").on(t.siteId, t.ticketNumber),
   ],
 );
 
@@ -87,6 +98,8 @@ export const message = pgTable(
     internal: boolean("internal").notNull().default(false),
     /** RFC 5322 Message-ID of the e-mail this row was sent as / received from (threading). */
     emailMessageId: text("email_message_id"),
+    /** E-mail only: who it was addressed to. Null for chat, notes and form posts. */
+    recipients: jsonb("recipients").$type<MessageRecipients>(),
     /** Set when an outbound e-mail failed; the reply is stored regardless. */
     deliveryError: text("delivery_error"),
     createdAt: timestamp("created_at").notNull().defaultNow(),

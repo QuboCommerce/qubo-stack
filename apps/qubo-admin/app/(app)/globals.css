@@ -194,6 +194,22 @@
 }
 
 @layer components {
+  /* Rich text: the reply editor and staff replies rendered in a thread. */
+  .qb-rich p { margin: 0 0 0.5em; }
+  .qb-rich > :last-child, .qb-rich p:last-child { margin-bottom: 0; }
+  .qb-rich ul { list-style: disc; padding-left: 1.25rem; margin: 0 0 0.5em; }
+  .qb-rich ol { list-style: decimal; padding-left: 1.25rem; margin: 0 0 0.5em; }
+  .qb-rich blockquote { border-left: 3px solid var(--border); padding-left: 0.75rem; color: var(--muted-foreground); margin: 0 0 0.5em; }
+  .qb-rich a { text-decoration: underline; text-underline-offset: 2px; }
+  .qb-rich strong { font-weight: 600; }
+  .qb-rich p.is-editor-empty:first-child::before {
+    content: attr(data-placeholder);
+    float: left;
+    height: 0;
+    pointer-events: none;
+    color: var(--muted-foreground);
+  }
+
   .qb-tab {
     display: flex;
     height: 100%;

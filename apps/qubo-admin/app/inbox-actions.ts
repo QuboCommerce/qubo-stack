@@ -4,7 +4,8 @@ import { isEmail, LIMITS, PRIORITIES, SNOOZE_OPTIONS, STATUSES, type SnoozeOptio
 import { db } from "@qubo/db/client";
 import { form } from "@qubo/db/schema";
 import { and, eq } from "drizzle-orm";
-import { getInboxFile, keepInboxFile, readBytes, reply, updateConversation } from "@qubo/inbox/server";
+import { escalate, getInboxFile, keepInboxFile, readBytes, reply, updateConversation } from "@qubo/inbox/server";
+import { parseDoc } from "@qubo/inbox";
 import { uploadAsset } from "@qubo/storage/media";
 import { revalidatePath } from "next/cache";
 import { getTranslations } from "next-intl/server";
@@ -18,20 +19,35 @@ const id = z.uuid();
 export async function replyAction(_: ActionState, formData: FormData): Promise<ActionState> {
   const { site, user } = await requireSiteFromForm(formData);
   const t = await getTranslations("inbox.errors");
+  const address = z.string().trim().max(320);
   const parsed = z
-    .object({ id, body: z.string().trim().max(20000), internal: z.enum(["on"]).optional(), fileIds: z.array(id).max(LIMITS.replyFiles) })
-    .safeParse({ ...Object.fromEntries(formData), fileIds: formData.getAll("fileIds") });
+    .object({
+      id,
+      body: z.string().trim().max(20000),
+      doc: z.string().max(200_000).optional(),
+      internal: z.enum(["on"]).optional(),
+      recipients: z.enum(["on"]).optional(),
+      cc: z.array(address).max(LIMITS.ccRecipients),
+      bcc: z.array(address).max(LIMITS.ccRecipients),
+      fileIds: z.array(id).max(LIMITS.replyFiles),
+    })
+    .safeParse({ ...Object.fromEntries(formData), cc: formData.getAll("cc"), bcc: formData.getAll("bcc"), fileIds: formData.getAll("fileIds") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t("invalidReply") };
+  const doc = parseDoc(parsed.data.doc);
   if (!parsed.data.body && !parsed.data.fileIds.length) return { error: t("writeFirst") };
+  // The recipients row is only on screen for e-mail replies; elsewhere the thread's list stays as it was.
+  const edited = parsed.data.recipients === "on" && parsed.data.internal !== "on";
   const result = await reply({
     conversationId: parsed.data.id,
     siteId: site.id,
     author: { id: user.id, name: user.name },
     body: parsed.data.body,
+    doc,
     internal: parsed.data.internal === "on",
+    ...(edited && { cc: parsed.data.cc, bcc: parsed.data.bcc }),
     fileIds: parsed.data.fileIds,
   });
-  revalidatePath(`/${site.slug}/inbox`);
+  revalidatePath(`/${site.slug}/inbox`, "layout");
   if (result.error) return { ok: true, at: Date.now(), error: t("emailFailed", { error: result.error }) };
   return { ok: true, at: Date.now() };
 }
@@ -59,7 +75,15 @@ export async function updateConversationAction(formData: FormData) {
     ...(p.unread && { unread: p.unread === "true" }),
     ...(p.snooze && { status: "snoozed" as const, unread: false, snoozedUntil: new Date(Date.now() + SNOOZE_OPTIONS[p.snooze][1]) }),
   });
-  revalidatePath(`/${site.slug}/inbox`);
+  revalidatePath(`/${site.slug}/inbox`, "layout");
+}
+
+/** Turns the thread into a numbered ticket (idempotent). */
+export async function escalateAction(formData: FormData): Promise<{ number: number | null }> {
+  const { site, user } = await requireSiteFromForm(formData);
+  const number = await escalate(site.id, id.parse(formData.get("id")), { id: user.id, name: user.name });
+  revalidatePath(`/${site.slug}/inbox`, "layout");
+  return { number };
 }
 
 /** Opening a thread marks it read (no revalidate: the badge refreshes via the event). */
@@ -105,7 +129,7 @@ export async function keepFileAction(siteSlug: string, fileId: string, keep: boo
   const { site } = await requireSiteFromForm(fd);
   const t = await getTranslations("inbox.errors");
   const res = await keepInboxFile(site.id, id.parse(fileId), keep);
-  revalidatePath(`/${site.slug}/inbox`);
+  revalidatePath(`/${site.slug}/inbox`, "layout");
   return res ? { ok: true as const } : { ok: false as const, error: t("onlyChat") };
 }
 
@@ -122,4 +146,9 @@ export async function saveFileToMediaAction(siteSlug: string, fileId: string) {
   const res = await uploadAsset({ orgId: site.organizationId, siteId: site.id, userId: user.id, filename: row.filename, bytes });
   if (!res.ok) return { ok: false as const, error: res.error };
   return { ok: true as const, name: res.item.filename };
+}
+
+/** `<form action>` flavour of escalateAction. */
+export async function escalateFormAction(formData: FormData) {
+  await escalateAction(formData);
 }
