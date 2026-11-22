@@ -57,23 +57,31 @@
     },
     "thread": {
       "back": "Back to list",
-      "meta": "{name} · via {channel} · {date}",
-      "metaEmail": "{name} · {email} · via {channel} · {date}",
       "staff": "Staff",
       "customer": "Customer",
       "internalNote": "Internal note",
       "deliveryErrorChat": "Shown in chat, but not e-mailed: {error}",
       "deliveryError": "Not e-mailed: {error}",
       "emailedTo": "E-mailed to {email}",
-      "sentInChat": "Sent in chat"
+      "sentInChat": "Sent in chat",
+      "makeTicket": "Make ticket",
+      "makeTicketHint": "Give this conversation a ticket number and keep it in Tickets until it's solved",
+      "escalated": "Made ticket #{number} by {name}",
+      "replyByEmail": "Reply by e-mail",
+      "addNote": "Add a note",
+      "showQuoted": "Show quoted text",
+      "to": "To {list}",
+      "cc": "Cc {list}",
+      "bcc": "Bcc {list}",
+      "notSent": "Saved in the thread, not e-mailed"
     },
     "context": {
       "contact": "Contact",
       "customerSince": "Customer since {date}",
       "order": "Order",
       "formTitle": "{name} form",
-      "sentFrom": "Sent from {path}",
-      "earlier": "Earlier conversations"
+      "earlier": "Earlier conversations",
+      "copied": "Copied in"
     },
     "controls": {
       "status": "Status",
@@ -152,7 +160,61 @@
       "draft": "Draft with AI",
       "sending": "Sending…",
       "addNote": "Add note",
-      "send": "Send"
+      "send": "Send",
+      "chatPlaceholder": "Message…",
+      "editorLabel": "Message",
+      "slashHint": "Type / for commands",
+      "commands": {
+        "label": "Commands",
+        "reply": {
+          "label": "Reply to the customer",
+          "done": "Writing a reply"
+        },
+        "note": {
+          "label": "Internal note",
+          "done": "Writing a note"
+        },
+        "ticket": {
+          "label": "Make ticket",
+          "done": "Ticket created"
+        },
+        "pending": {
+          "label": "Mark as waiting on customer",
+          "done": "Marked as waiting"
+        },
+        "close": {
+          "label": "Mark as resolved",
+          "done": "Resolved"
+        },
+        "snooze": {
+          "label": "Snooze until tomorrow",
+          "done": "Snoozed until tomorrow"
+        },
+        "assign": {
+          "label": "Assign to me",
+          "done": "Assigned to you"
+        }
+      },
+      "format": {
+        "label": "Formatting",
+        "bold": "Bold",
+        "italic": "Italic",
+        "link": "Link",
+        "bulletList": "Bulleted list",
+        "orderedList": "Numbered list",
+        "quote": "Quote",
+        "linkPrompt": "Link address (leave empty to remove)"
+      },
+      "recipients": {
+        "to": "To",
+        "cc": "Cc",
+        "bcc": "Bcc",
+        "toHint": "The customer always gets the reply",
+        "remove": "Remove {email}",
+        "add": "Add {kind} address",
+        "placeholder": "name@example.com, press Enter",
+        "invalid": "That doesn't look like an e-mail address."
+      }
     },
     "files": {
       "expiredHint": "Chat files are removed after 30 days unless kept.",
@@ -196,6 +258,54 @@
       "formGone": "That form no longer exists.",
       "onlyChat": "Only files visitors sent in chat expire.",
       "fileExpired": "This file has expired."
+    },
+    "lenses": {
+      "label": "Inbox sections",
+      "all": {
+        "tab": "Everything",
+        "title": "Inbox",
+        "subtitle": "Every message from your forms, e-mail and chat, in one place.",
+        "empty": "Nothing here."
+      },
+      "forms": {
+        "tab": "Forms",
+        "title": "Forms",
+        "subtitle": "What people sent through the forms on your site.",
+        "empty": "No form posts here."
+      },
+      "email": {
+        "tab": "E-mail",
+        "title": "E-mail",
+        "subtitle": "Threads that came in by e-mail.",
+        "empty": "No e-mail threads here."
+      },
+      "chats": {
+        "tab": "Chats",
+        "title": "Chats",
+        "subtitle": "Live conversations with visitors on your site.",
+        "empty": "No chats here."
+      },
+      "tickets": {
+        "tab": "Tickets",
+        "title": "Tickets",
+        "subtitle": "Requests you turned into numbered tickets to follow up.",
+        "empty": "No tickets here. Use \"Make ticket\" on any conversation."
+      }
+    },
+    "origins": {
+      "form": "Form",
+      "email": "E-mail",
+      "chat": "Chat",
+      "portal": "Customer account",
+      "system": "System"
+    },
+    "fields": {
+      "name": "Name",
+      "company": "Company",
+      "email": "E-mail",
+      "phone": "Phone",
+      "address": "Address",
+      "message": "Message"
     }
   },
   "customers": {

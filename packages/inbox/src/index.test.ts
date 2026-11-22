@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { baseSubject, slaState, chatSubject, htmlToText, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, publicStaffName, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
+import { baseSubject, splitQuoted, cleanAddresses, parseDoc, docToHtml, docToText, slaState, chatSubject, htmlToText, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, publicStaffName, createRateLimiter, formThread, isSignupOnly, replySubject, textToHtml } from "./index";
 
 describe("cleanFormData", () => {
   test("drops internal, empty and non-string fields; trims", () => {
@@ -104,5 +104,46 @@ describe("sla", () => {
     expect(slaState("open", "customer", ago(1), now)?.level).toBe("ok");
     expect(slaState("open", "customer", ago(5), now)?.level).toBe("warn");
     expect(slaState("open", "customer", ago(25), now)?.level).toBe("breach");
+  });
+});
+
+describe("splitQuoted", () => {
+  test("keeps the quoted trail apart", () => {
+    const r = splitQuoted("Merci !\n\nLe 21 nov. 2026, HM Froid a écrit :\n> Bonjour\n> Voici la facture");
+    expect(r.fresh).toBe("Merci !");
+    expect(r.quoted.startsWith("Le 21 nov. 2026")).toBe(true);
+  });
+  test("no quote, nothing quoted", () => expect(splitQuoted("Hello").quoted).toBe(""));
+});
+
+describe("cleanAddresses", () => {
+  test("dedupes, lowercases, excludes and drops junk", () => {
+    expect(cleanAddresses(["A@x.be", "a@x.be", "nope", "Compta <c@x.be>", "me@shop.be"], ["ME@shop.be"])).toEqual(["a@x.be", "c@x.be"]);
+  });
+});
+
+describe("rich documents", () => {
+  const doc = parseDoc(
+    JSON.stringify({
+      type: "doc",
+      content: [
+        { type: "paragraph", content: [{ type: "text", text: "Hi <b>", marks: [{ type: "bold" }] }, { type: "text", text: " there", marks: [{ type: "link", attrs: { href: "javascript:alert(1)" } }] }] },
+        { type: "bulletList", content: [{ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: "one", marks: [{ type: "link", attrs: { href: "https://hmfroid.be" } }] }] }] }] },
+        { type: "image", attrs: { src: "x" }, content: [{ type: "text", text: "kept" }] },
+      ],
+    }),
+  )!;
+  test("escapes text, drops unsafe links and unknown markup", () => {
+    const html = docToHtml(doc);
+    expect(html).toContain("<strong>Hi &lt;b&gt;</strong>");
+    expect(html).not.toContain("javascript");
+    expect(html).toContain('<a href="https://hmfroid.be"');
+    expect(html).not.toContain("<image");
+    expect(html).toContain("kept");
+  });
+  test("text twin", () => expect(docToText(doc)).toBe("Hi <b> there\n- one\nkept"));
+  test("rejects non-documents", () => {
+    expect(parseDoc('{"type":"script"}')).toBeNull();
+    expect(parseDoc("nope")).toBeNull();
   });
 });
