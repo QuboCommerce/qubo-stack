@@ -191,9 +191,28 @@
   body:has(:is(input, textarea, select, [contenteditable="true"]):focus) .qb-tabbar {
     display: none;
   }
+  /* ...and full-height surfaces (the inbox) take its room back. */
+  :root:has(:is(input, textarea, select, [contenteditable="true"]):focus) {
+    --qb-tabbar: env(safe-area-inset-bottom);
+  }
 }
 
 @layer components {
+  /* Inbox thread: the "New" line above the first unread message, and a linked message flashing. */
+  .qb-thread [data-new] { position: relative; margin-top: 2rem; }
+  .qb-thread [data-new]::before {
+    content: attr(data-new);
+    position: absolute; left: 0; right: 0; top: -1.25rem;
+    display: block; padding-top: 0.125rem;
+    border-top: 1px solid color-mix(in oklab, var(--color-sky-500) 45%, transparent);
+    color: color-mix(in oklab, var(--color-sky-700) 80%, transparent);
+    font-size: 11px; font-weight: 500; line-height: 1; text-align: left;
+  }
+  .qb-thread [data-flash] > * { animation: qb-flash 2s ease-out; border-radius: 0.75rem; }
+  @keyframes qb-flash {
+    0%, 30% { box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-sky-500) 40%, transparent); }
+    100% { box-shadow: 0 0 0 3px transparent; }
+  }
   /* Rich text: the reply editor and staff replies rendered in a thread. */
   .qb-rich p { margin: 0 0 0.5em; }
   .qb-rich > :last-child, .qb-rich p:last-child { margin-bottom: 0; }

@@ -66,6 +66,8 @@ export const conversation = pgTable(
     ai: jsonb("ai").$type<ConversationAi>(),
     /** True while the latest customer message hasn't been opened by staff. */
     unread: boolean("unread").notNull().default(true),
+    /** When staff last opened the thread; later messages get a "New" divider. */
+    lastReadAt: timestamp("last_read_at"),
     snoozedUntil: timestamp("snoozed_until"),
     slaDueAt: timestamp("sla_due_at"),
     lastMessageAt: timestamp("last_message_at").notNull().defaultNow(),

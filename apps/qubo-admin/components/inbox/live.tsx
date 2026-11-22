@@ -17,13 +17,17 @@ export function InboxLive({ siteId }: { siteId: string }) {
   return null;
 }
 
-/** Opening an unread thread marks it read once. */
-export function MarkRead({ site, conversationId, unread }: { site: string; conversationId: string; unread: boolean }) {
-  const done = useRef<string | null>(null);
+/**
+ * Opening an unread thread marks it read, and so does a new message arriving
+ * while it is open. A thread someone marks unread while it is open stays unread.
+ */
+export function MarkRead({ site, conversationId, unread, count }: { site: string; conversationId: string; unread: boolean; count: number }) {
+  const seen = useRef<{ id: string; count: number } | null>(null);
   useEffect(() => {
-    if (!unread || done.current === conversationId) return;
-    done.current = conversationId;
-    void markReadAction(site, conversationId);
-  }, [site, conversationId, unread]);
+    const fresh = seen.current?.id !== conversationId;
+    const grew = !fresh && count > (seen.current?.count ?? 0);
+    seen.current = { id: conversationId, count };
+    if (unread && (fresh || grew)) void markReadAction(site, conversationId);
+  }, [site, conversationId, unread, count]);
   return null;
 }

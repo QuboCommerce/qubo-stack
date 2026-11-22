@@ -975,6 +975,24 @@ the edge (octopus-dx Traefik, now `v3.6` for Docker 29) runs on this machine aga
 database is a plain `qubo-dev-db` Postgres 17 container on `127.0.0.1:54322` (no Supabase); the
 seed lives in `.scratch/dev-seed/`. E-mail replies still need `RESEND_API_KEY`; prod has none.
 
+### 58. Inbox as a working surface (2026-11-22)
+
+The inbox page is a full-height app surface (no page scroll): list, thread and, from `xl`, a
+context panel; below `xl` the panel opens as a sheet (Info button or `i`), and on phones list and
+thread swap. URL state (lens, view, `q`, `sort`, `unread`, `priority`, `assignee`, `c`) lives in
+`lib/inbox-shared.ts` because `lib/inbox.ts` is `server-only`; search also covers message bodies
+and ticket numbers. Every conversation action goes through `patchConversationsAction` (bulk, zod
+checked) and the same `ConversationMenuItems` render as right-click menu, row menu and thread
+"more" menu. Messages have their own menu (copy, quote in reply, link, mark unread from here,
+delete own note). `conversation.last_read_at` (migration 0026) draws the "New" line; `MarkRead`
+marks a thread read when it opens or when its message count grows, never on a bare unread flip,
+so "mark unread" sticks while the thread is open (also for another person looking at it). Drafts
+live in `localStorage` under `qb:inbox-draft:<id>`; the split Send button posts `after=resolved`.
+Constants a server component needs (`statusDot`, `channelIcon`) stay out of "use client" files.
+Dev database: now a scrubbed prod snapshot plus Ali's own account (password in
+`.private/dev/`); refresh with `pg_dump` on prod, restore into `qubo-dev-db`, then clear
+`portal_link`, `ai_settings` and `session`.
+
 ## Roadmap
 
 - [x] Rename/restructure to `qubo-stack`, push to GitHub

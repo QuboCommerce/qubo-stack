@@ -3,7 +3,7 @@ import { conversation, form, formSubmission, inboxFile, message, site, type Mess
 import { publish } from "@qubo/realtime/server";
 import { storageConfigured } from "@qubo/storage/server";
 import { createHash } from "node:crypto";
-import { and, count, desc, eq, gt, inArray, isNotNull, isNull, lte, ne, sql as q } from "drizzle-orm";
+import { and, count, desc, eq, gt, inArray, isNotNull, isNull, lte, ne, sql as q, type SQL } from "drizzle-orm";
 import { baseSubject, CHAT_AWAY_MS, cleanAddresses, docToHtml, docToText, type RichDoc, chatSubject, createRateLimiter, htmlToText, INBOUND_PER_HOUR, inboundRoute, isAutoReply, parseAddress, referencedIds, replyAddress, stripQuoted, cleanFormData, formNameFromKey, formThread, isEmail, isSignupOnly, LIMITS, publicStaffName, replySubject, textToHtml, type Channel, type Status } from "./index";
 
 import { checkUploads, claimDraftFiles, linkFiles, readBytes, storeFiles, type IncomingFile } from "./files";
@@ -292,20 +292,60 @@ export async function uploadDraftFiles(siteId: string, conversationId: string, a
   return { ok: true as const, attachments };
 }
 
+export type ConversationPatch = Partial<Pick<typeof conversation.$inferInsert, "status" | "priority" | "assigneeId" | "unread" | "snoozedUntil" | "tags" | "lastReadAt">>;
+
 /** Status, priority, assignee, read state; emits so other tabs refresh. */
-export async function updateConversation(
-  siteId: string,
-  id: string,
-  patch: Partial<Pick<typeof conversation.$inferInsert, "status" | "priority" | "assigneeId" | "unread" | "snoozedUntil" | "tags">>,
-) {
+export async function updateConversation(siteId: string, id: string, patch: ConversationPatch) {
+  return (await updateConversations(siteId, [id], patch)) > 0;
+}
+
+/**
+ * The same patch on several threads of one site (bulk actions). Tags are
+ * edited with `addTags` / `removeTags` so concurrent edits don't clobber each other.
+ */
+export async function updateConversations(siteId: string, ids: string[], patch: ConversationPatch & { addTags?: string[]; removeTags?: string[] }) {
+  if (!ids.length) return 0;
+  const { addTags, removeTags, ...rest } = patch;
   // Leaving "snoozed" by hand forgets the wake-up time.
-  const wake = patch.status && patch.status !== "snoozed" ? { snoozedUntil: null } : {};
-  const [row] = await db
+  const wake = rest.status && rest.status !== "snoozed" ? { snoozedUntil: null } : {};
+  const tags: SQL | undefined =
+    addTags?.length || removeTags?.length
+      ? q`array(select distinct x from unnest(${conversation.tags} || ${q.param(addTags ?? [])}::text[]) x where not (x = any(${q.param(removeTags ?? [])}::text[])) order by x)`
+      : undefined;
+  const rows = await db
     .update(conversation)
-    .set({ ...patch, ...wake, updatedAt: new Date() })
-    .where(and(eq(conversation.id, id), eq(conversation.siteId, siteId)))
+    .set({ ...rest, ...wake, ...(tags && { tags: tags as unknown as string[] }), updatedAt: new Date() })
+    .where(and(inArray(conversation.id, ids), eq(conversation.siteId, siteId)))
     .returning({ id: conversation.id });
-  if (row) await emit({ type: "conversation.updated", siteId, payload: { conversationId: id } });
+  for (const r of rows) await emit({ type: "conversation.updated", siteId, payload: { conversationId: r.id } });
+  return rows.length;
+}
+
+/** Marks the thread unread again, with the "New" divider just before `fromMessageId` (or nothing read at all). */
+export async function markUnread(siteId: string, id: string, fromMessageId?: string) {
+  let lastReadAt: Date | null = null;
+  if (fromMessageId) {
+    const m = await db.query.message.findFirst({ where: and(eq(message.id, fromMessageId), eq(message.conversationId, id)), columns: { createdAt: true } });
+    if (m) lastReadAt = new Date(m.createdAt.getTime() - 1);
+  }
+  return updateConversation(siteId, id, { unread: true, lastReadAt });
+}
+
+/** Staff can delete their own internal notes; nothing a customer saw can be deleted. */
+export async function deleteNote(siteId: string, messageId: string, userId: string) {
+  const [row] = await db
+    .delete(message)
+    .where(
+      and(
+        eq(message.id, messageId),
+        eq(message.internal, true),
+        eq(message.authorType, "staff"),
+        eq(message.authorId, userId),
+        inArray(message.conversationId, db.select({ id: conversation.id }).from(conversation).where(eq(conversation.siteId, siteId))),
+      ),
+    )
+    .returning({ conversationId: message.conversationId });
+  if (row) await emit({ type: "conversation.updated", siteId, payload: { conversationId: row.conversationId } });
   return Boolean(row);
 }
 

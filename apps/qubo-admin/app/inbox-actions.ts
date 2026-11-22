@@ -4,7 +4,7 @@ import { isEmail, LIMITS, PRIORITIES, SNOOZE_OPTIONS, STATUSES, type SnoozeOptio
 import { db } from "@qubo/db/client";
 import { form } from "@qubo/db/schema";
 import { and, eq } from "drizzle-orm";
-import { escalate, getInboxFile, keepInboxFile, readBytes, reply, updateConversation } from "@qubo/inbox/server";
+import { deleteNote, escalate, getInboxFile, keepInboxFile, markUnread, readBytes, reply, updateConversation, updateConversations } from "@qubo/inbox/server";
 import { parseDoc } from "@qubo/inbox";
 import { uploadAsset } from "@qubo/storage/media";
 import { revalidatePath } from "next/cache";
@@ -30,6 +30,7 @@ export async function replyAction(_: ActionState, formData: FormData): Promise<A
       cc: z.array(address).max(LIMITS.ccRecipients),
       bcc: z.array(address).max(LIMITS.ccRecipients),
       fileIds: z.array(id).max(LIMITS.replyFiles),
+      after: z.enum(["resolved", "pending"]).optional(),
     })
     .safeParse({ ...Object.fromEntries(formData), cc: formData.getAll("cc"), bcc: formData.getAll("bcc"), fileIds: formData.getAll("fileIds") });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? t("invalidReply") };
@@ -47,6 +48,8 @@ export async function replyAction(_: ActionState, formData: FormData): Promise<A
     ...(edited && { cc: parsed.data.cc, bcc: parsed.data.bcc }),
     fileIds: parsed.data.fileIds,
   });
+  // "Send and resolve": only once the reply is stored.
+  if (parsed.data.after) await updateConversation(site.id, parsed.data.id, { status: parsed.data.after });
   revalidatePath(`/${site.slug}/inbox`, "layout");
   if (result.error) return { ok: true, at: Date.now(), error: t("emailFailed", { error: result.error }) };
   return { ok: true, at: Date.now() };
@@ -88,10 +91,65 @@ export async function escalateAction(formData: FormData): Promise<{ number: numb
 
 /** Opening a thread marks it read (no revalidate: the badge refreshes via the event). */
 export async function markReadAction(siteSlug: string, conversationId: string) {
+  const { site } = await siteFor(siteSlug);
+  await updateConversation(site.id, id.parse(conversationId), { unread: false, lastReadAt: new Date() });
+}
+
+const siteFor = (slug: string) => {
   const fd = new FormData();
-  fd.set("site", siteSlug);
-  const { site } = await requireSiteFromForm(fd);
-  await updateConversation(site.id, id.parse(conversationId), { unread: false });
+  fd.set("site", slug);
+  return requireSiteFromForm(fd);
+};
+
+const bulkSchema = z.object({
+  ids: z.array(id).min(1).max(500),
+  status: z.enum(STATUSES).optional(),
+  priority: z.enum(PRIORITIES).optional(),
+  assigneeId: z.string().max(64).nullable().optional(),
+  unread: z.boolean().optional(),
+  snooze: z.enum(Object.keys(SNOOZE_OPTIONS) as [SnoozeOption, ...SnoozeOption[]]).optional(),
+  spam: z.boolean().optional(),
+  addTags: z.array(z.string().trim().toLowerCase().min(1).max(40)).max(20).optional(),
+  removeTags: z.array(z.string().trim().toLowerCase().min(1).max(40)).max(20).optional(),
+});
+export type ConversationsPatch = Omit<z.input<typeof bulkSchema>, "ids">;
+
+/** Menus and bulk actions: one patch on one or many threads. Returns how many changed. */
+export async function patchConversationsAction(siteSlug: string, ids: string[], patch: ConversationsPatch): Promise<{ count: number }> {
+  const { site, user } = await siteFor(siteSlug);
+  const p = bulkSchema.parse({ ids, ...patch });
+  if (p.assigneeId && p.assigneeId !== "me" && !(await assignableMembers(site.organizationId)).some((m) => m.id === p.assigneeId)) {
+    throw new Error((await getTranslations("inbox.errors"))("notMember"));
+  }
+  const addTags = [...(p.addTags ?? []), ...(p.spam === true ? ["spam"] : [])];
+  const removeTags = [...(p.removeTags ?? []), ...(p.spam === false ? ["spam"] : [])];
+  const count = await updateConversations(site.id, p.ids, {
+    ...(p.status && { status: p.status }),
+    ...(p.spam === true && { status: "resolved" as const, unread: false }),
+    ...(p.priority && { priority: p.priority }),
+    ...(p.assigneeId !== undefined && { assigneeId: p.assigneeId === "me" ? user.id : p.assigneeId || null }),
+    ...(p.unread !== undefined && { unread: p.unread, ...(p.unread ? { lastReadAt: null } : { lastReadAt: new Date() }) }),
+    ...(p.snooze && { status: "snoozed" as const, unread: false, snoozedUntil: new Date(Date.now() + SNOOZE_OPTIONS[p.snooze][1]) }),
+    ...(addTags.length && { addTags }),
+    ...(removeTags.length && { removeTags }),
+  });
+  revalidatePath(`/${site.slug}/inbox`, "layout");
+  return { count };
+}
+
+/** "Mark unread from here": the thread is unread again and opens with a "New" line above that message. */
+export async function markUnreadAction(siteSlug: string, conversationId: string, fromMessageId?: string) {
+  const { site } = await siteFor(siteSlug);
+  await markUnread(site.id, id.parse(conversationId), fromMessageId ? id.parse(fromMessageId) : undefined);
+  revalidatePath(`/${site.slug}/inbox`, "layout");
+}
+
+/** Deletes one of your own internal notes. */
+export async function deleteNoteAction(siteSlug: string, messageId: string): Promise<{ ok: boolean }> {
+  const { site, user } = await siteFor(siteSlug);
+  const ok = await deleteNote(site.id, id.parse(messageId), user.id);
+  revalidatePath(`/${site.slug}/inbox`, "layout");
+  return { ok };
 }
 
 const formSchema = (t: Awaited<ReturnType<typeof getTranslations<"inbox.errors">>>) => z.object({
