@@ -988,7 +988,9 @@ delete own note). `conversation.last_read_at` (migration 0026) draws the "New" l
 marks a thread read when it opens or when its message count grows, never on a bare unread flip,
 so "mark unread" sticks while the thread is open (also for another person looking at it). Drafts
 live in `localStorage` under `qb:inbox-draft:<id>`; the split Send button posts `after=resolved`.
-Constants a server component needs (`statusDot`, `channelIcon`) stay out of "use client" files.
+Constants a server component needs (`statusDot`, `channelIcon`) stay out of "use client" files. Origin icons live once in `components/inbox/icons.ts` (`channelIcon`) and feed the list
+`OriginBadge`, the thread toolbar and the sidebar lens entries (`NavLeaf.icon`); a form row's badge
+shows the form name and `shortSubject` drops the `<form> · ` subject prefix.
 Dev database: now a scrubbed prod snapshot plus Ali's own account (password in
 `.private/dev/`); refresh with `pg_dump` on prod, restore into `qubo-dev-db`, then clear
 `portal_link`, `ai_settings` and `session`.

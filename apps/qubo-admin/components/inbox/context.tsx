@@ -110,7 +110,7 @@ export function ContextPanel({ detail, site, ai, members }: { detail: Conversati
           </dd>
           <dt className="text-muted-foreground">{t("context.origin")}</dt>
           <dd className="flex items-center gap-1.5">
-            <Icon className="size-3.5 text-muted-foreground" /> {t(`origins.${detail.channel}`)}
+            <Icon className="size-3.5 text-muted-foreground" /> {detail.submission?.formName ?? t(`origins.${detail.channel}`)}
           </dd>
           {detail.ticketNumber !== null && (
             <>
