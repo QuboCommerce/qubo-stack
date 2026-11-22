@@ -4,18 +4,9 @@ import { conversation, form, formSubmission, inboxFile, message, order, organiza
 import { wakeSnoozed } from "@qubo/inbox/server";
 import { and, asc, count, desc, eq, ilike, inArray, isNotNull, isNull, ne, or, sql, type SQL } from "drizzle-orm";
 
-export const INBOX_VIEWS = ["open", "mine", "pending", "snoozed", "resolved", "all"] as const;
-export type InboxView = (typeof INBOX_VIEWS)[number];
+import { INBOX_VIEWS, LIST_LIMIT, type InboxLens, type InboxSort, type InboxView, type ListOptions } from "./inbox-shared";
 
-export const parseView = (v: string | undefined): InboxView => (INBOX_VIEWS as readonly string[]).includes(v ?? "") ? (v as InboxView) : "open";
-
-/**
- * Where a thread lives in the sidebar. Forms, e-mail and chats sort by origin;
- * a thread escalated to a ticket moves to Tickets and keeps its origin as a badge.
- */
-export const INBOX_LENSES = ["all", "forms", "email", "chats", "tickets"] as const;
-export type InboxLens = (typeof INBOX_LENSES)[number];
-export const parseLens = (v: string | undefined): InboxLens | null => (v === undefined ? "all" : (INBOX_LENSES as readonly string[]).includes(v) && v !== "all" ? (v as InboxLens) : null);
+export * from "./inbox-shared";
 
 function lensFilter(lens: InboxLens): SQL | undefined {
   const notTicket = isNull(conversation.ticketNumber);
@@ -50,16 +41,38 @@ function viewFilter(view: InboxView, userId: string): SQL | undefined {
   }
 }
 
-export async function listConversations(siteId: string, lens: InboxLens, view: InboxView, userId: string, q?: string) {
-  await wakeSnoozed(siteId);
-  const search = q?.trim()
+const like = (q: string) => `%${q.replace(/[\\%_]/g, (c) => `\\${c}`)}%`;
+
+function optionFilters(o: ListOptions, userId: string): SQL | undefined {
+  const q = o.q;
+  const search = q
     ? or(
-        ilike(conversation.subject, `%${q.trim()}%`),
-        ilike(conversation.contactEmail, `%${q.trim()}%`),
-        ilike(conversation.contactName, `%${q.trim()}%`),
-        ...(/^#?\d{1,7}$/.test(q.trim()) ? [eq(conversation.ticketNumber, Number(q.trim().replace("#", "")))] : []),
+        ilike(conversation.subject, like(q)),
+        ilike(conversation.contactEmail, like(q)),
+        ilike(conversation.contactName, like(q)),
+        sql`exists (select 1 from ${message} where ${message.conversationId} = ${conversation.id} and ${message.body} ilike ${like(q)})`,
+        ...(/^#?\d{1,7}$/.test(q) ? [eq(conversation.ticketNumber, Number(q.replace("#", "")))] : []),
       )
     : undefined;
+  return and(
+    search,
+    o.unread ? eq(conversation.unread, true) : undefined,
+    o.priority ? inArray(conversation.priority, ["high", "urgent"]) : undefined,
+    o.assignee === "me" ? eq(conversation.assigneeId, userId) : o.assignee === "none" ? isNull(conversation.assigneeId) : o.assignee ? eq(conversation.assigneeId, o.assignee) : undefined,
+  );
+}
+
+const sortOrder = (sort: InboxSort) =>
+  sort === "oldest"
+    ? [asc(conversation.lastMessageAt)]
+    : sort === "priority"
+      ? [sql`case ${conversation.priority} when 'urgent' then 0 when 'high' then 1 when 'normal' then 2 else 3 end`, desc(conversation.lastMessageAt)]
+      : sort === "unread"
+        ? [desc(conversation.unread), desc(conversation.lastMessageAt)]
+        : [desc(conversation.lastMessageAt)];
+
+export async function listConversations(siteId: string, lens: InboxLens, view: InboxView, userId: string, o: ListOptions) {
+  await wakeSnoozed(siteId);
   const rows = await db
     .select({
       id: conversation.id,
@@ -75,11 +88,12 @@ export async function listConversations(siteId: string, lens: InboxLens, view: I
       snoozedUntil: conversation.snoozedUntil,
       tags: conversation.tags,
       ticketNumber: conversation.ticketNumber,
+      createdAt: conversation.createdAt,
     })
     .from(conversation)
-    .where(and(eq(conversation.siteId, siteId), lensFilter(lens), viewFilter(view, userId), search))
-    .orderBy(desc(conversation.lastMessageAt))
-    .limit(100);
+    .where(and(eq(conversation.siteId, siteId), lensFilter(lens), viewFilter(view, userId), optionFilters(o, userId)))
+    .orderBy(...sortOrder(o.sort))
+    .limit(LIST_LIMIT);
   if (!rows.length) return [];
 
   // Preview line: latest public message per conversation.
@@ -89,21 +103,17 @@ export async function listConversations(siteId: string, lens: InboxLens, view: I
     .where(and(eq(message.internal, false), inArray(message.conversationId, rows.map((r) => r.id))))
     .orderBy(message.conversationId, desc(message.createdAt));
   const byId = new Map(previews.map((p) => [p.conversationId, p]));
-  return rows.map((r) => ({ ...r, preview: byId.get(r.id)?.body.slice(0, 140) ?? "", lastFrom: byId.get(r.id)?.authorType ?? "customer" }));
+  return rows.map((r) => ({ ...r, preview: byId.get(r.id)?.body.slice(0, 160) ?? "", lastFrom: byId.get(r.id)?.authorType ?? "customer" }));
 }
 export type ConversationRow = Awaited<ReturnType<typeof listConversations>>[number];
 
-export async function viewCounts(siteId: string, lens: InboxLens, userId: string) {
-  const entries = await Promise.all(
-    INBOX_VIEWS.filter((v) => v !== "all").map(async (v) => {
-      const [row] = await db
-        .select({ value: count() })
-        .from(conversation)
-        .where(and(eq(conversation.siteId, siteId), lensFilter(lens), viewFilter(v, userId)));
-      return [v, row?.value ?? 0] as const;
-    }),
-  );
-  return Object.fromEntries(entries) as Record<Exclude<InboxView, "all">, number>;
+export async function viewCounts(siteId: string, lens: InboxLens, userId: string, o: ListOptions) {
+  const views = INBOX_VIEWS.filter((v): v is Exclude<InboxView, "all"> => v !== "all");
+  const [row] = await db
+    .select(Object.fromEntries(views.map((v) => [v, sql<number>`(count(*) filter (where ${viewFilter(v, userId)}))::int`])))
+    .from(conversation)
+    .where(and(eq(conversation.siteId, siteId), lensFilter(lens), optionFilters(o, userId)));
+  return (row ?? Object.fromEntries(views.map((v) => [v, 0]))) as Record<Exclude<InboxView, "all">, number>;
 }
 
 /** Open threads per lens, for the lens tabs (one query). */

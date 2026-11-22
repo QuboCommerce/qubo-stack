@@ -44,7 +44,30 @@
       "you": "You: ",
       "waitMinutes": "{count}m",
       "waitHours": "{count}h",
-      "waitDays": "{count}d"
+      "waitDays": "{count}d",
+      "label": "Conversations",
+      "selectMode": "Select conversations",
+      "clearSearch": "Clear search",
+      "limit": "Showing the {count} most recent. Narrow the list with search or filters.",
+      "mine": "Mine",
+      "filters": {
+        "label": "Filter and sort",
+        "show": "Show",
+        "me": "Me",
+        "unreadOnly": "Unread only",
+        "highOnly": "High priority",
+        "remove": "Remove filter",
+        "assignee": "Assigned to",
+        "anyone": "Anyone",
+        "sort": "Sort",
+        "reset": "Reset filters"
+      },
+      "sorts": {
+        "newest": "Newest first",
+        "oldest": "Oldest first",
+        "priority": "Priority",
+        "unread": "Unread first"
+      }
     },
     "empty": {
       "notFoundTitle": "Conversation not found",
@@ -73,7 +96,13 @@
       "to": "To {list}",
       "cc": "Cc {list}",
       "bcc": "Bcc {list}",
-      "notSent": "Saved in the thread, not e-mailed"
+      "notSent": "Saved in the thread, not e-mailed",
+      "resolve": "Resolve",
+      "reopen": "Reopen",
+      "info": "Contact and details",
+      "prev": "Previous conversation",
+      "next": "Next conversation",
+      "newLine": "New"
     },
     "context": {
       "contact": "Contact",
@@ -81,7 +110,19 @@
       "order": "Order",
       "formTitle": "{name} form",
       "earlier": "Earlier conversations",
-      "copied": "Copied in"
+      "copied": "Copied in",
+      "title": "Contact and details",
+      "notCustomer": "Not a customer yet",
+      "copyCompany": "Copy company",
+      "copyAddress": "Copy address",
+      "openCustomer": "Customer record",
+      "details": "Details",
+      "origin": "Origin",
+      "ticket": "Ticket",
+      "created": "Created",
+      "lastMessage": "Last message",
+      "page": "Page",
+      "language": "Language"
     },
     "controls": {
       "status": "Status",
@@ -214,7 +255,10 @@
         "add": "Add {kind} address",
         "placeholder": "name@example.com, press Enter",
         "invalid": "That doesn't look like an e-mail address."
-      }
+      },
+      "keysHint": "Ctrl+Enter sends",
+      "sendResolve": "Send and resolve",
+      "addNoteResolve": "Add note and resolve"
     },
     "files": {
       "expiredHint": "Chat files are removed after 30 days unless kept.",
@@ -306,6 +350,91 @@
       "phone": "Phone",
       "address": "Address",
       "message": "Message"
+    },
+    "bulk": {
+      "selectAll": "Select all",
+      "pick": "Pick conversations",
+      "selected": "{count} selected",
+      "done": "Done",
+      "select": "Select {name}"
+    },
+    "menu": {
+      "openNewTab": "Open in new tab",
+      "markRead": "Mark as read",
+      "markUnread": "Mark as unread",
+      "status": "Status",
+      "snooze": "Snooze",
+      "priority": "Priority",
+      "assign": "Assign",
+      "me": "{name} (me)",
+      "copy": "Copy",
+      "what": {
+        "link": "Link",
+        "subject": "Subject"
+      },
+      "copyLink": "Link to conversation",
+      "copyEmail": "E-mail address",
+      "copyPhone": "Phone number",
+      "copyName": "Name",
+      "copySubject": "Subject",
+      "copyTicket": "Ticket number",
+      "fromContact": "All from this contact",
+      "spam": "Mark as spam",
+      "notSpam": "Not spam",
+      "more": "More actions"
+    },
+    "toast": {
+      "copied": "Copied",
+      "copiedWhat": "Copied: {what}",
+      "failed": "Something went wrong.",
+      "updated": "{count, plural, one {# conversation updated} other {# conversations updated}}",
+      "ticket": "Ticket #{number} created",
+      "markedUnread": "Marked as unread"
+    },
+    "shortcuts": {
+      "title": "Keyboard shortcuts",
+      "description": "Single keys work anywhere in the inbox except while typing.",
+      "keys": {
+        "next": "Next conversation",
+        "prev": "Previous conversation",
+        "close": "Close the thread or clear the selection",
+        "reply": "Reply",
+        "note": "Internal note",
+        "resolve": "Resolve or reopen",
+        "unread": "Mark read or unread",
+        "assign": "Assign to me",
+        "ticket": "Make ticket",
+        "select": "Select the open conversation",
+        "info": "Contact and details",
+        "search": "Search",
+        "send": "Send",
+        "sendResolve": "Send and resolve",
+        "help": "This list"
+      }
+    },
+    "message": {
+      "text": "Message",
+      "link": "Link",
+      "copyText": "Copy text",
+      "quote": "Quote in reply",
+      "copyLink": "Copy link to message",
+      "unreadFromHere": "Mark unread from here",
+      "deleteNote": "Delete note",
+      "confirmDelete": "Delete this note?",
+      "deleted": "Note deleted"
+    },
+    "form": {
+      "allFields": "All fields",
+      "copyField": "Copy {field}",
+      "copyAll": "Copy all",
+      "call": "Call",
+      "map": "Map"
+    },
+    "tags": {
+      "title": "Tags",
+      "remove": "Remove tag {tag}",
+      "add": "Add a tag",
+      "addMore": "Add…"
     }
   },
   "customers": {

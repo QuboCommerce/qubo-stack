@@ -44,7 +44,30 @@
       "you": "Vous : ",
       "waitMinutes": "{count} min",
       "waitHours": "{count} h",
-      "waitDays": "{count} j"
+      "waitDays": "{count} j",
+      "label": "Conversations",
+      "selectMode": "Sélectionner des conversations",
+      "clearSearch": "Effacer la recherche",
+      "limit": "Les {count} plus récentes sont affichées. Affinez avec la recherche ou les filtres.",
+      "mine": "À moi",
+      "filters": {
+        "label": "Filtrer et trier",
+        "show": "Afficher",
+        "me": "Moi",
+        "unreadOnly": "Non lues seulement",
+        "highOnly": "Priorité haute",
+        "remove": "Retirer le filtre",
+        "assignee": "Assignée à",
+        "anyone": "Tout le monde",
+        "sort": "Trier",
+        "reset": "Réinitialiser les filtres"
+      },
+      "sorts": {
+        "newest": "Plus récentes",
+        "oldest": "Plus anciennes",
+        "priority": "Priorité",
+        "unread": "Non lues d'abord"
+      }
     },
     "empty": {
       "notFoundTitle": "Conversation introuvable",
@@ -73,7 +96,13 @@
       "to": "À {list}",
       "cc": "Cc {list}",
       "bcc": "Cci {list}",
-      "notSent": "Enregistré dans la conversation, non envoyé par e-mail"
+      "notSent": "Enregistré dans la conversation, non envoyé par e-mail",
+      "resolve": "Résoudre",
+      "reopen": "Rouvrir",
+      "info": "Contact et détails",
+      "prev": "Conversation précédente",
+      "next": "Conversation suivante",
+      "newLine": "Nouveau"
     },
     "context": {
       "contact": "Contact",
@@ -81,7 +110,19 @@
       "order": "Commande",
       "formTitle": "Formulaire {name}",
       "earlier": "Conversations précédentes",
-      "copied": "En copie"
+      "copied": "En copie",
+      "title": "Contact et détails",
+      "notCustomer": "Pas encore client",
+      "copyCompany": "Copier la société",
+      "copyAddress": "Copier l'adresse",
+      "openCustomer": "Fiche client",
+      "details": "Détails",
+      "origin": "Origine",
+      "ticket": "Ticket",
+      "created": "Créée",
+      "lastMessage": "Dernier message",
+      "page": "Page",
+      "language": "Langue"
     },
     "controls": {
       "status": "Statut",
@@ -214,7 +255,10 @@
         "add": "Ajouter une adresse en {kind}",
         "placeholder": "nom@exemple.be, puis Entrée",
         "invalid": "Cette adresse e-mail ne semble pas valide."
-      }
+      },
+      "keysHint": "Ctrl+Entrée pour envoyer",
+      "sendResolve": "Envoyer et résoudre",
+      "addNoteResolve": "Ajouter la note et résoudre"
     },
     "files": {
       "expiredHint": "Les fichiers du chat sont supprimés après 30 jours, sauf s'ils sont conservés.",
@@ -306,6 +350,91 @@
       "phone": "Téléphone",
       "address": "Adresse",
       "message": "Message"
+    },
+    "bulk": {
+      "selectAll": "Tout sélectionner",
+      "pick": "Choisissez des conversations",
+      "selected": "{count, plural, one {# sélectionnée} other {# sélectionnées}}",
+      "done": "Terminé",
+      "select": "Sélectionner {name}"
+    },
+    "menu": {
+      "openNewTab": "Ouvrir dans un nouvel onglet",
+      "markRead": "Marquer comme lue",
+      "markUnread": "Marquer comme non lue",
+      "status": "Statut",
+      "snooze": "Reporter",
+      "priority": "Priorité",
+      "assign": "Assigner",
+      "me": "{name} (moi)",
+      "copy": "Copier",
+      "what": {
+        "link": "Lien",
+        "subject": "Objet"
+      },
+      "copyLink": "Lien vers la conversation",
+      "copyEmail": "Adresse e-mail",
+      "copyPhone": "Numéro de téléphone",
+      "copyName": "Nom",
+      "copySubject": "Objet",
+      "copyTicket": "Numéro de ticket",
+      "fromContact": "Tout de ce contact",
+      "spam": "Marquer comme spam",
+      "notSpam": "Pas un spam",
+      "more": "Plus d'actions"
+    },
+    "toast": {
+      "copied": "Copié",
+      "copiedWhat": "Copié : {what}",
+      "failed": "Une erreur est survenue.",
+      "updated": "{count, plural, one {# conversation mise à jour} other {# conversations mises à jour}}",
+      "ticket": "Ticket n° {number} créé",
+      "markedUnread": "Marquée comme non lue"
+    },
+    "shortcuts": {
+      "title": "Raccourcis clavier",
+      "description": "Les touches simples fonctionnent partout dans la boîte, sauf pendant la saisie.",
+      "keys": {
+        "next": "Conversation suivante",
+        "prev": "Conversation précédente",
+        "close": "Fermer la conversation ou vider la sélection",
+        "reply": "Répondre",
+        "note": "Note interne",
+        "resolve": "Résoudre ou rouvrir",
+        "unread": "Marquer lue ou non lue",
+        "assign": "M'assigner",
+        "ticket": "Créer un ticket",
+        "select": "Sélectionner la conversation ouverte",
+        "info": "Contact et détails",
+        "search": "Rechercher",
+        "send": "Envoyer",
+        "sendResolve": "Envoyer et résoudre",
+        "help": "Cette liste"
+      }
+    },
+    "message": {
+      "text": "Message",
+      "link": "Lien",
+      "copyText": "Copier le texte",
+      "quote": "Citer dans la réponse",
+      "copyLink": "Copier le lien du message",
+      "unreadFromHere": "Non lu à partir d'ici",
+      "deleteNote": "Supprimer la note",
+      "confirmDelete": "Supprimer cette note ?",
+      "deleted": "Note supprimée"
+    },
+    "form": {
+      "allFields": "Tous les champs",
+      "copyField": "Copier {field}",
+      "copyAll": "Tout copier",
+      "call": "Appeler",
+      "map": "Plan"
+    },
+    "tags": {
+      "title": "Étiquettes",
+      "remove": "Retirer l'étiquette {tag}",
+      "add": "Ajouter une étiquette",
+      "addMore": "Ajouter…"
     }
   },
   "customers": {

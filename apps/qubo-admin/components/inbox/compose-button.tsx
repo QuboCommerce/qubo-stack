@@ -1,6 +1,6 @@
 "use client";
 
-import { COMPOSE_EVENT, type ComposeDetail } from "@/components/inbox/composer";
+import { COMPOSE_EVENT, type ComposeDetail } from "@/components/inbox/use-inbox";
 import { Button } from "@/components/ui/button";
 
 /** Opens the composer below the thread in reply or note mode. */

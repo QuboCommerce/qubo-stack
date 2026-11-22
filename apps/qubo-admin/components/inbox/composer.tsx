@@ -4,7 +4,7 @@ import { useActionState, useEffect, useRef, useState, useTransition } from "reac
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Placeholder } from "@tiptap/extensions";
-import { Bold, Italic, Link2, List, ListOrdered, Lock, Paperclip, Quote, Send, Sparkles } from "lucide-react";
+import { Bold, CircleCheck, Info, Italic, Link2, List, ListOrdered, Lock, Paperclip, Quote, Send, Sparkles } from "lucide-react";
 import { LIMITS } from "@qubo/inbox";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -13,11 +13,10 @@ import { escalateAction, replyAction, updateConversationAction } from "@/app/inb
 import { useReplyFiles } from "@/components/inbox/files";
 import { Recipients } from "@/components/inbox/recipients";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@qubo/shared/utils";
 
-/** Other parts of the thread (form card, header) ask the composer to open in a mode. */
-export const COMPOSE_EVENT = "qb:compose";
-export type ComposeDetail = { mode: "reply" | "note" };
+import { COMPOSE_EVENT, type ComposeDetail } from "@/components/inbox/use-inbox";
 
 type Command = { key: "note" | "reply" | "ticket" | "pending" | "close" | "snooze" | "assign"; run: () => void };
 
@@ -55,9 +54,13 @@ export function Composer({
   const [drafting, startDraft] = useTransition();
   const [running, startCommand] = useTransition();
   const [slash, setSlash] = useState<{ query: string; index: number } | null>(null);
+  const [focused, setFocused] = useState(false);
+  const [empty, setEmpty] = useState(true);
+  const resolveButton = useRef<HTMLButtonElement>(null);
+  const draftKey = `qb:inbox-draft:${conversationId}`;
 
   // Editor callbacks are created once; they read the live values through this ref.
-  const live = useRef({ internal, chat: Boolean(chat), slash, commands: [] as Command[], run: (_c: Command) => {}, upload: (_f: File[]) => {} });
+  const live = useRef({ internal, chat: Boolean(chat), slash, commands: [] as Command[], run: (_c: Command) => {}, upload: (_f: File[]) => {}, save: () => {} });
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -66,7 +69,7 @@ export function Composer({
       Placeholder.configure({ placeholder: () => (live.current.internal ? t("notePlaceholder") : live.current.chat ? t("chatPlaceholder") : t("replyPlaceholder")) }),
     ],
     editorProps: {
-      attributes: { class: "qb-rich min-h-[4.5rem] max-h-[40vh] overflow-y-auto px-3 py-2 text-sm outline-none", "aria-label": t("editorLabel") },
+      attributes: { class: "qb-rich max-h-[40vh] overflow-y-auto px-3 py-2 text-sm outline-none", "aria-label": t("editorLabel") },
       handleKeyDown: (_view, e) => {
         const s = live.current.slash;
         const matches = s ? filterCommands(live.current.commands, s.query) : [];
@@ -82,7 +85,7 @@ export function Composer({
           }
           if (e.key === "Escape") return (setSlash(null), true);
         }
-        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) return (form.current?.requestSubmit(), true);
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) return (form.current?.requestSubmit(e.shiftKey ? resolveButton.current : undefined), true);
         // Chat feels like chat: Enter sends, Shift+Enter breaks the line.
         if (e.key === "Enter" && !e.shiftKey && live.current.chat && !live.current.internal) return (form.current?.requestSubmit(), true);
         return false;
@@ -95,6 +98,8 @@ export function Composer({
       },
     },
     onUpdate: ({ editor }) => {
+      setEmpty(editor.isEmpty);
+      live.current.save();
       const m = editor.getText().match(/^\/([a-z]*)$/i);
       setSlash((s) => (m ? { query: m[1]!.toLowerCase(), index: s?.query === m[1]!.toLowerCase() ? s.index : 0 } : null));
     },
@@ -125,13 +130,45 @@ export function Composer({
     c.run();
     toast.success(t(`commands.${c.key}.done`));
   }
-  live.current = { internal, chat: Boolean(chat), slash, commands, run: runCommand, upload: (f) => void files.upload(f) };
+  // Drafts survive switching threads and reloads (this browser only).
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const save = () => {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      try {
+        if (!editor || editor.isEmpty) localStorage.removeItem(draftKey);
+        else localStorage.setItem(draftKey, JSON.stringify({ doc: editor.getJSON(), internal: live.current.internal, at: Date.now() }));
+      } catch {}
+    }, 400);
+  };
+  live.current = { internal, chat: Boolean(chat), slash, commands, run: runCommand, upload: (f) => void files.upload(f), save };
+
+  useEffect(() => {
+    if (!editor) return;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (!raw) return;
+      const d = JSON.parse(raw) as { doc: object; internal: boolean };
+      editor.commands.setContent(d.doc);
+      setEmpty(editor.isEmpty);
+      if (d.internal || canReply) setInternal(d.internal || !canReply);
+    } catch {}
+  }, [editor]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => save(), [internal]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const onCompose = (e: Event) => {
-      const { mode } = (e as CustomEvent<ComposeDetail>).detail;
+      const { mode, quote } = (e as CustomEvent<ComposeDetail>).detail;
       setInternal(mode === "note" || !canReply);
-      editor?.commands.focus("end");
+      if (quote && editor) {
+        const lines = quote.trim().split("\n").slice(0, 40);
+        editor
+          .chain()
+          .focus("end")
+          .insertContent([{ type: "blockquote", content: lines.map((l) => ({ type: "paragraph", content: l ? [{ type: "text", text: l }] : [] })) }, { type: "paragraph" }])
+          .run();
+      } else editor?.commands.focus("end");
       form.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     };
     window.addEventListener(COMPOSE_EVENT, onCompose);
@@ -161,6 +198,9 @@ export function Composer({
     if (state.ok) {
       editor?.commands.clearContent(true);
       files.reset();
+      try {
+        localStorage.removeItem(draftKey);
+      } catch {}
     }
   }, [state?.at]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -181,6 +221,8 @@ export function Composer({
 
   const matches = slash ? filterCommands(commands, slash.query) : [];
   const showRecipients = !internal && !chat && Boolean(contactEmail);
+  // Compact until used: one line, no toolbar, so the thread gets the room.
+  const open = focused || !empty || files.drafts.length > 0 || matches.length > 0;
 
   return (
     <form
@@ -196,6 +238,8 @@ export function Composer({
         docInput.current!.value = editor.isEmpty ? "" : JSON.stringify(editor.getJSON());
         bodyInput.current!.value = editor.getText({ blockSeparator: "\n" });
       }}
+      onFocus={() => setFocused(true)}
+      onBlur={(e) => !e.currentTarget.contains(e.relatedTarget as Node | null) && setFocused(false)}
       onDragOver={(e) => e.dataTransfer.types.includes("Files") && e.preventDefault()}
       onDrop={(e) => {
         if (!e.dataTransfer.files.length) return;
@@ -209,7 +253,7 @@ export function Composer({
       <input ref={docInput} type="hidden" name="doc" />
       <input ref={bodyInput} type="hidden" name="body" />
       {internal && <input type="hidden" name="internal" value="on" />}
-      {showRecipients && <Recipients key={conversationId} to={email} initial={participants} />}
+      {showRecipients && open && <Recipients key={conversationId} to={email} initial={participants} />}
 
       {matches.length > 0 && (
         <ul role="listbox" aria-label={t("commands.label")} className="absolute bottom-full left-3 z-10 mb-1 w-72 overflow-hidden rounded-lg border bg-popover p-1 text-sm shadow-lg">
@@ -229,8 +273,8 @@ export function Composer({
       )}
 
       <div className={cn("mx-3 mt-2 rounded-lg border bg-background focus-within:ring-2 focus-within:ring-ring/40", running && "opacity-60")} aria-busy={drafting || running}>
-        {!chat && editor && <Toolbar editor={editor} />}
-        <EditorContent editor={editor} />
+        {!chat && editor && open && <Toolbar editor={editor} />}
+        <EditorContent editor={editor} className={cn(open ? "[&_.ProseMirror]:min-h-[4.5rem]" : "[&_.ProseMirror]:min-h-[2.25rem]")} />
       </div>
       <div className="px-3">
         {files.list}
@@ -254,13 +298,37 @@ export function Composer({
             <Sparkles className={cn(drafting && "animate-pulse")} /> {drafting ? t("drafting") : t("draft")}
           </Button>
         )}
-        <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground" title={hint}>
-          {hint}
-        </p>
-        <span className="hidden text-[11px] text-muted-foreground lg:inline">{t("slashHint")}</span>
-        <Button type="submit" size="sm" disabled={pending || files.uploading > 0}>
-          <Send /> {pending ? t("sending") : internal ? t("addNote") : t("send")}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground" aria-label={hint}>
+              <Info className="size-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-72">
+            <p>{hint}</p>
+            <p className="mt-1 opacity-70">{t("slashHint")} · {t("keysHint")}</p>
+          </TooltipContent>
+        </Tooltip>
+        <p className="hidden min-w-0 flex-1 truncate text-xs text-muted-foreground sm:block">{hint}</p>
+        <span className="flex-1 sm:hidden" />
+        <div className="flex">
+          <Button type="submit" size="sm" className="rounded-r-none" disabled={pending || files.uploading > 0}>
+            <Send /> {pending ? t("sending") : internal ? t("addNote") : t("send")}
+          </Button>
+          <Button
+            ref={resolveButton}
+            type="submit"
+            name="after"
+            value="resolved"
+            size="sm"
+            className="rounded-l-none border-l border-background/20 px-2"
+            disabled={pending || files.uploading > 0}
+            aria-label={internal ? t("addNoteResolve") : t("sendResolve")}
+            title={`${internal ? t("addNoteResolve") : t("sendResolve")} (Ctrl+Shift+Enter)`}
+          >
+            <CircleCheck />
+          </Button>
+        </div>
       </div>
     </form>
   );
