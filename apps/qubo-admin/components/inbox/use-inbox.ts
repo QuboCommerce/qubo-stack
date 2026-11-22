@@ -26,6 +26,7 @@ export type ConvSummary = {
   contactEmail: string | null;
   contactName: string | null;
   phone?: string | null;
+  formName?: string | null;
 };
 
 export function useCopy() {

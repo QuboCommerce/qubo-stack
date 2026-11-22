@@ -89,8 +89,11 @@ export async function listConversations(siteId: string, lens: InboxLens, view: I
       tags: conversation.tags,
       ticketNumber: conversation.ticketNumber,
       createdAt: conversation.createdAt,
+      formName: form.name,
     })
     .from(conversation)
+    .leftJoin(formSubmission, eq(formSubmission.id, conversation.formSubmissionId))
+    .leftJoin(form, eq(form.id, formSubmission.formId))
     .where(and(eq(conversation.siteId, siteId), lensFilter(lens), viewFilter(view, userId), optionFilters(o, userId)))
     .orderBy(...sortOrder(o.sort))
     .limit(LIST_LIMIT);

@@ -26,7 +26,8 @@ import {
   X,
 } from "lucide-react";
 import { ConversationMenuItems, contextKit, dropdownKit, PRIORITY_CHOICES, STATUS_CHOICES } from "@/components/inbox/conversation-menu";
-import { channelIcon } from "@/components/inbox/icons";
+import { shortSubject } from "@/components/inbox/icons";
+import { OriginBadge } from "@/components/inbox/origin-badge";
 import { COMPOSE_EVENT, INBOX_SEARCH_ID, INFO_EVENT, useInboxActions, type ComposeDetail, type ConvSummary } from "@/components/inbox/use-inbox";
 import { Button } from "@/components/ui/button";
 import { ContextMenu, ContextMenuContent, ContextMenuTrigger } from "@/components/ui/context-menu";
@@ -519,11 +520,12 @@ function Row({
   const t = useTranslations("inbox");
   const { relativeTime } = formatters(useLocale());
   const menuAt = useRef(0);
-  const Icon = channelIcon[row.channel];
   const sla = slaState(row.status, row.lastFrom, row.lastMessageAt);
   const category = row.tags.find((x) => x.startsWith("ai:"))?.slice(3);
   const name = row.contactName ?? row.contactEmail ?? t("list.anonymous");
-  const showSubject = row.subject && row.subject.trim().toLowerCase() !== name.trim().toLowerCase();
+  const subject = shortSubject(row.subject, row.formName);
+  const showSubject = subject && subject.trim().toLowerCase() !== name.trim().toLowerCase();
+  const initials = name.split(/[\s@._-]+/).filter(Boolean).slice(0, 2).map((w) => w[0]!.toUpperCase()).join("");
   const assignee = row.assigneeId && row.assigneeId !== me ? members.find((m) => m.id === row.assigneeId)?.name : null;
   return (
     <ContextMenu onOpenChange={(o) => o && (menuAt.current = Date.now())}>
@@ -554,7 +556,7 @@ function Row({
             className="flex gap-2.5 py-2.5 pl-2.5 pr-3 outline-none focus-visible:bg-accent"
           >
             <span className={cn("relative mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-muted text-muted-foreground transition-opacity", selecting ? "opacity-0" : "[@media(hover:hover)]:group-hover:opacity-0")}>
-              <Icon className="size-3.5" aria-label={t(`origins.${row.channel}`)} />
+              <span className="text-[10px] font-semibold" aria-hidden>{initials}</span>
               {row.unread && <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full border-2 border-card bg-sky-500" aria-label={t("list.unread")} />}
             </span>
             <span className="min-w-0 flex-1">
@@ -564,14 +566,15 @@ function Row({
                   {relativeTime(row.lastMessageAt)}
                 </time>
               </span>
-              {showSubject && <span className={cn("mt-0.5 block truncate text-[13px]", row.unread ? "text-foreground" : "text-foreground/80")}>{row.subject}</span>}
+              {showSubject && <span className={cn("mt-0.5 block truncate text-[13px]", row.unread ? "text-foreground" : "text-foreground/80")}>{subject}</span>}
               <span className="mt-0.5 block truncate text-xs text-muted-foreground">
                 {row.lastFrom === "staff" && t("list.you")}
                 {row.preview}
               </span>
-              <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground empty:hidden">
+              <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                <OriginBadge channel={row.channel} label={row.formName ?? t(`origins.${row.channel}`)} className="max-w-36" />
                 {row.ticketNumber !== null && (
-                  <span className="inline-flex items-center gap-0.5 rounded border px-1 tabular-nums">
+                  <span className="inline-flex h-5 items-center gap-0.5 rounded-md border px-1.5 tabular-nums">
                     <Ticket className="size-3" />#{row.ticketNumber}
                   </span>
                 )}

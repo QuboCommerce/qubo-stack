@@ -64,6 +64,7 @@ export default async function InboxPage({ params, searchParams }: { params: Prom
     contactEmail: detail.contactEmail,
     contactName: detail.contactName,
     phone,
+    formName: detail.submission?.formName ?? null,
     channel: detail.channel,
     createdAt: detail.createdAt,
     snoozedUntil: detail.snoozedUntil,

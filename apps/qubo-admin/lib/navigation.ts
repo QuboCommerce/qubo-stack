@@ -17,11 +17,12 @@ import {
 export type Capability = "commerce" | "catalog" | "booking" | "leads" | "blog" | "accounts" | "locales";
 
 import type en from "@/messages/en";
+import { channelIcon, ticketIcon } from "@/components/inbox/icons";
 
 /** Keys of the `nav` namespace in messages/en.json. */
 export type NavKey = keyof (typeof en)["nav"];
 
-export type NavLeaf = { key: NavKey; href: string; requires?: Capability[] };
+export type NavLeaf = { key: NavKey; href: string; requires?: Capability[]; icon?: LucideIcon };
 export type NavItem = NavLeaf & {
   icon: LucideIcon;
   /** Shown as the parent's sub-menu while the section is active (Shopify style). */
@@ -81,10 +82,10 @@ const groups: NavGroup[] = [
         requires: ["leads"],
         badge: "inbox",
         children: [
-          { key: "inboxForms", href: "/inbox/forms" },
-          { key: "inboxEmail", href: "/inbox/email" },
-          { key: "inboxChats", href: "/inbox/chats" },
-          { key: "inboxTickets", href: "/inbox/tickets" },
+          { key: "inboxForms", href: "/inbox/forms", icon: channelIcon.form },
+          { key: "inboxEmail", href: "/inbox/email", icon: channelIcon.email },
+          { key: "inboxChats", href: "/inbox/chats", icon: channelIcon.chat },
+          { key: "inboxTickets", href: "/inbox/tickets", icon: ticketIcon },
         ],
       },
       {

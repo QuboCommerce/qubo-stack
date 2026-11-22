@@ -6,7 +6,8 @@ import { SNOOZE_OPTIONS, type SnoozeOption } from "@qubo/inbox";
 import { cn } from "@qubo/shared/utils";
 import { AlarmClock, ArrowLeft, ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Flag, Info, MoreHorizontal, RotateCcw, Ticket, UserRound } from "lucide-react";
 import { ConversationMenuItems, dropdownKit, PRIORITY_CHOICES, STATUS_CHOICES } from "@/components/inbox/conversation-menu";
-import { channelIcon, statusDot } from "@/components/inbox/icons";
+import { channelIcon, shortSubject, statusDot } from "@/components/inbox/icons";
+import { OriginBadge } from "@/components/inbox/origin-badge";
 import { INFO_EVENT, useInboxActions, type ConvSummary } from "@/components/inbox/use-inbox";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -40,7 +41,7 @@ export function ThreadToolbar({
   const { shortDate, relativeTime } = formatters(useLocale());
   const { patch, pending } = useInboxActions(site);
   const one = [c.id];
-  const Icon = channelIcon[c.channel];
+  const subject = shortSubject(c.subject, c.formName);
   const name = c.contactName ?? c.contactEmail ?? t("list.anonymous");
   const resolved = c.status === "resolved";
   const assignee = members.find((m) => m.id === c.assigneeId);
@@ -52,11 +53,11 @@ export function ThreadToolbar({
           <ArrowLeft className="size-4" />
         </Link>
         <div className="min-w-0 flex-1 px-1">
-          <h2 className="truncate text-[15px] font-semibold leading-tight">{c.subject || name}</h2>
-          <p className="truncate text-xs text-muted-foreground">
-            {c.subject && c.subject !== name && <span>{name}</span>}
-            {c.contactEmail && c.contactEmail !== name && <span className="hidden sm:inline"> · {c.contactEmail}</span>}
-            <span suppressHydrationWarning> · {shortDate(c.createdAt)}</span>
+          <h2 className="truncate text-[15px] font-semibold leading-tight">{subject || name}</h2>
+          <p className="truncate text-xs text-muted-foreground [&>span+span]:before:content-['_·_']">
+            {subject && subject !== name && <span>{name}</span>}
+            {c.contactEmail && c.contactEmail !== name && <span>{c.contactEmail}</span>}
+            <span suppressHydrationWarning>{shortDate(c.createdAt)}</span>
           </p>
         </div>
         <div className="hidden items-center sm:flex">
@@ -88,9 +89,7 @@ export function ThreadToolbar({
       </div>
 
       <div className="flex items-center gap-1.5 overflow-x-auto px-3 pb-2 pt-1.5 [scrollbar-width:none] sm:px-4">
-        <span className="flex h-7 shrink-0 items-center gap-1 px-1 text-xs text-muted-foreground" title={t(`origins.${c.channel}`)}>
-          <Icon className="size-3.5" /> <span className="max-sm:sr-only">{t(`origins.${c.channel}`)}</span>
-        </span>
+        <OriginBadge channel={c.channel} label={c.formName ?? t(`origins.${c.channel}`)} className="h-7 rounded-full px-2.5 text-xs [&_svg]:size-3.5" />
         {c.ticketNumber !== null && (
           <span className="flex h-7 shrink-0 items-center gap-1 rounded-full border border-dashed px-2.5 text-xs tabular-nums text-muted-foreground">
             <Ticket className="size-3.5" />#{c.ticketNumber}

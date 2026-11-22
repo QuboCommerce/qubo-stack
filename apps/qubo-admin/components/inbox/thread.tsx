@@ -1,6 +1,6 @@
 import { useLocale, useTranslations } from "next-intl";
 import { splitQuoted } from "@qubo/inbox";
-import { ClipboardList, FileText, Globe, Languages, MapPin, Phone, Reply, StickyNote, Ticket, TicketPlus } from "lucide-react";
+import { Copy, Globe, Languages, MapPin, Phone, Reply, StickyNote, Ticket, TicketPlus } from "lucide-react";
 import { cn } from "@qubo/shared/utils";
 import { escalateFormAction } from "@/app/inbox-actions";
 import { channelIcon } from "@/components/inbox/icons";
@@ -117,7 +117,7 @@ function FormCard({ detail, site, m }: { detail: ConversationDetail; site: strin
     <article className="overflow-hidden rounded-xl border bg-background shadow-xs">
       <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5 font-medium text-foreground">
-          <FileText className="size-3.5" /> {t("context.formTitle", { name: sub.formName })}
+          <channelIcon.form className="size-3.5" /> {t("context.formTitle", { name: sub.formName })}
         </span>
         {sub.pagePath && (
           <span className="flex items-center gap-1">
@@ -169,7 +169,7 @@ function FormCard({ detail, site, m }: { detail: ConversationDetail; site: strin
         )}
         <span className="ml-auto flex items-center">
           <CopyAllButton text={formText(detail, m)}>
-            <ClipboardList /> <span className="max-sm:sr-only">{t("form.copyAll")}</span>
+            <Copy /> <span className="max-sm:sr-only">{t("form.copyAll")}</span>
           </CopyAllButton>
           {phone && (
             <a href={`tel:${tel(phone)}`} className={toolLink}>

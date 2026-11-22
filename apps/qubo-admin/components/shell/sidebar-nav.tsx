@@ -79,10 +79,11 @@ function Item({ item, base, pathname, mode, counts, onNavigate }: {
                 onClick={onNavigate}
                 aria-current={childActive ? "page" : undefined}
                 className={cn(
-                  "flex h-7 items-center rounded-md px-2 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                  "flex h-7 items-center gap-2 rounded-md px-2 text-[13px] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   childActive && "font-semibold text-sidebar-accent-foreground",
                 )}
               >
+                {child.icon && <child.icon className="size-3.5 shrink-0 opacity-70" />}
                 {t(child.key)}
               </Link>
             );
